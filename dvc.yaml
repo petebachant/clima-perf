@@ -2,14 +2,21 @@ stages:
   benchmark-amip:
     cmd: calkit slurm batch --name benchmark-amip --environment clima 
       --log-path 'logs/benchmark-amip/${item.date}.log' --dep 
-      scripts/run.py --dep .calkit/env-locks/main/linux-64.txt --out 
-      envs/${item.date}/Manifest-v1.11.toml --out 
+      scripts/run.py --dep .calkit/env-locks/main/linux-64.txt --dep 
+      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
+      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep 
+      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out envs/${item.date}/Manifest-v1.11.toml --out 
       envs/${item.date}/repo-revs.json -s --gpus=1 -s --time=120 -- 
       scripts/run.sh ${item.date}
     deps:
       - scripts/run.sh
       - scripts/run.py
       - .calkit/env-locks/main/linux-64.txt
+      - repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
     outs:
       - envs/${item.date}/Manifest-v1.11.toml:
           cache: false
@@ -25,6 +32,7 @@ stages:
         - '2025-10-01'
         - '2025-11-01'
         - '2025-12-01'
+        - '2025-12-06'
         - '2026-01-01'
     desc: Automatically generated from the 'benchmark-amip' stage in 
       calkit.yaml. Changes made here will be overwritten.
