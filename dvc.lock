@@ -1,0 +1,121 @@
+schema: '2.0'
+stages:
+  run-2026-01-01:
+    cmd: calkit slurm batch --name run-2026-01-01 --environment clima --dep 
+      scripts/run.py --out envs/2026-01-01 -s --gpus=1 -s --time=120 -- 
+      scripts/run.sh 2026-01-01
+    deps:
+    - path: scripts/run.py
+      hash: md5
+      md5: e441188488a4ef25facf2fa7396cb080
+      size: 6164
+    - path: scripts/run.sh
+      hash: md5
+      md5: be941b40ffd003e6c6e2352a8d4df319
+      size: 328
+    outs:
+    - path: .calkit/slurm/logs/run-2026-01-01.out
+      hash: md5
+      md5: c913884136b1bfe5a08d01a7901c1044
+      size: 63767
+    - path: envs/2026-01-01
+      hash: md5
+      md5: 97f7400a9340af7e03d7f80eb6c4da88.dir
+      size: 144821
+      nfiles: 2
+  benchmark-amip@2026-01-01:
+    cmd: calkit slurm batch --name benchmark-amip --environment clima --log-path
+      'logs/benchmark-amip/2026-01-01.log' --dep scripts/run.py --dep 
+      .calkit/env-locks/main/linux-64.txt --out 
+      envs/2026-01-01/Manifest-v1.11.toml --out envs/2026-01-01/repo-revs.json 
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-01
+    deps:
+    - path: .calkit/env-locks/main/linux-64.txt
+      hash: md5
+      md5: 1754a191da44126403fab3c104fbdaa6
+      size: 577
+    - path: scripts/run.py
+      hash: md5
+      md5: 2db647dceb3f768fe61e32e4aff7dfcc
+      size: 6572
+    - path: scripts/run.sh
+      hash: md5
+      md5: be941b40ffd003e6c6e2352a8d4df319
+      size: 328
+    outs:
+    - path: envs/2026-01-01/Manifest-v1.11.toml
+      hash: md5
+      md5: 729b8cb4ed166283a80c881bc45647a1
+      size: 142432
+    - path: envs/2026-01-01/repo-revs.json
+      hash: md5
+      md5: 1648886e82e3727ff84f511dfc2fd0b0
+      size: 469
+    - path: logs/benchmark-amip/2026-01-01.log
+      hash: md5
+      md5: 8716e9b77140dceba3f8bf2f20549dc8
+      size: 44987
+  benchmark-amip@2026-01-10:
+    cmd: calkit slurm batch --name benchmark-amip --environment clima --log-path
+      'logs/benchmark-amip/2026-01-10.log' --dep scripts/run.py --dep 
+      .calkit/env-locks/main/linux-64.txt --out 
+      envs/2026-01-10/Manifest-v1.11.toml --out envs/2026-01-10/repo-revs.json 
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-10
+    deps:
+    - path: .calkit/env-locks/main/linux-64.txt
+      hash: md5
+      md5: 1754a191da44126403fab3c104fbdaa6
+      size: 577
+    - path: scripts/run.py
+      hash: md5
+      md5: 4a1952c16ee3b27858cd0fba9b37accd
+      size: 6559
+    - path: scripts/run.sh
+      hash: md5
+      md5: be941b40ffd003e6c6e2352a8d4df319
+      size: 328
+    outs:
+    - path: envs/2026-01-10/Manifest-v1.11.toml
+      hash: md5
+      md5: 6e8718cb4de28edb4065f507911fc2e1
+      size: 142800
+    - path: envs/2026-01-10/repo-revs.json
+      hash: md5
+      md5: 193c659182609d6c17f1068a4a58e2b5
+      size: 469
+    - path: logs/benchmark-amip/2026-01-10.log
+      hash: md5
+      md5: ec777c018b4f88fb1236bcfb5225819a
+      size: 45251
+  benchmark-amip@2025-11-01:
+    cmd: calkit slurm batch --name benchmark-amip --environment clima --log-path
+      'logs/benchmark-amip/2025-11-01.log' --dep scripts/run.py --dep 
+      .calkit/env-locks/main/linux-64.txt --out 
+      envs/2025-11-01/Manifest-v1.11.toml --out envs/2025-11-01/repo-revs.json 
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2025-11-01
+    deps:
+    - path: .calkit/env-locks/main/linux-64.txt
+      hash: md5
+      md5: 1754a191da44126403fab3c104fbdaa6
+      size: 577
+    - path: scripts/run.py
+      hash: md5
+      md5: 514f6b77b930c7382ca4a4cf86a4baaa
+      size: 6659
+    - path: scripts/run.sh
+      hash: md5
+      md5: be941b40ffd003e6c6e2352a8d4df319
+      size: 328
+    outs:
+    - path: envs/2025-11-01/Manifest-v1.11.toml
+      hash: md5
+      md5: 9626c31096c2bc0321e9070d45c7e61c
+      size: 129606
+    - path: envs/2025-11-01/repo-revs.json
+      hash: md5
+      md5: b20ec25d4096ed0169460286e0e3a942
+      size: 465
+    - path: logs/benchmark-amip/2025-11-01.log
+      hash: md5
+      md5: 69f979fa205490da9ab1520e74c7f0da
+      size: 48081

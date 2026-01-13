@@ -1,25 +1,38 @@
 stages:
-  run-2026-01-01:
-    cmd: calkit slurm batch --name run-2026-01-01 --environment clima 
-      --dep scripts/run.py --out envs/2026-01-01 -s --gpus=1 -s 
-      --time=120 -- scripts/run.sh 2026-01-01
+  benchmark-amip:
+    cmd: calkit slurm batch --name benchmark-amip --environment clima 
+      --log-path 'logs/benchmark-amip/${item.date}.log' --dep 
+      scripts/run.py --dep .calkit/env-locks/main/linux-64.txt --out 
+      envs/${item.date}/Manifest-v1.11.toml --out 
+      envs/${item.date}/repo-revs.json -s --gpus=1 -s --time=120 -- 
+      scripts/run.sh ${item.date}
     deps:
       - scripts/run.sh
       - scripts/run.py
+      - .calkit/env-locks/main/linux-64.txt
     outs:
-      - envs/2026-01-01:
+      - envs/${item.date}/Manifest-v1.11.toml:
           cache: false
           persist: true
-      - .calkit/slurm/logs/run-2026-01-01.out:
+      - envs/${item.date}/repo-revs.json:
           cache: false
           persist: true
-    desc: Automatically generated from the 'run-2026-01-01' stage in 
+      - logs/benchmark-amip/${item.date}.log:
+          cache: false
+          persist: true
+    matrix:
+      date:
+        - '2025-10-01'
+        - '2025-11-01'
+        - '2025-12-01'
+        - '2026-01-01'
+    desc: Automatically generated from the 'benchmark-amip' stage in 
       calkit.yaml. Changes made here will be overwritten.
   summarize:
     cmd: calkit xenv -n main --no-check -- python scripts/summarize.py
     deps:
       - scripts/summarize.py
-      - .calkit/slurm/logs
+      - logs
       - .calkit/env-locks/main
     outs:
       - results/summary.csv:

@@ -16,26 +16,40 @@ environments:
 
 pipeline:
   stages:
-    run-2026-01-01:
+    benchmark-amip:
       kind: sbatch
       script_path: scripts/run.sh
       environment: clima
       sbatch_options:
         - --gpus=1
         - --time=120
+      iterate_over:
+        - arg_name: date
+          values:
+            - "2025-10-01"
+            - "2025-11-01"
+            - "2025-12-01"
+            - "2026-01-01"
       args:
-        - "2026-01-01"
+        - "{date}"
+      log_path: logs/benchmark-amip/{date}.log
       inputs:
         - scripts/run.py
+        - .calkit/env-locks/main/linux-64.txt
+        - repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+        - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+        - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       outputs:
-        - path: envs/2026-01-01
+        - path: envs/{date}/Manifest-v1.11.toml
+          storage: git
+        - path: envs/{date}/repo-revs.json
           storage: git
     summarize:
       kind: python-script
       environment: main
       script_path: scripts/summarize.py
       inputs:
-        - .calkit/slurm/logs
+        - logs
       outputs:
         - path: results/summary.csv
           storage: git
