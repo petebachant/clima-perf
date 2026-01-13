@@ -3,9 +3,31 @@ name: clima-perf
 title: CliMA performance
 description: Tracking CliMA performance over time.
 git_repo_url: https://github.com/petebachant/clima-perf
+
 environments:
   main:
     path: envs/main.tex
     kind: uv-venv
     prefix: .calkit/venvs/main/.venv
     python: "3.14"
+  clima:
+    kind: slurm
+    host: clima.gps.caltech.edu
+
+pipeline:
+  stages:
+    run-2026-01-01:
+      kind: sbatch
+      script_path: scripts/run.sh
+      environment: _system
+      args:
+        - --date
+        - "2026-01-01"
+      inputs:
+        - scripts/run.py
+    summarize:
+      kind: python-script
+      environment: main
+      script_path: scripts/summarize.py
+      inputs:
+        - .calkit/slurm/logs
