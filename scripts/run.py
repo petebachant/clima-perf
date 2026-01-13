@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import shutil
 import subprocess
 from datetime import datetime, timedelta
 
@@ -16,6 +15,7 @@ def get_last_commit_at_date(repo_path: str, date: str) -> str | None:
     If no commits were made, return None.
     """
     repo = git.Repo(repo_path)
+    repo.git.fetch()
     commits = repo.iter_commits(
         since=datetime.fromisoformat(date) - timedelta(days=1),
         until=datetime.fromisoformat(date),
@@ -62,6 +62,14 @@ def run_julia_command(env_dir: str, command: str):
     subprocess.run(cmd, check=True)
 
 
+def copy_file_at_rev(repo_path: str, rev: str, src_path: str, dest_path: str):
+    """Get the contents of a file at a specific Git revision."""
+    repo = git.Repo(repo_path)
+    file_contents = repo.git.show(f"{rev}:{src_path}")
+    with open(dest_path, "w") as f:
+        f.write(file_contents)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run a CliMA performance benchmark for a given date."
@@ -85,12 +93,16 @@ def main():
         print(f"  {repo}: {rev} (static)")
     # Create Julia environment based on ClimaCoupler's ClimaEarth environment
     env_dir = os.path.join("envs", date)
-    src_project = os.path.join(
-        "repos", "ClimaCoupler.jl", "experiments", "ClimaEarth", "Project.toml"
-    )
     os.makedirs(env_dir, exist_ok=True)
     dst_project = os.path.join(env_dir, "Project.toml")
-    shutil.copy(src_project, dst_project)
+    copy_file_at_rev(
+        repo_path=os.path.join("repos", "ClimaCoupler.jl"),
+        rev=repo_revs["updated"].get(
+            "ClimaCoupler.jl", repo_revs["static"].get("ClimaCoupler.jl")
+        ),
+        src_path=os.path.join("experiments", "ClimaEarth", "Project.toml"),
+        dest_path=dst_project,
+    )
     # Instantiate the environment
     run_julia_command(env_dir, "using Pkg; Pkg.instantiate();")
     # Add the rev for each package to the environment
