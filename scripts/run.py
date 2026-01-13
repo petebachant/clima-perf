@@ -7,6 +7,15 @@ from datetime import datetime, timedelta
 
 import git
 
+REPOS = [
+    "ClimaCoupler.jl",
+    "ClimaAtmos.jl",
+    "ClimaCore.jl",
+    "ClimaTimesteppers.jl",
+    "Thermodynamics.jl",
+    "RRTMGP.jl",
+]
+
 
 def get_last_commit_at_date(repo_path: str, date: str) -> str | None:
     """Return the commit hash of the last commit made to a repository at a
@@ -41,10 +50,9 @@ def get_repo_revs_at_date(date: str) -> dict:
     """Return a dictionary mapping repository names to their respective commit
     hashes at a specific date.
     """
-    repos = os.listdir("./repos")
     commits = {}
     latest_main = {}
-    for repo in repos:
+    for repo in REPOS:
         repo_path = os.path.join("./repos", repo)
         rev = get_last_commit_at_date(repo_path, date)
         if rev is not None:
@@ -56,10 +64,10 @@ def get_repo_revs_at_date(date: str) -> dict:
     return {"updated": commits, "static": latest_main}
 
 
-def run_julia_command(env_dir: str, command: str):
+def run_julia_command(env_dir: str, command: str, check: bool = True):
     """Run a Julia command in a specific environment."""
     cmd = ["julia", "--project=" + env_dir, "-e", command]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=check)
 
 
 def copy_file_at_rev(repo_path: str, rev: str, src_path: str, dest_path: str):
@@ -80,6 +88,12 @@ def main():
         required=True,
         help="The date (YYYY-MM-DD) for which to run the benchmark.",
     )
+    parser.add_argument(
+        "--env-only",
+        action="store_true",
+        default=False,
+        help="Only set up the environment.",
+    )
     args = parser.parse_args()
     date = args.date
     # Normalize date to YYYY-MM-DD format
@@ -95,27 +109,50 @@ def main():
     env_dir = os.path.join("envs", date)
     os.makedirs(env_dir, exist_ok=True)
     dst_project = os.path.join(env_dir, "Project.toml")
+    coupler_rev = repo_revs["updated"].get(
+        "ClimaCoupler.jl", repo_revs["static"].get("ClimaCoupler.jl")
+    )
+    print("Fetching ClimaEarth env at rev:", coupler_rev)
     copy_file_at_rev(
         repo_path=os.path.join("repos", "ClimaCoupler.jl"),
-        rev=repo_revs["updated"].get(
-            "ClimaCoupler.jl", repo_revs["static"].get("ClimaCoupler.jl")
-        ),
+        rev=coupler_rev,
         src_path=os.path.join("experiments", "ClimaEarth", "Project.toml"),
         dest_path=dst_project,
     )
+    copy_file_at_rev(
+        repo_path=os.path.join("repos", "ClimaCoupler.jl"),
+        rev=coupler_rev,
+        src_path=os.path.join(
+            "experiments", "ClimaEarth", "Manifest-v1.11.toml"
+        ),
+        dest_path=os.path.join(env_dir, "Manifest-v1.11.toml"),
+    )
+    # Remove ClimaCoupler dev from the manifest to avoid conflicts
+    print("Removing ClimaCoupler dev from environment")
+    run_julia_command(env_dir, 'using Pkg; Pkg.rm("ClimaCoupler");')
     # Instantiate the environment
-    run_julia_command(env_dir, "using Pkg; Pkg.instantiate();")
+    try:
+        run_julia_command(env_dir, "using Pkg; Pkg.instantiate();", check=True)
+    except subprocess.CalledProcessError:
+        print("Failed to instantiate environment; exiting")
+        return
     # Add the rev for each package to the environment
     julia_cmd_template = (
-        'using Pkg; Pkg.add(Pkg.PackageSpec(;name="{pkg_name}", rev="{rev}"))'
+        'using Pkg; Pkg.add(Pkg.PackageSpec(;url="{pkg_url}", rev="{rev}"))'
     )
-    for repo, rev in repo_revs["updated"].items():
-        pkg_name = repo.replace(".jl", "")
-        julia_cmd = julia_cmd_template.format(pkg_name=pkg_name, rev=rev)
-        run_julia_command(env_dir, julia_cmd)
-    for repo, rev in repo_revs["static"].items():
-        pkg_name = repo.replace(".jl", "")
-        julia_cmd = julia_cmd_template.format(pkg_name=pkg_name, rev=rev)
+    for repo in REPOS:
+        if (
+            repo not in repo_revs["updated"]
+            and repo not in repo_revs["static"]
+        ):
+            raise ValueError(f"No revision found for repository {repo}")
+        repo_url = f"https://github.com/CliMA/{repo}"
+        if repo in repo_revs["updated"]:
+            rev = repo_revs["updated"][repo]
+        else:
+            rev = repo_revs["static"][repo]
+        julia_cmd = julia_cmd_template.format(pkg_url=repo_url, rev=rev)
+        print("Adding package:", repo, "at rev:", rev)
         run_julia_command(env_dir, julia_cmd)
     # Resolve the environment
     run_julia_command(env_dir, "using Pkg; Pkg.resolve();")
@@ -124,6 +161,9 @@ def main():
     # Precompile and print the env status
     run_julia_command(env_dir, "using Pkg; Pkg.precompile();")
     run_julia_command(env_dir, "using Pkg; Pkg.status();")
+    if args.env_only:
+        print("Environment setup complete; exiting")
+        return
     # Now run
     benchmark_config_path = "./repos/ClimaCoupler.jl/config/benchmark_configs"
     cmd = (
