@@ -112,6 +112,16 @@ def main():
     # Precompile and print the env status
     run_julia_command(env_dir, "using Pkg; Pkg.precompile();")
     run_julia_command(env_dir, "using Pkg; Pkg.status();")
+    # Now run
+    benchmark_config_path = "./repos/ClimaCoupler.jl/config/benchmark_configs"
+    cmd = (
+        f"julia --threads=3 --color=yes --project={env_dir} "
+        "repos/ClimaCoupler.jl/experiments/ClimaEarth/run_amip.jl "
+        "--config_file "
+        f"{benchmark_config_path}/amip_progedmf_1m_land_he16.yml "
+        "--job_id gpu_amip_progedmf_1M_land_he16"
+    )
+    subprocess.run(cmd, shell=True, check=True)
 
 
 if __name__ == "__main__":
