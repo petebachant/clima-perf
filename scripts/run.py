@@ -203,33 +203,6 @@ def main():
     ]
     subprocess.run(cmd, check=True)
     log("Benchmark complete")
-    # Move artifacts into results directory
-    output_dirs = ["output", "experiments/ClimaEarth/output"]
-    artifact_dirs = [
-        os.path.join(
-            outdir,
-            "gpu_amip_progedmf_1M_land_he16",
-            "artifacts",
-        )
-        for outdir in output_dirs
-    ]
-    # Verify that only one artifacts directory exists
-    artifacts_src = None
-    for artifact_dir in artifact_dirs:
-        if os.path.exists(artifact_dir):
-            if artifacts_src is not None:
-                log("Warning: Multiple artifacts directories found")
-                return
-            artifacts_src = artifact_dir
-    if artifacts_src is None:
-        log("Warning: No artifacts directory found")
-        return
-    artifacts_dest = os.path.join(run_dir, "artifacts")
-    log(f"Moving artifacts from {artifacts_src} to run directory")
-    shutil.move(artifacts_src, artifacts_dest)
-    # Delete temporary copy of ClimaCoupler
-    log("Removing temporary ClimaCoupler copy")
-    shutil.rmtree(os.path.join(run_dir, "ClimaCoupler.jl"))
 
 
 if __name__ == "__main__":
