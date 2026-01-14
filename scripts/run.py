@@ -19,33 +19,29 @@ REPOS = [
 ]
 
 
-def get_last_commit_at_date(repo_path: str, date: str) -> str | None:
-    """Return the commit hash of the last commit made to a repository at a
-    specific date.
+def get_latest_commit_at_date(repo_path: str, date: str) -> dict | None:
+    """Return the latest commit hash of the repository as of a specific date.
 
     If no commits were made, return None.
+
+    Note that we include commits made on the given date by adding one day to
+    the ``until`` parameter.
     """
+    # Don't allow running for the current day, since that can cause
+    # irreproducible results
+    if datetime.fromisoformat(date).date() >= datetime.now().date():
+        raise ValueError("Date must be in the past")
     repo = git.Repo(repo_path)
-    repo.git.fetch()
+    repo.remotes.origin.fetch()
     commits = repo.iter_commits(
-        since=datetime.fromisoformat(date) - timedelta(days=1),
-        until=datetime.fromisoformat(date),
+        "origin/main",
+        until=datetime.fromisoformat(date) + timedelta(days=1),
     )
     for commit in commits:
-        return commit.hexsha
-
-
-def get_latest_commit_at_date(repo_path: str, date: str) -> str | None:
-    """Return the latest commit hash of the repository at a specific date.
-
-    If no commits were made, return None.
-    """
-    repo = git.Repo(repo_path)
-    commits = repo.iter_commits(
-        until=datetime.fromisoformat(date),
-    )
-    for commit in commits:
-        return commit.hexsha
+        return {
+            "rev": commit.hexsha,
+            "timestamp": commit.committed_datetime.isoformat(),
+        }
 
 
 def get_repo_revs_at_date(date: str) -> dict:
@@ -53,17 +49,15 @@ def get_repo_revs_at_date(date: str) -> dict:
     hashes at a specific date.
     """
     commits = {}
-    latest_main = {}
     for repo in REPOS:
         repo_path = os.path.join("./repos", repo)
-        rev = get_last_commit_at_date(repo_path, date)
-        if rev is not None:
-            commits[repo] = rev
-        else:
-            latest_rev = get_latest_commit_at_date(repo_path, date)
-            if latest_rev is not None:
-                latest_main[repo] = latest_rev
-    return {"changed": commits, "unchanged": latest_main}
+        rev = get_latest_commit_at_date(repo_path, date)
+        if rev is None:
+            raise ValueError(
+                f"No commits found for repository {repo} at date {date}"
+            )
+        commits[repo] = rev
+    return commits
 
 
 def run_julia_command(env_dir: str, command: str, check: bool = True):
@@ -115,24 +109,27 @@ def main():
     date = datetime.fromisoformat(date).strftime("%Y-%m-%d")
     repo_revs = get_repo_revs_at_date(date)
     log(f"Running benchmark for date: {date}")
-    log("Repository revisions:")
-    for repo, rev in repo_revs["changed"].items():
-        log(f"  {repo}: {rev} (changed)")
-    for repo, rev in repo_revs["unchanged"].items():
-        log(f"  {repo}: {rev} (unchanged)")
+    log("Git revs:")
+    for repo, commit in repo_revs.items():
+        rev = commit["rev"]
+        log(f"  {repo}: {rev}")
     # Create Julia environment based on ClimaCoupler's ClimaEarth environment
-    run_dir = os.path.join("envs", date)
+    run_dir = os.path.join("runs", "amip", date)
+    os.makedirs(run_dir, exist_ok=True)
     env_dir = os.path.join(
         run_dir, "ClimaCoupler.jl", "experiments", "ClimaEarth"
     )
-    coupler_rev = repo_revs["changed"].get(
-        "ClimaCoupler.jl", repo_revs["unchanged"].get("ClimaCoupler.jl")
-    )
+    coupler_rev = repo_revs["ClimaCoupler.jl"]["rev"]
     log("Copying ClimaCoupler at rev:", coupler_rev)
+    # Delete ClimaCoupler directory if it already exists
+    coupler_dir = os.path.join(run_dir, "ClimaCoupler.jl")
+    if os.path.exists(coupler_dir):
+        log("Removing existing ClimaCoupler directory:", coupler_dir)
+        shutil.rmtree(coupler_dir)
     copy_repo_at_rev(
         repo_path="./repos/ClimaCoupler.jl",
         rev=coupler_rev,
-        dest_path=os.path.join(run_dir, "ClimaCoupler.jl"),
+        dest_path=coupler_dir,
     )
     # Instantiate the environment
     log("Instantiating ClimaEarth environment at:", env_dir)
@@ -144,16 +141,10 @@ def main():
     for repo in REPOS:
         if repo == "ClimaCoupler.jl":
             continue
-        if (
-            repo not in repo_revs["changed"]
-            and repo not in repo_revs["unchanged"]
-        ):
+        if repo not in repo_revs:
             raise ValueError(f"No revision found for repository {repo}")
         repo_url = f"https://github.com/CliMA/{repo}"
-        if repo in repo_revs["changed"]:
-            rev = repo_revs["changed"][repo]
-        else:
-            rev = repo_revs["unchanged"][repo]
+        rev = repo_revs[repo]["rev"]
         julia_cmd = julia_cmd_template.format(pkg_url=repo_url, rev=rev)
         log("Adding package:", repo, "at rev:", rev)
         run_julia_command(env_dir, julia_cmd)
@@ -187,10 +178,10 @@ def main():
     config_src_dir = "./repos/ClimaCoupler.jl/config"
     config_dest_dir = os.path.join(run_dir, "ClimaCoupler.jl", "config")
     for config in configs:
-        shutil.copy2(
-            os.path.join(config_src_dir, config),
-            os.path.join(config_dest_dir, os.path.basename(config)),
-        )
+        src = os.path.join(config_src_dir, config)
+        dest = os.path.join(config_dest_dir, config)
+        log(f"  {src} -> {dest}")
+        shutil.copy2(src, dest)
     # Copy in the TOML file
     log("Copying ClimaCoupler TOML file")
     toml_src = "./repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml"
@@ -212,6 +203,33 @@ def main():
     ]
     subprocess.run(cmd, check=True)
     log("Benchmark complete")
+    # Move artifacts into results directory
+    output_dirs = ["output", "experiments/ClimaEarth/output"]
+    artifact_dirs = [
+        os.path.join(
+            outdir,
+            "gpu_amip_progedmf_1M_land_he16",
+            "artifacts",
+        )
+        for outdir in output_dirs
+    ]
+    # Verify that only one artifacts directory exists
+    artifacts_src = None
+    for artifact_dir in artifact_dirs:
+        if os.path.exists(artifact_dir):
+            if artifacts_src is not None:
+                log("Warning: Multiple artifacts directories found")
+                return
+            artifacts_src = artifact_dir
+    if artifacts_src is None:
+        log("Warning: No artifacts directory found")
+        return
+    artifacts_dest = os.path.join(run_dir, "artifacts")
+    log(f"Moving artifacts from {artifacts_src} to run directory")
+    shutil.move(artifacts_src, artifacts_dest)
+    # Delete temporary copy of ClimaCoupler
+    log("Removing temporary ClimaCoupler copy")
+    shutil.rmtree(os.path.join(run_dir, "ClimaCoupler.jl"))
 
 
 if __name__ == "__main__":
