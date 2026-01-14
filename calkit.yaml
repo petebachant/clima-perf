@@ -55,12 +55,32 @@ pipeline:
           storage: git
         - path: envs/{date}/repo-revs.json
           storage: git
-    summarize:
-      kind: python-script
-      environment: main
-      script_path: scripts/summarize.py
+    analyze:
+      kind: jupyter-notebook
+      environment: analyze
+      notebook_path: notebooks/analyze.ipynb
+      html_storage: git
+      executed_ipynb_storage: git
       inputs:
         - logs
       outputs:
-        - path: results/summary.csv
+        - path: results/amip.csv
           storage: git
+        - path: figures/amip-sypd.png
+          storage: git
+        - path: figures/amip-sypd.json
+          storage: git
+
+figures:
+  - path: figures/amip-sypd.json
+    description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over time
+      normalized by the start of performance tracking.
+
+notebooks:
+  - path: notebooks/analyze.ipynb
+    title: Analysis
+    description: Analyze and plot the flagship AMIP benchmark (16 horiz. elem.)
+      SYPD over time.
+
+showcase:
+  - figure: figures/amip-sypd.json
