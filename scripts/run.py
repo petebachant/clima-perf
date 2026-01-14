@@ -63,12 +63,12 @@ def get_repo_revs_at_date(date: str) -> dict:
             latest_rev = get_latest_commit_at_date(repo_path, date)
             if latest_rev is not None:
                 latest_main[repo] = latest_rev
-    return {"updated": commits, "static": latest_main}
+    return {"changed": commits, "unchanged": latest_main}
 
 
 def run_julia_command(env_dir: str, command: str, check: bool = True):
     """Run a Julia command in a specific environment."""
-    cmd = ["julia", "--color=yes", "--project=" + env_dir, "-e", command]
+    cmd = ["julia", "--project=" + env_dir, "-e", command]
     subprocess.run(cmd, check=check)
 
 
@@ -116,17 +116,17 @@ def main():
     repo_revs = get_repo_revs_at_date(date)
     log(f"Running benchmark for date: {date}")
     log("Repository revisions:")
-    for repo, rev in repo_revs["updated"].items():
-        log(f"  {repo}: {rev} (updated)")
-    for repo, rev in repo_revs["static"].items():
-        log(f"  {repo}: {rev} (static)")
+    for repo, rev in repo_revs["changed"].items():
+        log(f"  {repo}: {rev} (changed)")
+    for repo, rev in repo_revs["unchanged"].items():
+        log(f"  {repo}: {rev} (unchanged)")
     # Create Julia environment based on ClimaCoupler's ClimaEarth environment
     run_dir = os.path.join("envs", date)
     env_dir = os.path.join(
         run_dir, "ClimaCoupler.jl", "experiments", "ClimaEarth"
     )
-    coupler_rev = repo_revs["updated"].get(
-        "ClimaCoupler.jl", repo_revs["static"].get("ClimaCoupler.jl")
+    coupler_rev = repo_revs["changed"].get(
+        "ClimaCoupler.jl", repo_revs["unchanged"].get("ClimaCoupler.jl")
     )
     log("Copying ClimaCoupler at rev:", coupler_rev)
     copy_repo_at_rev(
@@ -145,15 +145,15 @@ def main():
         if repo == "ClimaCoupler.jl":
             continue
         if (
-            repo not in repo_revs["updated"]
-            and repo not in repo_revs["static"]
+            repo not in repo_revs["changed"]
+            and repo not in repo_revs["unchanged"]
         ):
             raise ValueError(f"No revision found for repository {repo}")
         repo_url = f"https://github.com/CliMA/{repo}"
-        if repo in repo_revs["updated"]:
-            rev = repo_revs["updated"][repo]
+        if repo in repo_revs["changed"]:
+            rev = repo_revs["changed"][repo]
         else:
-            rev = repo_revs["static"][repo]
+            rev = repo_revs["unchanged"][repo]
         julia_cmd = julia_cmd_template.format(pkg_url=repo_url, rev=rev)
         log("Adding package:", repo, "at rev:", rev)
         run_julia_command(env_dir, julia_cmd)
@@ -203,7 +203,6 @@ def main():
     config_dir = f"{run_dir}/ClimaCoupler.jl/config"
     cmd = [
         "julia",
-        "--color=yes",
         f"--project={env_dir}",
         f"{run_dir}/ClimaCoupler.jl/experiments/ClimaEarth/run_amip.jl",
         "--config_file",
