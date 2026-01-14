@@ -26,18 +26,37 @@ stages:
   benchmark-amip@2026-01-01:
     cmd: calkit slurm batch --name benchmark-amip --environment clima --log-path
       'logs/benchmark-amip/2026-01-01.log' --dep scripts/run.py --dep 
-      .calkit/env-locks/main/linux-64.txt --out 
-      envs/2026-01-01/Manifest-v1.11.toml --out envs/2026-01-01/repo-revs.json 
-      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-01
+      .calkit/env-locks/main/linux-64.txt --dep 
+      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
+      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
+      --dep 
+      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out envs/2026-01-01/Manifest-v1.11.toml --out 
+      envs/2026-01-01/repo-revs.json -s --gpus=1 -s --time=120 -- scripts/run.sh
+      2026-01-01
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
+    - path: 
+        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      hash: md5
+      md5: 8743b95b52b4a72ef72b1135ad094afd
+      size: 1150
+    - path: 
+        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      hash: md5
+      md5: 577bef53fd5c8e8eb2897c6d236dec53
+      size: 461
+    - path: repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      hash: md5
+      md5: a5dec42fc923c74e00871b5389deb2dd
+      size: 637
     - path: scripts/run.py
       hash: md5
-      md5: 2db647dceb3f768fe61e32e4aff7dfcc
-      size: 6572
+      md5: 2bed3078f0cc74f40f99ef6a7476f43b
+      size: 7547
     - path: scripts/run.sh
       hash: md5
       md5: be941b40ffd003e6c6e2352a8d4df319
@@ -53,8 +72,8 @@ stages:
       size: 469
     - path: logs/benchmark-amip/2026-01-01.log
       hash: md5
-      md5: 8716e9b77140dceba3f8bf2f20549dc8
-      size: 44987
+      md5: 0fdd09dbc4f6a56fa8bd7fab77a44d45
+      size: 40956
   benchmark-amip@2026-01-10:
     cmd: calkit slurm batch --name benchmark-amip --environment clima --log-path
       'logs/benchmark-amip/2026-01-10.log' --dep scripts/run.py --dep 
