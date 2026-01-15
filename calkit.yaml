@@ -36,19 +36,21 @@ pipeline:
       iterate_over:
         - arg_name: date
           values:
-            - "2025-10-01"
+            # - "2025-10-15" # Fails
             - "2025-11-01"
+            - "2025-11-03"
+            # - "2025-11-07" # Fails
             - "2025-11-14"
             - "2025-12-01"
             - "2025-12-06"
             - "2025-12-20"
             - "2025-12-27"
             - "2026-01-01"
-            - "2026-01-10"
-            - "2026-01-14"
+            # - "2026-01-06" # Fails
+            - "2026-01-13"
       args:
         - "{date}"
-      log_path: logs/benchmark-amip/{date}.log
+      log_path: runs/amip/{date}/output.log
       inputs:
         - scripts/run.py
         - .calkit/env-locks/main/linux-64.txt
@@ -56,9 +58,9 @@ pipeline:
         - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
         - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       outputs:
-        - path: envs/{date}/Manifest-v1.11.toml
+        - path: runs/amip/{date}/Manifest-v1.11.toml
           storage: git
-        - path: envs/{date}/repo-revs.json
+        - path: runs/amip/{date}/repo-revs.json
           storage: git
     analyze:
       kind: jupyter-notebook
@@ -67,7 +69,7 @@ pipeline:
       html_storage: git
       executed_ipynb_storage: git
       inputs:
-        - logs
+        - runs/amip
       outputs:
         - path: results/amip.csv
           storage: git
