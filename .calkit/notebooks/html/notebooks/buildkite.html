@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>analyze</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>buildkite</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7510,30 +7510,16 @@ a.anchor-link {
 </style>
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<main><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">cd</span> ..
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>/Users/pete/calkit/clima-perf
-</pre>
-</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Get-jobs-from-the-Buildkite-API">Get jobs from the Buildkite API<a class="anchor-link" href="#Get-jobs-from-the-Buildkite-API">¶</a></h1><p>Ensure the <code>BUILDKITE_PAT</code> environmental variable is set before running this notebook.
+It can be stored in the <code>.env</code> file at the top of the repo, which is kept out of
+version control.</p>
 </div>
 </div>
 </div>
@@ -7542,95 +7528,14 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
-
-<span class="n">logs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"runs/amip/*/output.log"</span><span class="p">)</span>
-
-<span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">sypds</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">run_locs</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
-    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
-    <span class="n">run_locs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"calkit"</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">"n_steps_completed = 40"</span> <span class="ow">in</span> <span class="n">line</span>
-            <span class="ow">or</span> <span class="s2">"n_steps_completed = 41"</span> <span class="ow">in</span> <span class="n">line</span>
-        <span class="p">):</span>
-            <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">found_step_40</span> <span class="ow">and</span> <span class="s2">"estimated_sypd = "</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">sypd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"estimated_sypd = "</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">break</span>
-    <span class="n">sypds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sypd</span><span class="p">)</span>
-
-<span class="c1"># Now read any fetched buildkite logs</span>
-<span class="n">bk_jobs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"buildkite/*.json"</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">job_fpath</span> <span class="ow">in</span> <span class="n">bk_jobs</span><span class="p">:</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">job_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">])</span>
-    <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
-    <span class="n">run_locs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"buildkite"</span><span class="p">)</span>
-    <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">job</span><span class="p">[</span><span class="s2">"raw_log_txt"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">"n_steps_completed = 40"</span> <span class="ow">in</span> <span class="n">line</span>
-            <span class="ow">or</span> <span class="s2">"n_steps_completed = 41"</span> <span class="ow">in</span> <span class="n">line</span>
-        <span class="p">):</span>
-            <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">found_step_40</span> <span class="ow">and</span> <span class="s2">"estimated_sypd = "</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">sypd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"estimated_sypd = "</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">break</span>
-    <span class="n">sypds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sypd</span><span class="p">)</span>
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"date"</span><span class="p">:</span> <span class="n">dates</span><span class="p">,</span> <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">sypds</span><span class="p">,</span> <span class="s2">"run_from"</span><span class="p">:</span> <span class="n">run_locs</span><span class="p">})</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span>
-
-<span class="c1"># Add normalized SYPD column; normalize by the first non-null SYPD value</span>
-<span class="n">first_sypd</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">((</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"sypd"</span><span class="p">)</span> <span class="o">/</span> <span class="n">first_sypd</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"sypd_norm"</span><span class="p">))</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">df</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">"results/amip.csv"</span><span class="p">)</span>
-
-<span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">()</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">"date"</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">"sypd_norm"</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"Flagship AMIP benchmark (16 horiz. elem.)"</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="s2">"plotly"</span><span class="p">,</span>
-<span class="p">)</span>  <span class="c1"># type: ignore</span>
-
-<span class="c1"># Use lines and markers</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">yaxis_title</span><span class="o">=</span><span class="s2">"Normalized SYPD"</span><span class="p">,</span> <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">"Date"</span><span class="p">)</span>
-
-<span class="c1"># Save as PNG and JSON</span>
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">write_image</span><span class="p">(</span><span class="s2">"figures/amip-sypd.png"</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="s2">"figures/amip-sypd.json"</span><span class="p">)</span>
-<span class="n">fig</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="o">==</span> <span class="s2">"notebooks"</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Moving to repo root"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7643,29 +7548,187 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>shape: (14, 4)
-┌─────────────────────────┬───────┬───────────┬───────────┐
-│ date                    ┆ sypd  ┆ run_from  ┆ sypd_norm │
-│ ---                     ┆ ---   ┆ ---       ┆ ---       │
-│ datetime[μs]            ┆ f64   ┆ str       ┆ f64       │
-╞═════════════════════════╪═══════╪═══════════╪═══════════╡
-│ 2025-10-15 00:00:00     ┆ null  ┆ calkit    ┆ null      │
-│ 2025-11-01 00:00:00     ┆ 0.059 ┆ calkit    ┆ 1.0       │
-│ 2025-11-03 00:00:00     ┆ 0.048 ┆ calkit    ┆ 0.813559  │
-│ 2025-11-07 00:00:00     ┆ null  ┆ calkit    ┆ null      │
-│ 2025-11-14 00:00:00     ┆ null  ┆ calkit    ┆ null      │
-│ …                       ┆ …     ┆ …         ┆ …         │
-│ 2026-01-01 00:00:00     ┆ null  ┆ calkit    ┆ null      │
-│ 2026-01-06 00:00:00     ┆ null  ┆ calkit    ┆ null      │
-│ 2026-01-13 00:00:00     ┆ 0.079 ┆ calkit    ┆ 1.338983  │
-│ 2026-01-14 02:08:04.227 ┆ 0.079 ┆ buildkite ┆ 1.338983  │
-│ 2026-01-15 02:01:10.145 ┆ 0.079 ┆ buildkite ┆ 1.338983  │
-└─────────────────────────┴───────┴───────────┴───────────┘
+<pre>Moving to repo root
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">dotenv</span>
+
+<span class="n">dotenv</span><span class="o">.</span><span class="n">load_dotenv</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>True</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"BUILDKITE_PAT"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">token</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No Buildkite token found"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="n">base_url</span> <span class="o">=</span> <span class="s2">"https://api.buildkite.com/v2"</span>
+
+<span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Authorization"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">"</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8763c73c-61ef-45a8-8da3-17be9cfd42ea">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_jobs</span><span class="p">(</span><span class="n">finished_from</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Get all flagship AMIP jobs since ``created_from``."""</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">builds</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">base_url</span> <span class="o">+</span> <span class="s2">"/organizations/clima/pipelines/climacoupler-coarse-nightly-amip/builds"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">h</span><span class="p">,</span>
+        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"finished_from"</span><span class="p">:</span> <span class="n">finished_from</span><span class="p">},</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">builds</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">b</span><span class="p">[</span><span class="s2">"jobs"</span><span class="p">]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+            <span class="k">if</span> <span class="s2">"flagship amip"</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">"16 helem"</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="n">job</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"build_id"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+                    <span class="s2">"build_state"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">),</span>
+                    <span class="s2">"build_created_at"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">),</span>
+                    <span class="s2">"build_finished_at"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"finished_at"</span><span class="p">),</span>
+                    <span class="s2">"commit"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commit"</span><span class="p">),</span>
+                    <span class="s2">"branch"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"branch"</span><span class="p">),</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"command"</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">),</span>
+                    <span class="s2">"state"</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">),</span>
+                    <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">),</span>
+                    <span class="s2">"finished_at"</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"finished_at"</span><span class="p">),</span>
+                    <span class="s2">"id"</span><span class="p">:</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span>
+                <span class="p">}</span>
+                <span class="n">raw_log_url</span> <span class="o">=</span> <span class="n">j</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"raw_log_url"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">raw_log_url</span><span class="p">:</span>
+                    <span class="n">log_resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">raw_log_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">h</span><span class="p">)</span>
+                    <span class="n">job</span><span class="p">[</span><span class="s2">"raw_log_txt"</span><span class="p">]</span> <span class="o">=</span> <span class="n">log_resp</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jobs</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dcc61b58-5979-4b7b-90da-9ec0f565f82c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="c1"># Let's see what job's we've already fetched and pick up</span>
+<span class="c1"># from there</span>
+<span class="n">bk_dir</span> <span class="o">=</span> <span class="s2">"buildkite"</span>
+<span class="n">min_finished_from</span> <span class="o">=</span> <span class="s2">"2026-01-14"</span>  <span class="c1"># First ever successful build</span>
+
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="o">==</span> <span class="s2">"notebooks"</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Moving to repo root"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">".."</span><span class="p">)</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">bk_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Jobs in the buildkite folder are JSON files named by the Unix timestamp</span>
+<span class="c1"># their build finished, so we know the last job's build we were able to fetch,</span>
+<span class="c1"># and can use that for the remaining data</span>
+<span class="n">latest_build_finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">min_finished_from</span><span class="p">)</span>
+<span class="n">build_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span> <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">bk_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">fname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".json"</span><span class="p">)]</span>
+<span class="k">if</span> <span class="n">build_files</span><span class="p">:</span>
+    <span class="n">latest_unix_ts</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">build_files</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span><span class="s2">".json"</span><span class="p">))</span>
+    <span class="n">latest_build_finished</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">latest_unix_ts</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fetching jobs from builds finished at </span><span class="si">{</span><span class="n">latest_build_finished</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">jobs</span> <span class="o">=</span> <span class="n">get_jobs</span><span class="p">(</span><span class="n">finished_from</span><span class="o">=</span><span class="n">latest_build_finished</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fetched </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span><span class="si">}</span><span class="s2"> jobs"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+    <span class="n">unix_ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"build_finished_at"</span><span class="p">])</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+    <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bk_dir</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">unix_ts</span><span class="p">)</span> <span class="o">+</span> <span class="s2">".json"</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Fetching jobs from builds finished at 2026-01-15 03:53:35.488000
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Fetched 1 jobs
+</pre>
+</div>
 </div>
 </div>
 </div>

@@ -62,6 +62,17 @@ pipeline:
           storage: git
         - path: runs/amip/{date}/repo-revs.json
           storage: git
+    fetch-buildkite:
+      kind: jupyter-notebook
+      environment: bk
+      notebook_path: notebooks/buildkite.ipynb
+      always_run: true
+      html_storage: git
+      executed_ipynb_storage: git
+      outputs:
+        - path: buildkite
+          delete_before_run: false
+          storage: git
     analyze:
       kind: jupyter-notebook
       environment: analyze
@@ -70,6 +81,7 @@ pipeline:
       executed_ipynb_storage: git
       inputs:
         - runs/amip
+        - buildkite
       outputs:
         - path: results/amip.csv
           storage: git
