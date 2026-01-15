@@ -2,15 +2,15 @@ stages:
   benchmark-amip:
     cmd: calkit slurm batch --name benchmark-amip@${item.date} 
       --environment clima --log-path 
-      'logs/benchmark-amip/${item.date}.log' --dep scripts/run.py 
-      --dep .calkit/env-locks/main/linux-64.txt --dep 
+      'runs/amip/${item.date}/output.log' --dep scripts/run.py --dep 
+      .calkit/env-locks/main/linux-64.txt --dep 
       repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
       repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       --dep 
       repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out envs/${item.date}/Manifest-v1.11.toml --out 
-      envs/${item.date}/repo-revs.json -s --gpus=1 -s --time=120 -- 
-      scripts/run.sh ${item.date}
+      --out runs/amip/${item.date}/Manifest-v1.11.toml --out 
+      runs/amip/${item.date}/repo-revs.json -s --gpus=1 -s --time=120 
+      -- scripts/run.sh ${item.date}
     deps:
       - scripts/run.sh
       - scripts/run.py
@@ -19,27 +19,29 @@ stages:
       - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
     outs:
-      - envs/${item.date}/Manifest-v1.11.toml:
+      - runs/amip/${item.date}/Manifest-v1.11.toml:
           cache: false
           persist: true
-      - envs/${item.date}/repo-revs.json:
+      - runs/amip/${item.date}/repo-revs.json:
           cache: false
           persist: true
-      - logs/benchmark-amip/${item.date}.log:
+      - runs/amip/${item.date}/output.log:
           cache: false
           persist: true
     matrix:
       date:
-        - '2025-10-01'
+        - '2025-10-15'
         - '2025-11-01'
+        - '2025-11-03'
+        - '2025-11-07'
         - '2025-11-14'
         - '2025-12-01'
         - '2025-12-06'
         - '2025-12-20'
         - '2025-12-27'
         - '2026-01-01'
-        - '2026-01-10'
-        - '2026-01-14'
+        - '2026-01-06'
+        - '2026-01-13'
     desc: Automatically generated from the 'benchmark-amip' stage in 
       calkit.yaml. Changes made here will be overwritten.
   analyze:
@@ -47,7 +49,7 @@ stages:
       python --to html "notebooks/analyze.ipynb"
     deps:
       - .calkit/notebooks/cleaned/notebooks/analyze.ipynb
-      - logs
+      - runs/amip
       - .calkit/env-locks/analyze
     outs:
       - results/amip.csv:
