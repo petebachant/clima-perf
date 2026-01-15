@@ -7548,6 +7548,7 @@ a.anchor-link {
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
@@ -7556,10 +7557,12 @@ a.anchor-link {
 
 <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">sypds</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">run_locs</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
     <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
     <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+    <span class="n">run_locs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"calkit"</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
     <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
@@ -7577,7 +7580,30 @@ a.anchor-link {
             <span class="k">break</span>
     <span class="n">sypds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sypd</span><span class="p">)</span>
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"date"</span><span class="p">:</span> <span class="n">dates</span><span class="p">,</span> <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">sypds</span><span class="p">})</span>
+<span class="c1"># Now read any fetched buildkite logs</span>
+<span class="n">bk_jobs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"buildkite/*.json"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">job_fpath</span> <span class="ow">in</span> <span class="n">bk_jobs</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">job_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">job</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">])</span>
+    <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+    <span class="n">run_locs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"buildkite"</span><span class="p">)</span>
+    <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">job</span><span class="p">[</span><span class="s2">"raw_log_txt"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">"n_steps_completed = 40"</span> <span class="ow">in</span> <span class="n">line</span>
+            <span class="ow">or</span> <span class="s2">"n_steps_completed = 41"</span> <span class="ow">in</span> <span class="n">line</span>
+        <span class="p">):</span>
+            <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">found_step_40</span> <span class="ow">and</span> <span class="s2">"estimated_sypd = "</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">sypd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"estimated_sypd = "</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">break</span>
+    <span class="n">sypds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sypd</span><span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"date"</span><span class="p">:</span> <span class="n">dates</span><span class="p">,</span> <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">sypds</span><span class="p">,</span> <span class="s2">"run_from"</span><span class="p">:</span> <span class="n">run_locs</span><span class="p">})</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span>
 
 <span class="c1"># Add normalized SYPD column; normalize by the first non-null SYPD value</span>
@@ -7617,21 +7643,24 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>shape: (8, 3)
-┌─────────────────────┬───────┬───────────┐
-│ date                ┆ sypd  ┆ sypd_norm │
-│ ---                 ┆ ---   ┆ ---       │
-│ datetime[μs]        ┆ f64   ┆ f64       │
-╞═════════════════════╪═══════╪═══════════╡
-│ 2025-11-01 00:00:00 ┆ 0.059 ┆ 1.0       │
-│ 2025-11-03 00:00:00 ┆ 0.048 ┆ 0.813559  │
-│ 2025-11-07 00:00:00 ┆ null  ┆ null      │
-│ 2025-12-06 00:00:00 ┆ 0.071 ┆ 1.20339   │
-│ 2025-12-20 00:00:00 ┆ 0.076 ┆ 1.288136  │
-│ 2025-12-27 00:00:00 ┆ 0.077 ┆ 1.305085  │
-│ 2026-01-06 00:00:00 ┆ null  ┆ null      │
-│ 2026-01-13 00:00:00 ┆ 0.078 ┆ 1.322034  │
-└─────────────────────┴───────┴───────────┘
+<pre>shape: (12, 4)
+┌─────────────────────┬───────┬──────────┬───────────┐
+│ date                ┆ sypd  ┆ run_from ┆ sypd_norm │
+│ ---                 ┆ ---   ┆ ---      ┆ ---       │
+│ datetime[μs]        ┆ f64   ┆ str      ┆ f64       │
+╞═════════════════════╪═══════╪══════════╪═══════════╡
+│ 2025-10-15 00:00:00 ┆ null  ┆ calkit   ┆ null      │
+│ 2025-11-01 00:00:00 ┆ 0.059 ┆ calkit   ┆ 1.0       │
+│ 2025-11-03 00:00:00 ┆ 0.048 ┆ calkit   ┆ 0.813559  │
+│ 2025-11-07 00:00:00 ┆ null  ┆ calkit   ┆ null      │
+│ 2025-11-14 00:00:00 ┆ null  ┆ calkit   ┆ null      │
+│ …                   ┆ …     ┆ …        ┆ …         │
+│ 2025-12-20 00:00:00 ┆ 0.077 ┆ calkit   ┆ 1.305085  │
+│ 2025-12-27 00:00:00 ┆ 0.077 ┆ calkit   ┆ 1.305085  │
+│ 2026-01-01 00:00:00 ┆ null  ┆ calkit   ┆ null      │
+│ 2026-01-06 00:00:00 ┆ null  ┆ calkit   ┆ null      │
+│ 2026-01-13 00:00:00 ┆ 0.079 ┆ calkit   ┆ 1.338983  │
+└─────────────────────┴───────┴──────────┴───────────┘
 </pre>
 </div>
 </div>
