@@ -7867,6 +7867,33 @@ a.anchor-link {
 
 <span class="k">def</span><span class="w"> </span><span class="nf">fetch_repo_history</span><span class="p">(</span><span class="n">repo_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
+        <span class="n">is_shallow</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">"git"</span><span class="p">,</span>
+                    <span class="s2">"-C"</span><span class="p">,</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span>
+                    <span class="s2">"rev-parse"</span><span class="p">,</span>
+                    <span class="s2">"--is-shallow-repository"</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="o">==</span> <span class="s2">"true"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_shallow</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">"git"</span><span class="p">,</span>
+                    <span class="s2">"-C"</span><span class="p">,</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span>
+                    <span class="s2">"fetch"</span><span class="p">,</span>
+                    <span class="s2">"--unshallow"</span><span class="p">,</span>
+                    <span class="s2">"origin"</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"--prune"</span><span class="p">],</span>
             <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -8147,8 +8174,8 @@ a.anchor-link {
 │ date       ┆ run_from  ┆ sypd  ┆ buildkite_ ┆ … ┆ ClimaTimes ┆ RRTMGP_di ┆ Thermodyn ┆ repos_cha │
 │ ---        ┆ ---       ┆ ---   ┆ commit     ┆   ┆ teppers_di ┆ ff_url    ┆ amics_dif ┆ nged      │
 │ datetime[μ ┆ str       ┆ f64   ┆ ---        ┆   ┆ ff_url     ┆ ---       ┆ f_url     ┆ ---       │
-│ s, UTC]    ┆           ┆       ┆ str        ┆   ┆ ---        ┆ null      ┆ ---       ┆ f64       │
-│            ┆           ┆       ┆            ┆   ┆ null       ┆           ┆ null      ┆           │
+│ s, UTC]    ┆           ┆       ┆ str        ┆   ┆ ---        ┆ str       ┆ ---       ┆ f64       │
+│            ┆           ┆       ┆            ┆   ┆ str        ┆           ┆ str       ┆           │
 ╞════════════╪═══════════╪═══════╪════════════╪═══╪════════════╪═══════════╪═══════════╪═══════════╡
 │ 2025-10-15 ┆ calkit    ┆ null  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
 │ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
@@ -8156,7 +8183,7 @@ a.anchor-link {
 │ 2025-11-01 ┆ calkit    ┆ 0.059 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
 │ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-02 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
+│ 2025-11-02 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
 │ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ 2025-11-03 ┆ calkit    ┆ 0.048 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
@@ -8166,10 +8193,10 @@ a.anchor-link {
 │ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ …          ┆ …         ┆ …     ┆ …          ┆ … ┆ …          ┆ …         ┆ …         ┆ …         │
-│ 2026-03-26 ┆ buildkite ┆ 0.124 ┆ e424dcd63a ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
-│ 02:01:09.5 ┆           ┆       ┆ f1bc641606 ┆   ┆            ┆           ┆           ┆           │
-│ 73 UTC     ┆           ┆       ┆ 812d652220 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
+│ 2026-03-26 ┆ buildkite ┆ 0.124 ┆ e424dcd63a ┆ … ┆ https://gi ┆ https://g ┆ https://g ┆ 6.0       │
+│ 02:01:09.5 ┆           ┆       ┆ f1bc641606 ┆   ┆ thub.com/C ┆ ithub.com ┆ ithub.com ┆           │
+│ 73 UTC     ┆           ┆       ┆ 812d652220 ┆   ┆ liMA/Clima ┆ /CliMA/RR ┆ /CliMA/Th ┆           │
+│            ┆           ┆       ┆ …          ┆   ┆ …          ┆ TMG…      ┆ erm…      ┆           │
 │ 2026-03-27 ┆ buildkite ┆ null  ┆ 1ad3b593b4 ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
 │ 02:01:11.1 ┆           ┆       ┆ 0d6dbf9cb7 ┆   ┆            ┆           ┆           ┆           │
 │ 93 UTC     ┆           ┆       ┆ df24ff4880 ┆   ┆            ┆           ┆           ┆           │
@@ -8182,10 +8209,10 @@ a.anchor-link {
 │ 02:01:11.1 ┆           ┆       ┆ 97a6fa343f ┆   ┆            ┆           ┆           ┆           │
 │ 35 UTC     ┆           ┆       ┆ 96e216a1f2 ┆   ┆            ┆           ┆           ┆           │
 │            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-04-03 ┆ buildkite ┆ 0.135 ┆ 6726c93a29 ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
-│ 02:01:11.5 ┆           ┆       ┆ df9a760d15 ┆   ┆            ┆           ┆           ┆           │
-│ 85 UTC     ┆           ┆       ┆ cb316be647 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
+│ 2026-04-03 ┆ buildkite ┆ 0.135 ┆ 6726c93a29 ┆ … ┆ https://gi ┆ null      ┆ https://g ┆ 5.0       │
+│ 02:01:11.5 ┆           ┆       ┆ df9a760d15 ┆   ┆ thub.com/C ┆           ┆ ithub.com ┆           │
+│ 85 UTC     ┆           ┆       ┆ cb316be647 ┆   ┆ liMA/Clima ┆           ┆ /CliMA/Th ┆           │
+│            ┆           ┆       ┆ …          ┆   ┆ …          ┆           ┆ erm…      ┆           │
 └────────────┴───────────┴───────┴────────────┴───┴────────────┴───────────┴───────────┴───────────┘
 </pre>
 </div>
