@@ -189,6 +189,11 @@ def main():
         run_dir, "ClimaCoupler.jl", "toml", "amip_progedmf_1m.toml"
     )
     shutil.copy2(toml_src, toml_dest)
+    # Set env var to use CUDA with ClimaComms
+    os.environ["CLIMACOMMS_DEVICE"] = "CUDA"
+    # Set environmental variable for julia to not use global packages for
+    # reproducibility
+    os.environ["JULIA_LOAD_PATH"] = "@:@stdlib"
     # Now run
     log("Starting benchmark")
     config_dir = f"{run_dir}/ClimaCoupler.jl/config"

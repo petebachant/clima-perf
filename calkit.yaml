@@ -23,16 +23,34 @@ environments:
   clima:
     kind: slurm
     host: clima.gps.caltech.edu
+    default_setup:
+      - module purge
+      - module load climacommon/2025_05_15
+    default_options:
+      - --gpus=1
+      - --time=120
 
 pipeline:
   stages:
     benchmark-amip:
-      kind: sbatch
-      script_path: scripts/run.sh
-      environment: clima
-      sbatch_options:
-        - --gpus=1
-        - --time=120
+      kind: python-script
+      environment: clima:main
+      scheduler:
+        log_path: runs/amip/{date}/output.log
+      script_path: scripts/run.py
+      args:
+        - --date="{date}"
+      inputs:
+        - repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+        - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+        - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      outputs:
+        - path: runs/amip/{date}/Manifest-v1.11.toml
+          storage: git
+          delete_before_run: true
+        - path: runs/amip/{date}/repo-revs.json
+          storage: git
+          delete_before_run: true
       iterate_over:
         - arg_name: date
           values:
@@ -50,20 +68,6 @@ pipeline:
             # - "2026-01-01" # Fails
             # - "2026-01-06" # Fails
             - "2026-01-13"
-      args:
-        - "{date}"
-      log_path: runs/amip/{date}/output.log
-      inputs:
-        - scripts/run.py
-        - .calkit/env-locks/main/linux-64.txt
-        - repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
-        - repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
-        - repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      outputs:
-        - path: runs/amip/{date}/Manifest-v1.11.toml
-          storage: git
-        - path: runs/amip/{date}/repo-revs.json
-          storage: git
     fetch-buildkite:
       kind: jupyter-notebook
       environment: bk
@@ -133,6 +137,6 @@ datasets:
     stage: fetch-buildkite
   - path: runs/amip
     title: Raw AMIP benchmark runs
-    description: Raw outputs (logs, manifests, repo revisions used)
-      from the flagship AMIP benchmark runs.
+    description: Raw outputs (logs, manifests, repo revisions used) from
+      the flagship AMIP benchmark runs.
     stage: benchmark-amip
