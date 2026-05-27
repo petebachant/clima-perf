@@ -7916,7 +7916,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>shape: (97, 18)
+<pre>shape: (98, 18)
 ┌────────────┬───────────┬───────┬────────────┬───┬────────────┬───────────┬───────────┬───────────┐
 │ date       ┆ run_from  ┆ sypd  ┆ buildkite_ ┆ … ┆ ClimaTimes ┆ RRTMGP_di ┆ Thermodyn ┆ repos_cha │
 │ ---        ┆ ---       ┆ ---   ┆ commit     ┆   ┆ teppers_di ┆ ff_url    ┆ amics_dif ┆ nged      │
@@ -7940,10 +7940,6 @@ a.anchor-link {
 │ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
 │ …          ┆ …         ┆ …     ┆ …          ┆ … ┆ …          ┆ …         ┆ …         ┆ …         │
-│ 2026-05-19 ┆ buildkite ┆ 0.214 ┆ 4ea2e3af21 ┆ … ┆ null       ┆ null      ┆ null      ┆ 2.0       │
-│ 02:01:08.1 ┆           ┆       ┆ 20f0c3e8fe ┆   ┆            ┆           ┆           ┆           │
-│ 96 UTC     ┆           ┆       ┆ 8bd5b56aeb ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
 │ 2026-05-20 ┆ buildkite ┆ 0.218 ┆ 6beb62031c ┆ … ┆ null       ┆ null      ┆ https://g ┆ 3.0       │
 │ 02:01:09.2 ┆           ┆       ┆ b6a8a8a18a ┆   ┆            ┆           ┆ ithub.com ┆           │
 │ 59 UTC     ┆           ┆       ┆ 4fcd81008d ┆   ┆            ┆           ┆ /CliMA/Th ┆           │
@@ -7960,6 +7956,10 @@ a.anchor-link {
 │ 02:01:08.5 ┆           ┆       ┆ 749174d7d4 ┆   ┆            ┆ ithub.com ┆           ┆           │
 │ 85 UTC     ┆           ┆       ┆ 03c09bd0a0 ┆   ┆            ┆ /CliMA/RR ┆           ┆           │
 │            ┆           ┆       ┆ …          ┆   ┆            ┆ TMG…      ┆           ┆           │
+│ 2026-05-27 ┆ buildkite ┆ 0.244 ┆ d8776ab5cf ┆ … ┆ null       ┆ null      ┆ null      ┆ 2.0       │
+│ 02:01:09.3 ┆           ┆       ┆ 95f73ec583 ┆   ┆            ┆           ┆           ┆           │
+│ 40 UTC     ┆           ┆       ┆ e6d45c6c93 ┆   ┆            ┆           ┆           ┆           │
+│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
 └────────────┴───────────┴───────┴────────────┴───┴────────────┴───────────┴───────────┴───────────┘
 </pre>
 </div>
@@ -7996,32 +7996,41 @@ a.anchor-link {
 <span class="n">DATA</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"data"</span>
 
 <span class="c1"># Hand-curated map: canonical paper DOI (lowercased) -&gt; CliMA software package.</span>
-<span class="c1"># Papers scraped from https://clima.caltech.edu/publications/ whose DOI is not</span>
-<span class="c1"># in this map fall into the "(no software)" bucket of the citations chart —</span>
-<span class="c1"># they are real CliMA publications but not tied to a specific package.</span>
-<span class="c1"># Add an entry here when a new package gets a canonical paper.</span>
+<span class="c1"># Used to color the software-paper panel of the external-engagement figure.</span>
+<span class="c1"># Papers whose DOI is not in this map (or whose entry on the publications</span>
+<span class="c1"># page has no DOI at all) implicitly fall outside the software-stacked panel</span>
+<span class="c1"># but are still counted in the "all citations" total.</span>
 <span class="n">PACKAGE_BY_DOI</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"10.21105/joss.02018"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Ramadhan et al. 2020, JOSS</span>
-    <span class="s2">"10.1029/2024ms004465"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Silvestri et al. 2024, JAMES</span>
-    <span class="s2">"10.48550/arxiv.2502.14148"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Wagner et al. 2025, arXiv preprint</span>
+    <span class="s2">"10.21105/joss.02018"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>             <span class="c1"># Ramadhan et al. 2020, JOSS</span>
+    <span class="s2">"10.1029/2024ms004465"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>            <span class="c1"># Silvestri et al. 2024, JAMES</span>
+    <span class="s2">"10.48550/arxiv.2502.14148"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>       <span class="c1"># Wagner et al. 2025, arXiv preprint</span>
     <span class="s2">"10.21105/joss.04869"</span><span class="p">:</span> <span class="s2">"EnsembleKalmanProcesses"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2022, JOSS</span>
-    <span class="s2">"10.21105/joss.06372"</span><span class="p">:</span> <span class="s2">"CalibrateEmulateSample"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2024, JOSS</span>
-    <span class="s2">"10.1029/2025ms005118"</span><span class="p">:</span> <span class="s2">"ClimaLand"</span><span class="p">,</span>  <span class="c1"># Deck et al. 2026, JAMES</span>
-    <span class="s2">"10.1029/2025ms005014"</span><span class="p">:</span> <span class="s2">"ClimaCore"</span><span class="p">,</span>  <span class="c1"># atmosphere dynamical core</span>
-    <span class="s2">"10.5194/gmd-15-6259-2022"</span><span class="p">:</span> <span class="s2">"ClimaAtmos"</span><span class="p">,</span>  <span class="c1"># ClimateMachine v0.2.0 lineage</span>
+    <span class="s2">"10.21105/joss.06372"</span><span class="p">:</span> <span class="s2">"CalibrateEmulateSample"</span><span class="p">,</span>   <span class="c1"># Dunbar et al. 2024, JOSS</span>
+    <span class="s2">"10.1029/2025ms005118"</span><span class="p">:</span> <span class="s2">"ClimaLand"</span><span class="p">,</span>               <span class="c1"># Deck et al. 2026, JAMES</span>
+    <span class="s2">"10.1029/2025ms005014"</span><span class="p">:</span> <span class="s2">"ClimaCore"</span><span class="p">,</span>               <span class="c1"># atmosphere dynamical core</span>
+    <span class="s2">"10.5194/gmd-15-6259-2022"</span><span class="p">:</span> <span class="s2">"ClimaAtmos"</span><span class="p">,</span>          <span class="c1"># ClimateMachine v0.2.0 lineage</span>
 <span class="p">}</span>
 
-<span class="c1"># Load the most recent citations snapshot produced by fetch-citations.</span>
-<span class="n">citations_dir</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"openalex"</span> <span class="o">/</span> <span class="s2">"citations"</span>
-<span class="n">snapshots</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">citations_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">))</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">snapshots</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No citation snapshots in </span><span class="si">{</span><span class="n">citations_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">latest_snapshot</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">snapshots</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using </span><span class="si">{</span><span class="n">snapshots</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">latest_snapshot</span><span class="p">[</span><span class="s1">'papers'</span><span class="p">])</span><span class="si">}</span><span class="s2"> papers"</span><span class="p">)</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">package_for_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">package_for_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">PACKAGE_BY_DOI</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">doi</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+
+<span class="c1"># Load the four normalized OpenAlex tables written by fetch-citations.</span>
+<span class="c1"># resolved-pubs is the master pubs table (every work fetched, CliMA pubs +</span>
+<span class="c1"># the works citing them, deduped). clima-pubs is the slim extras keyed by</span>
+<span class="c1"># openalex_id — join on openalex_id to recover full CliMA-pub records.</span>
+<span class="n">openalex_dir</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"openalex"</span>
+<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"resolved-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">clima_extras_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"clima-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">citation_edges_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"citations.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">clima_pubs_df</span> <span class="o">=</span> <span class="n">clima_extras_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">resolved_pubs_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"resolved_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | clima_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clima_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | "</span>
+    <span class="sa">f</span><span class="s2">"citation_edges=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">citation_edges_df</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8034,7 +8043,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Using 2026-05-26.json: 109 papers
+<pre>resolved_pubs=2665 | clima_pubs=118 | citation_edges=3490
 </pre>
 </div>
 </div>
@@ -8066,9 +8075,6 @@ a.anchor-link {
 
 
 <span class="c1"># ----- Internal-user set (canonical CliMA org members) ---------------</span>
-<span class="c1"># fetch-github writes the union of authenticated /orgs/CliMA/members</span>
-<span class="c1"># (private members visible to the token's user) with whatever the previous</span>
-<span class="c1"># snapshot held, so private members captured by a local run survive in CI.</span>
 <span class="n">members_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"clima_members.json"</span>
 <span class="n">clima_members</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CliMA"</span><span class="p">}</span>
 <span class="k">if</span> <span class="n">members_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -8080,10 +8086,7 @@ a.anchor-link {
 <span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
 <span class="c1"># are clearly automated — usually Julia ecosystem bots. Extend this set if</span>
 <span class="c1"># new ones appear in the engagement CSV.</span>
-<span class="n">EXTRA_BOTS</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"JuliaTagBot"</span><span class="p">,</span>
-    <span class="s2">"attobot"</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="n">EXTRA_BOTS</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JuliaTagBot"</span><span class="p">,</span> <span class="s2">"attobot"</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -8109,32 +8112,49 @@ a.anchor-link {
     <span class="k">return</span> <span class="n">camel_by_lc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
 
-<span class="c1"># ----- Event-level citation rows --------------------------------------</span>
-<span class="c1"># One row per external citing work. Internal self-citations (any author</span>
-<span class="c1"># shared with any scraped CliMA paper) are dropped here, matching the</span>
-<span class="c1"># filter applied by fetch-citations.py when computing external_by_quarter.</span>
-<span class="n">cit_event_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">paper</span> <span class="ow">in</span> <span class="n">latest_snapshot</span><span class="p">[</span><span class="s2">"papers"</span><span class="p">]:</span>
-    <span class="n">pkg</span> <span class="o">=</span> <span class="n">package_for_doi</span><span class="p">(</span><span class="n">paper</span><span class="p">[</span><span class="s2">"doi"</span><span class="p">])</span> <span class="ow">or</span> <span class="s2">""</span>
-    <span class="k">for</span> <span class="n">cw</span> <span class="ow">in</span> <span class="n">paper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"citing_works"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
-        <span class="k">if</span> <span class="n">cw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_internal"</span><span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">cw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">q</span> <span class="ow">or</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="n">MIN_QUARTER</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">cit_event_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">"quarter"</span><span class="p">:</span> <span class="n">q</span><span class="p">,</span>
-                <span class="s2">"cited_doi"</span><span class="p">:</span> <span class="n">paper</span><span class="p">[</span><span class="s2">"doi"</span><span class="p">],</span>
-                <span class="s2">"cited_package"</span><span class="p">:</span> <span class="n">pkg</span><span class="p">,</span>
-                <span class="s2">"citing_openalex_id"</span><span class="p">:</span> <span class="n">cw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"openalex_id"</span><span class="p">),</span>
-                <span class="s2">"publication_date"</span><span class="p">:</span> <span class="n">cw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publication_date"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="p">)</span>
-<span class="n">cit_events_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cit_event_rows</span><span class="p">)</span>
+<span class="c1"># ----- Citation event table (built from the normalized OpenAlex tables) -</span>
+<span class="c1"># "Internal" = the citing pub shares any author OpenAlex ID with any CliMA</span>
+<span class="c1"># pub. Computed downstream so the filter can be tuned without refetching.</span>
+<span class="n">clima_author_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">clima_pubs_df</span><span class="p">[</span><span class="s2">"author_ids"</span><span class="p">]:</span>
+    <span class="n">clima_author_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ids</span> <span class="ow">or</span> <span class="p">[])</span>
+
+<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">resolved_pubs_df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+    <span class="n">is_internal</span><span class="o">=</span><span class="n">resolved_pubs_df</span><span class="p">[</span><span class="s2">"author_ids"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ids</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">&amp;</span> <span class="n">clima_author_ids</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Join edges -&gt; citing-pub metadata (from resolved-pubs) -&gt; cited-pub</span>
+<span class="c1"># DOI/package. resolved-pubs is the single source of truth for shared</span>
+<span class="c1"># per-work fields; clima-pubs supplies the CliMA-specific extras (here just</span>
+<span class="c1"># the cited-side DOI).</span>
+<span class="n">cited_lookup</span> <span class="o">=</span> <span class="n">clima_pubs_df</span><span class="p">[[</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">]]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"openalex_id"</span><span class="p">:</span> <span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">:</span> <span class="s2">"cited_doi"</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">joined</span> <span class="o">=</span> <span class="n">citation_edges_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+    <span class="n">resolved_pubs_df</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="s2">"publication_date"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"is_internal"</span><span class="p">]</span>
+    <span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"openalex_id"</span><span class="p">:</span> <span class="s2">"citing_openalex_id"</span><span class="p">}),</span>
+    <span class="n">on</span><span class="o">=</span><span class="s2">"citing_openalex_id"</span><span class="p">,</span>
+    <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+<span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">cited_lookup</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+
+<span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="o">~</span><span class="n">joined</span><span class="p">[</span><span class="s2">"is_internal"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="kc">False</span><span class="p">)]</span>
+<span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_QUARTER</span><span class="p">)]</span>
+<span class="n">joined</span><span class="p">[</span><span class="s2">"cited_package"</span><span class="p">]</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="s2">"cited_doi"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">package_for_doi</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+
+<span class="n">cit_events_df</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">"quarter"</span><span class="p">,</span>
+        <span class="s2">"cited_doi"</span><span class="p">,</span>
+        <span class="s2">"cited_package"</span><span class="p">,</span>
+        <span class="s2">"citing_openalex_id"</span><span class="p">,</span>
+        <span class="s2">"publication_date"</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># ----- Event-level GitHub engagement rows -----------------------------</span>
-<span class="c1"># One row per external star / fork / issue / merged PR.</span>
 <span class="n">eng_event_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
 
@@ -8215,7 +8235,7 @@ a.anchor-link {
 
 <span class="n">eng_events_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">eng_event_rows</span><span class="p">)</span>
 
-<span class="c1"># ----- Aggregations driving the figure (built from the event tables) --</span>
+<span class="c1"># ----- Aggregations driving the figure --------------------------------</span>
 <span class="n">all_by_q</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">cit_events_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">cit_events_df</span><span class="o">.</span><span class="n">empty</span>
@@ -8247,13 +8267,15 @@ a.anchor-link {
 <span class="n">sw_order</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="p">]</span>
-<span class="n">eng_totals</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">eng_totals</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="p">)</span>
 <span class="n">eng_order</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="p">]</span>
 
-<span class="c1"># Unified color map (Oceananigans gets blue if it ranks first across the</span>
-<span class="c1"># combined software-citations + engagement totals).</span>
+<span class="c1"># Unified color map so Oceananigans (etc.) keeps the same color across the</span>
+<span class="c1"># software-citations and GitHub-engagement panels.</span>
 <span class="n">combined_totals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -8365,7 +8387,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>2201 citation events, 3905 engagement events
+<pre>2312 citation events, 3905 engagement events
 </pre>
 </div>
 </div>

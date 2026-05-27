@@ -127,10 +127,13 @@ pipeline:
           delete_before_run: false
     fetch-citations:
       description: >
-        Scrape https://clima.caltech.edu/publications/ for paper DOIs and
-        snapshot their OpenAlex citation data. Keyed by UTC day; no-ops if
-        the snapshot for the current UTC day already exists. Package
-        grouping is done in the analyze notebook.
+        Parse every entry on https://clima.caltech.edu/publications/, resolve
+        each to an OpenAlex work (DOI lookup or title+year search), and
+        snapshot the citation graph as four normalized JSONL tables
+        (clima-pubs, citing-pubs, citations, authors) under data/openalex/.
+        No-ops once the marker records the current UTC day. Internal-vs-
+        external classification and package grouping happen in the analyze
+        notebook.
       kind: python-script
       script_path: scripts/fetch-citations.py
       environment: clima-data
