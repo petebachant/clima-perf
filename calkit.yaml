@@ -80,6 +80,32 @@ pipeline:
         - path: buildkite
           delete_before_run: false
           storage: git
+    fetch-github:
+      description: Fetch GitHub releases, stars, issues, PRs, forks data on
+        a weekly basis.
+      kind: shell-script
+      script_path: scripts/fetch-github.sh
+      environment: gh-cli
+      args:
+        - "{date}"
+      iterate_over:
+        - var_name: date
+          values:
+            - date_range:
+                start: 2018-01-01
+                end:
+                step: "1 week"
+      outputs:
+        - path: data/github
+          storage: git
+    fetch-citations:
+      description: Fetch CliMA publication and citation data.
+      kind: python-script
+      environment: TODO
+      script_path: scripts/fetch-citations.py
+      outputs:
+        - path: data/openalex
+          storage: git
     analyze:
       kind: jupyter-notebook
       environment: analyze
