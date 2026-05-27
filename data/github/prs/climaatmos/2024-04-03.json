@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 387,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds 1-moment microphysics scheme to prognostic EDMF.\r\n\r\nPrecipitation (rain and snow) is only computed as a grid mean quantity (i.e. we don't have updraft and environment precipitation variables). The sources to precipitation are computed as a sum of contributions from updrafts and the environment. The precipitation sinks (evaporation, melting, deposition/sublimation) are only computed on the grid mean. \r\n\r\nMy main priority was to only have one definition of `compute_precipitation_sources!` and `compute_precipitation_sinks!`. This is where I loop over all microphysics processes and I don't want to have multiple versions of it. That function returns 4 outputs (source terms to total water, rain, snow and energy) and I didn't know how to write it outside of a `colidx` loop.\r\n\r\nThings I don't like about the code right now:\r\n- the additional `colidx` loop\r\n- all the additional variables I'm adding to the cache\r\n- `compute_precipitation_sinks!` and `compute_precipitation_sources!` behave differently. The `sources` one zeroes out the cached `S` before adding to it. The `sinks` does not. This is because when used without EDMF, the `sinks` are done after the `sources` and add to the same cached values. This is clunky, but I didn't have a better idea and I did not want to add another 4 variables to the cache\r\n\r\nAlso, can I re-use my tmp scalar between different updraft j-s and the environment?\r\n\r\n```\r\n    tmp1 = p.scratch.\u1d9ctemp_scalar\r\n    n = number of updrafts\r\n\r\n    do colidx\r\n        # Sources from the updrafts\r\n        for j in 1:n\r\n            foo!(\r\n                tmp1[colidx],\r\n               all_the_sgs_j_variables_and_dollars[colidx]\r\n            )\r\n        end\r\n```",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-29T23:54:07Z",
+    "deletions": 79,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2024-04-03T05:59:05Z",
+    "number": 2858,
+    "title": "Add 1-moment microphysics to prognostic EDMF"
+  },
+  {
+    "additions": 415,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "~~When a simulation is run with the driver, remove existing output. This is helpful when dealing with diagnostics, given that NetCDF output is appended.~~\r\n\r\n~~I personally think that this is a dangerous feature to have, and we should probably think of a safer solution for the long term.~~\r\n\r\nSee comment below about ClimaUtilities",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-30T00:41:42Z",
+    "deletions": 288,
+    "labels": [],
+    "mergedAt": "2024-04-03T18:15:03Z",
+    "number": 2606,
+    "title": "Use ClimaUtilities.OutputPathGenerator to organize output directories"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds some NVTX annotations, so that we can see how long functions take with more granularity. A step towards #2868.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-03T19:58:44Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2024-04-03T23:00:10Z",
+    "number": 2869,
+    "title": "Add some NVTX annotations"
+  }
+]

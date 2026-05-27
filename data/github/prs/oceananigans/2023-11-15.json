@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR converts a few lines to read like English does per our coding style conventions.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-10T05:16:55Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2023-11-15T20:41:32Z",
+    "number": 3385,
+    "title": "Tiny conversion of code to English"
+  },
+  {
+    "additions": 564,
+    "author": {
+      "id": "MDQ6VXNlcjQzNDE4NTky",
+      "is_bot": false,
+      "login": "BrodiePearson",
+      "name": "Brodie Pearson"
+    },
+    "body": "@glwagner This PR completes (hopefully!) the implementation of three-dimensional Stokes drift implementation within non-hydrostatic simulations by adding the momentum forcing terms that arise from horizontal gradients of the Stokes drift via $(\\nabla \\times \\mathbf{u^s}) \\times \\mathbf{v}$. \r\n\r\nI also added an example code that utilizes the new `StokesDrift` function (and retains the previous `UniformStokesDrift` function). It is a little convoluted because I wanted to implement a Stokes drift that varied in all 3 dimensions to ensure that the code was well-behaved. The example is as follows:\r\n\r\n- Is based on the Langmuir turbulence example\r\n- The new example imposes a spatially-varying x-aligned Stokes drift that is a separable function of the three spatial dimensions\r\n\r\n```math\r\nu^s(x, y, z) = f(x)g'(y)h(z)\r\n```\r\n- The vertical variation is a classic exponential decay with depth over a vertical length scale $\\delta$. Note this function is defined as the z-derivative of another function $h(z)$ to make the description of the vertical Stokes drift easier below.\r\n\r\n```math\r\nh'(z) = U^s e^{(z/\\delta)}\r\n```\r\n\r\n- The x-variation is sinusoidal modulation on top of a background that peaks in the middle of the x-domain.\r\n\r\n```math\r\nf(x) = \\frac{1}{2}\\left( 1 + 0.1cos\\left(\\frac{\\pi(2x-L_x)}{L_x}\\right)\\right)\r\n```\r\n\r\n- The y-variation represents a piece-wise function consisting of a _jet_ region of width $L_{jet}$ centered at $y_{jet}$ where $u^s$ is constant, transition regions of width $L_{transition}$ on either side of the jet where Stokes drift follows a sinusoidal decay from its jet value to zero, and a _no wave_ region where there is no Stokes drift outside of the jet and transition zones.\r\n```math\r\n g(y) =    1 + cos\\left(\\pi \\frac{y - y_{jet} + L_{jet}/2 }{L_{transition}} \\right)       \\quad \\text{if } y_{jet} - L_{jet}/2  > y >  y_{jet} - L_{jet}/2 - L_{transition} \r\n```\r\n\r\n```math\r\n g(y) = 1 + cos\\left(\\pi \\frac{y - y_{jet} - L_{jet}/2 }{L_{transition}} \\right)       \\quad \\text{if } y_{jet} + L_{jet}/2 + L_{transition}  > y >  y_{jet} + L_{jet}/2\r\n```\r\n\r\n```math\r\n  g(y) = 0  \\quad \\text{at all other } y\r\n```\r\n\r\n- This x-aligned Stokes drift has $\\partial_x u^s\\neq0$ so incompressibility ($\\nabla \\cdot \\mathbf{u^s}$) requires another Stokes drift component. Since we do not impose a y-oriented wave field, we achieve this through a vertical Stokes drift component $w^s(x,y,z)$. We diagnose this from the $u^s$ field and by imposing a surface boundary condition of no vertical motion: $w^s(x,y,0)=0$ . It then follows that:\r\n\r\n```math\r\nw^s(x, y, z) = f'(x)g(y)\\left[h(z)-h(0)\\right]\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-15T18:56:42Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2023-11-15T23:14:20Z",
+    "number": 3392,
+    "title": "Correction of three-dimensional Stokes drift implementation"
+  }
+]

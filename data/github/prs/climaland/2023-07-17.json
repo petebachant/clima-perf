@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 359,
+    "author": {
+      "id": "MDQ6VXNlcjg2MDM1NjQ5",
+      "is_bot": false,
+      "login": "Espeer5",
+      "name": "Edward Speer"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdds two-stream radiative transfer model as an alternative to the BeerLambertModel for computing APAR in the CanopyModel, following methods found in [pySellersTwoStream](https://github.com/tquaife/pySellersTwoStream)\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Two-stream parameters struct and model struct included in radiation.jl\r\n- New plant_absorbed_ppfd method added for the two-stream model which computes APAR using the formulas and energy balance method found [here](https://github.com/tquaife/pySellersTwoStream/blob/master/sellersTwoStream.py#L450). (After testing, the calculations from these two implementations agree, see testing script which compares outputs of both implementations [here](https://github.com/CliMA/ClimaLSM.jl/blob/two-stream/test/standalone/Vegetation/test_two_stream.jl))\r\n- Substituting this model into the radiative transfer for the Ozark experiment with the same parameters yields very little change in the GPP prediction, see plots below, one of which is using two-stream with one layer canopy, the other is using BeerLambert\r\nTwo-Stream:\r\n![GPP2STR](https://github.com/CliMA/ClimaLSM.jl/assets/86035649/b2899ada-301e-43fe-81da-a0afd1fb11bc)\r\nBeerLambert:\r\n![GPP](https://github.com/CliMA/ClimaLSM.jl/assets/86035649/440d8e3d-22af-46c7-a84f-7966e4cae780)\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-12T18:26:40Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2023-07-17T17:10:57Z",
+    "number": 265,
+    "title": "Two-Stream Radiative Transfer Scheme"
+  },
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nWe forgot to add in the source/sink term for energy due to root extraction. This just required small changes to arguments to ClimaLSM.source! and a new method. The term is in Equation 2.18 of the land model design doc: \\tilde{I}_l*R_r.\r\n\r\nAlong the way: make energyhydrology parameters broadcastable and update usage of Ref accordingly. a future PR will do this for all relevant structs - see issue https://github.com/CliMA/ClimaLSM.jl/issues/209\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-14T22:38:31Z",
+    "deletions": 39,
+    "labels": [],
+    "mergedAt": "2023-07-17T17:56:19Z",
+    "number": 269,
+    "title": "added source term for energy due to root extraction"
+  }
+]

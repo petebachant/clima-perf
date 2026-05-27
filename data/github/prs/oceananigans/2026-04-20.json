@@ -1,0 +1,118 @@
+[
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This also solves https://buildkite.com/clima/oceananigans/builds/30940#019d9e7e-48d8-4d48-92a9-0dfd44e00187/L607\r\n```\r\n\u250c Oceananigans\r\n\u2502  WARNING: Imported binding Oceananigans.architecture was undeclared at import time during import to Advection.\r\n\u2502  WARNING: ignoring conflicting import of Oceananigans.architecture into Advection\r\n\u2514  \r\n```",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-18T11:21:26Z",
+    "deletions": 54,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-04-20T06:28:57Z",
+    "number": 5523,
+    "title": "Explicit imports in `Advection`"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-30T13:00:22Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      },
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      }
+    ],
+    "mergedAt": "2026-04-20T10:02:45Z",
+    "number": 5458,
+    "title": "Adapt to CUDA.jl v6"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "[`JULIA_DEPOT_PATH`](https://docs.julialang.org/en/v1/manual/environment-variables/#JULIA_DEPOT_PATH) must end with a trailing colon, otherwise the builtin depot is ignored, and stdlibs are always precompiled needlessly.\r\n\r\nNoticed at https://buildkite.com/clima/oceananigans/builds/30952#019da115-b526-420c-b836-ef25f4bfb0fd/L33\r\n```\r\nPrecompiling packages...\r\n  56296.7 ms  \u2713 Pkg (serial)\r\n  1 dependency successfully precompiled in 56 seconds\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-18T14:59:28Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-04-20T10:42:08Z",
+    "number": 5525,
+    "title": "Append colon to `JULIA_DEPOT_PATH`"
+  },
+  {
+    "additions": 130,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "In Julia v1.13, using at-doc inside struct to attach the docstring to an inner constructor [causes an extra hidden field to be added to the struct itself](https://github.com/JuliaLang/julia/issues/60681#issuecomment-4280636832), due to macro expansion rules.  Doesn't look like this is going to be changed upstream, so we have to work around it: luckily the fix is backward compatible, we only lose the convenience of having the docstring right above the constructor definition.\r\n\r\nPR best reviewed by [ignoring whitespace changes](https://github.com/CliMA/Oceananigans.jl/pull/5527/changes?w=1).\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-20T12:44:57Z",
+    "deletions": 128,
+    "labels": [],
+    "mergedAt": "2026-04-20T15:26:08Z",
+    "number": 5527,
+    "title": "Avoid use of at-doc macro inside structs"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "In order to use `@binary` you need to also bring a bunch of other symbols into scope unnecessarily.\r\n\r\nBefore this PR:\r\n```julia-repl\r\njulia> using Oceananigans.AbstractOperations: @binary\r\n\r\njulia> @binary Base.atand\r\nERROR: UndefVarError: `Oceananigans` not defined in `Main`\r\nSuggestion: check for spelling errors or missing imports.\r\nHint: Oceananigans is loaded but not imported in the active module Main.\r\n```\r\n\r\nAfter this PR:\r\n```julia-repl\r\njulia> using Oceananigans.AbstractOperations: @binary\r\n\r\njulia> @binary Base.atand\r\nSet{Any} with 10 elements:\r\n  :+\r\n  :/\r\n  :^\r\n  :atand\r\n  :-\r\n  :>=\r\n  :>\r\n  :<=\r\n  :*\r\n  :<\r\n```\r\n\r\nInlining the symbols is similar to what done for unary symbols https://github.com/CliMA/Oceananigans.jl/blob/77268ec6169f4c1f4f1a3e0b70d62bcf3b236f98/src/AbstractOperations/unary_operations.jl#L93-L118 (I wonder [who did that](https://github.com/CliMA/Oceananigans.jl/pull/4997) :innocent:).  Other similar PRs: #4178, #4994.\r\n\r\nSpotted in https://github.com/NumericalEarth/Breeze.jl/pull/644 which had to do\r\n```julia\r\nusing Oceananigans: Oceananigans\r\nusing Oceananigans.AbstractOperations: @binary, BinaryOperation, GridMetric, choose_location\r\nusing Oceananigans.AbstractOperations: apply_op, grid_metric_operation\r\n\r\n@binary Base.atand\r\n```\r\nwhich felt very excessive.  CC @ewquon.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-20T17:34:51Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2026-04-20T19:38:02Z",
+    "number": 5528,
+    "title": "Simplify definition of at-binary not to require loads of imports"
+  }
+]

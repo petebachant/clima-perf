@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Drops a leftover `_radians` from #5280",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-12T22:30:49Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-02-13T02:05:22Z",
+    "number": 5295,
+    "title": "Drop a leftover `_radians`"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This PR just adds a docstring to `MutableVerticalDiscretization` as I believe this was missing and I wanted to know what was in there. I let AI fill it up, and it makes sense to me, but I am not 100% sure it's correct, so this should be double-checked by someone else before being merged. No change to the code otherwise though!",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-12T03:33:55Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-02-13T03:14:09Z",
+    "number": 5282,
+    "title": "Add docstring to MutableVerticalDiscretization"
+  },
+  {
+    "additions": 483,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR creates an interface called\r\n\r\n```julia\r\nstep_closure_prognostics!(model.closure_fields, model.closure, model, dt)\r\n```\r\n\r\nwhich can be extended by closures in order to step forward prognostic fields outside the models default time-stepping mechanism. This is useful for closures that implement off-pattern time-stepping methods, such as Lagrangian advection by DynamicSmagorinsky, or substepping, like CATKEVerticalDiffusivity and TKEDissipationVerticalDiffusivity. CATKEVerticalDiffusivity also evolves a non-advected prognostic variable that represents an Eulerian time-average of the surface buoyancy flux.\r\n\r\nThe new interface removes state-dependent conditionals in `compute_closure_fields!`, which complicate preserving the \"idempotency\" of `update_state!` (ie repeated calls to `update_state!` should not change the prognostic state of the model). This makes checkpointing easier, and also simplifies raising via Reactant.\r\n\r\nI have also taken the opportunity to clean up the semantics of the closure interface.\r\n\r\nIt also adds `initialize_closure_fields!` which is needed to remove a conditional in DynamicSmagorinsky.\r\n\r\nTakes over from #5267 ",
+    "changedFiles": 50,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-10T20:53:55Z",
+    "deletions": 608,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-02-13T14:20:20Z",
+    "number": 5274,
+    "title": "(0.105.0) Implement interface for stepping closure prognostic variables"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "This adds an additional method for `time_step!` to `OceananigansReactantExt` for `ReactantModel{<:SplitRungeKuttaTimeStepper}`. Its only difference from the method for non-Reactant models with `SplitRungeKuttaTimeStepper` is commenting out the conditional statement:\r\n```\r\n#=\r\nif model.clock.iteration == 0\r\n    update_state!(model, callbacks)\r\nend\r\n=#\r\n```\r\nsince this breaks Reactant, and the Reactant methods for `first_time_step!` automatically call `update_state!` anyway. A method for Reactant models with Adams-Bashforth timesteppers has already been implemented for the same reason.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-30T00:36:23Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-02-13T19:52:12Z",
+    "number": 5237,
+    "title": "Add split runge kutta to reactant extension"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 88,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR is also split off from #1512. It removes `TempestHyperdiffusion`, which is no longer needed, and slightly simplifies the cache `p`.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Remove the `TempestHyperdiffusion` struct and the `enable_qt_hyperdiffusion` function. Remove the `B` parameter from the `ClimaHyperdiffusion` struct.\r\n- Allow the `hyperdiff` CLI option to be `ClimaHyperdiffusion`, `true`, `none` or `false`, and remove the `enable_qt_hyperdiffusion` CLI option.\r\n- Rename `horizontal_limiter_tendency!` to `limited_tendency!`, and rename `hyperdiffusion_tracers_tendency!` to `tracer_hyperdiffusion_tendency!`.\r\n- Move the `hyperdiffusion_cache` to `default_cache`, and move the `hyperdiffusion_tendency!` to `remaining_tendency!`.\r\n- Move the `NVTX.@range` outside of `hyperdiffusion_tendency!` and `tracer_hyperdiffusion_tendency!`.\r\n- Separate the `hyperdiffusion_ghost_buffer` from the main `ghost_buffer`, and allocate it in `hyperdiffusion_cache`.\r\n- Replace `p.ghost_buffer.skip_dss` with `p.do_dss`.\r\n- Only apply DSS during hyperdiffusion if `do_dss` is `true`.\r\n- Replace `\u1d9c\u03c1h` with `p.\u1d9ctemp_scalar`, `\u1d9c\u03c9\u00b3` with `p.\u1d9ctemp_CT3`, and `\u1da0\u03c9\u00b9\u00b2` with `p.\u1da0temp_CT12`.\r\n- Replace the n identical copies of the limiter in `p` with a single limiter.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-22T18:00:10Z",
+    "deletions": 194,
+    "labels": [],
+    "mergedAt": "2023-04-23T03:14:14Z",
+    "number": 1595,
+    "title": "Simplify cache and remove TempestHyperdiffusion"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-23T07:50:31Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-04-23T17:01:12Z",
+    "number": 1596,
+    "title": "Fix typo in bibliography"
+  }
+]

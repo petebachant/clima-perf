@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 2076,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaCalibrate.jl/issues/290\r\n\r\nThis PR refactors the existing code into three different modules `EKPUtils`, `BackendManager`, and `Calibration`.\r\n\r\nThe purpose of `EKPUtils` is to contain utility functions for EKP that doesn't depend on using the rest of the functionality of `ClimaCalibrate`.\r\n\r\nFor `HPCBackend`, the original `calibrate` function contains functionality to submit slurm jobs, wait for the slurm jobs to complete, and update the G ensemble and EKP object. The `BackendManager` module contain only the functionality to submit slurm scripts and the `Calibration` module uses the API provided by the `BackendManager` module to submit the slurm jobs for calibration. In the future, this should make it easier to implement other features such as a way to perform a parameter sweep. \r\n\r\nSimilarly, for the `JuliaBackend` and `WorkerBackend`, the same changes are made to the `calibrate` function to keep the structure of these functions mostly the same. Although, minimal changes were made to these functions compared to the functions that dispatch on the `HPCBackend`.",
+    "changedFiles": 35,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOI0q0v870PkQY",
+        "number": 290,
+        "repository": {
+          "id": "R_kgDOI0q0vw",
+          "name": "ClimaCalibrate.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCalibrate.jl/issues/290"
+      }
+    ],
+    "createdAt": "2026-04-06T21:04:30Z",
+    "deletions": 1779,
+    "labels": [],
+    "mergedAt": "2026-04-13T21:32:02Z",
+    "number": 295,
+    "title": "Refactor code into different modules"
+  }
+]

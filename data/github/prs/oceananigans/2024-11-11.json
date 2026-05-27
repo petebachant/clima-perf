@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "From a MWE similar to the one in #3899 (adding some more reduced directions):\r\n```julia\r\nusing Oceananigans\r\nusing GLMakie\r\n\r\ngrid = RectilinearGrid(size = (10, 10, 10), extent = (10, 10, 10))\r\nbottom(x, y) = - rand() * 5 # Between -5 and 0\r\ngrid = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom))\r\n\r\nf1 = Field{Center, Center, Nothing}(grid)\r\nf2 = Field{Center, Nothing, Center}(grid)\r\nf3 = Field{Nothing, Center, Center}(grid)\r\nset!(f1, (x, y) -> rand())\r\nset!(f2, (x, y) -> rand())\r\nset!(f3, (x, y) -> rand())\r\n\r\nfig = Figure(); ax1 = Axis(fig[1, 1]); ax2 = Axis(fig[1, 2]); ax3 = Axis(fig[1, 3])\r\nheatmap!(ax1, f1)\r\nheatmap!(ax2, f2)\r\nheatmap!(ax3, f3)\r\n```\r\n<img width=\"1174\" alt=\"Screenshot 2024-11-05 at 12 26 38\u202fPM\" src=\"https://github.com/user-attachments/assets/fc22559f-2615-4e3e-b687-52f40ac5cd4e\">\r\n\r\nShould we add some tests?\r\n\r\ncloses #3899\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6dDvGN",
+        "number": 3899,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3899"
+      }
+    ],
+    "createdAt": "2024-11-05T11:27:03Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-11-11T12:49:28Z",
+    "number": 3900,
+    "title": "Mask `ReducedFields` accounting the immersed column"
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Since they have been removed from the exported methods, I think we do not have a need for them anymore.",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-10T17:01:14Z",
+    "deletions": 94,
+    "labels": [],
+    "mergedAt": "2024-11-11T15:04:29Z",
+    "number": 3912,
+    "title": "Remove redundant advection aliases"
+  }
+]

@@ -1,0 +1,177 @@
+[
+  {
+    "additions": 197,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis implements #1305 \r\n\r\nThis PR removes all namelist functionality, replacing it with calls to ClimaParameters. This includes the whole `generate_namelist ` file and all usage of `parse_namelist`. \r\n\r\nThe existing `TurbulenceConvectionParameters` struct has been expanded to include all former namelist parameters. This includes a few microphysics parameters as well. In most cases where `namelist` is passed in, I have just replaced it with the expanded struct.\r\n\r\nThis replaces PR #1311.\r\nCloses #1305 \r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5dL4Kt",
+        "number": 1305,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1305"
+      }
+    ],
+    "createdAt": "2023-02-17T18:52:47Z",
+    "deletions": 807,
+    "labels": [
+      {
+        "color": "18EC4D",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs79cmfg",
+        "name": "ClimaParameters :control_knobs:"
+      },
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-02-23T00:45:22Z",
+    "number": 1377,
+    "title": "Replace namelist usage, expand TCParams struct"
+  },
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR replaces `Y.c.q_rai` with `Y.c.\u03c1q_rai` and `Y.c.q_sno` with `Y.c.\u03c1q_sno`. This allows ClimaAtmos's tracer advection to work correctly for rain and snow, since it assumes that every tracer is represented by a variable of the form `Y.c.\u03c1c`. Closes #1390. Prelude to #1391.\r\n\r\n## Content\r\n- Fixes the advection of rain and snow at terminal velocity. This tendency was previously implemented as `c\u209c = \u1d9cdiv\u1d65(\u1da0right_bias(\u03c1c * terminal_velocity)) / \u03c1`, which is only correct for anelastic models, where `\u03c1\u209c` is 0. Now, it will be implemented as `\u03c1c\u209c = \u1d9cdiv\u1d65(\u1da0right_bias(\u03c1c * terminal_velocity))`, which is generically correct.\r\n- Fixes the sources/sinks for rain and snow. These tendencies were previously implemented as `c\u209c = S * area`, which is only an approximation of the correct expression, `c\u209c = S * area * (1 + c)`. Now, it will be implemented as `\u03c1c\u209c = \u03c1 * S * area`, which is correct.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5fIU5g",
+        "number": 1390,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1390"
+      }
+    ],
+    "createdAt": "2023-02-23T01:15:28Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-02-23T06:40:19Z",
+    "number": 1392,
+    "title": "Replace q_rai and q_sno with \u03c1q_rai and \u03c1q_sno"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "## Purpose \r\nImplements face-valued reconstruction of velocities for application in the momentum tendency expressions. \r\nCloses #1368 \r\nCloses #1369 \r\n\r\n## Todo\r\n- [x] Define $\\tilde{\\boldsymbol{u}}$\r\n- [x] Update horizontal tendency term \r\n- [x] Update vertical tendency term\r\n- [x] Update documentation to reflect changes to equations\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5eky5l",
+        "number": 1368,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1368"
+      },
+      {
+        "id": "I_kwDOFoZ0Vs5eky_w",
+        "number": 1369,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1369"
+      }
+    ],
+    "createdAt": "2023-02-15T20:52:58Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "0052cc",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABLyr7KQ",
+        "name": "Dycore equations"
+      }
+    ],
+    "mergedAt": "2023-02-23T19:36:29Z",
+    "number": 1364,
+    "title": "Reconstructed velocities for momentum advection terms."
+  },
+  {
+    "additions": 51,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Closes https://github.com/CliMA/ClimaAtmos.jl/issues/1393",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5fIiw4",
+        "number": 1393,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1393"
+      }
+    ],
+    "createdAt": "2023-02-23T18:47:16Z",
+    "deletions": 132,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-02-23T20:28:19Z",
+    "number": 1394,
+    "title": "Delete unused precipitation fraction model"
+  }
+]

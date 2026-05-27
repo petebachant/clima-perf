@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 147,
+    "author": {
+      "id": "MDQ6VXNlcjMyNjQxNTc3",
+      "is_bot": false,
+      "login": "Mikolaj-A-Kowalski",
+      "name": "Mikolaj Adam Kowalski"
+    },
+    "body": "Replaces #2484 (since we need PR from inside the repo to run the CI `perf` jobs. the description is copied verbatim)\r\n\r\nCloses #2401\r\n\r\n@petebachant @imreddyTeja @sjavis @AdelekeBankole \r\n\r\nIn  this PR we will aim to contribute a more efficient implementation of the tridiagonal matrix solver to that effect we:\r\n- split the `multiple_field_solve!` to isolate tridiagonal cases \r\n- redirect tridiagonal cases to a specialised solver\r\n\r\nAt the moment the specialised solver is significantly faster (e.g. when tested on L40 single solve reduces from ~200ms to 90ms [compere.tar.gz](https://github.com/user-attachments/files/26542935/compere.tar.gz)). Once we trigger `[perf]` tag we will see how it performs in the complete simulation :crossed_fingers: \r\n\r\nThis is still a draft since the solver is not good enough from the point of view of the launch configuration. We launch a block per column and a thread for each vertical level. This works well if the number of levels is close to multiple of `32` (like AMIP), but it is not stable enough.  In this PR we will try to provide and test some alternatives. At the moment I see two options we can try: \r\n\r\n**Stitch Matrices together on load to shared memory**   \r\nThis would basically use the existing (quite fast) shmem solver, but to balance the load, load multiple columns into shmem to solve them as a single matrix (as far as I know some rows with 0 off-diagonals at the matrix 'stiches' should not cause numerical problems...). Here the problem would be though that since the 1st (or last) element of the off-diagonal would need to be patched to 0 (since it may not be zero, currently having \"don't care\" status) on load  to shared memory. \r\n\r\nSince the loading of data currently accounts for at least 50% of the solver runtime extra logic on load may not be performant. We shall see.\r\n\r\n**Shared Memory Parallel Thomas** \r\nSince we expect the vertical tridiagonal matrices to be small we can solve them in batches of 32. Have a single wrap per block and allow each of the threads to solve full matrix with the Parallel Thomas.    \r\n\r\n\r\n### TODO\r\n\r\nWhen the PR is ready go through the checklist:\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/).\r\n- [x] Unit tests are included. (new solver is covered by existing unit tests)\r\n- [x] Code is exercised in an integration test.\r\n- [x] Documentation has been added/updated.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms7dCbfS",
+        "number": 2401,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2401"
+      }
+    ],
+    "createdAt": "2026-04-09T09:54:49Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-05-06T14:48:42Z",
+    "number": 2486,
+    "title": "More efficient solver for TridiagonalMatrixFields"
+  }
+]

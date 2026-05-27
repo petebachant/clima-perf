@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 845,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements two advancements for CATKE. First is a reformulation of the shear production term. Previously this was computed using the velocity field at time-step `n` in the TKE tendency, like all other terms in the velocity and tracer explicit tendencies. However, [Burchard (2002)](https://www.sciencedirect.com/science/article/pii/S1463500302000094?casa_token=3cKiqlICvN8AAAAA:Hg3iGP-1q_UYh2We7maQRb9z9F5blbp8lHiH61T_Gep7y0DG8VYVRWwGvzvCDlbD2iANNHbLp4g) argue that the shear production term should be formulated to _exactly_ conserve total kinetic energy, which means that it's form actually depends on the time-stepping scheme being used. In our case, temporally-discrete shear production requires using the velocity field at time step `n` and `n+1`.\r\n\r\nTo implement this scheme we have to add some features to the time stepping routine. In particular we have to allow closures to tell `HydrostaticFreeSurfaceModel` not to step forward certain tracers. Next, we step forward the TKE within `compute_diffusivities!`.\r\n\r\nSecond, this PR also implements split-explicit substepping for CATKE's TKE. It seems that this is required because even though the new shear production discretization dramatically stabilizes CATKE (allowing long time-steps stably), it does not render CATKE's solutions completely insensitive to the time-step. So, for _accuracy_ (and performance) purposes, we are motivated to also add the capability to advance the TKE on a short time-step while the velocities and tracers advance on a slower time-step. This only matters for high vertical resolutions and very strong forcing. But when you do global simulations, there is strong forcing somewhere on the Earth, and we probably want to represented it accurately...\r\n\r\nMore documentation to come.",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-06T04:57:08Z",
+    "deletions": 563,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2024-06-06T19:03:43Z",
+    "number": 3585,
+    "title": "(0.91.1) CATKE numerics: discretely correct shear production, split-explicit TKE substepping"
+  }
+]

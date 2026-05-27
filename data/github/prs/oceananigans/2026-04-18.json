@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "### Update: closes #5374 \r\n\r\nThe changes in `abstol` and `reltol` started from https://github.com/CliMA/Oceananigans.jl/pull/4563 when I changed the `ConjugateGradientPoissonSolver` to solve the volume multiplied $V \\nabla^2 \\phi$ instead of $\\nabla^2 \\phi$. This is done so that the operator is symmetric under both uniform and non-uniform grids. The requirement for a symmetric operator is so that we can use the conjugate gradient algorithm.\r\n\r\nHowever in scaling the operator the residual is now scaled by the cell volume, therefore a universal `abstol` and `reltol` will not work. I put in a heuristic to account for the cell volume dependence, but that has turned out to take many more iterations than generally needed, especially in cases where cell volumes are large. \r\n\r\nIn trying to put in a fix I realized that we can actually compute the convergent criteria by scaling the cell volume back, so that the convergence criteria the same as pre https://github.com/CliMA/Oceananigans.jl/pull/4563, which is universal and non cell-volume dependent. This comes at a cost of only two kernel multiplications as I am scaling and descaling `residual` in place before and after computing `norm` for use with `tolerance`, so no extra memory is required.\r\n\r\nThis has shown to be working quite well. I've put in tests to ensure that this works for the future as well.\r\n\r\n---\r\nfix `reltol` and `abstol` in docstring\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7wKe26",
+        "number": 5374,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5374"
+      }
+    ],
+    "createdAt": "2025-12-07T04:14:57Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-04-18T02:49:19Z",
+    "number": 5021,
+    "title": "Use volume independent residual in `ConjugateGradientPoissonSolver` tolerance calculation"
+  }
+]

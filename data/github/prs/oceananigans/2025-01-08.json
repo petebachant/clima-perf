@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Working with @milankl I noticed that a stripped-down version of ClimaOcean (with only the `HydrostaticFreeSurfaceModel`) was terribly slow compared to a SpeedyWeather simulation with the same gridsize.\r\n\r\nAfter some investigating I found out that the problem was the `forcing` added as an argument to the momentum kernels after the splatting of the other `args...`.\r\nI am not sure what caused this loss of performance, but the benchmark of the code:\r\n```julia\r\nusing ClimaOcean\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing BenchmarkTools\r\n\r\narch    = Oceananigans.CPU()\r\nr_faces = ClimaOcean.exponential_z_faces(; Nz = 8, depth = 5000)\r\n\r\ngrid = LatitudeLongitudeGrid(arch, \r\n                             size=(360, 152, 8), \r\n                             latitude=(-75.5, 75.5), \r\n                             longitude=(0, 360),\r\n                             halo = (6, 6, 2),\r\n                             z = r_faces)\r\n\r\nocean = ClimaOcean.ocean_simulation(grid; \r\n                                    closure=nothing,\r\n                                    momentum_advection=VectorInvariant(),\r\n                                    tracer_advection=Centered(),\r\n                                    free_surface=SplitExplicitFreeSurface(grid; substeps=20))\r\n\r\ntime_step!(ocean)\r\ntime_step!(ocean)\r\n\r\n@benchmark time_step!(ocean)\r\n```\r\non main:\r\n<img width=\"878\" alt=\"Screenshot 2025-01-07 at 4 01 16\u202fPM\" src=\"https://github.com/user-attachments/assets/b2fc68b7-367d-4335-b1f4-b6e328f9ae97\" />\r\nand on this branch with the correction:\r\n<img width=\"825\" alt=\"Screenshot 2025-01-07 at 4 11 35\u202fPM\" src=\"https://github.com/user-attachments/assets/71e68abc-da1b-4b0e-93cd-819c3f8190a9\" />\r\n\r\nThis should not impact GPU execution.\r\n\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-07T17:34:25Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2025-01-08T00:02:42Z",
+    "number": 4032,
+    "title": "Inference problem on the CPU"
+  }
+]

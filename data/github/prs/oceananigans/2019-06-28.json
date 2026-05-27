@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Copy pasting from @glwagner's fork.\r\n\r\nAdaptive time stepping with a `TimeStepWizard` that computes time steps for you.\r\n\r\nI just need to modify `time_step!` with a flag like `first_step_Euler=true` to take forward Euler steps at first iteration and when changing the time step, but with the ability to turn it off for tests where we actually don't want to do this. \r\n\r\nI'll add some more docstrings and a couple of tests.\r\n\r\ncc @sandreza \r\n\r\nResolves #189 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MzU1MjA3Mzc=",
+        "number": 189,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/189"
+      }
+    ],
+    "createdAt": "2019-06-25T14:31:45Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-06-28T22:37:01Z",
+    "number": 297,
+    "title": "Adaptive time stepping through wizardry"
+  },
+  {
+    "additions": 1390,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR introduces a new reentrant channel model type, the `ChannelModel`, which is periodic in x, has walls in the y-direction, and has the usual rigid lid at the top. It's just a regular `Model` but with no-flux boundary conditions in the y-direction on all fields.\r\n\r\nThe halo regions are filled in appropriately to apply the free-slip boundary conditions. This is nice as we get a channel without having to change the operators or time-stepping at all. @jm-c has pointed out that things could get complicated with this approach when we get to implementing e.g. positivity-preserving advection schemes with having to fill the halo regions very frequently, but we agreed to cross that bridge when we get there. At that point, masks may turn out to be a better approach.\r\n\r\nIt would be nice to have a solid physics test before merging this. Perhaps https://github.com/climate-machine/Oceananigans.jl/issues/100#issuecomment-483255199 would work, although we've had some issues setting up a flow in thermal wind balance (see PR #179). It might still work as an eyeball test.\r\n\r\nI will release a new minor version once this PR is merged.\r\n\r\nResolves #100\r\n\r\nHelps with #242 \r\nHelps with #258 ",
+    "changedFiles": 27,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTY0MTg1MzA=",
+        "number": 100,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/100"
+      }
+    ],
+    "createdAt": "2019-06-20T17:11:40Z",
+    "deletions": 851,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-06-28T23:45:33Z",
+    "number": 290,
+    "title": "Reentrant channel model, for real this time (+ lots of cleanup)"
+  }
+]

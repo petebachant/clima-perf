@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 466,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nNow that all component model code is in src and ext, we can move the constructors and `setup_and_run` functions in `setup_run.jl` into src too. This greatly simplifies the packages we need to load explicitly before running a simulation, and reduces code in experiments.\r\n\r\nThis PR sets us up nicely to split the experiments/ClimaEarth environment into 2: AMIP and CMIP (all deps from AMIP + Oceananigans, ClimaOcean, ClimaSeaIce, KernelAbstractions, ConservativeRegridding). If we decide to do that, it will be in a separate PR because it would touch many files\r\n\r\n## Content\r\n- [x] Move CoupledSimulation constructors and setup_and_run from experiments/ClimaEarth/setup_run.jl into src/SimCoordinator.jl\r\n- [x] Export CoupledSimulation and setup_and_run from the top-level ClimaCoupler module\r\n- [x] Replace setup_run.jl with code_loading.jl, which contains only the stderr redirect, using ClimaCoupler, and extension triggers (Makie, Oceananigans, ClimaLand, ClimaAtmos)\r\n- [x] Update all scripts to include code_loading.jl instead of setup_run.jl\r\n- [x] Move script-specific imports (Dates, ClimaCore, ClimaComms) out of the shared file and into the scripts that use them\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-25T01:08:53Z",
+    "deletions": 599,
+    "labels": [],
+    "mergedAt": "2026-02-27T00:50:08Z",
+    "number": 1759,
+    "title": "move setup_run.jl functions into src"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake extension naming more uniform/consistent\r\n\r\n## Content\r\n- [x] rename `ClimaCouplerOceananigansMakieExt` to `ClimaCouplerCMIPMakieExt` so that it matches `ClimaCouplerCMIPExt`\r\n- [x] rename `ext/climaland/` directory to `ext/ClimaCouplerClimaLandExt/` so it matches what we do for the other extensions with multiple files\r\n- [x] update docs and all references to changed filepaths\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-27T19:50:24Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2026-02-27T21:08:24Z",
+    "number": 1765,
+    "title": "unify extension naming"
+  },
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds a Cess climate sensitivity test by comparing two existing AMIP longruns. This will run quickly after all runs have completed.\r\n\r\nCurrent output:\r\n```\r\n[ Info: Loading TOA fluxes\r\n[ Info: Global mean TOA flux changes (p2K \u2212 control):\r\n[ Info: delta_rsut         = -0.667 W m\u207b\u00b2\r\n[ Info: delta_rlut         = 4.769 W m\u207b\u00b2\r\n[ Info: delta_toa        = 4.102 W m\u207b\u00b2\r\n[ Info: Climate sensitivity estimate:\r\n[ Info: \u03bb = delta_toa / delta_sst = 2.051 W m\u207b\u00b2 K\u207b\u00b9\r\n[ Info: Approximate ECS = ERF_2xCO2 / \u03bb \u2248 1.8 K\r\n```\r\n<img width=\"1400\" height=\"1800\" alt=\"toa_flux_difference\" src=\"https://github.com/user-attachments/assets/f765170a-d62a-47c2-a7d8-6214cec3eaca\" />\r\n\r\n(generated from `/scratch/clima/slurm-buildkite/climacoupler-longruns/1063/climacoupler-longruns)\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-26T20:40:22Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-02-27T21:58:43Z",
+    "number": 1764,
+    "title": "Add equilibrium climate sensitivity test to longruns"
+  }
+]

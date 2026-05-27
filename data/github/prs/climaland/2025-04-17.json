@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 259,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- add density dependence to snow albedo\r\n- expose the snow cover parameterization to the user; add resolution dependence parameters\r\n\r\nSuggested experiments \r\n1. Zenith angle with beta = 0  (effectively already done)\r\n2. Zenith angle with beta > 0: \r\n- X0 ~ 0.4 \\pm 0.2, must be positive and less than 1\r\n- Beta = 0.4 \\pm 0.2 must be positive and less than 1\r\n3. zenith angle with beta > 0 and snow cover fraction params \r\n- gamma = 0.1 \\pm 0.05 and must be positive\r\n- beta_0 = 1.8 \\pm 0.1 and must be positive\r\n- beta_min fixed to 1.0 (not trained)\r\n- z0 = 0.106 \\pm 0.05 and must be positive\r\n\r\n\r\n## To-do\r\n\r\n\r\n\r\n## Content\r\nAdds a prefactor to the ZenithAngleAlbedoModel parameterization which depends on snow density. This stands in as a proxy for grain size and liquid water content. This prefactor ranges from 0 to 1 and is smaller for higher density relative to the density of liquid water.\r\n\r\nExposes the snow cover parameters to the user, and adds in an additional two which depend on the resolution of the model. The idea here is to learn how the parameter of the model depends on the resolution of the model to make a resolution-robust model. \r\n\r\n## Reasoning\r\nI am looking at albedo of snow here: https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1029/RG020i001p00067\r\n\r\nFigure 5 shows how liquid water (which they argue is similar to changing the grain size in snow) affects the snowpack albedo. They also point out that while grain size is the primary determinant of snow albedo, the density is a good proxy for it. So I think we could also add a snow density dependence.\r\n\r\n(I think the variation in Fig 5 is comparable to the variation in Fig 10 for zenith angle, so this could be \"as important\" to include. The primary effect would be to darken snow at mid latitudes in spring, I think.\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-14T23:53:14Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2025-04-17T16:22:52Z",
+    "number": 1107,
+    "title": "Extend snow albedo to depend on density; snow cover parameterization exposed"
+  },
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "When using GL quadrature, it makes little sense to have more than one point per element. Interpolating onto multiple points per element leads to duplicated values.\r\n\r\nThis doesn't change the long runs.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-11T20:23:25Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-04-17T17:40:38Z",
+    "number": 1103,
+    "title": "Add default_diagnostic_num_points"
+  }
+]

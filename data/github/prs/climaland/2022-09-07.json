@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 774,
+    "author": {
+      "id": "MDQ6VXNlcjYxODUwODA4",
+      "is_bot": false,
+      "login": "gagnelandmanna",
+      "name": ""
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\nThis PR brings several changes to the vegetation model, which solves for fluxes and water content as a function of height in a tree. We changed the flow (mol s-1) function to flux (m s-1), and use the Bristow approximation instead of the previous approximation we had for flux, which errored when pressure values in adjacent compartments were equal, or when running with certain boundary conditions which led to negative flow estimates and negative values inside the log() of the flow function. This PR also sets fluxes at the faces of the compartments, which are found by using pressure values at compartment midpoints, which we also added. This is more accurate than previous implementation, where pressure and flux were defined at compartment surfaces. We also changed the state variable from relative water content to augmented liquid fraction to allow for expansion in the water holding capacity of the tree (vartheta > 1), like in the soil model. We also made a few name changes.\r\n\r\n## Benefits and Risks\r\nUnit conversion between soil and vegetation models not necessary going forward as uniform, all SI. Bristow approximation works better as described above. \r\n\r\n## Linked Issues\r\n(Provide references to any link issues. Use closes #issuenum to automatically close an open issue)\r\n#70\r\n\r\n## PR Checklist\r\n- [x] This PR has a corresponding issue OR is linked to an SDI.\r\n- [x] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [x] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [x] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [x] I linted my code on my local machine prior to submission OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code used in an integration test OR N/A.\r\n- [x] All tests ran successfully on my local machine OR N/A.\r\n- [x] All classes, modules, and function contain docstrings OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-15T15:32:12Z",
+    "deletions": 675,
+    "labels": [],
+    "mergedAt": "2022-09-07T20:14:18Z",
+    "number": 89,
+    "title": "Vegetation model update"
+  }
+]

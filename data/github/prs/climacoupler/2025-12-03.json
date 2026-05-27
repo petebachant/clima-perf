@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nIn #1251 we removed the function `setup_and_run`, and added a function `step!(cs::CoupledSimulation)`. As we made this change, it looks like we added one extra step at the end of each simulation.\r\n\r\n### Behavior before #1251\r\nWe would iterate over t in a for loop, using `t in (t_start + dt_cpl):dt_cpl:t_end`, so t was in the range `[t_start + dt_cpl, t_end]` (and so was cs.t). At each step of the loop, we set `cs.t[] = t`, then stepped component models.\r\n\r\n### Behavior since #1251\r\nWe iterate over t in a while loop using `cs.t <= t_end`, so t is in the range `[t_start + dt_cpl, t_end]`. However, unlike before, at each step of the loop we set `cs.t[] += dt_cpl`, then stepped component models. This means that at the last step of the while loop, we set `cs.t = t_end + dt_cpl`, then step all components to that time.\r\n\r\n### What we want\r\nSince we want to call step!(cs) without requiring any external information, we want to keep the `cs.t[] += dt_cpl` inside the while loop. However we also want `t_end` to be the real end of the simulation. We can do this by changing the while loop to `cs.t < t_end`, which is what this PR does.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T22:19:21Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-12-03T00:15:35Z",
+    "number": 1586,
+    "title": "remove extra step at end of sim"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "Without these changes, it's not possible to run on the `clima` machine with the `climacommon/2025_05_15` module loaded.\r\n\r\n## Old behavior\r\n\r\n<img width=\"572\" height=\"135\" alt=\"image\" src=\"https://github.com/user-attachments/assets/ad82b772-b5c7-4a58-863e-168aecbe5ee9\" />\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-02T19:33:15Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2025-12-03T22:04:06Z",
+    "number": 1588,
+    "title": "Update ClimaEarth environment for Julia 1.11"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Compat entries for Atmos / Land to support SurfaceFluxes.jl > 0.14.1 have been added to the corresponding branches. Reverts the commit pin for nightly AMIP runs to use SurfaceFluxes.jl main branch.  \r\n\r\nGustiness is represented as a field for consistency with other scalar fields (e.g. beta) ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-03T19:31:40Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-12-03T22:36:10Z",
+    "number": 1590,
+    "title": "Revert SF nightly test branch to main"
+  }
+]

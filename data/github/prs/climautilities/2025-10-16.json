@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 160,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR uses `OnCell` periodic boundary condition whenever possible. This is done by checking if all the dimensions are equispaced and if they are, ~~use `BSpline`~~ add virtual longitude points by repeating the first longitude slice.\r\n\r\n~~All dimensions must be equispaced, because `BSpline` in Interpolations.jl required that. As a result, if the interpolation is from data with time, longitude, and latitude as the dimensions, then a `BSpline` cannot be used. As a result, the interpolation is not correct for the longitude dimension.~~\r\n\r\nThe proposed solution is to use a heuristic to automatically ~~choose oncell~~ add virtual longitude points if one of the dimensions span 360 degrees by seeing if `last(dim) - first(dim) + dim[2] - dim[1] ` is 360 degrees and the dimension is equispaced.\r\n\r\nThis is a stopgap solution to #181.\r\n\r\nTODO\r\n\r\n- [X] Add tests",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-03T22:34:52Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-10-16T21:04:42Z",
+    "number": 190,
+    "title": "Use oncell periodic condition when possible"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nReverting to a constant canopy height.\r\n\r\nWhy?\r\n- It didnt have much of an impact on accuracy and if anything seems changing back to a constant improves bias\r\n- When we calibrated our current parameterization, the coefficient for multiplying h_canopy for displacement height and z_0b became very small, indicating a lack of dependence on canopy height.\r\n\r\nAgreed that these should have some spatial dependence, but I think we should rethink it.\r\n\r\nNot that we need to try and match CLM, but:\r\n- CLM models canopy height as a constant of 0.5m (which was very similar to what we were originally doing)\r\n- CLM models displacement height as 0.67 x canopy_height x function of LAI/SAI. The function of LAI/SAI is between zero and 1. Therefore displacement height is <~0.335 m always. Our displacement height can become very large, so that we need to clip it if d > z_atmos - z_sfc. This is clearly not physical. \r\n- Similar for roughness - the upshot is a roughness length between 0.01 (bare soil) and 0.06 m in CLM.\r\n\r\nLong runs:\r\nhttps://buildkite.com/clima/climaland-long-runs/builds/4723\r\n<img width=\"2400\" height=\"3200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/b421a2fe-62fd-430a-8d2a-e7d4b94738bc\" />\r\n\r\nAlexis' long run on Friday:\r\nhttps://buildkite.com/clima/climaland-long-runs/builds/4720 \r\n<img width=\"2400\" height=\"3200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/69ea16b8-44b9-4e92-bf56-d171b2a789cf\" />\r\n\r\n## Notes\r\n<img width=\"492\" height=\"209\" alt=\"image\" src=\"https://github.com/user-attachments/assets/33bc3ef9-8c4a-473d-b1dc-07603f2604dc\" />\r\n\r\n<img width=\"288\" height=\"169\" alt=\"image\" src=\"https://github.com/user-attachments/assets/c36a221b-8f0d-4346-8a31-a1966f4a076e\" />\r\n\r\n<img width=\"240\" height=\"337\" alt=\"image\" src=\"https://github.com/user-attachments/assets/f91ebdda-69f6-4fc1-852e-995b8c0e78f0\" />\r\n\r\n\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-06T20:47:07Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2026-04-07T17:14:26Z",
+    "number": 1706,
+    "title": "revert to constant canopy height"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "some fixes to docs and tests",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-07T18:01:03Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-04-07T21:48:14Z",
+    "number": 1708,
+    "title": "Ar/inland water slab fixes"
+  }
+]

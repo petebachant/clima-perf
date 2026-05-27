@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 319,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds support for fused incrementing of the state vector for the explicit and imex tableaus. We can easily extend it to the other tableaus, but I've only applied it to these for now.\r\n\r\nFused incrementing is supported by adding a new type: `MaskedCoeffs`, which has a simple definition:\r\n```julia\r\nstruct MaskedCoeffs{S, m, C}\r\n    coeffs::C\r\n    function MaskedCoeffs(coeffs::C) where {C}\r\n        m = BitArray(iszero.(coeffs))\r\n        return new{size(m), Tuple(m), C}(coeffs)\r\n    end\r\nend\r\n```\r\n\r\nMost behavior of these masks simply forward to the `coeffs`, however, there is a special supported feature: the bit array, which indicates whether the coefficients are zero / skippable or not, are converted to tuples, and retrievable at compile-time:\r\n\r\n```julia\r\n# Special behavior of MaskedCoeffs:\r\nBase.@propagate_inbounds Base.getindex(::Type{MaskedCoeffs{S, m, C}}, i::Int, j::Int) where {S, m, C} =\r\n    @inbounds m[i + S[1] * (j - 1)]\r\nBase.@propagate_inbounds Base.getindex(::Type{MaskedCoeffs{S, m, C}}, j::Int) where {S, m, C} = @inbounds m[j]\r\n```\r\n\r\nThis allows us to easily write a `fused_increment` generated function. The version for 2D coefficients looks like this:\r\n\r\n```julia\r\n@inline fused_increment(u, dt, tend, mc, v) = fused_increment(u, dt, tend, mc, v, get_S(mc))\r\n\r\n# ij case (S::NTuple{2})\r\n@generated function fused_increment(u, dt, tend, mc::T, ::Val{i}, ::NTuple{2}) where {i, S, T <: MaskedCoeffs{S}}\r\n    i \u2264 1 && return :(u)\r\n    terms = []\r\n    for j in 1:(i - 1)\r\n        T[i, j] && continue\r\n        push!(terms, :(dt * mc[$i, $j] * tend[$j]))\r\n    end\r\n    isempty(terms) && return :(u)\r\n    expr = comma_sep_expr(terms)\r\n    return :(Base.Broadcast.broadcasted(+, u, $expr...))\r\nend\r\n```\r\n\r\nOne downside of doing this is that the types in the tableaus can no longer be diagonalized. Unless we hard-code implementations based on the algorithm name, I don't think that there is a way to avoid these numbers entering the type space, and grouping them with the coefficients makes book keeping a lot easier. The upside is that only a tuple of Bools enter the type space, rather than the coefficients themselves.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-22T16:22:10Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "DEB1E4",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABB4eaeA",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2024-02-23T14:24:02Z",
+    "number": 249,
+    "title": "Add support for fused incrementing"
+  }
+]

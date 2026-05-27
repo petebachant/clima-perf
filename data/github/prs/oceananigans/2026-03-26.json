@@ -1,0 +1,131 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T00:07:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-03-26T00:07:52Z",
+    "number": 5430,
+    "title": "Fix formatting and citation errors in index.md"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "@tomchor not sure if this is the right fix (perhaps we should actually run this as a `jldoctest` -- we can add `Oceanostics` to the docs environment)\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-24T15:31:25Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-03-26T05:15:35Z",
+    "number": 5425,
+    "title": "Fix typo in Simulation tips docs"
+  },
+  {
+    "additions": 98,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\r\n\r\nThis PR intends to clarify the meaning of \"initialization\" versus other actions associated with `set!`. A principal source of confusion is `initialization_update_state!`, whose name was intended to mean \"update state, during initialization\". However, the name seemed to be interpreted as \"update state AND initialization\", such that this function was overloaded with initialization activities. To fix this confusion this PR eliminates `initialization_update_state!`.\r\n\r\nAnother related issue is that `set!` was being misinterpreted as an initial condition function that can be called only once. This is not true; the intent of the design is that `set!` can be called multiple times. This actually can be useful for some cases where a second call to `set!` may use a computation from the first call. There isn't really a use case for this as far as I can tell for ocean modeling, but it applies to other kinds of models (like atmosphere models and as a corollary, for coupled models), and I believe consistency and non-surprising behavior across the ecosystem is important.\r\n\r\nTo help resolve these inconsistencies, this PR creates a distinction between \"state reconciliation\" which is needed to ensure consistency between 1) the 3D velocity field and the barotropic mode and 2) between the grid metrics and surface displacement for `MutableVerticalDiscretization`. In particular, state reconcilation needs to be performed whenever the model state is changed --- so it can occur more often than \"initialization\", which occurs only once. Moreover state reconciliation is \"idempotent\", in that multiple calls to `reconcile_state!(model)` (a new function for this PR) have no additional effect.\r\n\r\nIn contrast to state reconcilation, _initialization_ is NOT guaranteed to be idempotent, and therefore must strictly be called _only once_. Initialization is now performed by `time_step!(simulation)`, which is called by `run!`. This also means that \"bare\" time-stepping with `time_step!(model, dt)` (ie without `Simulation`) is not guaranteed correct unless `initialize!(model)` is called beforehand. Right now this issue only applies to models that use the Lagrangian-averaged `DynamicSmagorinsky` closure.\r\n\r\nNote that we also call reconcile_state!(model) during initialization (recall that reconcile_state! is idempotent; so it can be called as often as needed), and we call fill_halo_regions! on prognostic variables as well. This resolves an issue raised on #5352 where halo filling needs to be moved out of update_state! (meaning that update_state! can no longer fulfill the role of a complete auxiliary state update). After this PR, a total auxiliary state update requires calling both reconcile_state! (which is not called during time-stepping), and update_state! which is called during time-stepping.\r\n\r\nIn summary this PR\r\n\r\n- Removes the confusing `initialization_update_state!` function, replacing it with a clear separation of concerns\r\n- Introduces `reconcile_state!` \u2014 ensures auxiliary state (barotropic velocities, vertical coordinate \u03c3) is consistent with prognostic fields after external mutation (e.g. via `set!`)\r\n- Renames `initialize_free_surface!` \u2192 `reconcile_free_surface!` and `initialize_vertical_coordinate!` \u2192 `reconcile_vertical_coordinate!` to reflect their true role as reconciliation, not one-time initialization\r\n- Renames `maybe_initialize_state!` \u2192 `maybe_prepare_first_time_step!` (calls only `update_state!` at iteration 0 as a safety net for bare model time-stepping)\r\n- Adds `reconcile_state` kwarg to `set!` for advanced users\r\n- Updates model interface documentation with idempotency requirements\r\n- Bumps version to 0.106.1\r\n\r\n### Function roles after this PR\r\n\r\n| Function | Idempotent? | Purpose |\r\n|----------|-------------|---------|\r\n| `reconcile_state!` | Yes | Make auxiliary state that isn't changed by `update_state!` (U,V,\u03c3) consistent with prognostic fields |\r\n| `update_state!` | Yes | Compute auxiliary state except the parts handled by `reconcile_state!`: recompute diagnostics, fill halos (async), compute tendencies |\r\n| `initialize!` | No | `reconcile_state!` + sync halo fills + closure field init |\r\n| `maybe_prepare_first_time_step!` | Yes | Safety net: calls `reconcile_state!` and `update_state!` at iter 0 for bare model time-stepping |\r\n\r\nCloses discussion from #5352.\r\n\r\n## Test plan\r\n\r\n- [x] Smoke tests: model construction, `set!`, SplitExplicit barotropic mode, `Simulation.run!`, bare `time_step!`\r\n- [x] HFSM tests: 152 passed, 7 broken (pre-existing)\r\n- [x] Simulation tests: 55/55 passed\r\n- [x] Time stepping tests: 118 passed, 2 broken (pre-existing)\r\n- [x] Reactant HFSM tests: 2 errors (pre-existing MLIR failures, same on `main`)\r\n- [ ] Multi-region / CubedSphere tests (running)\r\n- [ ] CI\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-21T03:38:56Z",
+    "deletions": 86,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-03-26T05:16:31Z",
+    "number": 5420,
+    "title": "Remove initialization_update_state! and clean up initialization"
+  },
+  {
+    "additions": 297,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR reenables conservation tests with zstar and `PartialCellBottom` immersed boundary grids. They seem to pass locally",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-03T09:00:20Z",
+    "deletions": 219,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-03-26T08:50:58Z",
+    "number": 5356,
+    "title": "Partial cell conservation"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "It looks like we have random OOM in unit tests:\r\nhttps://buildkite.com/clima/oceananigans/builds/30298#019d254a-8b65-4bdd-8d81-1a7d63c0450a\r\n\r\nIt might be because of accumulated memory in the Unit tests, so in this PR I am just adding a simple GC.gc() and reducing the size of the largest dimension interpolations\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-25T15:36:31Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-03-26T08:51:34Z",
+    "number": 5428,
+    "title": "Relieve memory in unit tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "to capture #5420 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T09:47:40Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-03-26T09:47:56Z",
+    "number": 5431,
+    "title": "Bump minor version from 0.106.2 to 0.106.3"
+  }
+]

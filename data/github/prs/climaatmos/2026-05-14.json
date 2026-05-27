@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 2523,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nRemoves local agent files (except repo-specific files) and instead uses DeveloperGuides as a subtree.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 37,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-12T23:36:16Z",
+    "deletions": 703,
+    "labels": [],
+    "mergedAt": "2026-05-14T01:45:57Z",
+    "number": 4482,
+    "title": "Use central guidelines from DeveloperGuides repo"
+  },
+  {
+    "additions": 156,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR standardizes the YAML config parsing. Closes #4176. This is a breaking change for the coupler.\r\n\r\n\r\nContent:\r\n- Strict coercion in override_default_config: error on type mismatch instead of silently keeping the wrong-typed value. Added EXCEPTED_KEYS bypass for this, restricted to `hyperdiff` (String|nothing union) and `diagnostics` (structured list).\r\n- Schema cleanup: \r\n  - vert_diff/hyperdiff default to ~ (was \"false\")\r\n  - prognostic_surface defaults to \"PrescribedSST\" (was \"false\")\r\n  - diagnostics now declared in the schema instead of bypassed\r\n- Drop dead keys: subsidence, ls_adv, scm_coriolis. Setups own these via dispatch and this was never updated.\r\n- Simplify get_vertical_diffusion_model, get_hyperdiffusion_model, get_subsidence_model, get_large_scale_advection_model, get_scm_coriolis, and check_case_consistency to match.\r\n- Migrate 22 user configs (vert_diff: true --> \"VerticalDiffusion\", hyperdiff: \"false\" --> ~, prognostic_surface: true --> \"SlabOceanSST\").\r\n",
+    "changedFiles": 31,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs7efcVK",
+        "number": 4176,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4176"
+      }
+    ],
+    "createdAt": "2026-05-13T18:34:16Z",
+    "deletions": 157,
+    "labels": [],
+    "mergedAt": "2026-05-14T21:03:23Z",
+    "number": 4486,
+    "title": "Standardize YAML config parsing"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Content\r\n- Tag release 0.39.0\r\n- Update dependencies in buildkite\r\n- Split downgrade tests into groups to match the main test GHA\r\n\r\n```\r\n\r\n    Updating `~/clima/ClimaAtmos.jl/.buildkite/Manifest-v1.11.toml`\r\n  [79e6a3ab] \u2191 Adapt v4.5.2 \u21d2 v4.6.0\r\n  [179af706] \u2191 CFTime v0.2.8 \u21d2 v0.2.9\r\n  [61eb1bfa] \u2191 GPUCompiler v1.10.0 \u21d2 v1.11.1\r\n  [682c06a0] \u2191 JSON v1.5.2 \u21d2 v1.6.0\r\n  [dad2f222] \u2191 LLVMExtra_jll v0.0.43+0 \u21d2 v0.0.43+1\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-14T21:05:33Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-05-14T22:37:23Z",
+    "number": 4492,
+    "title": "Tag release and update dependencies"
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 154,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an alternative to #1861, and I'm feeling more inclined to move forward with this design. This PR switches from using specialization on `CuArrayBackedTypes`, which required naming specific types:\r\n\r\n```julia\r\nconst cu_array = CUDA.CuArray\r\nconst TSubArray{T} = SubArray{<:Any, <:Any, <:T}\r\nconst TReshapedArray{T} = Base.ReshapedArray{<:Any, <:Any, <:T}\r\n\r\nconst CuArrayBackedTypes = Union{\r\n    cu_array,\r\n    TSubArray{cu_array},\r\n    TSubArray{TReshapedArray{cu_array}},\r\n    TSubArray{TReshapedArray{TSubArray{cu_array}}},\r\n    TReshapedArray{cu_array},\r\n    TReshapedArray{TSubArray{cu_array}},\r\n}\r\n```\r\nthat could be passed in, to using dispatch on either `Array` or `CuArray`. The advantage of dispatching is that we no longer have to account for every possible way that these types are composed (e.g., the above definition will break on `TSubArray{TSubArray{cu_array}}` and `TSubArray{TSubArray{TSubArray{cu_array}}}`). The way that this PR achieves this is by having the top-level methods (`Base.copyto!` and `Base.fill!`) call (for example) `Base.copyto!(dest, bc, backed_array(dest, bc))`. `backed_array` does some checking, and then calls an internal `_backed_array` which is recursively defined for all array types that we support:\r\n\r\n```julia\r\n_backed_array(x::CUDA.CuArray) = x # in extension\r\n_backed_array(x::Array) = x\r\n_backed_array(x::SubArray) = _backed_array(parent(x))\r\n_backed_array(x::Base.ReshapedArray) = _backed_array(parent(x))\r\n_backed_array(x::AbstractData) = _backed_array(parent(x))\r\n```\r\n\r\nThis way, every possible combination of CPU/GPU-backed `SubArray` and `ReshapedArray` are now supported and should \"just work\".\r\n\r\nThe price we pay is that now we're dispatching on 3 arguments (e.g., `fill!(::VF, val, ::Array)`), which is not as pretty, but will not involve the existing whack-a-mole situation.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-01T15:26:43Z",
+    "deletions": 46,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-07-02T00:54:31Z",
+    "number": 1863,
+    "title": "CPU-GPU specialization -> dispatching"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Closes #1849, #1734, #1717, #1705, #1706",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-28T14:57:31Z",
+    "deletions": 72,
+    "labels": [],
+    "mergedAt": "2024-07-02T17:12:09Z",
+    "number": 1852,
+    "title": "Update compats and github workflows"
+  }
+]

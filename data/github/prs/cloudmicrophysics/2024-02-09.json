@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 763,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR changes all existing parameter constructors to use `get_parameter_values` instead of accessing the toml dict directly. This requires a lot of lines changed, but most of it is boilerplate.\r\n\r\n### Example for Kaolinite\r\nOriginal:\r\n```julia\r\nfunction Kaolinite(\r\n    ::Type{FT},\r\n    toml_dict::CP.AbstractTOMLDict = CP.create_toml_dict(FT),\r\n) where {FT}\r\n    (; data) = toml_dict\r\n    return Kaolinite(\r\n        FT(data[\"China2017_J_deposition_m_Kaolinite\"][\"value\"]),\r\n        FT(data[\"China2017_J_deposition_c_Kaolinite\"][\"value\"]),\r\n        FT(data[\"KnopfAlpert2013_J_ABIFM_m_Kaolinite\"][\"value\"]),\r\n        FT(data[\"KnopfAlpert2013_J_ABIFM_c_Kaolinite\"][\"value\"]),\r\n    )\r\nend\r\n```\r\nNew constructor:\r\n```julia\r\nKaolinite(::Type{FT}) where {FT <: AbstractFloat} =\r\n    Kaolinite(CP.create_toml_dict(FT))\r\n\r\nfunction Kaolinite(td::CP.AbstractTOMLDict)\r\n    name_map = (;\r\n        :China2017_J_deposition_m_Kaolinite => :deposition_m,\r\n        :China2017_J_deposition_c_Kaolinite => :deposition_c,\r\n        :KnopfAlpert2013_J_ABIFM_m_Kaolinite => :ABIFM_m,\r\n        :KnopfAlpert2013_J_ABIFM_c_Kaolinite => :ABIFM_c,\r\n    )\r\n    parameters = CP.get_parameter_values(td, name_map, \"CloudMicrophysics\")\r\n    FT = CP.float_type(td)\r\n    return Kaolinite{FT}(; parameters...)\r\nend\r\n```\r\n\r\n### Key Changes\r\nConstructors with the form: `ParamStruct(FT, toml_dict = CP.create_toml_dict(FT))` have been changed to \r\n`ParamStruct(FT) = ParamStruct(CP.create_toml_dict(FT))` and `ParamStruct(toml_dict)`. \r\nThis preserves the behavior of `ParamStruct(FT)`, but is technically an interface change since a call like `ParamStruct(FT, toml_dict)` is no longer possible.\r\n\r\nAdd a kwarg constructor for most parameter structs - this is needed for nicer integration with climaparameters.\r\n\r\nThe biggest changes are in the 1 moment Rain, Snow, and CloudIce constructors:\r\n- Add a few new TOML-based constructors for small structs (AcnvB1994, AccrKK2000, AccrB1994, etc)\r\n- Dispatch `ParticleMass` and `ParticleArea` constructors for Rain, Snow, and CloudIce",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-07T18:26:15Z",
+    "deletions": 660,
+    "labels": [],
+    "mergedAt": "2024-02-09T19:54:40Z",
+    "number": 315,
+    "title": "Refactor parameters to use ClimaParameters API"
+  }
+]

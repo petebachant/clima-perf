@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 366,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nLays the groundwork for including surface runoff (applied as part of the boundary condition for soil) and for subsurface runoff (applied as a sink term for the soil model).\r\n\r\nIn this implementation, we assume that\r\n- a single runoff model struct will specify both surface and subsurface runoff parameterizations (these are often linked)\r\nand that the use case is  \r\n- modeling runoff (or not) with Richards model or with the full soil model, either in standalone mode or as part of an LSM. \r\n- only modeling runoff for the special cases of a simulation which prescribes precipitation (Richards model) or precip+atmospheric conditions+radiation conditions (which in turn leads to a computation for evaporation, SHF, LHF, radiative fluxes...; EnergyHydrology model). \r\n \r\nI.e. we wont support:\r\n- just adding subsurface runoff, but not surface runoff, or vice versa\r\n- somehow combining runoff with other types of boundary conditions\r\n\r\nSee Issue #266 \r\n\r\n## Contents \r\nMore major changes:\r\n1. introduces RichardsAtmosDrivenFluxBC which serves the same role as AtmosDrivenFluxBC, but for Richards equation. New boundary_flux method for this BC. Not currently used - should we add now? but I think this could be useful to have.\r\n2. methods for soil_boundary_fluxes for bc::AtmosDrivenFluxBC and boundary_flux for bc::RichardsAtmosDrivenFluxBC compute infiltration using a function defined in runoff.jl (soil_surface_runoff())\r\n3.  Both richards and energy hydrology model constructors add the subsurface flow sink term to the equations based on the type of the boundary condition at the top - i.e. it will only do so if the BC is of type RichardsAtmosDrivenFluxBC or AtmosDrivenFluxBC. It has to add something of type AbstractSoilSource - use soil_subsurface_source().\r\n\r\nMinor changes\r\n1. Adds docstrings/updates APIs\r\n2. fixes the same bug appearing in two files: docs/tutorials/Usage/LSM_single_column_tutorial.jl and tests/integrated/soil_energy_hydrology_biogeochemistry related to how boundary conditions are specified.\r\n4. additional type signatures for boundary_flux methods, minor changes in arguments to boundary_flux, soil_boundary_fluxes, and ClimaLSM.source! methods.\r\n- soil_boundary_fluxes(bc, boundary, model, dz, Y, p, t)\r\n- boundary_flux(bc, boundary, model, dz, Y, p, t)\r\n- ClimaLSM.source!(dY, src, Y, p, model)\r\n- \r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-14T17:56:18Z",
+    "deletions": 73,
+    "labels": [],
+    "mergedAt": "2023-07-18T18:00:47Z",
+    "number": 267,
+    "title": "Preliminary runoff model"
+  }
+]

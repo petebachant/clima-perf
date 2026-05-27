@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "In the spirit of getting closer to continuous delivery (see https://www.oxinabox.net/2019/09/28/Continuous-Delivery-For-Julia-Packages.html#what-if-i-dont-want-to-release-right-now--dev-versions) we should probably tag and release v0.43.0 soon since PRs #1070, #1057, and #1061 + couple of bug fix PRs would be useful to have.\r\n\r\nRelease notes:\r\n\r\n* Fixes a bug in `TwoDimensionalLeith` (PR #1073, issue #1034). Previously tests were being skipped due to extreme slowness. Now we run tests on GPU (but not CPU, where the closure is much slower to compile).\r\n\r\n* Rewrites the interface for \"scheduling\" output and diagnostics (PR #1070). Previously output and diagnostics were usually scheduled by specifying either `time_interval` or `iteration_interval` kwargs in the constrcutor for the object in question. Now, the relevant kwarg is called `schedule` and takes a callable `AbstractSchedule` object (or any user-defined function `func` that returns `true` or `false` depending on the single argument `func(model)`). This design is more flexible and extensible, and also simplifies underlying code. Four schedules are provided:\r\n\r\n    - `TimeInterval(interval)`\r\n    - `IterationInterval(interval)`\r\n    - `WallTimeInterval(interval)`\r\n    - `AveragedTimeInterval(interval; window=interval, stride=1)` (for time-averaging output).\r\n\r\nBreaking changes:\r\n\r\n* Output writers and diagnostics no longer have the keyword arguments `time_interval` or `iteration_interval`. The most commonly-used features that are affected are `JLD2OutputWriter`, `NetCDFOutputWriter`, and `Checkpointer`. `JLD2OutputWriter` and `NetCDFOutputWriter` no longer have the kwargs `time_averaging_window` and `time_averaging_stride`. The specific syntax changes are:\r\n\r\n    * `time_interval=T` becomes `schedule=TimeInterval(T)`\r\n    * `iteration_interval=I` becomes `schedule=IterationInterval(I)`\r\n    * `time_interval=T, time_averaging_window=W` becomes `schedule=AveragedTimeInterval(T, window=W)`.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-17T17:17:13Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-10-20T11:12:11Z",
+    "number": 1077,
+    "title": "Bump v0.43.0"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Helps with #1063.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-19T16:54:13Z",
+    "deletions": 75,
+    "labels": [],
+    "mergedAt": "2020-10-20T13:16:39Z",
+    "number": 1081,
+    "title": "Use mean! not sum! for AveragedField + nuke zero_halo_regions"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #1076",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MjM4MDU4NDc=",
+        "number": 1076,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1076"
+      }
+    ],
+    "createdAt": "2020-10-17T17:31:04Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2020-10-20T19:53:39Z",
+    "number": 1078,
+    "title": "Set `-O0` when testing"
+  }
+]

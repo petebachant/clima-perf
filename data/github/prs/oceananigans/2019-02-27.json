@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 175,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Just hacked something together that allows for user-defined forcing functions for the CPU. Have not tested on the GPU yet.\r\n\r\nBasically there's a struct `Forcing` that stores the user-defined forcing functions. It will replace the old `ForcingFields` struct. See `examples/deep_convection_3d.jl` for how I switched to using a forcing function for T to enforce a cooling surface heat flux.\r\n\r\nA big issue is that the current implementation slows down the time stepping by a factor of 2-3x. So we'll have to figure out why before merging.\r\n\r\nThe function must have a signature like `F(u, v, w, T, S, Nx, Ny, Nz, \u0394x, \u0394y, \u0394z, i, j, k)` right now so this won't produce a nice solution as we will have to figure out #59 before the function signature can look as nice as `surface_cooling_disk(grid, velocities, tracers, i, j, k)`. This is work for another branch.\r\n\r\nWill keep working on this before merging. Just wanted to start something.\r\n\r\nResolves #73 ",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-02-26T23:07:49Z",
+    "deletions": 119,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-02-27T22:54:51Z",
+    "number": 85,
+    "title": "Support for user-defined forcing functions."
+  }
+]

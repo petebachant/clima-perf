@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 181,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nSome of our buildkite runs were not running on GPU. Update buildkite so that they are.\r\n\r\ncloses #860 \r\n\r\n## Content\r\n- Run tests on GPU (we thought we were doing this before but were not), and make some GPU-compatibility fixes\r\n- Use Array(parent(...)) in tests for GPU compatibility.\r\nThis is required to enable GPU compatibility. Generally the pattern\r\n`Array(parent(...))` is discouraged, but using it to check analytic\r\nvalues in tests is okay.\r\n- Add workaround to avoid type inference failure (initial bug described below)\r\nThis is required as a workaround to the type inference failure detailed \r\nin https://github.com/CliMA/ClimaCore.jl/issues/2065. The failure appears\r\nwhen a function is broadcast over one field and two structs; the types\r\nare too complex and inference fails. This workaround introduces a wrapper\r\nstruct to contain the two struct inputs, so that the function is broadcast\r\nover one field and only one struct, and the types are easier to infer.\r\n\r\n## Initial bug reported\r\n1. Fix bug in `experiments/integrated/performance/profile_allocations.jl`. Note that the same code runs on the Clima cluster on GPU. This is the error message:\r\n```\r\n(base) [kdeck@hpc-22-32 ClimaLand.jl]$ julia --project=.buildkite  experiments/integrated/performance/profile_allocations.jl\r\n[ Info: ProfileCanvas found, running with profiler\r\nERROR: LoadError: InvalidIRError: compiling MethodInstance for ClimaCoreCUDAExt.knl_copyto!(::ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, ::Base.Broadcast.Broadcasted{ClimaCore.DataLayouts.VIJFHStyle{5, 2, 600, CUDA.CuArray{Float64, N, CUDA.DeviceMemory} where N}, NTuple{5, Base.OneTo{Int64}}, typeof(ClimaCore.RecursiveApply.radd), Tuple{ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, Base.Broadcast.Broadcasted{ClimaCore.DataLayouts.VIJFHStyle{5, 2, 600, CUDA.CuArray{Float64, N, CUDA.DeviceMemory} where N}, Nothing, typeof(ClimaCore.RecursiveApply.rsub), Tuple{Base.Broadcast.Broadcasted{ClimaCore.DataLayouts.VIJFHStyle{5, 2, 600, CUDA.CuArray{Float64, N, CUDA.DeviceMemory} where N}, Nothing, typeof(phase_change_source), Tuple{ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, Base.Broadcast.Broadcasted{ClimaCore.DataLayouts.VIJFHStyle{5, 2, 600, CUDA.CuArray{Float64, N, CUDA.DeviceMemory} where N}, Nothing, typeof(thermal_time), Tuple{Base.Broadcast.Broadcasted{ClimaCore.DataLayouts.VIJFHStyle{5, 2, 600, CUDA.CuArray{Float64, N, CUDA.DeviceMemory} where N}, Nothing, typeof(volumetric_heat_capacity), Tuple{ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}, Float64, Tuple{ClimaLand.Parameters.LandParameters{Float64, Thermodynamics.Parameters.ThermodynamicsParameters{Float64}, SurfaceFluxes.Parameters.SurfaceFluxesParameters{Float64, SurfaceFluxes.UniversalFunctions.BusingerParams{Float64}, Thermodynamics.Parameters.ThermodynamicsParameters{Float64}}, Insolation.Parameters.InsolationParameters{Float64}}}}}, ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, SubArray{Float64, 5, CUDA.CuDeviceArray{Float64, 5, 1}, Tuple{Base.Slice{Base.OneTo{Int64}}, Base.Slice{Base.OneTo{Int64}}, Base.Slice{Base.OneTo{Int64}}, UnitRange{Int64}, Base.Slice{Base.OneTo{Int64}}}, false}}, ClimaCore.DataLayouts.VIJFH{Float64, 5, 2, 600, CUDA.CuDeviceArray{Float64, 5, 1}}}}, Float64, Float64, Tuple{vanGenuchten{Float64}}, Tuple{ClimaLand.Parameters.LandParameters{Float64, Thermodynamics.Parameters.ThermodynamicsParameters{Float64}, SurfaceFluxes.Parameters.SurfaceFluxesParameters{Float64, SurfaceFluxes.UniversalFunctions.BusingerParams{Float64}, Thermodynamics.Parameters.ThermodynamicsParameters{Float64}}, Insolation.Parameters.InsolationParameters{Float64}}}}}}}}}) resulted in invalid LLVM IR\r\nReason: unsupported dynamic function invocation (call to getindex(t::Tuple, i::Int64) @ Base tuple.jl:31)\r\nStacktrace:\r\n [1] _getindex (repeats 7 times)\r\n   @ ./broadcast.jl:705\r\n [2] _broadcast_getindex\r\n   @ ./broadcast.jl:681\r\n [3] _getindex\r\n   @ ./broadcast.jl:706\r\n [4] _broadcast_getindex\r\n   @ ./broadcast.jl:681\r\n [5] _getindex\r\n   @ ./broadcast.jl:706\r\n [6] _getindex\r\n   @ ./broadcast.jl:705\r\n [7] _broadcast_getindex\r\n   @ ./broadcast.jl:681\r\n [8] getindex\r\n   @ ./broadcast.jl:636\r\n [9] knl_copyto!\r\n   @ ~/.julia/packages/ClimaCore/Zoz8z/ext/cuda/data_layouts_copyto.jl:13\r\nReason: unsupported dynamic function invocation (call to matric_potential)\r\nStacktrace:\r\n  [1] phase_change_source\r\n    @ /central/home/kdeck/ClimaLand.jl/src/standalone/Soil/soil_heat_parameterizations.jl:65\r\n```\r\n\r\n /central/home/kdeck/ClimaLand.jl/src/standalone/Soil/soil_heat_parameterizations.jl:65:\r\n```\r\nfunction phase_change_source(\r\n    \u03b8_l::FT,\r\n    \u03b8_i::FT,\r\n    T::FT,\r\n    \u03c4::FT,\r\n    \u03bd::FT,\r\n    \u03b8_r::FT,\r\n    hydrology_cm::C,\r\n    earth_param_set::EP,\r\n) where {FT, EP, C}\r\n    _\u03c1_i = FT(LP.\u03c1_cloud_ice(earth_param_set))\r\n    _\u03c1_l = FT(LP.\u03c1_cloud_liq(earth_param_set))\r\n    _LH_f0 = FT(LP.LH_f0(earth_param_set))\r\n    _T_freeze = FT(LP.T_freeze(earth_param_set))\r\n    _grav = FT(LP.grav(earth_param_set))\r\n    # According to Dall'Amico (text above equation 1), \u03c8w0 corresponds\r\n    # to the matric potential corresponding to the total water content (liquid and ice).\r\n    \u03b8tot = min(_\u03c1_i / _\u03c1_l * \u03b8_i + \u03b8_l, \u03bd)\r\n    # This is consistent with Equation (22) of Dall'Amico\r\n    \u03c8w0 = matric_potential(hydrology_cm, effective_saturation(\u03bd, \u03b8tot, \u03b8_r)) # <---- Line 65\r\n\r\n    \u03c8T = _LH_f0 / _T_freeze / _grav * (T - _T_freeze) * heaviside(_T_freeze - T)\r\n    # Equation (23) of Dall'Amico\r\n    \u03b8star = inverse_matric_potential(hydrology_cm, \u03c8w0 + \u03c8T) * (\u03bd - \u03b8_r) + \u03b8_r\r\n\r\n    return (\u03b8_l - \u03b8star) / \u03c4\r\nend\r\n```\r\n\r\nCalled by:\r\n```\r\n    params = model.parameters\r\n    (; \u03bd, \u03c1c_ds, \u03b8_r, hydrology_cm, earth_param_set) = params\r\n    _\u03c1_l = FT(LP.\u03c1_cloud_liq(earth_param_set))\r\n    _\u03c1_i = FT(LP.\u03c1_cloud_ice(earth_param_set))\r\n    \u0394z = model.domain.fields.\u0394z # center face distance\r\n    @. dY.soil.\u03d1_l +=\r\n        -phase_change_source(\r\n            p.soil.\u03b8_l,\r\n            Y.soil.\u03b8_i,\r\n            p.soil.T,\r\n            thermal_time(\r\n                volumetric_heat_capacity(\r\n                    p.soil.\u03b8_l,\r\n                    Y.soil.\u03b8_i,\r\n                    \u03c1c_ds,\r\n                    earth_param_set,\r\n                ),\r\n                \u0394z,\r\n                p.soil.\u03ba,\r\n            ),\r\n            \u03bd,\r\n            \u03b8_r,\r\n            hydrology_cm,\r\n            earth_param_set,\r\n        )\r\n```\r\n\r\nNote that `typeof(hydrology_cm) <: AbstractSoilHydrologyClosure` and we have set `Base.broadcastable(x::AbstractSoilHydrologyClosure) = tuple(x)`\r\n\r\n\r\n## Content\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6atMBv",
+        "number": 860,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/860"
+      }
+    ],
+    "createdAt": "2024-08-27T18:01:12Z",
+    "deletions": 70,
+    "labels": [],
+    "mergedAt": "2024-12-11T02:53:43Z",
+    "number": 739,
+    "title": "fix buildkite run so that unit tests run on GPU"
+  },
+  {
+    "additions": 543,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #872 - This PR adds a leaderboard component for ClimaLand's long runs. See the plots below.\r\n\r\n![gpp_bias_plot](https://github.com/user-attachments/assets/5218112c-820f-4fac-8268-3dfe57c49e72)\r\n![lwu_bias_plot](https://github.com/user-attachments/assets/237a0e2e-3a44-4767-b1d7-de02fbdbe582)\r\n![et_bias_plot](https://github.com/user-attachments/assets/31aa3b24-35bd-4aeb-a257-7788ed6beb82)\r\n![global_rmse_and_bias_graphs](https://github.com/user-attachments/assets/a375c704-23f5-4824-8bf9-bad5201d9313)\r\n\r\nThe values near the coastlines are `Nan`s because the observational data is resampled so that it matches the same grid as the simulation data.\r\n\r\nI added a new file `land_leaderboard.jl` since no simulation being done for long runs are longer are two years or more. I am not sure if this should be done since `land_leaderboard.jl` is exactly the same as `land.jl` beside the length of the simulation. The leaderboard code still works even if the length of the simulation is only a year, it would just not throw away the first year of the simulation and use it instead for comparing against the observational data.\r\n\r\nThe other thing is that the simulation is not correct because the era5 land forcing data is from 2021.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6bKdbD",
+        "number": 872,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/872"
+      }
+    ],
+    "createdAt": "2024-10-28T18:34:55Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-12-11T17:44:14Z",
+    "number": 890,
+    "title": "Add leaderboard component to ClimaLand's long runs"
+  }
+]

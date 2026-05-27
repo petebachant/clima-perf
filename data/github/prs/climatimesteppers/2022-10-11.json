@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR fixes `step!` so that it can be called arbitrarily many times.\r\nCloses #73 \r\n\r\n## Content\r\nThis adds a check for `!isempty(tstops)` to `DiffEqBase.step!` for our `DistributedODEIntegrator`, allowing the integrator to step past the final `tstop`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEDQfX85TlZC7",
+        "number": 73,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNzE4NTEzNTk=",
+          "name": "ClimaTimeSteppers.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaTimeSteppers.jl/issues/73"
+      }
+    ],
+    "createdAt": "2022-10-10T18:21:19Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-10-11T15:50:40Z",
+    "number": 74,
+    "title": "Fix bug in step! that prefents stepping past t_end"
+  },
+  {
+    "additions": 392,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\nThis PR adds test cases from [ARK ODE](http://runge.math.smu.edu/ARKode_example.pdf) that have analytic solutions, specifically `ark_analytic`, `ark_analytic_nonlin`, and `ark_analytic_sys`. Every new algorithm in ClimaTimeSteppers will be tested against these problems, with the current PR updating the tests for IMEX ARK algorithms. Testing an algorithm involves computing the problem's solution using the algorithm for some `dt`, checking that the solution is the same for the increment and tendency formulations of the algorithm, plotting the computed solution and its error (as compared to the analytic solution), computing new solutions for a slightly larger and a slightly smaller `dt`, checking that the convergence order is within 10% of the predicted order for the algorithm, and plotting the convergence with respect to `dt`. For algorithms that use Newton's method, only 1 iteration is used for problems with a linear implicit part, while 2 iterations are used for problems with a nonlinear implicit part.\r\n\r\nIn addition, this PR introduces a consistent format for specifying test cases (the `IntegratorTestCase` object), and it modifies the tests in `integrator.jl` to use a `constant_tendency` test case instead of `const_prob` and `const_sol`. The other test files should also eventually be modified.\r\n\r\n## Benefits and Risks\r\nThese tests are more rigorous than what we had before, and they would have caught the ARS bug that held us up for a while. The automated plots also provide a quick way to identify issues by visual inspection of Buildkite results. All the plots are also added to the documentation, though we might want to reduce this to only a few key plots if the number of plots increases.\r\n\r\nThere are two minor issues. The first is that ARS121 converges with order 2 for `ark_analytic`, even though it is only a first order method; there is probably some arcane mathematical reason for this. The second issue is that Oswald's HOMMEM1 algorithm does not pass the increment comparison test, which might indicate a lingering bug in the increment formulation.\r\n\r\n## PR Checklist\r\n- [ ] This PR has a corresponding issue OR is linked to an SDI.\r\n- [x] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [x] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [x] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [x] I linted my code on my local machine prior to submission OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code used in an integration test OR N/A.\r\n- [x] All tests ran successfully on my local machine OR N/A.\r\n- [x] All classes, modules, and function contain docstrings OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-26T17:59:41Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2022-10-11T21:23:12Z",
+    "number": 64,
+    "title": "Add ARK ODE tests and plots"
+  }
+]

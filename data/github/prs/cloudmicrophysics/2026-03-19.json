@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 897,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "# Summary\r\n\r\nThis pull request refactors the type hierarchy and usage of parameterized types throughout the codebase to simplify type signatures and improve code clarity. The main change is the removal of the floating-point type parameter (`FT`) from many struct definitions and function signatures, in favor of storing the floating-point type only where necessary (typically as fields rather than in the type itself). This results in shorter, more readable type signatures and reduces the need for repeated type parameters in function definitions. Additionally, some keyword argument usage is improved for clarity.\r\n\r\nThe PR is organized with two commits:\r\n- The first introduces the struct improvements\r\n- The second contains the `show.jl` methods\r\n\r\n# Content\r\n\r\n**Type System Simplification and Refactoring:**\r\n\r\n* The abstract `ParametersType` no longer has the `FT` field in type space. For backward compatibility, the `eltype` function remains, and recursively looks up the first argument of the concrete struct. Within microphysics parameterizations, `FT` should instead be fetched from the state.\r\n* Relatedly, structs that do not explicitly store elements of type `FT`, no longer carry this information in type space.\r\n\r\n**API and Usability Improvements:**\r\n\r\n* Construction of `SB2006` objects in plotting scripts now uses keyword arguments for clarity (`is_limited = false`), replacing positional boolean arguments. [[1]](diffhunk://#diff-3da31cc0a82ec76ffc26eed642af787642daa5f97f4cae77fd68f173a781cd3dL27-R27) [[2]](diffhunk://#diff-1513930e33b38736b2cc2f38f2bed730a7ff7a126394853978bfec1fa0f823a7L20-R20) [[3]](diffhunk://#diff-6469470bd7023d9c34138b69f09538a4016923266aae032f3544a25641aa88ceL12-R12)\r\n\r\n**Struct printing**\r\n\r\n* Added generic `show` methods (see `show.jl`) that structs can use to enable pretty-printing of their contents.\r\n* By default, all parameter structs (i.e. subtypes of `ParametersType`) with more than 7 elements will be verbosely printed, and otherwise tersely printed. Printing is recursive, as the example below illustrates. \r\n* Optionally, you can attach units to elements of the structure for more informative printing.\r\n\r\n```julia-repl\r\njulia> import CloudMicrophysics.Parameters as CMP\r\n\r\njulia> CMP.SB2006(Float32)\r\nSB2006\r\n\u251c\u2500 pdf_c: CloudParticlePDF_SB2006(\u03bdc = 1.0f0, \u03bcc = 1.0f0, xc_min = 4.2f-15, xc_max = 2.6f-10, \u03c1w = 1000.0f0)\r\n\u251c\u2500 pdf_r: RainParticlePDF_SB2006_limited\r\n\u2502  \u251c\u2500 \u03bdr = -0.6666667\r\n\u2502  \u251c\u2500 \u03bcr = 0.33333334\r\n\u2502  \u251c\u2500 xr_min = 2.6e-10\r\n\u2502  \u251c\u2500 xr_max = 5.0e-6\r\n\u2502  \u251c\u2500 N0_min = 250000.0\r\n\u2502  \u251c\u2500 N0_max = 2.0e7\r\n\u2502  \u251c\u2500 \u03bb_min = 1000.0\r\n\u2502  \u251c\u2500 \u03bb_max = 10000.0\r\n\u2502  \u251c\u2500 \u03c1w = 1000.0\r\n\u2502  \u2514\u2500 \u03c10 = 1.225\r\n\u251c\u2500 acnv: AcnvSB2006(kcc = 4.44f9, x_star = 2.6f-10, \u03c10 = 1.225f0, A = 400.0f0, a = 0.7f0, b = 3.0f0)\r\n\u251c\u2500 accr: AccrSB2006(kcr = 5.25f0, \u03c40 = 5.0f-5, \u03c10 = 1.225f0, c = 4.0f0)\r\n\u251c\u2500 self: SelfColSB2006(krr = 7.12f0, \u03barr = 60.7f0, d = -5.0f0)\r\n\u251c\u2500 brek: BreakupSB2006(Deq = 0.0009f0, Dr_th = 0.00035f0, kbr = 1000.0f0, \u03babr = 2300.0f0)\r\n\u251c\u2500 evap: EvaporationSB2006(av = 0.78f0, bv = 0.308f0, \u03b1 = 159.0f0, \u03b2 = 0.266f0, \u03c10 = 1.225f0)\r\n\u2514\u2500 numadj: NumberAdjustmentHorn2012(\u03c4 = 100.0f0)\r\n\r\njulia> CMP.CloudLiquid(Float32)  # the fields for this struct has units defined\r\nCloudLiquid(\u03c4_relax = 10.0f0 [s], \u03c1w = 1000.0f0 [kg/m\u00b3], r_eff = 1.4f-5 [m], N_0 = 5.0f8 [1/m\u00b3])\r\n\r\n```\r\n\r\n**Other Minor Improvements:**\r\n\r\n* Remove `Base.` prefix from `@kwdef` macro as it is directly available.",
+    "changedFiles": 50,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-11T22:07:26Z",
+    "deletions": 997,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-03-19T21:24:52Z",
+    "number": 700,
+    "title": "rft: improve parameter constructors"
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This feature adds support for using a checkpoint file to initialize a model that contains additional passive tracers that weren't present in the original simulation. The use case in mind is whenever a user wants to start passive tracers only after simulation spin-up, for example.\r\n\r\nAt the moment, on main, this isn't possible since if we try to pickup a simulation but a given variable can't be found in the checkpointer file, the code throws a warning when trying to set the data for that variable, and an error when trying to set its tendencies.\r\n\r\nThis PR changes the code so that it throws an error for both cases. After this PR a user can then do:\r\n\r\n```julia\r\nusing Oceananigans\r\n\r\ngrid = RectilinearGrid(size = (4, 4, 4), extent = (1,1,1))\r\n\r\nmodel_spinup = NonhydrostaticModel(; grid, tracers = :b)\r\nset!(model_spinup, b=1)\r\n\r\nsimulation = Simulation(model_spinup, \u0394t = 1, stop_time = 10)\r\nsimulation.output_writers[:checkpointer] = checkpointer = Checkpointer(model_spinup,\r\n                                                                       schedule=TimeInterval(5),\r\n                                                                       prefix=\"checkpoint\")\r\n\r\nrun!(simulation)\r\n\r\nusing Oceananigans.OutputWriters: write_output!\r\nwrite_output!(checkpointer, model_spinup)\r\n\r\nmodel = NonhydrostaticModel(; grid,\r\n                            tracers = (keys(model_spinup.tracers)..., :t1, :t2))\r\n\r\n@info \"Restarting model with more tracers\"\r\ncheckpoint_file_path = Oceananigans.OutputWriters.checkpoint_path(true, simulation.output_writers)\r\nset!(model, checkpoint_file_path)\r\n\r\nsimulation = Simulation(model, \u0394t = 1, stop_time = 20)\r\n\r\nrun!(simulation)\r\n```\r\n\r\nOn main this throws a `KeyError`. On this branch this produces:\r\n\r\n```julia\r\n[ Info: Initializing simulation...\r\n[ Info:     ... simulation initialization complete (1.614 seconds)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (20.304 seconds).\r\n[ Info: Simulation is stopping after running for 22.039 seconds.\r\n[ Info: Simulation time 10 seconds equals or exceeds stop time 10 seconds.\r\n[ Info: Restarting model with more tracers\r\n\u250c Warning: Could not restore t1 from checkpoint.\r\n\u2514 @ Oceananigans.OutputWriters ~/repos/Oceananigans.jl/src/OutputWriters/checkpointer.jl:218\r\n\u250c Warning: Could not restore t2 from checkpoint.\r\n\u2514 @ Oceananigans.OutputWriters ~/repos/Oceananigans.jl/src/OutputWriters/checkpointer.jl:218\r\n\u250c Warning: Could not restore tendencies for t1 from checkpoint.\r\n\u2514 @ Oceananigans.OutputWriters ~/repos/Oceananigans.jl/src/OutputWriters/checkpointer.jl:257\r\n\u250c Warning: Could not restore tendencies for t2 from checkpoint.\r\n\u2514 @ Oceananigans.OutputWriters ~/repos/Oceananigans.jl/src/OutputWriters/checkpointer.jl:257\r\n[ Info: Initializing simulation...\r\n[ Info:     ... simulation initialization complete (514.400 \u03bcs)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (41.614 seconds).\r\n[ Info: Simulation is stopping after running for 41.750 seconds.\r\n[ Info: Simulation time 20 seconds equals or exceeds stop time 20 seconds.\r\n\r\njulia> interior(model.tracers.b)\r\n4\u00d74\u00d74 view(::Array{Float64, 3}, 4:7, 4:7, 4:7) with eltype Float64:\r\n[:, :, 1] =\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n\r\n[:, :, 2] =\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n\r\n[:, :, 3] =\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n\r\n[:, :, 4] =\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n 1.0  1.0  1.0  1.0\r\n\r\njulia> interior(model.tracers.t1)\r\n4\u00d74\u00d74 view(::Array{Float64, 3}, 4:7, 4:7, 4:7) with eltype Float64:\r\n[:, :, 1] =\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n\r\n[:, :, 2] =\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n\r\n[:, :, 3] =\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n\r\n[:, :, 4] =\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n 0.0  0.0  0.0  0.0\r\n```\r\n\r\nOne option to add safety is to modify `set!(model, filepath::AbstractString)` to take an option argument `skip_missing_variables = false` (or something), which would change the behavior from throwing a warning to throwing an error.\r\n\r\n@whitleyv ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-22T02:03:58Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2023-02-23T16:45:18Z",
+    "number": 2938,
+    "title": "Make it easier to restart a simulation from a checkpoint with additional passive tracers"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #2922 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5eRAaG",
+        "number": 2922,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2922"
+      }
+    ],
+    "createdAt": "2023-02-21T22:24:34Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2023-02-23T23:47:58Z",
+    "number": 2937,
+    "title": "Brings back ShallowWater regression test"
+  }
+]

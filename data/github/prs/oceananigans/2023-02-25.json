@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "I made an attempt. But it can be definitely improved...\r\n\r\nSo this diffusivity is applied to the dynamics regardless the formulation?\r\n\r\n@francispoulin can you edit the docstring? Or @simone-silvestri?\r\n\r\nCloses #2939 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5fCLTV",
+        "number": 2939,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2939"
+      }
+    ],
+    "createdAt": "2023-02-22T04:11:43Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2023-02-25T01:27:17Z",
+    "number": 2941,
+    "title": "Docstring for `ShallowWaterScalarDiffusivity`"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "When trying to run a LES with a Tuple closure (such as `closure = (ScalarDiffusivity(), SmagorinskyLilly())`), the calculation of a diffusive timescale fails on main:\r\n\r\n```\r\njulia> cell_diffusion_timescale(model.closure, model.diffusivity_fields, model.grid)\r\nERROR: type Tuple has no field \u03bd\u2091\r\nStacktrace:\r\n  [1] getproperty\r\n    @ ./Base.jl:38 [inlined]\r\n  [2] cell_diffusion_timescale(closure::SmagorinskyLilly{Oceananigans.TurbulenceClosures.ExplicitTimeDiscretization, Float64, NamedTuple{(:b,), Tuple{Float64}}}, diffusivities::Tuple{Nothing, NamedTuple{(:\u03bd\u2091,), Tuple{Field{Center, Center, Center, Nothing, RectilinearGrid{Float64, Periodic, Periodic, Bounded, Float64, Float64, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, CPU}, Tuple{Colon, Colon, Colon}, OffsetArrays.OffsetArray{Float64, 3, Array{Float64, 3}}, Float64, FieldBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Flux, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Flux, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Flux, Nothing}}, Nothing, Oceananigans.Fields.FieldBoundaryBuffers{Nothing, Nothing, Nothing, Nothing}}}}}, grid::RectilinearGrid{Float64, Periodic, Periodic, Bounded, Float64, Float64, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, CPU})\r\n    @ Oceananigans.TurbulenceClosures /glade/work/tomasc/.julia/packages/Oceananigans/yF0dQ/src/TurbulenceClosures/turbulence_closure_diagnostics.jl:51\r\n```\r\n\r\nThis PR fixes that and generalizes a test so that this issue can be caught in the future.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-24T15:57:10Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2023-02-25T16:49:54Z",
+    "number": 2945,
+    "title": "Fixes calculation of diffusive CFL for LES with Tuple closures"
+  }
+]

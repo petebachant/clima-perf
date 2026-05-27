@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 705,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR primarily adds a utility called `regrid_bathymetry(target_grid)` designed to \"regrid\" ETOPO bathymetry to any latitude-longitude grid.\r\n\r\nThe bathymetry file is downloaded from:\r\n\r\nhttps://www.ngdc.noaa.gov/thredds/fileServer/global/ETOPO2022/60s/60s_surface_elev_netcdf/ETOPO_2022_v1_60s_N90\r\nW180_surface.nc\r\n\r\ninto the directory `/data`. (If the file is already found there, it is not re-downloaded). The url and filename can be changed via keyword arguments.\r\n\r\nThe basic usage is demonstrated by `examples/generate_bathymetry.jl`:\r\n\r\n```julia\r\ngrid = LatitudeLongitudeGrid(CPU();\r\n                             size = (360, 160, 1),\r\n                             latitude = (-80, 80),\r\n                             longitude = (-180, 180),\r\n                             z = (0, 1),\r\n                             halo = (4, 4, 4))\r\n\r\none_degree_h = regrid_bathymetry(grid, height_above_water=1, minimum_depth=5)\r\n```\r\n\r\n`regrid_bathymetry` performs the following steps:\r\n\r\n1. Load ETOPO bathymetry from file (possibly downloading first).\r\n2. Setting the height of land (\"above water\") to 1 meter. (The default is `nothing`, which does not change land height.)\r\n3. Reduce the minimum ocean depth to 5 meters (default: 0).\r\n4. Create the ETOPO \"native grid\", and then regrid the modified ETOPO bathymetry to the target grid (above, a grid with one-degree resolution).\r\n\r\nThe regridding is done by area averaging. Thus by adjusting the two keywords `height_above_water` and `minimum_depth`, users can tweak the position of coastlines. For example, larger `height_above_water` will yield a coarse bathymetry with more land.\r\n\r\nEventually I would also like to add the kwarg `fill_inland_seas`.\r\n\r\nWe may also have additional functions like `quarter_degree_bathymetry()`, which use `regrid_bathymetry` to generate an initial bathymetry estimate, and then perform further modifications based on bespoke knowledge for quarter degree grids (such as widening the Strait of Gibraltar).\r\n\r\nCloses #32 ",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys5phYSp",
+        "number": 32,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/32"
+      }
+    ],
+    "createdAt": "2023-07-10T18:35:05Z",
+    "deletions": 349,
+    "labels": [],
+    "mergedAt": "2023-10-11T22:55:35Z",
+    "number": 35,
+    "title": "Utility for regridding ETOPO bathymetry to any grid"
+  }
+]

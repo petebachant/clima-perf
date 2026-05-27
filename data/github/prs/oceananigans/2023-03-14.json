@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 783,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The main goal for this PR is to create a user-facing function to obtain grid spacings.\r\n\r\nEDIT:\r\n\r\n The current behavior is that for every grid type there are functions `xspacings()`, `xspacing()`, `xnodes()` and `xnode()` (and similarly for y and z) that follow the pattern illustrated below:\r\n\r\n```julia\r\njulia> grid = RectilinearGrid(size=(4, 4, 1), extent=(1, 1, 1))\r\n4\u00d74\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)  regularly spaced with \u0394x=0.25\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)  regularly spaced with \u0394y=0.25\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-1.0, 0.0] regularly spaced with \u0394z=1.0\r\n\r\njulia> xnodes(grid, Center(), Center(), Face())\r\n4-element view(OffsetArray(::StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}, -2:7), 1:4) with eltype Float64:\r\n 0.125\r\n 0.375\r\n 0.625\r\n 0.875\r\n\r\njulia> xnode(2, 2, 2, grid, Center(), Center(), Face())\r\n0.375\r\n\r\njulia> xspacings(grid, Center(), Center(), Face())\r\n0.25\r\n\r\njulia> xspacing(1, 2, 3, grid, Center(), Center(), Face())\r\n0.25\r\n```\r\n\r\nThese functions also appropriately handle stretched coordinates. In addition, both `xspacings()` and `xnodes()` have a `with_halos` kwarg that controls whether of not halos points are included.\r\n\r\nConvenience functions with fewer arguments are also defined for the cases where that's possible. For example:\r\n\r\n```julia\r\njulia> xnode(2,2,2, grid, Center(), Center(), Face())\r\n0.375\r\n\r\njulia> xnode(2, grid, Center())\r\n0.375\r\n```\r\n\r\nI added tests for these functions for every grid in a way that doesn't create new grid instantiations.",
+    "changedFiles": 53,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-27T00:19:14Z",
+    "deletions": 482,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-03-14T22:13:01Z",
+    "number": 2842,
+    "title": "Creates functions for grid spacings"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Change u\u20d7 -> \ud835\udc2e\r\n\r\nSee https://clima.github.io/OceananigansDocumentation/stable/model_setup/forcing_functions/#AdvectiveForcing\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-14T16:50:35Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2023-03-14T22:26:50Z",
+    "number": 2971,
+    "title": "Fix docs rendering in Model setup/Forcing"
+  }
+]

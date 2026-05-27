@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes a major latency issue on Julia 1.9 (per @vtjnash on slack)\r\n\r\n> it is a constructor for a type with too many Union parameters\r\n\r\nThe fix is to remove several `Union` parameter types. I also took the opportunity to reduce the type space for `Solver`-- there is no need to have `I <: Int` and `FT` in the type space since `Int` will always resolve the same and `FT` can be grabbed from `eltype`s of member arrays.\r\n\r\nMain:\r\n```julia\r\njulia> @time using RRTMGP\r\n[ Info: Precompiling RRTMGP [a01a1ee8-cea4-48fc-987c-fc7878d79da1]\r\n532.620944 seconds (517.19 M allocations: 140.311 GiB, 2.15% gc time, 0.16% compilation time: 86% of which was recompilation)\r\n```\r\n\r\nThis PR:\r\n```julia\r\njulia> @time using RRTMGP\r\n[ Info: Precompiling RRTMGP [a01a1ee8-cea4-48fc-987c-fc7878d79da1]\r\n  5.199173 seconds (5.78 M allocations: 453.897 MiB, 1.94% gc time, 15.94% compilation time: 88% of which was recompilation)\r\n```\r\n\r\nIt's still not fantastic (there are other structs with several `Union`s), but it's at least not catastrophic.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-11T18:21:13Z",
+    "deletions": 82,
+    "labels": [],
+    "mergedAt": "2023-05-11T19:44:38Z",
+    "number": 352,
+    "title": "Fix Latency on julia 1.9"
+  }
+]

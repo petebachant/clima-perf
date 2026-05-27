@@ -1,0 +1,140 @@
+[
+  {
+    "additions": 300,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Originally this PR did what is described below. Then https://github.com/CliMA/Oceananigans.jl/pull/4582 and https://github.com/CliMA/Oceananigans.jl/pull/4554 were merged, which did part of what was originally proposed here. Now this PR will only add tests to ensure that things keep working with the `ConjugateGradientPoissonSolver` when using `PerturbationAdvectionOpenBoundaryConditions` in `ImmersedBoundaryGrid`s. At least in simple cases.\r\n\r\n---\r\n\r\nThe goal of this PR is to fix the initialization of `PerturbationAdvectionOpenBoundaryCondition`. I was playing around with it and did notice that the indices at `i=1` weren't receiving the external boundary condition (the one we get through `getbc()`) which led to, so this PR tests a solution for that. For now this fix is just an `ifelse` statement, but maybe we can find a better one.\r\n\r\nI hadn't opened a PR earlier because I was trying to figure out why the implementation of the open boundary condition was different on for left boundary than for the right boundaries (right boundaries seem to work fine). It was unclear to be where the asymmetry was coming from. Then @jagoosw's comment comment earlier mentioned that the left boundary in stepped but apparently the right boundary is not.\r\n\r\nAs a benchmark, this MWE is currently failing on main, but is running on this branch:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.BoundaryConditions: PerturbationAdvectionOpenBoundaryCondition\r\nusing Oceananigans.Solvers: ConjugateGradientPoissonSolver\r\n\r\nLx, Lz = 10, 3\r\nNx = Nz = 8\r\n\r\ngrid_base = RectilinearGrid(topology = (Bounded, Flat, Bounded), size = (Nx, Nz), x = (0, Lx), z = (0, Lz))\r\nflat_bottom(x) = 1\r\ngrid = ImmersedBoundaryGrid(grid_base, PartialCellBottom(flat_bottom))\r\nU = 1\r\ninflow_timescale = 0.0\r\noutflow_timescale = Inf\r\nu_boundaries = FieldBoundaryConditions(\r\n    west   = PerturbationAdvectionOpenBoundaryCondition(U; inflow_timescale, outflow_timescale),\r\n    east   = PerturbationAdvectionOpenBoundaryCondition(U; inflow_timescale, outflow_timescale),)\r\n    \r\nmodel = NonhydrostaticModel(; grid,\r\n                              boundary_conditions = (; u = u_boundaries),\r\n                              pressure_solver = ConjugateGradientPoissonSolver(grid, maxiter=10),\r\n                              advection = WENO(; grid, order=5)\r\n                             )\r\nu\u2080(x, z) = U + 1e-2*rand()\r\nset!(model, u=u\u2080, enforce_incompressibility=true)\r\n```\r\n\r\nFor now this PR also reverts the FFT preconditioner to what it was before https://github.com/CliMA/Oceananigans.jl/pull/4041 because it makes it much easier for simulations with both `ImmersedBoundaries` and `OpenBoundaryConditions` to run. Although I guess ideally we wouldn't need to do that since the change is needed for Krylov methods (at least that's what I understood).\r\n\r\nUltimately, I think we should also add a test that catches this in the future.\r\n\r\nRelated to https://github.com/CliMA/Oceananigans.jl/issues/4451#issuecomment-2903837583\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/4603",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM67QZB5",
+        "number": 4603,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4603"
+      }
+    ],
+    "createdAt": "2025-05-23T12:29:04Z",
+    "deletions": 124,
+    "labels": [],
+    "mergedAt": "2025-06-27T02:10:31Z",
+    "number": 4539,
+    "title": "Add tests for `ConjugateGradientPoissonSolver` with `PerturbationAdvectionOpenBoundaryConditions` in `ImmersedBoundaryGrid`s"
+  },
+  {
+    "additions": 187,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #3857\r\nResolves #3703",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6S2f1A",
+        "number": 3703,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3703"
+      },
+      {
+        "id": "I_kwDOCRy_aM6bg7qV",
+        "number": 3857,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3857"
+      }
+    ],
+    "createdAt": "2025-06-24T18:00:20Z",
+    "deletions": 200,
+    "labels": [],
+    "mergedAt": "2025-06-27T13:14:09Z",
+    "number": 4616,
+    "title": "Remove `grid` arg/kwarg from `Centered` and `Upwind` constructors"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR illustrates how to add time information to a `Field` when it is created by indexing into a `FieldTimeSeries`.\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-26T22:50:37Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2025-06-27T15:20:03Z",
+    "number": 4141,
+    "title": "Add time to `Field` generated from `FieldTimeSeries`"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjQ5MzM1NjE2",
+      "is_bot": false,
+      "login": "Yixiao-Zhang",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-18T17:00:39Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2025-06-27T15:22:47Z",
+    "number": 3349,
+    "title": "Fix the problem that particles may be out of bounds when velocity is too large"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "I didn't see this used anywhere in the src code\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-27T02:19:50Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-06-27T15:30:16Z",
+    "number": 4622,
+    "title": "Drop TimesDates from direct dependency"
+  }
+]

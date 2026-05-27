@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 206,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDgzMzM0",
+      "is_bot": false,
+      "login": "LenkaNovak",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n\r\nCloses #2374 \r\n\r\nComponents\r\n- [x] implement slab ocean\r\n- [x] fix `\u03c1_cloud_liq -> \u03c1_cloud_ice` bug for snow precipitation conversions\r\n- [x] accumulate precipitation in slab ocean at every stage as `u.sfc.P_minus_E`\r\n- [x] add conservation checks (target: sqrt(eps))\r\n  - [x] energy\r\n  - [x] water \r\n- [x] `horizontal_integral_at_boundary` extended and moved to utilities (used in `callbacks.jl` and the `driver.jl`) and the missing info on the vertical discretization of the parent 3d field is highlighted in [this issue](https://github.com/CliMA/ClimaCore.jl/issues/1578)\r\n- [x] column-integrated precipitation is now defined on faces (following evaporation and other surface properties. \r\n\r\n## Notes\r\n- `NCDatasets` precompilation failures: restricted to v0.13.1 (issue: #2460)\r\n- 300% increase in walltime before and after rebase on local coarse runs. (not captured in `build_history` of the last merge, since doesn't track any of the AMIP/aquaplanet experiments - only baroclinic wave and held suarez) (issue: #2459)\r\n- conservation of long runs: (issue: #2458)\r\n  - bubble correction leads to worse water conservation\r\n  - both energy and water conservation errors grow in time.\u00a0For now we increase the atol to be `sqrt(eps(FT)) * 50` for the 100d long run and the conservation issues will be dealt with separately. \r\n- [coarse](https://github.com/CliMA/ClimaAtmos.jl/commit/72e17de2eff3e4b98deb0a812e0326ce49a7733d) run completes 100d ([build](https://buildkite.com/clima/climaatmos-longruns/builds/1309#018cae79-de7e-4c27-9fbe-037cb4667400)), fine (target) resolution does not complete 3 timesteps ([build](https://buildkite.com/clima/climaatmos-longruns/builds/1308#018cae58-ede2-4e25-9c38-0eea370e061c)). The precise setup for the target resolution will be identified as part of another PR (issue: #2457). \r\n\r\n## Log of errors of tested configs (10-day coarse)\r\n\r\n### ENERGY\r\n#### dry:\r\n- vert_diff = false, no rad -> \u0394e_sfc: 0, \u0394e_atmos: 5.0440316f17 (abs: 2.766592f23)\r\n- vert_diff = true, no rad -> \u0394e = -1.3581168f18\r\n- vert_diff = true, clearsky -> \u0394e = -3.634405f18\r\n- vert_diff = true gray -> \u0394e = 2.4396f19\r\n\r\n#### moist, 0M:\r\n- vert_diff = false, clersky -> \u0394e = 3.634405f18\r\n- vert_diff = true, clearsky -> \u0394e = -6.654969f19\r\n\r\n### WATER\r\n#### moist, 0M:\r\n- vert_diff = false, clearsky -> \u0394w_atmos = 0 - no init q\r\n- vert_diff = true, clearsky, callback precip accumulation -> \u0394w_tot =  0.00096921396f0 > sqrt(eps(FT))\r\n- vert_diff = true, clearsky, precip accumulation in Y.sfc at every stage  -> error_tot =  0.00023729318f0 < sqrt(eps(FT))\r\n- vert_diff = true, clearsky, precip accumulation in Y.sfc at every stage, bubble correction  -> error_tot = 0.0007678267f0 > sqrt(eps(FT))\r\n\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs53L9t4",
+        "number": 2374,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2374"
+      }
+    ],
+    "createdAt": "2023-12-01T00:43:21Z",
+    "deletions": 45,
+    "labels": [],
+    "mergedAt": "2023-12-28T20:49:39Z",
+    "number": 2399,
+    "title": "Add a slab ocean and energy and water conservation tests in long runs"
+  }
+]

@@ -1,0 +1,90 @@
+[
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjY3NTkzODYx",
+      "is_bot": false,
+      "login": "whitleyv",
+      "name": "Victoria Whitley Clark"
+    },
+    "body": "This PR fixes the diffusive flux argument in the divergence of diffusive flux, `\u2207_dot_q\u1d9c`,\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/e929631eb3a233ae3f3358d2146e5d6004f9a06c/src/TurbulenceClosures/diffusion_operators.jl#L47  to allow for the immersed boundary version using `_diffusive_flux_x`. This will make the tracer equations feel the immersed boundaries correctly. This also adds a very small 1D validation to test this. With a uniform buoyancy, validation checks if the buoyancy changes in time (it shouldn't). Below are the results before and after the fix. We can, of course, not include the validation and instead add a test for this.\r\n![b_plot1D_tracertest_bad](https://user-images.githubusercontent.com/67593861/129624223-70449ca0-5efb-4037-914a-20e1b565d4ca.png)\r\n![b_plot1D_tracertest](https://user-images.githubusercontent.com/67593861/129624224-1eac8bae-7e78-4cc2-8b39-a202def6e975.png)\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-16T20:25:19Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-08-18T13:53:59Z",
+    "number": 1935,
+    "title": "Fix diffusive flux bug for immersed boundaries"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "`KernelFunctionOperation` wasn't being exported, so this PR fixes it.\r\n\r\nI also moved the docstring to the struct because it was being recognized before. Let me know if this isn't the best solution to this. Before\r\n\r\n```julia\r\nhelp?> Oceananigans.AbstractOperations.KernelFunctionOperation\r\n  No documentation found.\r\n\r\n  Oceananigans.AbstractOperations.KernelFunctionOperation is of type UnionAll.\r\n\r\n  Summary\r\n  \u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\r\n\r\n  struct UnionAll <: Type{T}\r\n\r\n  Fields\r\n  \u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\r\n\r\n  var  :: TypeVar\r\n  body :: Any\r\n\r\n  Supertype Hierarchy\r\n  \u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\r\n\r\n  UnionAll <: Type{T} <: Any\r\n```\r\n\r\nNow:\r\n\r\n```julia\r\nhelp?> KernelFunctionOperation\r\nsearch: KernelFunctionOperation\r\n\r\n  KernelFunctionOperation{LX, LY, LZ}(kernel_function, grid; architecture=nothing,\r\n                                      computed_dependencies=(), parameters=nothing)\r\n\r\n  Constructs a KernelFunctionOperation at location (LX, LY, LZ) on grid an with an optional iterable of computed_dependencies and arbitrary parameters.\r\n\r\n  With isnothing(parameters) (the default), kernel_function is called with\r\n\r\n  kernel_function(i, j, k, grid, computed_dependencies...)\r\n\r\n  Otherwise kernel_function is called with\r\n\r\n  kernel_function(i, j, k, grid, computed_dependencies..., parameters)\r\n\r\n  Examples\r\n  \u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\u2261\r\n\r\n  Construct a kernel function operation that returns random numbers:\r\n\r\n  random_kernel_function(i, j, k, grid) = rand() # use CUDA.rand on the GPU\r\n  \r\n  kernel_op = KernelFunctionOperation{Center, Center, Center}(random_kernel_function, grid; architecture=CPU())\r\n\r\n  Constrcut a kernel function operation using the vertical vorticity operator valid on curvilinear and cubed sphere grids:\r\n\r\n  using Oceananigans.Operators: \u03b6\u2083\u1da0\u1da0\u1d43 # called with signature \u03b6\u2083\u1da0\u1da0\u1d43(i, j, k, grid, u, v)\r\n  \r\n  grid = model.grid\r\n  u, v, w = model.velocities\r\n  \r\n  \u03b6_op = KernelFunctionOperation{Face, Face, Center}(\u03b6\u2083\u1da0\u1da0\u1d43, CPU(), grid, computed_dependencies=(u, v))\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-18T16:00:28Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2021-08-18T23:05:42Z",
+    "number": 1939,
+    "title": "Exports KernelFunctionOperation"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR bumps the patch version in order to deploy docs, now that the `DOCUMENTER_KEY` environment variable should be correctly set for the tartarus buildkite agent.\r\n\r\nResolves #1909",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5NTU5Njc0NjE=",
+        "number": 1909,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1909"
+      }
+    ],
+    "createdAt": "2021-08-18T20:02:03Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-08-18T23:28:10Z",
+    "number": 1940,
+    "title": "Deploy docs"
+  }
+]

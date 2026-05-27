@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 258,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #2216",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6tD0wH",
+        "number": 2216,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2216"
+      }
+    ],
+    "createdAt": "2025-03-06T21:09:39Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2025-04-12T13:47:44Z",
+    "number": 2212,
+    "title": "Add restart support for masked spaces"
+  },
+  {
+    "additions": 492,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "We only ever need to use the `loc::Union{LeftBoundaryWindow, Interior, RightBoundaryWindow}` in `should_call_left_boundary`, `should_call_right_boundary`, and `get_boundary` to determine which stencil function to call (left, interior, or right).\r\n\r\nDespite this narrow scope of where it's needed, we currently pass `loc` through every single `getidx` and `stencil` call. It also requires branching right at the top-most part of the `apply_stencil!` (mentioned [here](https://github.com/CliMA/ClimaCore.jl/pull/2282#issue-2985349164)).\r\n\r\nThis PR removes `loc` as an argument and simply computes it on-the-fly inside `getidx(space, ::StencilBroadcasted, ...)`, which is the only place that it's really needed.\r\n\r\nI'm testing this out to improve gpu performance, but it also seems like an overall simplification in that we're deleting ~300 lines of code (part of this may just be formatter artifacts, but still).\r\n\r\nThis is actually the proper closing of #2250.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-10T20:52:24Z",
+    "deletions": 706,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "11DC9E",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABEZGepg",
+        "name": "Latency"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-04-12T14:49:34Z",
+    "number": 2284,
+    "title": "Compute stencil location on the fly"
+  }
+]

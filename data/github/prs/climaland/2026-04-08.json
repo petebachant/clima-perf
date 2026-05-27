@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 1095,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "# Inland water slab\r\n\r\n[DOCS](https://clima.github.io/ClimaLand.jl/previews/PR1672/standalone/pages/inland_waters/slab_lake/)\r\n\r\nThis PR adds a fixed-depth slab lake representation for inland water grid points (lakes, rivers, reservoirs). A prognostic `SlabLakeModel` (in its own `InlandWater` module) evolves lake internal energy (`U_lake`) at the surface while the underlying soil column acts as a thermal sediment substrate.\r\n\r\n## Key features\r\n\r\n- `SlabLakeModel` as a standalone component with `SlabLakeParameters` (configurable depth, conductance, albedo liquid/ice, emissivity, roughness lengths)\r\n- Prognostic lake internal energy with phase change (liquid fraction `q_l` determines ice/liquid state)\r\n- Lake\u2013sediment heat exchange via a single tunable conductance parameter (series-resistance model with `\u0394z_top` read from the soil domain at runtime)\r\n- Fixed-depth assumption: net surface water flux (P \u2212 E) balanced by signed runoff residual\r\n- Energy conservation: surface energy balance + sediment heat flux + runoff enthalpy = dU_lake/dt\r\n- Continuous blending of soil and lake fluxes via `lake_fraction` mask\r\n- Lake diagnostics: `lkie` (lake internal energy), `tlake` (temperature), `qlake` (liquid fraction)\r\n- Inland water mask derived from [IMERG land-sea mask](https://gpm.nasa.gov/data/directory/imerg-land-sea-mask-netcdf) (water fraction > 80%, latitude \u00b160\u00b0), located in `InlandWater.inland_water_mask()`\r\n\r\n## What changed at lake grid points\r\n\r\n- Surface fluxes drive the slab lake energy equation, blended with soil via lake fraction\r\n- Soil receives heat only through the lake\u2013sediment interface (no direct atmospheric forcing at lake points)\r\n- Soil sublimation source masked at lake points\r\n- LAI, SAI, and RAI zeroed at lake points (no canopy over lakes)\r\n- Ground albedo and LW upwelling area-weighted across soil, snow, and lake fractions\r\n- Surface albedo and specific humidity vary with ice fraction; roughness uses lake values\r\n\r\n## Architecture\r\n\r\n- Lake component uses dispatch (`Nothing` vs `SlabLakeModel`) throughout \u2014 no runtime `if !isnothing` checks in per-step code\r\n- `soil_boundary_fluxes!` dispatches on `Val(prognostic_land_components)` for lake-aware tuples\r\n- Radiation dispatch (`ground_albedo_PAR/NIR`, `_ground_lw_upwelling`, `_update_lake_radiative_fluxes!`) uses separate methods for with-lake and without-lake component tuples\r\n- Sediment heat flux computation lives in `src/integrated/soil_lake_model.jl`, following the same pattern as `update_soil_snow_ground_heat_flux!` in `soil_snow_model.jl`\r\n- `lake_fraction` is a static cache field (set once at initialization from `inland_water_mask`) needed by canopy ground albedo dispatch methods\r\n\r\n## Follow-up work\r\n\r\n- Ice-dependent roughness lengths (currently constant for liquid and frozen states)\r\n- Standalone lake mode (currently lake only runs in integrated mode with a soil model)\r\n\r\n<img width=\"2400\" height=\"3200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/0f8ec3c0-ed66-4bd7-8d51-35356071019b\" />\r\n\r\n<img width=\"2000\" height=\"1100\" alt=\"image\" src=\"https://github.com/user-attachments/assets/9e966dbc-7126-4ea4-9ea4-2bfaf626782a\" />\r\n\r\nNote: adjusting the mask water fraction threshold (currently using above 80% water) might reduce RMSE further a bit. Not tested yet.\r\n\r\nNote2, for discussion: mask is currently binary. Do we want to ensure the code will work in case in the future we use a non-binary lake fraction f?",
+    "changedFiles": 24,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-13T18:54:04Z",
+    "deletions": 179,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2026-04-08T00:13:01Z",
+    "number": 1672,
+    "title": "inland waters slab"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nReverts this change from #1591. Requires also reverting bucket changes from https://github.com/CliMA/ClimaCoupler.jl/commit/288987875b84413fc01e5de6a8826f11abab9261#diff-a2880400c2145db122968b23c23a980c061601611b3bfe9e2cce55c10f147c73\r\n\r\nTested in this ClimaCoupler PR and works fine https://github.com/CliMA/ClimaCoupler.jl/pull/1865\r\n\r\n## To-do\r\n- [x] add a method of `turbulent_fluxes!` which does nothing in `CoupledAtmosphere` case\r\n- [x] add a function `helper_update_surface_humidity_function` so we can remap `W` and `\u03c3S` onto the boundary space and call it on those in the coupler\r\n\r\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\r\n\r\n## Summary by CodeRabbit\r\n\r\n## Release Notes v1.7.0\r\n\r\n* **New Features**\r\n  * Updated bucket model flux handling in coupled atmospheric scenarios.\r\n\r\n* **Documentation**\r\n  * Improved formatting and clarity in driver documentation.\r\n\r\n* **Chores**\r\n  * Updated package dependencies to latest stable versions.\r\n  * Released version 1.7.0.\r\n\r\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-16T21:47:10Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2026-04-08T20:18:25Z",
+    "number": 1677,
+    "title": "don't compute fluxes in coupled case"
+  }
+]

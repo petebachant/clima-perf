@@ -1,0 +1,150 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR passes Nq and Nv through Val in the copyto stencil. These two parameters are known at compile-time, so passing them through with `Val` is type stable and the compiler may be able to generate more efficient code with them passed through the type-space.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-24T01:17:20Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-06-24T03:24:09Z",
+    "number": 1840,
+    "title": "Pass Nq and Nv throuh Val in copyto stencil"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes a broken test on Julia 1.11 (https://github.com/CliMA/ClimaCore.jl/actions/runs/9638641287/job/26579650985?pr=1840#step:6:567).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-24T02:56:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-06-24T04:22:51Z",
+    "number": 1841,
+    "title": "Fix broken test for julia 1.11"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Followup/fix to https://github.com/CliMA/ClimaCore.jl/pull/1841",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-24T12:29:40Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2024-06-24T12:29:46Z",
+    "number": 1842,
+    "title": "Fix version condition in field unit test"
+  },
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I went to add some topology unit tests, and realized that there are no unit tests/documentation for `_get_idx`. It turns out that we can simply replace most of the methods with two new simpler functions:\r\n\r\n```julia\r\nBase.@propagate_inbounds cart_ind(n, i::Integer) = @inbounds CartesianIndices(map(x->Base.OneTo(x), n))[i]\r\nBase.@propagate_inbounds linear_ind(n, ci::CartesianIndex) = @inbounds LinearIndices(map(x->Base.OneTo(x), n))[ci]\r\n```\r\nWhich is actually safer in that it will throw bounds errors if we pass in bad indices, and it's also faster on average:\r\n\r\n```julia\r\n#=\r\njulia --project\r\nusing Revise; include(joinpath(\"test\", \"Topologies\", \"benchmark_get_idx.jl\"))\r\n=#\r\nusing ClimaCore.Topologies: _get_idx, _get_idx_metric\r\nusing Test\r\nusing BenchmarkTools\r\n\r\nBase.@propagate_inbounds cart_ind(n, i::Integer) = @inbounds CartesianIndices(map(x->Base.OneTo(x), n))[i]\r\nBase.@propagate_inbounds linear_ind(n, ci::CartesianIndex) = @inbounds LinearIndices(map(x->Base.OneTo(x), n))[ci]\r\nget_idx(sizet, idx) = @inbounds _get_idx(sizet, idx)\r\n\r\n@testset \"_get_idx\" begin\r\n    # _get_idx(sizet::NTuple{3, Int}, loc::Int)\r\n    for sizet in (\r\n        # (1,1,1),\r\n        (3,4,5),\r\n        # (5,4,3),\r\n        )\r\n        for idx in 1:10:prod(sizet)\r\n            t1 = @belapsed cart_ind($sizet, $idx)\r\n            t2 = @belapsed get_idx($sizet, $idx)\r\n            @test t1 \u2264 t2\r\n        end\r\n    end\r\n\r\n    # _get_idx(sizet::NTuple{5, Int}, loc::NTuple{5, Int})\r\n    for sizet in (\r\n        # (1,1,1,1),\r\n        (3,4,5,6),\r\n        # (6,5,4,3),\r\n        )\r\n        for idx in 1:100:prod(sizet)\r\n            t1 = @belapsed cart_ind($sizet, $idx)\r\n            t2 = @belapsed get_idx($sizet, $idx)\r\n            @test t1 \u2264 t2\r\n            ci = cart_ind(sizet, idx)\r\n            t1 = @belapsed linear_ind($sizet, $ci)\r\n            t2 = @belapsed get_idx($sizet, $(ci.I))\r\n            @test t1 \u2264 t2\r\n        end\r\n    end\r\n\r\n    # _get_idx(sizet::NTuple{4, Int}, loc::NTuple{4, Int})\r\n    for sizet in (\r\n        # (1,1,1,1,1),\r\n        (3,4,5,6,6),\r\n        # (6,5,4,3,3),\r\n        )\r\n        for idx in 1:200:prod(sizet)\r\n            ci = cart_ind(sizet, idx)\r\n            t2 = @belapsed get_idx($sizet, $(ci.I))\r\n            t1 = @belapsed linear_ind($sizet, $ci)\r\n            @test t1 \u2264 t2\r\n        end\r\n    end\r\n\r\nend\r\n```\r\n\r\nThis seems like a win on all fronts: new code is documented (in base), safer, faster, and fewer lines of code.\r\n\r\nIf this doesn't workout, I'll revert and add the unit test for `_get_idx`:\r\n```julia\r\n-#=\r\njulia --project\r\nusing Revise; include(joinpath(\"test\", \"Topologies\", \"unit_get_idx.jl\"))\r\n=#\r\nusing ClimaCore.Topologies: _get_idx, _get_idx_metric\r\nusing Test\r\n\r\nBase.@propagate_inbounds cart_ind(n, i::Integer) = CartesianIndices(map(x->Base.OneTo(x), n))[i]\r\nBase.@propagate_inbounds linear_ind(n, ci::CartesianIndex) = LinearIndices(map(x->Base.OneTo(x), n))[ci]\r\n\r\n# sizet_metric = (nlevels, Nq, Nq, nmetric, nelems)\r\n# Topologies._get_idx_metric(sizet_metric, (level, ip, jp, elem))\r\n# function _get_idx_metric(sizet::NTuple{5, Int}, loc::NTuple{4, Int})\r\n#     nmetric = sizet[4]\r\n#     (i11, i12, i21, i22) = nmetric == 4 ? (1, 2, 3, 4) : (1, 2, 4, 5)\r\n#     (level, i, j, elem) = loc\r\n#     return (\r\n#         _get_idx(sizet, (level, i, j, i11, elem)),\r\n#         _get_idx(sizet, (level, i, j, i12, elem)),\r\n#         _get_idx(sizet, (level, i, j, i21, elem)),\r\n#         _get_idx(sizet, (level, i, j, i22, elem)),\r\n#     )\r\n#     return nothing\r\n# end\r\n\r\nBase.@propagate_inbounds function metric_ind(sizet::NTuple{5, Int}, loc::NTuple{4, Int})\r\n    @inbounds begin\r\n        nmetric = sizet[4]\r\n        (i21, i22) = nmetric == 4 ? (3, 4) : (4, 5)\r\n        (level, i, j, elem) = loc\r\n        inds = (\r\n            linear_ind(sizet, CartesianIndex(level, i, j, 1, elem)),\r\n            linear_ind(sizet, CartesianIndex(level, i, j, 2, elem)),\r\n            linear_ind(sizet, CartesianIndex(level, i, j, i21, elem)),\r\n            linear_ind(sizet, CartesianIndex(level, i, j, i22, elem)),\r\n        )\r\n        return inds\r\n    end\r\nend\r\n\r\n\r\n@testset \"_get_idx\" begin\r\n    # _get_idx(sizet::NTuple{3, Int}, loc::Int)\r\n    for sizet in (\r\n        (1,1,1),\r\n        (3,4,5),\r\n        (5,4,3),\r\n        )\r\n        for idx in 1:prod(sizet)\r\n            @test _get_idx(sizet, idx) == cart_ind(sizet, idx).I\r\n        end\r\n        @test_throws BoundsError cart_ind(sizet, prod(sizet)+1).I\r\n        @test_throws BoundsError cart_ind(sizet, 0).I\r\n        @test_throws BoundsError cart_ind(sizet, -1).I\r\n    end\r\n\r\n    # _get_idx(sizet::NTuple{5, Int}, loc::NTuple{5, Int})\r\n    for sizet in (\r\n        (1,1,1,1),\r\n        (3,4,5,6),\r\n        (6,5,4,3),\r\n        )\r\n        for idx in 1:prod(sizet)\r\n            @test _get_idx(sizet, idx) == cart_ind(sizet, idx).I\r\n            ci = cart_ind(sizet, idx)\r\n            @test _get_idx(sizet, ci.I) == linear_ind(sizet, ci)\r\n        end\r\n        @test_throws BoundsError cart_ind(sizet, prod(sizet)+1).I\r\n        @test_throws BoundsError cart_ind(sizet, 0).I\r\n        @test_throws BoundsError cart_ind(sizet, -1).I\r\n    end\r\n\r\n    # _get_idx(sizet::NTuple{4, Int}, loc::NTuple{4, Int})\r\n    for sizet in (\r\n        (1,1,1,1,1),\r\n        (3,4,5,6,6),\r\n        (6,5,4,3,3),\r\n        )\r\n        for idx in 1:prod(sizet)\r\n            ci = cart_ind(sizet, idx)\r\n            @test _get_idx(sizet, ci.I) == linear_ind(sizet, ci)\r\n        end\r\n        @test_throws BoundsError cart_ind(sizet, prod(sizet)+1).I\r\n        @test_throws BoundsError cart_ind(sizet, 0).I\r\n        @test_throws BoundsError cart_ind(sizet, -1).I\r\n    end\r\n\r\n    # sizet=(1,1,1,4,1); loc=(1,1,2,4); @test _get_idx_metric(sizet, loc) == metric_ind(sizet, loc)\r\n    # sizet=(3,4,5,6,6); loc=(3,4,5,6); @test _get_idx_metric(sizet, loc) == metric_ind(sizet, loc)\r\n    # sizet=(3,4,5,4,6); loc=(3,4,5,4); @test _get_idx_metric(sizet, loc) == metric_ind(sizet, loc)\r\n    # sizet=(6,5,4,3,3); loc=(6,5,4,3); @test _get_idx_metric(sizet, loc) == metric_ind(sizet, loc)\r\nend\r\n```",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-24T12:54:09Z",
+    "deletions": 97,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-06-24T14:52:07Z",
+    "number": 1843,
+    "title": "Replace `_get_idx` w/ `CartesianIndices/LinearIndices`"
+  },
+  {
+    "additions": 276,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds unit tests for the DataLayouts `copyto!`. This PR also adds CUDA `copyto!` support for `IFH`, `IJF`, `IF` and `VIFH` datalayouts (which were previously missing).\r\n\r\nI've also defined some aliases: `BroadcastedUnionIJFH`, `BroadcastedUnionIFH` and alike, to simplify some of the method definitions (we can use them in at least one other place).\r\n\r\nI did also switch over to using `auto_launch!`'s `auto` (I already did this for `fill!`), but we should probably benchmark the difference. Perhaps we can break this PR up into the tests (some of which will be broken) and benchmarks, so that we can compare. Thoughts on this? I do really like the simplicity of unifying and using the cuda utils.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-13T19:45:44Z",
+    "deletions": 86,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "7DC14A",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABpe2xxQ",
+        "name": "Coverage"
+      }
+    ],
+    "mergedAt": "2024-06-24T17:14:44Z",
+    "number": 1804,
+    "title": "Add DataLayouts `copyto!` unit tests"
+  },
+  {
+    "additions": 146,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds mapreduce unit tests.\r\n\r\nCurrently, none work on the gpu, as we don't have mapreduce support over DataLayouts (we only have support over fields).\r\n\r\nFixing this is not too difficult: we can simply change the field definitions to DataLayout ones, and forward to the DataLayout ones.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-24T19:15:21Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-06-24T20:21:24Z",
+    "number": 1844,
+    "title": "Add mapreduce unit tests"
+  }
+]

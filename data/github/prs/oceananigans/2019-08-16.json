@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 209,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR extends the `JLD2OutputWriter` with two new options: `verbose` and `max_filesize`.\r\n\r\nWhen `verbose=true` the `JLD2OutputWriter` logs what it is doing, how long it takes to copy/compute output and write output, and the file size of the output (current and delta).\r\n\r\nWhen `max_filesize=true`, the `JLD2OutputWriter` will stop writing to the output file once the file size exceeds `max_filesize`, and write to a new one with a consistent naming scheme.\r\n\r\nIn action:\r\n```julia\r\nusing Oceananigans\r\nmodel = Model(N=(64, 64, 64), L=(1, 1, 1))\r\n\r\nu(model) = model.velocities.u.data.parent\r\nfields = Dict(:u => u)\r\now = JLD2OutputWriter(model, fields; prefix=\"test\", frequency=5, max_filesize=10MiB, force=true, verbose=true)\r\npush!(model.output_writers, ow)\r\n\r\ntime_step!(model, 50, 1)\r\n```\r\n```\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 4.608 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=3.822 s, size=2.2 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 2.891 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=22.262 ms, size=4.4 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 3.118 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=22.564 ms, size=6.6 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 2.479 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=18.126 ms, size=8.8 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 3.421 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=23.091 ms, size=11.0 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 2.627 \u03bcs\r\n[ Info: Filesize 11.0 MiB has exceeded maximum file size 10.0 MiB.\r\n[ Info: Renaming first part: ./test.jld2 -> ./test_part1.jld2\r\n[ Info: Now writing to: ./test_part2.jld2\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=19.754 ms, size=2.2 MiB, \u0394size=2.2 MiB\r\n[ Info: Calculating JLD2 output Symbol[:u]...\r\n[ Info: Calculation time: 3.320 \u03bcs\r\n[ Info: Writing JLD2 output Symbol[:u]...\r\n[ Info: Writing done: time=13.866 ms, size=4.4 MiB, \u0394size=2.2 MiB\r\n...\r\n..\r\n.\r\n.\r\n.\r\n```\r\n\r\nAt the end:\r\n```\r\nPermissions Size User Date Modified Name\r\n.rw-r--r--   11M alir 10 Aug 10:20  test_part1.jld2\r\n.rw-r--r--   11M alir 10 Aug 10:20  test_part2.jld2\r\n.rw-r--r--  2.3M alir 10 Aug 10:20  test_part3.jld2\r\n```\r\n\r\nResolves #344 ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0Nzg1NTU3NzU=",
+        "number": 344,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/344"
+      }
+    ],
+    "createdAt": "2019-08-10T15:01:00Z",
+    "deletions": 102,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-08-16T20:33:19Z",
+    "number": 350,
+    "title": "Verbose and maximum filesize options for JLD2 output writer"
+  }
+]

@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 7986,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "This PR makes thermodynamics entirely functional (closes #273). The old `PhasePartition` and state methods are retained for the time being for backward compatibility, until ClimaAtmos, ClimaCoupler, ClimaLand etc. are updated. They are in files called `depr_*`, which we will delete then. (The code works without these files.)\r\n\r\nThere are a few (smaller) breaking changes:\r\n- Renamed `specific_enthalpy*` to `enthalpy*`.\r\n- Renamed `specific_entropy*` to `entropy*`.\r\n- Renamed `dry_pottemp` to `potential_temperature`\r\n- Removed `q_vap_saturation_generic`. Use `q_vap_saturation` instead.\r\n- Removed `universal_gas_constant` (or `gas_constant`), `molar_mass_dryair` and `molar_mass_water` from thermo parameters.\r\n- Removed `phase_type` from `relative_humidity`.\r\n- Renamed `latent_heat_liq_ice` to `humidity_weighted_latent_heat`.\r\n\r\nAlso\r\n- Simplifies CI (closes #271)\r\n- Removed warnings/errors from saturation adjustment and replaced by converge flag (closes #223)\r\n- Removes clippings (except in diagnostic quantities, such as relative humidity, closes #292)\r\n- Fixes a few bugs (e.g., in the use of `liquid_fraction` in nonequilibrium conditions, derivatives used in saturation adjustment), which may affect model behavior. ",
+    "changedFiles": 85,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODuejNs6VQzTx",
+        "number": 223,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTAwNjE2MjI=",
+          "name": "Thermodynamics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Thermodynamics.jl/issues/223"
+      },
+      {
+        "id": "I_kwDODuejNs7DNnga",
+        "number": 271,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTAwNjE2MjI=",
+          "name": "Thermodynamics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Thermodynamics.jl/issues/271"
+      },
+      {
+        "id": "I_kwDODuejNs7EIxYv",
+        "number": 273,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTAwNjE2MjI=",
+          "name": "Thermodynamics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Thermodynamics.jl/issues/273"
+      },
+      {
+        "id": "I_kwDODuejNs7e7tYv",
+        "number": 292,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTAwNjE2MjI=",
+          "name": "Thermodynamics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Thermodynamics.jl/issues/292"
+      }
+    ],
+    "createdAt": "2026-01-04T18:55:07Z",
+    "deletions": 6511,
+    "labels": [],
+    "mergedAt": "2026-01-08T17:43:09Z",
+    "number": 293,
+    "title": "Make Thermodynamics functional again and remove reliance on PhasePartition and ThermoStates "
+  }
+]

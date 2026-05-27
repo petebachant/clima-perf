@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 339,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR extends `ClimaComms.@threaded` to work with `CUDADevice`, and it adds an option to control thread coarsening. This will allow us to implement simple kernels in a device-agnostic way (i.e., without needing to explicitly import CUDA). In particular, this functionality is needed to implement LU factorization and LU solver kernels in CliMA/ClimaAtmos.jl#2730. It can also be used to generalize most of the kernels defined in `ClimaCoreCUDAExt.jl` to multi-threaded CPUs.\r\n\r\nThe current implementation of this macro only performs simple one-dimensional parallelization, but it can be extended to support shared memory and multi-dimensional thread/block configurations in the future. Eventually, we might be able to eliminate CUDA extensions from other packages altogether, replacing them with device-agnostic macros from ClimaComms. The main benefit of this will be that all of our kernel code is defined in one location, with clear documentation that informs developers about important design patterns.\r\n\r\nThis PR also bumps the version of the cache action in the test-os workflow from `v1` to `v4`, since an error was being thrown for `v1`.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-03T02:52:03Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2025-05-08T01:59:02Z",
+    "number": 111,
+    "title": "Extend threaded macro to CUDADevice"
+  }
+]

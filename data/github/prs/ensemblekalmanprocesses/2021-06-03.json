@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "The current output of get_mean(ParameterDistribution) is an `Array{FT, 2}` that cannot be used as an input to the `Sampler()`. I did not see any instance of the code where this structure was useful, so I have changed the function to return an `Array{FT, 1}`. \r\n\r\nNote that this change simplifies every single use of get_mean(ParameterDistribution) in the tests and examples.\r\n\r\nApart from this, I have corrected the installation guide.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-22T20:22:37Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2021-06-03T00:34:09Z",
+    "number": 29,
+    "title": "Fix get_mean() for PDs, fix installation docs"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "This PR simplifies substantially the update of the EKI algorithm.\r\n\r\n- The computation of the cross-covariance matrices was done through a loop, which is unnecessary since we are already loading the Statistics module.\r\n- Everything was transposed for some reason. Now all data are stored in columns, similarly to the rest of the code.\r\n\r\n The new construction produces the same results (tested with an `assert` before this PR). Note that I have not added the Bessel correction to the cross-covariances `cov_ug` and `cov_gg` to ensure consistency with the papers and the previous version. We can discuss this.\r\n\r\nIn addition, I have fixed an issue with the construction of `y`, which was `Array{FT,1}` for `!deterministic_forward_map`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-23T01:16:55Z",
+    "deletions": 52,
+    "labels": [],
+    "mergedAt": "2021-06-03T01:06:12Z",
+    "number": 30,
+    "title": "Simplify EKI update, correct dims error in nondeterministic settings"
+  }
+]

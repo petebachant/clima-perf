@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "Fixes a bug where we couldn't properly promote to the underlying data layout style (for Field slab / columns).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-28T15:36:57Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwyODk5ODQwNjE3",
+        "name": "bug"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2022-01-28T16:15:33Z",
+    "number": 486,
+    "title": "promote wrapped datastyles for field broadcasts"
+  },
+  {
+    "additions": 113,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "First part of #481.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-28T06:26:10Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyODk5ODQwNjIy",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2022-01-28T20:21:06Z",
+    "number": 485,
+    "title": "add iterator for unique nodes of spectral element space"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "Part of $483\r\n\r\nCan be visualized by google trace:// viewer (part of chrome)  or through the https://github.com/microsoft/vscode-js-profile-visualizer extension in vscode.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-28T16:48:14Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-01-28T20:53:18Z",
+    "number": 487,
+    "title": "save cpuprofile file for buildkite testcase flamegraph"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "After looking at more flame graphs, I saw a call chain of `fast_materialize!` -> `materialize!` -> bad stuff with allocs and `getindex`. I took a look at our `materialize!` and that basically just calls `copyto!` and `instantiate`. Since we recently fixed issues with `copyto!`, I took a look at `instantiate` and recognized that we were using the old (problematic) recursion pattern. This PR changes this recursion pattern to follow `column_args` and alike.\r\n\r\nThis will only affect the spectral code, since the call to `initialize` in FD's `materialize!` isn't recursive.\r\n\r\nThis PR also moves @dennisYatunin's `copyto!(::FieldVector,::Base.Broadcast.Broadcasted{FieldVectorStyle})` into `src/` with some minor adjustments (using a better recursion pattern, and supporting `VectorField`s with scalars.). This change seems to account for most of the performance benefit, as it elides calling `getindex` (which was the main culprit in the flame graph).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-27T16:56:06Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2022-01-28T20:53:18Z",
+    "number": 480,
+    "title": "Use better recursion pattern for instantiate, avoid getindex"
+  }
+]

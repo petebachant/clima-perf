@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 226,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR is another step for closing the distributed zstar conservation issue \r\n\r\nEdit: a couple of bugs including the `MutableVerticalDiscretization` and `SplitExplicitFreeSurface` were found\r\n- The `surface_buffer_kernel_parameters` needs to include corners to make sure the column height is correctly computed when iterating the split explicit free surface\r\n- In case of a non-distributed grid, we need to have topology-aware column_height operators that do not go and look in the halos when iterating the split explicit solution (this is `SplitExplicitFreeSurface` specific)\r\n- topology-aware operators need to include the new topologies `RightCenterFolded` and `RightFaceFolded` which act the same as a `RightConnected` topology.\r\n\r\nCloses #5161",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7kDFFb",
+        "number": 5161,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5161"
+      }
+    ],
+    "createdAt": "2026-01-28T15:11:22Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-02-01T12:59:32Z",
+    "number": 5225,
+    "title": "Introduce distributed conservation tests and fix some bugs"
+  }
+]

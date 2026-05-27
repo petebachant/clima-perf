@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 248,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "[*Edited 1 Feb 2022 in response to updates*] \r\n\r\nThis PR updates CES to use the [0.2.0 release](https://github.com/CliMA/EnsembleKalmanProcesses.jl/releases/tag/v0.2.0) of EnsembleKalmanProcesses.jl (EKP). In addition to using changed module and method names, the PR adds support in CES for use of an explicit random number generator where needed; this was done in EKP [#81](https://github.com/CliMA/EnsembleKalmanProcesses.jl/pull/81).\r\n\r\n[Recommended practice](https://discourse.julialang.org/t/set-the-state-of-the-global-rng/12599/3) for reproducible tests is to pass an RNG object explicitly to all methods which need it. It's not sufficient to set the global seed for the default RNG: the default RNG algorithm used by Julia was [changed](https://julialang.org/blog/2021/11/julia-1.7-highlights/#new_rng_reproducible_rng_in_tasks) in version 1.7. This will affect us in the future when we update CES to support Julia > 1.6 (CliMA/CalibrateEmulateSample.jl#121): the [docs](https://docs.julialang.org/en/v1/stdlib/Random/#Reproducibility) for the Random package note that the same seed may give different random values in different versions.\r\n\r\nChanges made to the CES API in this PR are minor (which is why the RNG change is combined with the EKP update):\r\n- An `rng` field is added to `MCMC`; the constructor sets this to `Random.GLOBAL_RNG` by default.\r\n- `rng` is recognized as an optional first argument to `get_obs_sample`, used in lieu of the `rng_seed` kwarg if provided.\r\n\r\nAll changes are fully backwards compatible. In particular, tests are updated to use an explicit rng, but examples have been left unchanged. It may be desirable to update them as well.\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-05T05:30:44Z",
+    "deletions": 133,
+    "labels": [],
+    "mergedAt": "2022-02-16T23:56:29Z",
+    "number": 122,
+    "title": "Use EKP.jl 0.2.0 & pass explicit RNG object where used"
+  }
+]

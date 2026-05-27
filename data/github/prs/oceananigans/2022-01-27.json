@@ -1,0 +1,98 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "It seems like the behavior of `WindowedSpatialAverage` can now be achieved by using `Field(Average(field, dims=dims, condition=condition))`. It might be a bit slower, but it's more flexible, so I think we should get rid of `WindowedSpatialAverage`.\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/2185",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5Cbn4G",
+        "number": 2185,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2185"
+      }
+    ],
+    "createdAt": "2022-01-26T23:04:27Z",
+    "deletions": 77,
+    "labels": [],
+    "mergedAt": "2022-01-27T02:51:11Z",
+    "number": 2193,
+    "title": "Removes `WindowedSpatialAverage`"
+  },
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "A few updates.\r\n\r\nCloses #2194.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5Cfwf2",
+        "number": 2194,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2194"
+      }
+    ],
+    "createdAt": "2022-01-27T00:08:48Z",
+    "deletions": 70,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-01-27T10:59:05Z",
+    "number": 2195,
+    "title": "Update docs/docstrings"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "I thought I had fixed this previously but it looks like not. So I've added a test that `isnothing(model.free_surface)` when `grid isa SingleColumnGrid`.\r\n\r\nFor the sake of a verbose explanation:\r\n\r\nWhen `grid isa SingleColumnGrid`, the constructor-helper `FreeSurface` should return `nothing` rather than some other free surface object, like `ExplicitFreeSurface`, etc.\r\n\r\nTHEN, when `isnothing(model.free_surface)`, the handy function `fields(model)` should _omit_ the free surface displacement `\u03b7` from the `NamedTuple` of model fields.\r\n\r\nA bug crept into the code because we didn't have a test during #2121 when some of the function signatures changed (because we don't need `arch` _and_ `grid` if `arch` is stored in `grid`).\r\n\r\ncc @navidcy \r\ncc @adelinehillier ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-27T02:26:00Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2022-01-27T15:16:08Z",
+    "number": 2196,
+    "title": "Fixes `FreeSurface` constructor for `SingleColumnGrid` and adds a test"
+  }
+]

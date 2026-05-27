@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nERA5 has incorrect 10m wind speeds at times: https://confluence.ecmwf.int/display/CKB/ERA5%3A+large+10m+winds\r\nThis leads to 3 NaNs in the soil model and snowy land model (our 3 NaNs occur during these wind events, which are very isolated in time. These winds also generate large fluxes which presumably lead to instability since boundary conditions are treated explicitly).\r\n\r\nThis PR gives us the option of clipping the wind speed from ERA5 only. Since these values are wrong, this seems OK to do, though we do need to specify an arbitrary cutoff. Since we cut the wind speed when we set up the forcing for ERA5, this does not mean we clip the wind speed in general (e.g., we would not in coupled simulations.)\r\n\r\nWhile ideally the model could be stable in all situations, fixing this would require significant effort (probably treating boundary conditions implicitly, though that might not be enough, Im not sure). I think we can move forward knowing this is a limitation of the model timestepping.\r\n\r\nFor reference, in the year 2009, the 99.99 percentile is 24 m/s, so a cutoff of 25 m/s seems fine.\r\n\r\nlonger runs with this fix implemented, and without any NaNs are here: https://buildkite.com/clima/climaland-long-runs/builds/4025\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6atJkm",
+        "number": 859,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/859"
+      }
+    ],
+    "createdAt": "2025-05-30T00:09:56Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-06-02T22:22:41Z",
+    "number": 1166,
+    "title": "clip wind speed from ERA5"
+  }
+]

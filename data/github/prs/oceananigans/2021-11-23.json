@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 855,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Extended the type WENO5 to allow the execution of the WENO scheme on stretched and uniform grids alike. \r\n\r\nIn practice:\r\n\r\n- `WENO5()` will default to the uniform 5th order coefficients (\"uniform\" setting) in all directions with a JS-WENO formulation\r\n- `WENO5(grid = grid)` will default to uniform interpolation coefficient if the direction is uniform (`typeof(\u0394c) <: Number`) and will precompute the ENO coefficients for reconstruction in the stretched directions (\"stretched\" setting) (I have tested \"on the fly\" coefficient calculation for stretched directions and it is way too expensive! therefore, useless to keep as a possibility)\r\n- `WENO5(grid = grid, stretched_smoothness=true)` will compute coefficients for the smoothness indicators `\u03b2\u2080, \u03b2\u2081` and `\u03b2\u2082` to account for stretched grid\r\n- `WENO5(zweno = true)` will implement a Z-WENO formulation for the weno weight calculation\r\n- No support is given for `WENO5S(grid = grid)` for curvilinear grids for the moment (defaults to uniform setting)\r\n\r\nComments:\r\nDespite the fact that all methods have the same execution speed, `stretched_smoothness` requires more memory (and slightly more computation time) and is not much impactful. As such, most of the time it is better to use just the `WENO5(grid = grid)` keyword argument as it does not decrease accuracy but decreases memory utilization (and speed up slightly). (I haven't tried all types of grids, so maybe it is good to check before performing a large simulation on a weird stretched grid)\r\nOn the other hand, a Z-WENO formulation is always beneficial (also in case of a uniform mesh) with no major decrease in performance. The same can be said for the stretched `WENO5(grid=grid)` formulation in case of stretched grids\r\n\r\n`validation/advection/validate_weno_scheme.jl` compares all these methods in terms of time and accuracy on a simple 1D and 2D tracer advection simulations. Below some animations showing the performance of the three methods for a \"center coarsened\" grid type (`grid_str2`)\r\n`U` => `WENO5()` \r\n`S` => `WENO5(grid = grid)` \r\n`\u03b2` => `WENO5(grid = grid, stretched_smoothness=true)` \r\n`Z` => `WENO5(grid = grid, stretched_smoothness=true, zweno=true)` \r\n\r\nhttps://user-images.githubusercontent.com/7112768/142819747-4e4083cf-d725-4f1a-bac7-4fb10800ecc7.mp4\r\n\r\nhttps://user-images.githubusercontent.com/7112768/142819755-fec13fb6-684f-4f1a-b7ec-78d9768c4ff7.mp4\r\n\r\n\r\nCloses #1704 \r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MDI5MDIzMTU=",
+        "number": 1704,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1704"
+      }
+    ],
+    "createdAt": "2021-11-14T21:10:52Z",
+    "deletions": 165,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2021-11-23T14:24:26Z",
+    "number": 2060,
+    "title": "Stretched WENO and general improvement of WENO infrastructure"
+  }
+]

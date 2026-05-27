@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 215,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "and also correct some `Float64` that slipped in the `SplitExplicitFreeSurface`. This is some preparatory work to allow more flexible user type and eventually fully support Metal.\r\n\r\nNote that I have tested `Metal` on an additional branch that implements these changes + some (quite easy actually) support for Metal architectures https://github.com/CliMA/Oceananigans.jl/tree/ss/fix-metal (as well as some other tangential stuff I was trying which is not relevant) and this [example](https://github.com/CliMA/Oceananigans.jl/blob/ss/fix-metal/validation/mesoscale_turbulence/baroclinic_adjustment.jl) seem to run quite nicely with WENO, so after this PR is merged, the route for Metal should be\r\n- enable easy Float32 support\r\n- implement a `MetalGPU` (alias for a possible `GPU{<:Metal.MetalBackend}`) architecture",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-20T22:33:14Z",
+    "deletions": 212,
+    "labels": [],
+    "mergedAt": "2025-01-23T06:51:52Z",
+    "number": 4053,
+    "title": "Remove all hardcoded Float64 from the `Advection` module"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "to reproduce the issue on main:\r\n```julia\r\njulia> grid = RectilinearGrid(size = (1, 1), x = (0, 1), z = (0, 1), topology = (Periodic, Flat, Bounded))\r\n1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Flat, Bounded} on CPU with 1\u00d70\u00d71 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0) regularly spaced with \u0394x=1.0\r\n\u251c\u2500\u2500 Flat y\r\n\u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0] regularly spaced with \u0394z=1.0\r\n\r\njulia> Oceananigans.Operators.\u2111y\u1d43\u1da0\u1d43(1, 1, 1, grid, 1)\r\nERROR: MethodError: \u2111y\u1d43\u1da0\u1d43(::Int64, ::Int64, ::Int64, ::RectilinearGrid{Float64, Periodic, Flat, Bounded, Oceananigans.Grids.StaticVerticalCoordinate{OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, Float64}, Float64, Float64, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, Nothing, CPU}, ::Int64) is ambiguous.\r\n\r\nCandidates:\r\n  \u2111y\u1d43\u1da0\u1d43(i, j, k, grid::Oceananigans.Grids.YFlatGrid, c)\r\n    @ Oceananigans.Operators ~/.julia/packages/Oceananigans/HTdbl/src/Operators/interpolation_operators.jl:90\r\n  \u2111y\u1d43\u1da0\u1d43(i, j, k, grid::Oceananigans.Grids.AbstractGrid, f::Number, args...)\r\n    @ Oceananigans.Operators ~/.julia/packages/Oceananigans/HTdbl/src/Operators/interpolation_operators.jl:35\r\n\r\nPossible fix, define\r\n  \u2111y\u1d43\u1da0\u1d43(::Any, ::Any, ::Any, ::Oceananigans.Grids.YFlatGrid, ::Number)\r\n\r\nStacktrace:\r\n [1] top-level scope\r\n   @ REPL[4]:1\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-19T20:58:22Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-01-23T11:29:47Z",
+    "number": 4051,
+    "title": "Disambiguate interpolation of `::Number` on grids with `Flat` dimensions"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "closes #4057",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6nUluv",
+        "number": 4057,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4057"
+      }
+    ],
+    "createdAt": "2025-01-23T15:54:35Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-01-23T22:22:31Z",
+    "number": 4059,
+    "title": "Add a fallback `set_timestepper!` "
+  }
+]

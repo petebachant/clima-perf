@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a `alias_to_name_map` to `AliasParamDict` so that we can easily support `getindex` so that these dicts behave like ordinary dicts:\r\n\r\n```julia\r\nBase.getindex(pd::ParamDict, i) = getindex(pd.data, i)\r\nBase.getindex(pd::AliasParamDict, i) =\r\n    getindex(pd.data, pd.alias_to_name_map[i])\r\n```\r\n\r\nPeeled off from #79.\r\n\r\nThis PR also bumps the version for a new release.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-27T01:47:16Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwxOTM0OTAyOTU3",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2022-05-27T01:54:14Z",
+    "number": 86,
+    "title": "Store alias-to-name map for fast alias getindex"
+  }
+]

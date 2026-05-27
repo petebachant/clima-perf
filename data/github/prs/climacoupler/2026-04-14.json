@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 279,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes [#1570](https://github.com/CliMA/ClimaCoupler.jl/issues/1750)\r\n\r\nThis PR adds infrastructure for testing whether a calibration can run or not. A calibration involves\r\n\r\n1. Generating observations\r\n2. Running an ensemble of simulations to produce diagnostics\r\n3. Computing the observation map (data from diagnostics to G ensemble matrix)\r\n4. Run post iteration analysis (plotting of parameters, bias, and RMSE)\r\n\r\nThe main computational cost is running the ensemble of simulations and the amount of mistakes/typos that can happen in this step is minimal compared to the other steps. This PR adds the function `setup_and_emulate_diagnostics` which repeatedly call the diagnostics handler of the atmos simulation with a default time step of one day. This forces all the diagnostics of the atmos simulation to be produced with data that is probably not correct. Beside that, the diagnostics are exactly what would be produced from the atmos simulation.\r\n\r\nWhen running a test calibration on `clima` with precompilation finished with a simulation lasting for a month, the first iteration takes ~20 minutes (most of the time is spent creating the simulation). ",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7sr5Ju",
+        "number": 1750,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1750"
+      }
+    ],
+    "createdAt": "2026-03-10T23:02:39Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-04-14T00:14:19Z",
+    "number": 1793,
+    "title": "Add infrastructure for testing calibration"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Closes #1800. \r\n\r\nNote that some polar mask variables/functions have been renamed to reflect these changes (e.g., `polar_exclusion_flux_mask_centers` is now just `polar_mask`).\r\n\r\nA few other changes (let me know if I should split these up into multiple PRs):\r\n- I noticed that the boundary mask had the opposite convention of 1's and 0's from the ocean mask, so I switched it to be consistent (0's where |lat| >= 78)\r\n- I have switched `ifelse` statements where we apply the mask to just point-wise multiplication of the mask. For example,\r\n```\r\n@. remapped_F_lh = ifelse(polar_excl_centers .\u2248 0, zero(remapped_F_lh), remapped_F_lh)\r\n```\r\nbecomes\r\n```\r\n@. remapped_F_lh = polar_mask*remapped_F_lh\r\n```\r\nI did a simple benchmark for arrays of this size, and found that the former can take ~1 s whereas the latter takes ~0.1 s. There was some talk of the `ifelse` being necessary to catch `NaN`s, but I'm thinking that that shouldn't be necessary here and should happen somewhere else.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7yX49i",
+        "number": 1800,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1800"
+      }
+    ],
+    "createdAt": "2026-04-13T23:58:14Z",
+    "deletions": 70,
+    "labels": [],
+    "mergedAt": "2026-04-14T21:58:14Z",
+    "number": 1873,
+    "title": "Modify polar mask to be on cell centers only"
+  }
+]

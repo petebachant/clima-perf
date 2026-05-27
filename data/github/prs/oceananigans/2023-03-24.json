@@ -1,0 +1,175 @@
+[
+  {
+    "additions": 920,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR overhauls grid utils + adds `minimum_x/y/zspacing` methods that work on any grid.\r\n\r\n(with @glwagner)\r\n\r\nCloses #1119",
+    "changedFiles": 64,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MzMzMzE5NjQ=",
+        "number": 1119,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1119"
+      }
+    ],
+    "createdAt": "2023-03-21T02:27:58Z",
+    "deletions": 738,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-03-24T03:02:12Z",
+    "number": 2991,
+    "title": "Completely overhaul grid utils + `min_\u0394x/y/z` -> `minimum_spacing` + move `x/y/zspacing` to `Grids`"
+  },
+  {
+    "additions": 113,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Apparently, the issue with #2996 is caused by the fact that slurping inside a kernel signature \r\ni.e:\r\n```\r\n@kernel function test_func(r, c, args...)\r\n      i, j, k = @index(Global, NTuple)\r\n      r[i, j, k] = whatever_inlined_function(i, j, k, c, args...)\r\nend\r\n```\r\nThis can be fixed by passing the size of the `Vararg` tuple\r\nlike this\r\n```\r\n@kernel function test_func(r, c, args::Vararg{T, N}) where {T, N}\r\n      i, j, k = @index(Global, NTuple)\r\n       r[i, j, k] = whatever_inlined_function(i, j, k, c, args...)\r\nend\r\n```\r\n\r\nEdit, this approach only works if all Varargs are of the same type `T`.\r\n\r\nEdit, Edit, with @glwagner we decided to pass all additional arguments to the kernel as a tuple, so\r\n```\r\n@kernel function test_func(r, c, args)\r\n      i, j, k = @index(Global, NTuple)\r\n      r[i, j, k] = whatever_inlined_function(i, j, k, c, args...)\r\nend\r\n```\r\nwhich means that from now on, when calling a kernel\r\n```\r\ncaller_func(arch, grid, r, c, args...) = launch!(arch, grid, worksize, test_func, r, c, args...)\r\n```\r\nwill become\r\n```\r\ncaller_func(arch, grid, r, c, args...) = launch!(arch, grid, worksize, test_func, r, c, Tuple(args))\r\n```\r\nResolves #2996",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5hckA0",
+        "number": 2996,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2996"
+      }
+    ],
+    "createdAt": "2023-03-23T20:40:51Z",
+    "deletions": 106,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-03-24T03:06:10Z",
+    "number": 3026,
+    "title": "Fixes CPU slowdown with KernelAbstractions >= v0.8"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #2668 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5N38k0",
+        "number": 2668,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2668"
+      }
+    ],
+    "createdAt": "2023-03-22T17:55:28Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2023-03-24T03:19:08Z",
+    "number": 3011,
+    "title": "Fix bug in `precondition!` for `DiagonallyDominantPreconditioner`"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #1960",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5NzgyMTIwMTE=",
+        "number": 1960,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1960"
+      }
+    ],
+    "createdAt": "2023-03-23T04:20:00Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-03-24T13:18:36Z",
+    "number": 3023,
+    "title": "Check for NaNs in `prognostic_fields` not `fields`"
+  },
+  {
+    "additions": 193,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the behavior `RiBasedVerticalDiffusivity` to compute eddy diffusivities with a moving average in time, rather than using instantaneous values.\r\n\r\nThis has the effect of eliminating vertical \"noise\" that is present without time-averaging:\r\n\r\n# Without time-averaging\r\n\r\nhttps://user-images.githubusercontent.com/15271942/226771108-213d709c-a95c-4e1e-a469-8dd7826635c1.mp4\r\n\r\n\r\n# With time-averaging\r\n\r\nhttps://user-images.githubusercontent.com/15271942/226771068-cfe964a5-033f-46e2-989f-39623a4e2912.mp4\r\n\r\nThis PR also unifies the notation for eddy diffusivities between `CATKEVerticalDiffusivity`, `RiBasedVerticalDiffusivity`, and `ConvectiveAdjustmentVerticalDiffusivity`.\r\n\r\n~~Before merging I plan to re-calibrate the parameters for `RiBasedVerticalDiffusivity`.~~\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-22T00:27:26Z",
+    "deletions": 131,
+    "labels": [],
+    "mergedAt": "2023-03-24T13:19:19Z",
+    "number": 2995,
+    "title": "Time-averaged eddy diffusivities for `RiBasedVerticalDiffusivity`"
+  }
+]

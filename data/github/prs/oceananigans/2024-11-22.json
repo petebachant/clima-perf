@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Vector rotation was not defined for immersed boundary grids. This PR defines it.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-19T21:27:48Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2024-11-22T07:47:00Z",
+    "number": 3939,
+    "title": "(0.94.3) Vector rotation for immersed boundary grids"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #3948\r\n\r\n`Az\u1d9c\u1d9c\u1d43` was defined in the `Operators` module, just not exported, so it couldn't be used in `AbstractOperations`. I'll export some more common metrics.\r\n\r\nBut now the MWE from #3948 is giving me another error (see below).\r\n\r\nLooks like `reduced_dimensions` is not defined for `BinaryOperation`, just `Field`. I'll change the definitions to use `AbstractField` as `AbstractOperation <: AbstractField`.\r\n\r\n```\r\nERROR: MethodError: no method matching reduced_dimensions(::Oceananigans.AbstractOperations.BinaryOperation{Center, Center, Nothing, typeof(*), Field{\u2026}, Oceananigans.AbstractOperations.GridMetricOperation{\u2026}, typeof(Oceananigans.Operators.identity1), typeof(Oceananigans.Operators.identity2), ImmersedBoundaryGrid{\u2026}, Float64})\r\n\r\nClosest candidates are:\r\n  reduced_dimensions(::Field{Nothing, Nothing, Nothing})\r\n   @ Oceananigans ~/atdepth/Oceananigans.jl/src/Fields/field.jl:523\r\n  reduced_dimensions(::Field{Nothing, Nothing})\r\n   @ Oceananigans ~/atdepth/Oceananigans.jl/src/Fields/field.jl:522\r\n  reduced_dimensions(::Field{Nothing, <:Any, Nothing})\r\n   @ Oceananigans ~/atdepth/Oceananigans.jl/src/Fields/field.jl:521\r\n  ...\r\n\r\nStacktrace:\r\n [1] immersed_column\r\n   @ ~/atdepth/Oceananigans.jl/src/ImmersedBoundaries/immersed_reductions.jl:71 [inlined]\r\n [2] condition_operand(func::typeof(identity), op::Oceananigans.AbstractOperations.BinaryOperation{\u2026}, ::Nothing, mask::Int64)\r\n   @ Oceananigans.ImmersedBoundaries ~/atdepth/Oceananigans.jl/src/ImmersedBoundaries/immersed_reductions.jl:67\r\n [3] condition_operand\r\n   @ ~/atdepth/Oceananigans.jl/src/Fields/field.jl:649 [inlined]\r\n [4] (Reduction{\u2026})(field::Field{\u2026}; dims::Tuple{\u2026}, condition::Nothing, mask::Int64)\r\n   @ Oceananigans.AbstractOperations ~/atdepth/Oceananigans.jl/src/AbstractOperations/metric_field_reductions.jl:111\r\n [5] top-level scope\r\n   @ REPL[11]:1\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6fzmic",
+        "number": 3948,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3948"
+      }
+    ],
+    "createdAt": "2024-11-22T00:14:59Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2024-11-22T18:02:20Z",
+    "number": 3949,
+    "title": "Fix `Integral` reductions on immersed grids"
+  }
+]

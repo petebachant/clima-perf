@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This PR fixes two separate bugs which raise warnings when building documentation, as described in issue #167. Thanks to @charleskawczynski for helping me debug this issue!\r\n\r\n1) The first bug is that relative paths are not supported as targets of Documenter `@ref` links (Documenter issue [509](https://github.com/JuliaDocs/Documenter.jl/issues/509) -- I *think* the link is generated correctly but doesn't pass the linkcheck stage, but don't quote me on that.)\r\nThe fix implemented here is the same as [what was used](https://github.com/JuliaLang/julia/pull/22201) for the julialang docs: the link targets are explicitly marked with an [`@id` tag](https://juliadocs.github.io/Documenter.jl/stable/man/syntax/#Duplicate-Headers), and the `@ref` tag is changed to refer to that `@id` tag, rather than the file's path. \r\nIroncially, this could be better documented in the Documenter docs themselves...\r\n\r\n2) The second bug only takes place when building docs locally, and results in missing file warnings for files that exist. This is due to Literate.jl, which generates non-functional URLs (containing the string [`<unkown>`](https://github.com/fredrikekre/Literate.jl/blob/cec2506d22f1367bf03fc3487f14009eff2fd03b/src/Literate.jl#L204-L206)) if the config variable [`repo_root_url`](https://fredrikekre.github.io/Literate.jl/v2/outputformats/#Configuration) is not set. Literate.jl's default configuration picks this up correctly when run under common CI services (eg. GH Actions), but not when built locally. \r\nThe fix implemented here is to manually set this path in make.jl only when being run outside of CI (which we test for by testing the existence of a shell environment variable named `CI`).\r\n\r\nWith the two fixes above, documentation builds locally without raising any warnings, and manually checking confirms the links in question are generated correctly.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585Lb0jh",
+        "number": 167,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/167"
+      }
+    ],
+    "createdAt": "2022-06-08T19:43:41Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-07-20T20:12:32Z",
+    "number": 166,
+    "title": "Bugfixes to Documenter config, docs links"
+  }
+]

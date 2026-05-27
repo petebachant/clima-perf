@@ -1,0 +1,126 @@
+[
+  {
+    "additions": 269,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades to the latest dependencies",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-18T03:54:16Z",
+    "deletions": 269,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-11-18T04:39:14Z",
+    "number": 1133,
+    "title": "Upgrade deps"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds the life cycle tan case.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-18T06:09:30Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2022-11-18T06:45:12Z",
+    "number": 1135,
+    "title": "Add life cycle tan"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Refactors the surface functions by changing `set_surface_density_and_humidity!` to `set_surface_thermo_state!`, which we can use to dispatch between the GCM case vs a prescribed surface thermo state case (of which there are many for the TC SCM examples)\r\n - Removes `q_sfc` and `\u03c1_sfc` from the cache, since we can just store the surface thermo state instead.\r\n\r\nThis does add allocations to the diagnostics callback, but I've been thinking that it may be nice to split out the cache into solver vs diagnostics cache so that we can somehow ensure that computing diagnostics doesn't impact the solve.\r\n\r\nMaybe these changes will slightly impact how we interact with the coupler? cc-ing @LenkaNovak ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-18T06:07:10Z",
+    "deletions": 41,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      },
+      {
+        "color": "640AA2",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABHUOXkw",
+        "name": "Surface :surfer:"
+      }
+    ],
+    "mergedAt": "2022-11-18T18:20:30Z",
+    "number": 1134,
+    "title": "Refactor surface functions"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes a conditional for deciding how `ustar` is populated in `SurfaceBase`. This should be a no-op because `ustar` is passed into SurfaceFluxes if `TC.fixed_ustar(surf_params)`, so we should be able to recover it by consistency.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-18T21:20:17Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-11-18T22:27:18Z",
+    "number": 1137,
+    "title": "Remove condition for computing ustar"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nPartially addresses #1079. Right now it only works when radiation is the only external tendency, as all other external tendencies change within one timestep. @simonbyrne suggests that a better way is to add some state variables to accumulate fluxes. I still would like to merge this in as a temporary solution though, as I think it would be good to make sure we are conserving mass and energy in ci.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-18T19:45:14Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-11-18T23:13:12Z",
+    "number": 1136,
+    "title": "add mass and energy conservation check"
+  }
+]

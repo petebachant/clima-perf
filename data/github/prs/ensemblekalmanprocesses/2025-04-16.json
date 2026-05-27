@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 435,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #474\r\n\r\n## Todo\r\n- can a `lmul_sqrt` method be created for such types? [Not yet implemented- note also not necessary for the EKP algorithms]\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Introduce the new matrix storage options `SVDplusD` (to store a covariance compactly) and `DminusTall` (to store the inverse of `SVDplusD` compactly.\r\n- On construction of `ObservationSeries` the `SVDplusD` object is correctly inverted, and inverse stored as a `DminusTall`\r\n- correctness of the lmul function and scalability checked with unit tests\r\n- Documentation! See [here](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR473/observations/)\r\n## Example\r\n\r\n```\r\nusing EnsembleKalmanProcesses, LinearAlgebra\r\nn=100                                      # dim of observation\r\n\u0393_diag = Diagonal( 0.01*collect(1.0:n))    # diagonal noise\r\nZ = randn(n, 5)                            # array with observation as columns\r\n\u0393_low_rank = tsvd_cov_from_samples(Z)      # cov of observations\r\n\r\n\u0393_sum = SVDplusD(\u0393_low_rank, \u0393_diag)       # compactly store the `\u0393_low_rank + \u0393_diag`\r\nObservation_sum = Observation(\r\n     Dict(\r\n            \"samples\" => y_obs_test,\r\n            \"covariances\" => \u0393_sum, # internally builds the inverse of `SVDplusD`\r\n            \"names\" => \"cov_as_svd_plus_diag\",\r\n        ),\r\n)\r\n\r\n# build some process with it\r\nutkiobj_sum = EnsembleKalmanProcess(..., observation_sum, Inversion())\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-25T00:14:33Z",
+    "deletions": 81,
+    "labels": [],
+    "mergedAt": "2025-04-16T21:49:19Z",
+    "number": 473,
+    "title": "SVDplusD, for representing a covariance as a sum of SVD and Diagonal without building it"
+  },
+  {
+    "additions": 1258,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #466 \r\nCloses #467\r\nCloses #468\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Added `TransformUnscented` inspired from our EKTI based on using the Woodbury identity to perform the update linear algebra in the ensemble space not the data space in `src/UnscentedTransformKalmanInversion.jl`(i.e. from EKTF  (https://journals.ametsoc.org/view/journals/mwre/129/3/1520-0493_2001_129_0420_aswtet_2.0.co_2.xml) - NB largely it is a similar formulation, with the main difference being the need to build \"weighted\" perturbations from the ensemble, not just 1/sqrt(N-1) * difference. \r\n- Share many of the current `Unscented` functions, with `TransformUnscented` \r\n- UKI & UTKI implementation with update-group indexing\r\n- fixed `Unscented(prior)` initialization for 1-dim parameter prior\r\n- full suite of unit tests (verifying utki and uki produce similar values)\r\n- Added UTKI into the loss_minimization example below.\r\n\r\n### Misc\r\n- added \"kwargs...\" into update_ensemble for all methods\r\n- fixed small index bug for etki indexing (also in utki) with update-groups\r\n- Removed a warning for too-small ensemble size that is inappropriate for unscented methods\r\n- Add utilities to safely multiply `lmul` and `lmul!` by the observation noise, it's inverse. \r\n\r\n## Examples: Examples, check with UKI\r\n- on `examples/LossMinimization/loss_minimization_finite_vs_infinite_ekp.jl` using `impose_prior=true`  \r\nOrder: Left (smooth loss), UKI & UTKI, Right (noisy loss) UKI & UTKI\r\n<img src=\"https://github.com/user-attachments/assets/099762f1-5a2b-4c5b-bbe7-a2d50c1c8586\" width=\"170\"> <img src=\"https://github.com/user-attachments/assets/bfbd133b-f833-4123-80e9-c905c60d7d92\" width=\"170\"> <img src=\"https://github.com/user-attachments/assets/9a4591b2-3b56-4274-9ab4-9e209e7b29fb\" width=\"170\"> <img src=\"https://github.com/user-attachments/assets/367a5973-31bf-4678-8527-1f12d1e8249a\" width=\"170\">\r\nBoth unscented variants (UKI/UTKI) behave the same on smooth loss and noisy loss (NB `impose_prior=true` has slight bias towards prior compared with e.g. EKS or other prior-imposing (a.k.a `X-infinite` variants)\r\n<img src=\"https://github.com/user-attachments/assets/68a98657-e009-4c69-ab90-f526723a0040\" width=\"350\"> <img src=\"https://github.com/user-attachments/assets/8cdae032-1c2c-478f-99b8-3a9a509f88c1\" width=\"350\">\r\n\r\n-  on `examples/Accelerators/ExpSinAccelerated/` **Left = UKI, Right UTKI**\r\n<img src=\"https://github.com/user-attachments/assets/413a824e-c450-49bc-b6a6-0b22a86e62b0\" width=\"350\"> <img src=\"https://github.com/user-attachments/assets/5378487e-04a1-418c-b7ef-77836dd3720b\" width=\"350\">\r\n\r\n## Examples: Scaling \r\n- from unit tests solving problems with increased dimension and adding in regular UKI for comparison:\r\n```\r\n\u250c Info: 6 iterations of experiment uki with 1000-dim observation took 0.7976522949999998 seconds. \r\n\u2514  (avg update: 0.13294204916666663)\r\n\u250c Info: 6 iterations of experiment utki with 1000-dim observation took 0.005414058999999999 seconds. \r\n\u2514  (avg update: 0.0009023431666666665)\r\n\r\nInfo: 4 iterations of experiment uki with 10000-dim observation took 109.81469675299999 seconds. \r\n\u2514  (avg update: 27.453674188249998)\r\n\u250c Info: 4 iterations of experiment utki with 10000-dim observation took 0.099600575 seconds. \r\n\u2514  (avg update: 0.02490014375)\r\n\r\n[UKI not attempted]\r\n\u250c Info: 3 iterations of experiment utki with 100000-dim observation took 0.48207968700000003 seconds. \r\n\u2514  (avg update: 0.16069322900000002)\r\n\r\n[UKI not attempted]\r\n\u250c Info: 2 iterations of experiment utki with 1000000-dim observation took 5.737153102 seconds. \r\n\u2514  (avg update: 2.868576551)\r\n\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586t99yS",
+        "number": 466,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/466"
+      },
+      {
+        "id": "I_kwDOEreD586t99zX",
+        "number": 467,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/467"
+      },
+      {
+        "id": "I_kwDOEreD586t991V",
+        "number": 468,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/468"
+      }
+    ],
+    "createdAt": "2025-03-14T00:59:14Z",
+    "deletions": 286,
+    "labels": [],
+    "mergedAt": "2025-04-16T22:38:28Z",
+    "number": 469,
+    "title": "New UTKI variant `TransformUnscented`"
+  }
+]

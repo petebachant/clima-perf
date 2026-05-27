@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 882,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Every package that depends on ClimaComms depends on CUDA and MPI. As a result, user of dowstream packages have to obtain CUDA and MPI even if they don't cannot or don't want to use either of the two.\r\n\r\nThis PR moves CUDA and MPI to extensions, opening the path to move support for CUDA and MPI in downstream packages to extensions too. \r\n\r\nThe benefits of using extensions are reduced instantiation and load time (eg, in every GitHub Action runner), but also establishes a pattern of supporting different backends/accelerators in a more modular way instead of entangling everything together. The downside is that extensions are not complete and there are things that cannot be done at the moment. One example is defining new types in the main module (without `evaling`). This is manifest in this PR, where I pushed the definition of `MPISendRecvGraphContext` and `MPIPersistentSendRecvGraphContext` to the extension. A second downside is that extensions are a little brittle right now. For example, there can be errors in precompilation. That said, supporting backends like CUDA is precisely what extensioins were designed for.\r\n\r\nCloses #74 \r\nCloses #4 \r\nCloses #69",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGUSWBM5AyZXn",
+        "number": 4,
+        "repository": {
+          "id": "R_kgDOGUSWBA",
+          "name": "ClimaComms.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaComms.jl/issues/4"
+      },
+      {
+        "id": "I_kwDOGUSWBM6EPHEz",
+        "number": 74,
+        "repository": {
+          "id": "R_kgDOGUSWBA",
+          "name": "ClimaComms.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaComms.jl/issues/74"
+      }
+    ],
+    "createdAt": "2024-04-20T23:40:14Z",
+    "deletions": 1003,
+    "labels": [],
+    "mergedAt": "2024-04-29T02:05:53Z",
+    "number": 75,
+    "title": "Move MPI and CUDA to Julia extensions"
+  }
+]

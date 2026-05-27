@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 91,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR has two main functions:\r\n- Set surface height to 0, independent of snow depth. This avoids an error in computing surface fluxes when the snow gets too tall, which was previously causing NaNs in very snowy regions (Patagonia, southern Alaska, etc). We may need to revisit this in the future - see https://github.com/CliMA/ClimaLand.jl/issues/934\r\n- Misc. updates to longruns and pipeline",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-03T22:26:17Z",
+    "deletions": 122,
+    "labels": [],
+    "mergedAt": "2024-12-04T00:18:24Z",
+    "number": 935,
+    "title": "some NaN fixes, longrun updates"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nThis PR makes two changes which bring the soil and snow model in line with the equations we have in the paper.\r\n1. Evaporation/condensation is include in the \"influx\" term from which we then compute runoff and infiltration. Previously, we computed infiltration/runoff from Precip+snowmelt (if applicable), and then set the BC as infiltration+evap. Now we compute infiltration/runoff from Precip+snowmelt+evap, and set the BC = infiltration. This allows us to handle heavy condensation events also, which I think caused NaN before, and so I also stopped setting Evap and subl to 0 if condensation was occuring.\r\n2. Non-dimensionalize the coefficients for thermal conductivity in snow. If the snow density = ice density, we get kappa_snow = kappa_ice exactly\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-25T19:56:33Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-12-04T01:18:09Z",
+    "number": 931,
+    "title": "Update soil water bc and snow conductivity to match paper"
+  }
+]

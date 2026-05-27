@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 147,
+    "author": {
+      "id": "U_kgDOBz9FcQ",
+      "is_bot": false,
+      "login": "amylu00",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdding a function to calculate nucleation rate coefficient, J, for homogeneous freezing.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n- @assert to see if Delta_a_w is in range for hom_J\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n- document homogeneous freezing J\r\n- create the homogeneous J function in a HomFreezing module in IceNucleation.jl\r\n- GPU tests (see appendix of [this paper](https://acp.copernicus.org/articles/21/14403/2021/acp-21-14403-2021.pdf))\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-29T17:47:59Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2023-06-30T21:42:32Z",
+    "number": 138,
+    "title": "HOM Freezing J"
+  },
+  {
+    "additions": 325,
+    "author": {
+      "id": "MDQ6VXNlcjc1NTg3NzA5",
+      "is_bot": false,
+      "login": "mikhailmints",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis is an initial implementation of tests for precipitation susceptibility, as described in Glassmeier & Lohmann 2016.\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n- Analogous precipitation susceptibility rates need to be added for ice-phase processes.\r\n- The struct with the precipitation susceptibility rates needs to be extended to include the ice-phase rates.\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- In a new file, `PrecipitationSusceptibility.jl`:\r\n  - Added the struct `precip_susceptibility_rates`, which can store information on the logarithmic derivatives of precipitation production with respect to number density and specific humidity of cloud and rain droplets.\r\n  - Added the functions `precipitation_susceptibility_autoconversion` and `precipitation_susceptibility_accretion` that compute the autoconversion and accretion susceptibility for any 2-moment scheme, using automatic differentiation (`ForwardDiff.jl`).\r\n- In `test/precipitation_susceptibility_tests.jl`:\r\n  - Added helper functions for computing derivatives of the universal functions from SB2006 / Glassmeier & Lohmann analytically.\r\n  - Added tests to check if the autoconversion and accretion susceptibility from the automatic differentiation for SB2006 matches the expected autoconversion susceptibility described analytically in Glassmeier and Lohmann. All 5 tests are now passing.\r\n- Created a documentation page for precipitation susceptibility.\r\n  - Wrote plotting code for replicating Fig 2 from Glassmeier and Lohmann, added it to the documentation.\r\n- Other miscellaneous changes:\r\n  - Changed the label on the code samples in the README from `julia` to `bash` since VSCode was saying that it was not valid Julia syntax.\r\n  - Changed the imports in `Microphysics2M` and the tests to use `as` instead of declaring `const`'s for the imported modules.\r\n  - In `common_functions_tests.jl` changed `import Test` to `import Test as TT` because otherwise, this file was not able to run individually and only after other tests, since `TT` was not defined within the file.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-24T16:08:36Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2023-06-30T23:31:36Z",
+    "number": 133,
+    "title": "Initial implementation of precipitation susceptibility tests"
+  }
+]

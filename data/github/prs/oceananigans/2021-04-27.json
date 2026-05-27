@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 481,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Note: `implicit_free_surface_linear_operation` was missing a halo filling step for eta prior to launching the kernel. This PR fixes that issue.",
+    "changedFiles": 41,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-23T20:22:48Z",
+    "deletions": 398,
+    "labels": [],
+    "mergedAt": "2021-04-27T01:27:01Z",
+    "number": 1608,
+    "title": "Miscellaneous updates to get ConformalCubedSphereGrid simulations running on the GPU"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Trying to use `AnisotropicMinimumDissipation` with `buoyancy = nothing` threw an error because it tries to access `buoyancy.model`, which doesn't exist when `buoyancy = nothing`.\r\n\r\nThis PR fixes that bug and adds a few tests for time-stepping AMD with different buoyancy models, including `buoyancy=nothing`. The bug is fixed by adding a new default `Cb = nothing` (rather than `Cb = 0.0`), in which case the computation of the buoyancy modification term is elided entirely. This might speed up some models (but who knows by how much).\r\n\r\nIt is _still_ the case that users who specify a non-default `Cb` without a buoyancy model receive error that could be hard to interpret. We could `validate_closure` for this. I feel it's not worth the effort right now though because the buoyancy modification term is not implemented correctly anyways, and it seems that even if implemented correctly it may not improve the fidelity of simulations with buoyancy. A better solution might be to delete the code associated with the buoyancy modification term and simplify our lives.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-25T16:04:19Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2021-04-27T08:34:42Z",
+    "number": 1619,
+    "title": "Fixes AnisotropicMinimumDissipation bug with `buoyancy=nothing`"
+  },
+  {
+    "additions": 164,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds support for in-place reduction operations where the target is an `AbstractReducedField` and the source is either an `AbstractDataField`, `AbstractOperation`, or array of some kind. These work on the GPU. In the end the solution was simple since we now subtype `AbstractArray`; we only need to pass a view into the interior indices of the target to `Base.mapreducedim!` (which on the GPU ends up at `GPUArrays.mapreducedim!`).\r\n\r\nThe result is that `AveragedField(op::AbstractOperation)` no longer needs to allocate memory for the three-dimensional result of computing `op`. Instead, `op` is reduced in a kernel. This is both faster (much much faster, I think --- though a benchmark is a good idea) and more memory efficient. It also greatly simplifies `compute!(field::AveragedField)`:\r\n\r\n```julia\r\nfunction compute!(avg::AveragedField, time=nothing)\r\n    compute_at!(avg.operand, time)\r\n    mean!(avg, operand)\r\n    return nothing\r\nend\r\n```\r\n\r\nSo, resolves #1422.\r\n\r\nI also took the liberty of resolving #1610 and nuking `interiorparent`...",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MjIyMzgyODU=",
+        "number": 1422,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1422"
+      }
+    ],
+    "createdAt": "2021-04-24T00:17:29Z",
+    "deletions": 184,
+    "labels": [],
+    "mergedAt": "2021-04-27T16:51:32Z",
+    "number": 1611,
+    "title": "Adds support for using `Base.mapreducedim!` with AbstractField and AbstractOperations"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This may resolve #1601 . We'll need to test manually I think since we don't want to update the whole `Manifest.toml`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NjM1NjczNzc=",
+        "number": 1601,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1601"
+      }
+    ],
+    "createdAt": "2021-04-27T15:07:18Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2021-04-27T19:01:54Z",
+    "number": 1621,
+    "title": "Pin ArrayInterface at 3.1.6"
+  }
+]

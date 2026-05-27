@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 170,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This PR adds the preconditioned Crank-Nicholson algorithm (pCN) to MarkovChainMonteCarlo.jl. It's selected by passing `alg_type = \"pCN\"` to `MCMC`. Other aspects of the MCMC interface are unchanged.\r\n\r\nDocstrings are updated to reflect this new option. The existing unit test for MCMC estimation is duplicated, and is run for `rwm` as well as `pCN`.\r\n\r\nVanilla random-walk Metropolis sampling (`alg_type = \"rwm\"`) doesn't have a well-defined limit for high-dimensional parameter spaces; pCN replaces the random walk with an Ornstein\u2013Uhlenbeck [AR(1)] process so that the Metropolis acceptance probability remains non-zero in this limit. See  [Beskos et. al. (2008)](https://www.worldscientific.com/doi/abs/10.1142/S0219493708002378) and [Cotter et. al. (2013)](https://projecteuclid.org/journals/statistical-science/volume-28/issue-3/MCMC-Methods-for-Functions--Modifying-Old-Algorithms-to-Make/10.1214/13-STS421.full).\r\n\r\nUseful feedback on this PR was provided by conversations with @odunbar.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-07T20:27:05Z",
+    "deletions": 85,
+    "labels": [],
+    "mergedAt": "2022-04-29T04:10:32Z",
+    "number": 124,
+    "title": "Add preconditioned Crank-Nicholson method for MCMC sampling"
+  },
+  {
+    "additions": 368,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This PR implements the abstract typing done in CliMA/EnsembleKalmanProcesses.jl#100, e.g. `Array{FT, 2}` \u2192 `AbstractMatrix{FT}`, in order to be consistent with that dependency.\r\n\r\nSee the discussion concerning performance at that PR; use of abstract types is [recommended against](https://docs.julialang.org/en/v1/manual/performance-tips/#Avoid-fields-with-abstract-containers) for perf reasons, but the rationale here is that the code is essentially \"glue\" rather than numerical routines appearing in hot loops, so writing for generality over perf is justified. \r\nAnother downside is that existing abstract types aren't \"abstract\" enough, e.g. `UniformScaling` is not a subtype of `AbstractMatrix` and must be handled separately.\r\n\r\nAs a benefit, the changes made here result in some method signatures being more strongly typed than they are in `master`, allowing us to replace repeated code with multiple dispatch (\"Don't Repeat Yourself\"). \r\n\r\n`MCMC` is changed to a mutable struct, instead of continuing the current code's practice of enabling mutability by making fields of the struct 1x1 Arrays instead of scalars. This change is a moot point, however, since it will be overridden by PR #130.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-28T03:01:45Z",
+    "deletions": 367,
+    "labels": [],
+    "mergedAt": "2022-04-29T04:51:16Z",
+    "number": 132,
+    "title": "Substitute types with abstractions"
+  },
+  {
+    "additions": 1770,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This is a \"catchall\" PR for improvements to code and docstring formatting and resolving *non-critical* linter warnings and other julia recommended practices. See individual commits for the changes made.\r\n\r\nChanges here do **not** modify the code's functionality or performance in any way.",
+    "changedFiles": 28,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-05T05:41:01Z",
+    "deletions": 1251,
+    "labels": [],
+    "mergedAt": "2022-04-29T06:44:59Z",
+    "number": 123,
+    "title": "Miscellaneous cleanup of warnings; formatting"
+  }
+]

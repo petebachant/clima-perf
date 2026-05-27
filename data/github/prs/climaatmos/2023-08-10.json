@@ -1,0 +1,115 @@
+[
+  {
+    "additions": 2591,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "### PR Summary:\r\nRemoved the command line argparsing, and replaced it with YAML files using the same key/value format. Changed the utilities and tests that depend on the current cli.\r\n\r\n### Contents:\r\nAdded default configuration files which store model argument values, types (implicitly), and descriptions.  There is one overall default file and one edmf default file: `.buildkite/default_config.yml` and `.buildkite/default_edmf_config.yml`.\r\n\r\nAdded config files for all buildkite jobs: normal model runs, longruns, performance, and mpi jobs.\r\n\r\nUpdated the CI pipeline YAML and the longrun YAML to use the config files and improved formatting.\r\n\r\nUpdated documentation with guides for running the model with custom configurations and parameters. Added OrderedCollections to docs dependencies to maintain ordering and improve readability when generating the default configuration table.\r\n\r\nRemoved the majority of the `cli_options.jl` interface and ported functionality to work with the new config system. The new functions can now be found in `src/solver/yaml_helper.jl`\r\n- `job_id_from_parsed_args` is now `job_id_from_config`, otherwise it should produce the same result\r\n- `print_repl_script` is now in `docs/src/repl_scripts.jl`, and is slightly tweaked.\r\n- `parsed_args_per_job_id` is now `configs_per_job_id`, and it is tweaked to read in all job-specific YAML files from the `.buildkite` folder. I've added an optional argument to include performance configs. The `filter_string` kwarg is now called `filter` and takes a key-value pair instead of a string.\r\n- `non_default_command_line_flags_parsed_args` is now `non_default_config_entries`\r\nAdded several other config-related utilities to `yaml_helper.jl`:\r\n- `default_config_dict` returns the default config, read in from `.buildkite/default_config.yml` and `.buildkite/default_edmf_config.yml`\r\n- `config_from_target_job` gets the config of the passed in `job_id`\r\n- `override_default_config()` takes a vector of `Dict`s or filepaths and returns a `Dict` with the default config overriden by the given dicts or parsed YAML files. This is meant to generate the actual config used by the model. All config values are typecast to the type of the default config value. The function will error if a key that is not in the default config is passed in, which may pose issues for the coupler if they pass in extra arguments in the config.\r\n- Removed `commands_from_yaml`. The closest function is now `configs_per_job_id`.\r\nFor `src/solver/types.jl`:\r\n- `AtmosCoveragePerfConfig` now longer takes `parsed_args` and `AtmosCoveragePerfParsedArgs` has been removed. Otherwise, the precedence for options in `AtmosCoverPerfConfig` is the same.\r\n- `AtmosConfig()` has been changed. The priority for setting the config is as follows: if an optional Dict `config_dict` is passed in, that will be used to override the defaults. If `parsed_args` contains a `config_file`, that file will be read in and override the defaults. Otherwise, the defaults will be used. TOML files can no longer provide model configuration.\r\n- `merge_parsed_args_with_toml()` has been removed.\r\n\r\nRemoved old parameter tests, since we no longer need to test `merge_parsed_args_with_toml`\r\n\r\nUpdated coupler compatibility tests\r\n\r\nRemoved `toml_edmf_bomex` job, since this is no longer functional.\r\n\r\nVery slightly increased allocs on two jobs (max 1.0006x increase)\r\n\r\nUpdated `perf` scripts for the new config scheme.\r\n\r\nThere is still a bit of work to do, but this PR is already large:\r\n- Clean up the configuration. Some arguments should be parameters. Some arguments can be merged with others. We could also experiment with a more hierarchical config, since the YAML structure makes this easy. Some arguments are currently strings and should be booleans. The typechecking could also be improved.\r\n- Change `parsed_args` to `config_dict` or something similar, since the name is no longer accurate.\r\n\r\n### Original Proposal\r\n\r\nThis is a proposal for file-based model configuration and a request for feedback. The immediate idea is to parse a flat file instead of the command line. Some basic examples have already been completed for EDMF cases.\r\n### Motivation\r\nThe CLI has grown large and unwieldy. Buildkite jobs are hard to manually parse through. As we continue development, the CLI will only grow and get more complex. We also need to be able to drive the model from a file for calibration, but the logic of this is unnecessarily complicated because we need to support both the CLI and a file config.\r\nFor more background on this, see [here](https://github.com/CliMA/ClimaAtmos.jl/issues/721#issuecomment-1226559829) and [here](https://github.com/CliMA/ClimaAtmos.jl/issues/1259).\r\n### Primary Goals\r\n- The new model config must be easy to change.\r\n- Configuration settings must be easily found in the documentation.\r\n- Existing internals (`yaml_helper`, perf config) that rely on the current argument parsing must not be broken. \r\n- Model parameters must be separate from the model configuration. Model parameters must only be changed through TOML files. \r\n\r\n### Summary\r\nI want to remove the bulk of the command line arguments and replace it with YAML files. YAML files are easily read by both humans and parsers, and YAML.jl is already a dependency.\r\nThere is a default config in `.buildkite/model_configs/default_config.yml`. This contains a list of configuration entries with default values and help messages taken directly from the existing CLI. This allows us to continue autogenerating the configuration documentation. It also implicitly stores the type information of each config argument. It would also be simple to introduce nested configurations. This could be immediately useful for something like the rayleigh sponge arguments.\r\nHere is the top of the default config:\r\n```\r\ntest_edmf_consistency:\r\n  help: \"Test edmf equation consistency [`false` (default), `true`]\"\r\n  value: false\r\nsurface_thermo_state_type:\r\n  help: \"Surface thermo state type [`GCMSurfaceThermoState` (default), `PrescribedThermoState`]\"\r\n  value: \"GCMSurfaceThermoState\"\r\ntopo_smoothing:\r\n  help: \"Choose whether to order-2 smoothing on the LGL mesh\"\r\n  value: false\r\nhyperdiff:\r\n  help: \"Hyperdiffusion [`ClimaHyperdiffusion` (or `true`; default), `none` (or `false`)]\"\r\n  value: \"ClimaHyperdiffusion\"\r\n```\r\nThis config is automatically read in by the current `AtmosConfig()`, and is overridden by \"override config file(s)\" passed in via the `--config_file` argument. \r\nThe override config files have simple YAML syntax so that they are not cumbersome to create. Here is the file `.buildkite/model_configs/edmf/edmf_common.yml`:\r\n```\r\napply_limiter: false\r\nconfig: \"column\"\r\nhyperdiff: \"false\"\r\ndebugging_tc: true\r\nturbconv: \"edmf\"\r\nFLOAT_TYPE: \"Float64\"\r\n```\r\nThe values of these key-value pairs are typecast to the types found in the default config to prevent silent typing issues.\r\nMultiple files can be passed in, allowing for common parameters to be used in multiple buildkite jobs with case-specific overrides.\r\nI've fleshed this out for most of the EDMF cases already.\r\nThe main code changes for this are pretty minimal - since the CLI produced a dictionary, this just parses and overrides the default config file in `AtmosConfig()`, slotting it into the `parsed_args`. Some parts will need to be changed, but I tried to keep this as a minimal example.\r\n\r\nThere is still a good amount of work to do, but I would like feedback before I spend time on the following:\r\n- [x] Finish the rest of the config files for the rest of the buildkite tests\r\n- [x] Change certain parts of the `parsed_args` flow, like the `comms_ctx`\r\n- [x] Change the various tools that rely on parsing the current buildkite files and command-line arguments. \r\n- [x] Add documentation on using YAML files for configuration and TOML files for parameter overrides.",
+    "changedFiles": 133,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5ce_Wj",
+        "number": 1259,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1259"
+      }
+    ],
+    "createdAt": "2023-07-20T17:31:02Z",
+    "deletions": 1346,
+    "labels": [
+      {
+        "color": "83243D",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABRQnXow",
+        "name": "Breaking :boom:"
+      }
+    ],
+    "mergedAt": "2023-08-10T03:53:25Z",
+    "number": 1900,
+    "title": "Remove CLI, replace with file-based config"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nFix a bug of the wrong constant is used in the TKE boundary condition.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-09T21:42:50Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      },
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-08-10T05:38:36Z",
+    "number": 1962,
+    "title": "fix k_star in TKE boundary condition"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdds mixing length to hdf5 output. Adds TKE and mixing length to remapped netcdf output. This would be useful for debugging.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-09T18:57:16Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-08-10T21:06:20Z",
+    "number": 1961,
+    "title": "add mixing length to diagnostics"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nRemove smagorinsky-lilly mixing length from the smooth minimum.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-10T06:11:03Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-08-10T22:54:20Z",
+    "number": 1964,
+    "title": "remove smag-lilly mixing length"
+  }
+]

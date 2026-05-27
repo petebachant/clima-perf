@@ -1,0 +1,124 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "`ClimaComms` 0.6.6 introduces new features related to logging. Now, silencing non-root loggers is default and requires no action on the user's part.\r\n\r\nThe version also introduces new loggers that can be used to save the output to file.\r\n\r\nhttps://clima.github.io/ClimaComms.jl/dev/logging/\r\n\r\n(To be merged after we bump dependencies)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-27T23:51:43Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-01-30T01:08:49Z",
+    "number": 1152,
+    "title": "Don't force logger for ClimaComms >= 0.6.6"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe've been seeing very long wait times on Central recently, especially for CPUs. This is a good reminder that we should audit our CI pipeline and make sure that each run is giving us valuable information. This PR removes/shortens a few runs, based on the justifications below:\r\n\r\n- delete Slabplanet Float32 run\r\n  - Float32 is tested by other, more scientifically-meaningful runs: \"AMIP - Float32 test\", \"GPU AMIP target: topography and diagnostic EDMF\", etc\r\n- delete slabplanet albedo from temporal map on CPU and GPU\r\n  - temporal map albedo is tested by \"GPU AMIP: albedo from temporal map + 0M\", \"GPU AMIP: albedo from temporal map + 1M\", \"GPU AMIP target: topography and diagnostic EDMF\"\r\n- delete CPU slabplanet albedo from function\r\n  - exact same setup is tested on GPU\r\n- delete CPU AMIP test albedo from function\r\n  - exact same setup is tested on GPU\r\n- decrease `t_end` of MPI coarse amip from 32 days to 10 days\r\n  -  if the purpose of this test is just to check we can run with MPI successfully, 10 days should give us the same information as 32 days\r\n\r\n\r\n- remaining question: do we need AMIP albedo from temporal map with both 0M and 1M microphysics? 0M is used by almost all of our CI runs, so the only reason to keep it would be for a direct comparison between 0M and 1M",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-29T20:09:26Z",
+    "deletions": 76,
+    "labels": [],
+    "mergedAt": "2025-01-30T03:39:35Z",
+    "number": 1157,
+    "title": "slim down CI pipeline"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Closes #1090 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-30T00:59:42Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-01-30T04:45:50Z",
+    "number": 1158,
+    "title": "Fix codecov action"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nupdate ClimaTimeSteppers compat to allow v0.7 or v0.8",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-30T06:12:59Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2025-01-30T16:44:00Z",
+    "number": 1160,
+    "title": "use CTS v0.8"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis should help us catch breaking changes coming from ClimaTimeSteppers sooner\r\n\r\nnote: this will break until packages downstream of ClimaTimeSteppers are updated to use v0.8.0 (~ClimaAtmos https://github.com/CliMA/ClimaAtmos.jl/pull/3542~, ClimaLand https://github.com/CliMA/ClimaLand.jl/pull/996, ~ClimaCoupler #1160~)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-29T19:20:24Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-01-30T16:46:12Z",
+    "number": 1156,
+    "title": "use main branch of CTS for nightly AMIP"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "https://github.com/CliMA/ClimaAtmos.jl/pull/3522 implements reading CO2 directly in Atmos\r\n\r\nCloses #1137 ",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6mNmGj",
+        "number": 1137,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1137"
+      }
+    ],
+    "createdAt": "2025-01-17T23:35:13Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2025-01-30T20:37:53Z",
+    "number": 1143,
+    "title": "Remove CO2 from AMIP driver"
+  }
+]

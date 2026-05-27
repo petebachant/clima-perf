@@ -1,0 +1,79 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-15T06:07:42Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-03-16T02:39:09Z",
+    "number": 2357,
+    "title": "Update README to use latest syntax"
+  },
+  {
+    "additions": 635,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR eliminates `AbstractEddyDiffusivity` in favor of simply defining `viscosity` and `diffusivity` directly for the LES closures. It also converts the boundary layer parameterizations to subtype `AbstractScalarDiffusivity{TD, VerticalFormulation}`. This change eliminates much code duplication.\r\n\r\nI'm also removing the \"background\" diffusivities/viscosities from the LES closures.\r\n\r\nCloses #1277\r\nCloses #1381\r\n\r\nTODO:\r\n\r\n- [x] Pass closures into `ivd_upper_diagonal` and implement `ivd_upper_diagonal` for closure tuples and filter out explicit closures before implicit solve\r\n- [x] Change \"diffusivity extractors\" like `\u03ba\u1da0\u1d9c\u1d9c` so they take `closure` as an argument.\r\n- [x] Support `viscosity(closure::Tuple, K)` cc @tomchor \r\n- [x] Test `DiffusiveCFL` for closure tuples\r\n- [x] We won't need `z_diffusivity` etc anymore?",
+    "changedFiles": 36,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NjkzNTEzNzY=",
+        "number": 1277,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1277"
+      },
+      {
+        "id": "MDU6SXNzdWU4MTE0NDgwNDA=",
+        "number": 1381,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1381"
+      }
+    ],
+    "createdAt": "2022-03-01T22:26:57Z",
+    "deletions": 913,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2022-03-16T20:01:04Z",
+    "number": 2295,
+    "title": "Better subtyping of `AbstractScalarDiffusivity` and misc TurbulenceClosures cleanup"
+  }
+]

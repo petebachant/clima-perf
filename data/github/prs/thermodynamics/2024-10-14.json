@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "We are getting NaNs in RH for very low temperatures because our saturation vapor pressure is zero. For example\r\n\r\n`TD.saturation_vapor_pressure(tps, FT(30), TD.Ice()) = 0` \r\n`TD.saturation_vapor_pressure(tps, FT(40), TD.Ice()) = 0` \r\n`TD.saturation_vapor_pressure(tps, FT(50), TD.Ice()) = 4.16f-42` \r\n\r\n\r\nThis PR adds a small number in the denominator to prevent that. \r\n\r\n`eps(Float32(0)) = 1.0f-45`",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-14T20:25:55Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Add label to launch Buildkite",
+        "id": "LA_kwDODuejNs8AAAABRtDTgg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2024-10-14T22:44:06Z",
+    "number": 230,
+    "title": "Protect against zero divisions in RH for cold T"
+  }
+]

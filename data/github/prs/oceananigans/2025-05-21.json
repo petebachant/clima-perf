@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "\u2026TKEDissipation) (#4526)\"\r\n\r\nThis reverts commit 7c561b694a7b5aca4b44746187ddd2cd18c495ba.\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-21T01:15:27Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2025-05-21T03:54:26Z",
+    "number": 4533,
+    "title": "Revert \"Don't time-step TKE unless warranted (add clock to CATKE and \u2026"
+  },
+  {
+    "additions": 353,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR implements some quality of life changes to the `VarianceDissipation` metric as well as some necessary changes to support more involved time-stepping schemes like RK3.\r\nIn particular:\r\n- Instead of being \"per-model\", the metric is switched to be \"per-tracer\", which simplifies the implementation. (It might lead to an overhead in compute and memory as, for various tracers, the stored transport should be the same, but the additional compute is quite irrelevant, and the memory overhead can be avoided by explicitly passing preconstructed transport to `VarianceDissipation`).\r\n- The metric is now implemented as a struct to use as a `Callback` rather than a diagnostic. This allows us to force the `UpdateStateCallsite`, which is necessary if we want to have an RK3 implementation.\r\n- We allow schedules different than `IterationInterval(1)` by forcing `ConsecutiveIterations(schedule)` if the schedule is different than `IterationInterval(1)`, which allows us to compute the metric at any schedule we want. At the moment, though, the output schedule should be equal to the schedule we pass to `Callback(t::VarianceDissipation; schedule)` if we want to save down meaningful results (the test is modified to capture cases with different schedules). We can improve on this in future PRs\r\n\r\nAn example of the new UI is in the test and the validation example",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-19T08:06:22Z",
+    "deletions": 311,
+    "labels": [],
+    "mergedAt": "2025-05-21T05:44:50Z",
+    "number": 4522,
+    "title": "Improve variance dissipation computation"
+  },
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #4067 \r\n\r\nThis change solves $p \\text{d}t$ in the Poisson equation rather than $p$ as it is currently.\r\nThe advantage of this is that this avoids numerical instabilities that occur when we compute the RHS of \r\n```math\r\n\\nabla ^2 p = -\\frac{\\nabla \\cdot \\boldsymbol{u}_*}{\\Delta t}\r\n```\r\n\r\nwhen $\\Delta t$ is extremely small, which occurs when we take small timesteps, which are almost inevitable when using some sort of `TimeInterval`.\r\nIn this change, we solve for \r\n```math\r\n\\psi  \\equiv \\int_n^{n+1} p \\text{d} t \\approx p^{n+1} \\Delta t\r\n```\r\nand update the pressure correction with\r\n```math\r\n\\boldsymbol{u}_{n+1} = \\boldsymbol{u}_* - \\nabla \\psi.\r\n```\r\nThe full derivation can be found here https://github.com/CliMA/Oceananigans.jl/issues/4067#issuecomment-2619120179\r\n\r\nThis is a huge change as `model.pressures.pNHS` now gives $p \\text{d}t$. However if we decide to go through with this change, we can discuss the detail of what to expose to the user/change some of the variable name notation to avoid confusion.\r\nCurrently this issue has a workaround using the `minimum_relative_step` flag in `Simulation`, however I think it could be useful to implement this PR as it is a fundamental fix.\r\n\r\nHere I provide a staircase convection validation script to illustrate consistent behaviour before and after this PR fix:\r\n```julia\r\nusing Oceananigans\r\nusing Printf\r\nusing Oceananigans.Solvers: ConjugateGradientPoissonSolver, FFTBasedPoissonSolver\r\n\r\n#####\r\n##### Model setup\r\n#####\r\nNx = 64\r\nNz = 64\r\n\r\ngrid = RectilinearGrid(CPU(), Float64,\r\n                       size = (Nx, Nz),\r\n                       halo = (4, 4),\r\n                       x = (0, 1),\r\n                       z = (0, 1),\r\n                       topology = (Bounded, Flat, Bounded))\r\n\r\nslope(x) = (5 + tanh(40*(x - 1/6)) + tanh(40*(x - 2/6)) + tanh(40*(x - 3/6)) + tanh(40*(x - 4/6)) + tanh(40*(x - 5/6))) / 10\r\n\r\ngrid = ImmersedBoundaryGrid(grid, GridFittedBottom(slope))\r\n                       \r\n@info \"Created $grid\"\r\nreltol = 1e-7\r\nabstol = 1e-7\r\nmaxiter = 1000\r\n# preconditioner = nothing\r\npreconditioner = FFTBasedPoissonSolver(grid.underlying_grid)\r\npressure_solver = ConjugateGradientPoissonSolver(grid; maxiter, reltol, abstol, preconditioner)\r\nmodel = NonhydrostaticModel(; grid,\r\n                            pressure_solver,\r\n                            advection = WENO(order=5),\r\n                            coriolis = FPlane(f=0.1),\r\n                            tracers = (:b, :c),\r\n                            buoyancy = BuoyancyTracer())\r\n\r\n@info \"Created $model\"\r\n@info \"with pressure solver $(model.pressure_solver)\"\r\n\r\n# Cold blob\r\nh = 0.03\r\nx\u2080 = 0.75\r\nz\u2080 = 0.9\r\nb_background(x, z) = z\r\nb_blob(x, z) = -5 * exp(-((x - x\u2080)^2 + (z - z\u2080)^2) / 2h^2)\r\nb\u1d62(x, z) = b_background(x, z) + b_blob(x, z)\r\nset!(model, b=b\u1d62, c=1)\r\n\r\n#####\r\n##### Simulation\r\n#####\r\n\u0394t = 1e-2\r\nsimulation = Simulation(model, \u0394t=\u0394t, stop_time = 10)\r\n\r\n# wizard = TimeStepWizard(max_change=1.05, max_\u0394t=1e-1, cfl=0.6)\r\n# simulation.callbacks[:wizard] = Callback(wizard, IterationInterval(1))\r\n\r\nwall_time = Ref(time_ns())\r\n\r\nb, c = model.tracers\r\nu, v, w = model.velocities\r\nB = Field(Integral(b))\r\nC = Field(Integral(c))\r\ncompute!(B)\r\ncompute!(C)\r\nB\u2080 = B[1, 1, 1]\r\nC\u2080 = C[1, 1, 1]\r\n\u03b4 = \u2202x(u) + \u2202y(v) + \u2202z(w)\r\n\r\nfunction progress(sim)\r\n    elapsed = time_ns() - wall_time[]\r\n\r\n    compute!(B)\r\n    compute!(C)\r\n    B\u2099 = B[1, 1, 1]\r\n    C\u2099 = C[1, 1, 1]\r\n\r\n    msg = @sprintf(\"Iter: %d, next \u0394t: %s, time: %s, wall time: %s, \u0394B: %.3f %%, \u0394C: %.3f %%, max|\u03b4|: %.2e, residual extrema %s, pressure extrema %s\",\r\n                   iteration(sim), prettytime(sim.\u0394t), prettytime(sim), prettytime(1e-9 * elapsed),\r\n                   100 * (B\u2099 - B\u2080) / B\u2080,\r\n                   100 * (C\u2099 - C\u2080) / C\u2080,\r\n                   maximum(abs, \u03b4),\r\n                   extrema(interior(model.pressure_solver.conjugate_gradient_solver.residual)), \r\n                   extrema(interior(model.pressures.pNHS)))\r\n\r\n    pressure_solver = sim.model.pressure_solver\r\n    if sim.model.pressure_solver isa ConjugateGradientPoissonSolver\r\n        solver_iterations = pressure_solver.conjugate_gradient_solver.iteration \r\n        msg *= string(\", solver iterations: \", solver_iterations)\r\n    end\r\n\r\n    @info msg\r\n\r\n    wall_time[] = time_ns()\r\n\r\n    return nothing\r\nend\r\n                   \r\nsimulation.callbacks[:p] = Callback(progress, IterationInterval(50))\r\n\r\nprefix = \"staircase_convection\"\r\n\r\noutputs = merge(model.velocities, model.tracers, (; p=model.pressures.pNHS, \u03b4))\r\n\r\nsimulation.output_writers[:jld2] = JLD2Writer(model, outputs;\r\n                                                    filename = prefix * \"_fields\",\r\n                                                    # schedule = TimeInterval(0.1),\r\n                                                    schedule = IterationInterval(10),\r\n                                                    overwrite_existing = true)\r\n\r\nsimulation.output_writers[:timeseries] = JLD2Writer(model, (; B, C);\r\n                                                          filename = prefix * \"_time_series\",\r\n                                                        #   schedule = TimeInterval(0.1),\r\n                                                          schedule = IterationInterval(10),\r\n                                                          overwrite_existing = true)\r\n\r\nrun!(simulation)\r\n```\r\nwhich gives an output of\r\n\r\nhttps://github.com/user-attachments/assets/b8a64348-3569-47f1-84d3-64bbc0f613eb\r\n\r\nHere I made a video of the field anomalies before and after the fix:\r\n\r\nhttps://github.com/user-attachments/assets/7046f4a5-0f25-4035-8eb5-b929ca324c2f\r\n\r\nThis shows that the behavior of the flow did not change after the fix. Not sure what is going on with pressure, perhaps I made a multiplicative error but I essentially just did `model.pressures.pNHS ./ \u0394t` to the new output...\r\n\r\nFor reference here is the simulation before applying the fix:\r\n\r\nhttps://github.com/user-attachments/assets/a800d2bb-6426-438e-a5b7-e81fb44f39f0\r\n\r\n@glwagner @simone-silvestri interested in your thoughts!",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6nvVtK",
+        "number": 4067,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4067"
+      }
+    ],
+    "createdAt": "2025-03-25T21:25:47Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-05-21T22:41:59Z",
+    "number": 4276,
+    "title": "Solving Poisson equation for `p * dt` instead of `p`"
+  },
+  {
+    "additions": 122,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-19T04:11:37Z",
+    "deletions": 111,
+    "labels": [],
+    "mergedAt": "2025-05-21T22:42:29Z",
+    "number": 4520,
+    "title": "Use default `prettyurls=true` in docs build"
+  }
+]

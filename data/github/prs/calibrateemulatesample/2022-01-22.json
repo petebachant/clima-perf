@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 3715,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nReduces the current Emulator interface dependence of Gaussian Processes. Now the GP can be swapped for another statistical emulator. \r\n \r\n## In the PR\r\n- [x] New general `Emulator` class. This handles all the data manipulation e.g. Normalization, Standardization, Decorrelation\r\n- [x] General interface functions for Emulator, `optimize_hyperparameters!`, `predict`\r\n- [x] New `MachineLearningTool` type, \r\n- [x] Moved the Gaussian Processes into a `GaussianProcess <: MachineLearningTool` class\r\n- [x] Example (e.g. `plot_GP`) to demonstrate the new interface\r\n- [x] Unit tests\r\n- [x] New doc strings.\r\n\r\n## Additional change\r\nSeems to be ongoing issues with unit testing Julia 1.5.4, so I have updated the Manifest, Docs.yml and Test.yml to Julia 1.6.X\r\n \r\n## Changes to user experience:\r\n\r\nIngredients: \r\n```julia\r\ngppackage = GPJL()\r\npred_type = YType()\r\nGPkernel = ...\r\niopairs = PairedDataContainer(x_data,y_data)\r\n```\r\n\r\n### Old interface\r\n\r\nSet up a `GaussianProcessEmulator` object\r\n```julia \r\n    gp = GaussianProcess(\r\n         iopairs,\r\n         gppackage;\r\n         GPkernel=GPkernel, \r\n         obs_noise_cov=nothing, \r\n         normalized=false, \r\n         noise_learn=true, \r\n\t truncate_svd=1.0, \r\n         standardize=false,\r\n         prediction_type=pred_type, \r\n         norm_factor=nothing)\r\n ```\r\nThen predict with it.\r\n```julia\r\n\u03bc, \u03c3\u00b2 = GaussianProcessEmulator.predict(gp, new_inputs)\r\n```\r\nIt is short, but it inherently is stuck to the Gaussian process framework. It also hides e.g. the training away, and we may wish to have this more open. The script below is more general, separating out which parameters are related to data processing and which relate to the specific ML tool.\r\n\r\n### New interface\r\nSetup a `GaussianProcess<:MachineLearningTool` object\r\n```julia\r\n gp = GaussianProcess(\r\n       gppackage;\r\n       kernel=GPkernel,\r\n       noise_learn=true,\r\n       prediction_type=pred_type) \r\n```\r\nand then create the general emulator type using `gp`\r\n```julia\r\n    em = Emulator(\r\n        gp,\r\n        iopairs,\r\n        obs_noise_cov=nothing,\r\n        normalize_inputs=false,\r\n        standardize_outputs=false,\r\n        truncate_svd=1.0)\r\n```\r\nTrain and predict\r\n```julia\r\nEmulators.optimize_hyperparameters!(em)\r\n\u03bc, \u03c3\u00b2 = Emulators.predict(em, new_inputs)\r\n```\r\n### Adding a new `MachineLearningTool`\r\nInclude a new file `NewTool.jl` at the top of `Emulator.jl`\r\nIn this file define:\r\n1. `struct NewTool <: MachineLearningTool` with constructor `NewTool(...)` to hold ML parameters and models\r\n2. `function build_models!(NewTool,iopairs)` to build and store ML models. Called in Emulator constructor\r\n3. `function optimize_hyperparameters!(NewTool)`to train the stored ML models. Called by method of same name in Emulator\r\n4. `function predict(NewTool,new_inputs)` to predict with stored ML models Called by method of same name in Emulator\r\n",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-24T22:08:03Z",
+    "deletions": 2743,
+    "labels": [],
+    "mergedAt": "2022-01-22T00:42:39Z",
+    "number": 120,
+    "title": "Modular emulator interface"
+  }
+]

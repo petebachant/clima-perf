@@ -1,0 +1,129 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #4862\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7R0Iop",
+        "number": 4862,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4862"
+      }
+    ],
+    "createdAt": "2025-10-16T02:39:19Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2025-10-16T05:05:56Z",
+    "number": 4863,
+    "title": "Rename 'bcs' to 'boundary_conditions' in `on_architecture` for FieldTimeSeries"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Perhaps this is related to those weird MultiRegion-related methods appearing with Distributed? See https://github.com/CliMA/ClimaOcean.jl/issues/647#issue-3485830061\r\n\r\nSince the method wasn't imported, the attempt below to extent it might resulted in overwriting it?\r\n\r\nWhat was missing was:\r\n```julia\r\nimport Oceananigans.BoundaryConditions: FieldBoundaryConditions\r\n```\r\n\r\nJulia v1.12 warned me for that; that's how I found it.\r\n\r\n```Julia\r\n  1 dependency had output during precompilation:\r\n\u250c Oceananigans\r\n\u2502  WARNING: Constructor for type \"FieldBoundaryConditions\" was extended in `MultiRegion` without explicit qualification or import.\r\n\u2502    NOTE: Assumed \"FieldBoundaryConditions\" refers to `BoundaryConditions.FieldBoundaryConditions`. This behavior is deprecated and may differ in future versions.`\r\n\u2502    NOTE: This behavior may have differed in Julia versions prior to 1.12.\r\n\u2502    Hint: If you intended to create a new generic function of the same name, use `function FieldBoundaryConditions end`.\r\n\u2502    Hint: To silence the warning, qualify `FieldBoundaryConditions` as `BoundaryConditions.FieldBoundaryConditions` in the method signature or explicitly `import BoundaryConditions: FieldBoundaryConditions`.\r\n\u2514\r\n```\r\n\r\ncc @taimoorsohail ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-15T21:30:33Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2025-10-16T05:53:37Z",
+    "number": 4860,
+    "title": "Add missing import when extending `FieldBoundaryConditions` in `MultiRegion`"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Keyword arguments were thrown away in the distributed zipper, causing it to fill distributed halos also when `only_local_halo = false`. As a consequence, MPI transfers were also synchronized in \"local\" fill halos, destroying the computation - communication overlap.\r\nThis PR fixes this behavior. Correctness does not change, only performance.\r\n\r\ncc @xkykai @taimoorsohail ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-16T13:10:44Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-10-16T23:40:21Z",
+    "number": 4865,
+    "title": "Pass correct `kwargs...` in distributed tripolar `fill_halo_event!`"
+  },
+  {
+    "additions": 1407,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "- [x] Further cleanup of:\r\n  https://github.com/CliMA/Oceananigans.jl/blob/cbfb6f24fd0c6852e730f49904ed8b27c6d033ee/ext/OceananigansXESMFExt.jl#L12-L28\r\n  eg use `permutedims` instead of `'`\r\n- [x] Does the regridding reproduces the Python xESMF regridding?\r\n- [x] (Perhaps related to the above) Can the integral before and after regridding be better than `rtol = 1e-4`?\r\n- [x] Documentation/Example for how to do a regridding using XESMF.jl (docstrings with examples should suffice for now; convert some example(s) to doctest(s)).\r\n\r\n\r\nCloses #4818",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7OQWlP",
+        "number": 4818,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4818"
+      }
+    ],
+    "createdAt": "2025-09-30T14:02:42Z",
+    "deletions": 45,
+    "labels": [
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2025-10-16T23:59:28Z",
+    "number": 4823,
+    "title": "Docs, Examples, and Validation for the XESMF extension"
+  }
+]

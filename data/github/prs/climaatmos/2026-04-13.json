@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 230,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Update entraiment and detrainment;\r\n- Change area limiters functions from exp to power laws\r\n\r\n## Content\r\nIn this PR, I introduce a function that returns a limiter factor which is close to one in the interior of the admissible range and smoothly approaches zero near the area fraction bounds (`a_min` and `a_max`). This factor is applied as\r\n```math\r\ndetr = factor * detr + (1 - factor) * entr\r\n```\r\n\r\nso that the net area tendency `(entr - detr) * rho a` is effectively scaled by factor. As the area fraction approaches the bounds, the limiter gradually adjusts detrainment toward entrainment, causing `(entr - detr)` to approach zero and preventing the area fraction from leaving the allowed range.\r\nIn addition, I changed the area limiter functions (for both the minimum and maximum bounds) from exponential forms to power laws. Exponential functions decay very slowly, which causes the limiter to influence the entire range of area fractions. Power laws decay much more rapidly and therefore localize the limiter\u2019s effect closer to the bounds. This choice is also more natural since the area fraction spans several orders of magnitude, and expressing the limiter in terms of ratios leads naturally to power-law behavior.\r\nFinally, I made a few minor adjustments across the entrainment and detrainment parameterizations.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-10T01:11:37Z",
+    "deletions": 73,
+    "labels": [],
+    "mergedAt": "2026-04-13T02:10:38Z",
+    "number": 4425,
+    "title": "entr/detr area limiters"
+  }
+]

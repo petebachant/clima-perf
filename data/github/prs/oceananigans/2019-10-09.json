@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 231,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the name of the `Forcing` constructor to `ModelForcing` to clarify the difference between constructors for forcing objects on single fields, and constructors for the `NamedTuple` of forcing objects for all model fields. It also conventionalizes the name of the fields in `ModelForcing`, so that \r\n\r\n```julia\r\nforcing = ModelForcing(u=u_forcing)\r\n```\r\n\r\nis used to apply the forcing function `u_forcing` to `u`. \r\n\r\nIn addition it adds a new type \"`SimpleForcing`\", which permits users to pass functions of `x`, `y`, `z`, and `t`. A few validating lines in the `ModelForcing` constructor ensure that forcing functions for `u`, `v`, and `w` are applied at the correct locations.\r\n\r\nFor example, we can now write\r\n\r\n```julia\r\nT_forcing = SimpleForcing((x, y, z, t) -> exp(z) * cos(t))\r\n\r\nmodel = Model(forcing=ModelForcing(T=T_forcing))\r\n```\r\nTo create a forcing on temperature that decays exponentially in z and oscillates in time.\r\n\r\nTo test this functionality, this PR introduces an example \"`ocean_convection_with_plankton`\" that uses `SimpleForcing` to model the growth and decay of a plankton-like tracer.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-10-07T16:40:18Z",
+    "deletions": 132,
+    "labels": [],
+    "mergedAt": "2019-10-09T17:55:35Z",
+    "number": 444,
+    "title": "Forcing API refactor"
+  }
+]

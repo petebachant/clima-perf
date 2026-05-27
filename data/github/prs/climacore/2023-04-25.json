@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Reduces the number of allowable method ambiguities to our current number of ambiguities (8)\r\n - Removes the broken, unused and untested `column_integral_definite`. It's broken because\r\n\r\n```julia\r\ncolumn_integral_definite(field::Fields.Field, one_index::Union{Int, PlusHalf}) =\r\n    column_integral_definite(similar(level(field, one_index)), field)\r\n```\r\npopulates a temporary array (`similar(level(field, one_index))`) with the result, which users do not have access to, so it's a bug. Also, there's a method ambiguity between this method and the method that actually does all the work:\r\n\r\n\r\n```julia\r\nfunction column_integral_definite(field::Fields.ColumnField)\r\n    field_data = Fields.field_values(field)\r\n    \u0394z_data = Spaces.\u0394z_data(axes(field))\r\n    Nv = Spaces.nlevels(axes(field))\r\n    \u222bfield = zero(eltype(field))\r\n    @inbounds for j in 1:Nv\r\n        \u222bfield += field_data[j] * \u0394z_data[j]\r\n    end\r\n    return \u222bfield\r\nend\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-25T16:18:16Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2023-04-25T19:09:52Z",
+    "number": 1201,
+    "title": "Rm broken column integrals, lower amb lim"
+  }
+]

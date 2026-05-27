@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR moves the post processing into a dedicated folder.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-02T22:21:07Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-11-03T00:45:44Z",
+    "number": 1076,
+    "title": "Move post processing into dedicated folder"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Refactors some of the TC initialization\r\n - Passes `thermo_params` over `param_set` more\r\n - Replaces a `real_center_indices` loop with broadcast expressions",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-02T23:10:55Z",
+    "deletions": 72,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-11-03T01:19:41Z",
+    "number": 1078,
+    "title": "Refactor TC init"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes the allocation monitoring (in the long runs) by removing a folder that no longer exists",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-03T15:31:15Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-11-03T16:24:17Z",
+    "number": 1081,
+    "title": "Remove non existent directory from alloc monitoring"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nThis uses the `x/yaxis=:log` option, which gives nicer output:\r\n\r\n![high-resolution_Scaling_efficiency_vs_ncols](https://user-images.githubusercontent.com/1692009/199615416-e2cd189a-b49f-4d75-96d5-9858fbeb49cf.png)\r\n![high-resolution_Scaling_efficiency](https://user-images.githubusercontent.com/1692009/199615418-ab549014-fd4e-42de-8329-c9e34d012a88.png)\r\n![high-resolution_Scaling](https://user-images.githubusercontent.com/1692009/199615422-3a83c8c9-605f-4a40-86dd-b6e3a1ebc074.png)\r\n![high-resolution_sypd](https://user-images.githubusercontent.com/1692009/199615424-1c95fb0d-0e15-44e3-9fbc-130676c382a7.png)\r\n\r\nFollow up to #1067 \r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-02T22:36:23Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2022-11-03T21:21:49Z",
+    "number": 1077,
+    "title": "use plots.jl log axis"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose \r\nIn order to identify the bug causing non-determinism in the IMEX EDMF experiments, I am splitting that PR into several smaller PRs. This first PR is a collection of minor changes that (hopefully) have no effect on the behavior of the simulation.\r\n\r\n## Content\r\n- Change the `compressible_edmf_bomex` pipeline example `dt` from 1s to 40s\r\n- Add an identical example that uses JFNK instead of Newton's method (this can actually run with a 45s `dt`, but the resulting profiles are extremely noisy)\r\n- Change `ds_filename_reference` from `joinpath(path, ds_filename_computed)` to `joinpath(path, job_id, \"prog_state.nc\")` in `compute_mse.jl`, so that both examples can use the same reference data\r\n- Modify `define_tc_quicklook_profiles.jl`, `self_reference_or_path.jl`, and `driver.jl` so that the quicklook plot can be generated locally, without looking up the reference data from `main` (this is very helpful for debugging)\r\n- Rename `CA.implicit_tendency!` to `CA.implicit_vertical_advection_tendency!`, and move the zeroing out of the implicit EDMF tendency from `src` to `examples` (this is so that, when `TCU.sgs_flux_tendency!` is split into `TCU.explicit_sgs_flux_tendency!` and `TCU.implicit_sgs_flux_tendency!`, `TCU.implicit_sgs_flux_tendency!` can be called from `examples`, right after the implicit EDMF tendency is zeroed out)\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-03T00:43:24Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2022-11-03T23:24:15Z",
+    "number": 1080,
+    "title": "Add JFNK pipeline example and other minor changes"
+  }
+]

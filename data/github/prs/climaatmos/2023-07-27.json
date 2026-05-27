@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is a step towards putting the quadrature loop into the form: `quad(f, m, cov, dist)`, which evaluates an integral `int pdf(x; m, cov) .* f(x) dx`. Even just with this PR, I think the physics are more decoupled from the integration. There is a TODO added, which I'm not yet sure how to address:\r\n\r\n```julia\r\n\u03c3_q_lim = -qt_mean / (sqrt2 * env_thermo_quad.a[1]) # TODO: is this correct?\r\n```\r\n\r\nFor now,t there's an inference issue which requires us to type cast in `compute_cloud_fraction`, but we should be able to revert it once we dig into what's wrong there.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-24T19:31:43Z",
+    "deletions": 102,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2023-07-27T05:41:30Z",
+    "number": 1913,
+    "title": "Refactor quad loop"
+  },
+  {
+    "additions": 183,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds coupler compatibility coverage tests.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-21T23:43:03Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-07-27T09:50:21Z",
+    "number": 1809,
+    "title": "Add coupler compatibility tests"
+  },
+  {
+    "additions": 128,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds the `--prognostic_tke` command-line option, which currently just toggles the advection of TKE. It also adds the vertical advection of TKE and cleans up the advection tendency functions. Related to #1916.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Add a boolean type parameter to `EDMFX` and `DiagnosticEDFMX`, and set it to `parsed_args[\"prognostic_tke\"]`.\r\n- Define the `use_prognostic_tke` function to extract this type parameter (or to return `false` when there is no `turbconv_model`).\r\n- Modify `horizontal_advection_tendency!` as follows:\r\n    - Unify the horizontal advection of TKE for `EDMFX` and `DiagnosticEDFMX`.\r\n    - Ensure that TKE is only advected when `use_prognostic_tke` returns `true`.\r\n- Modify `explicit_vertical_advection_tendency!` as follows:\r\n    - Extract all cached values at the beginning of this function.\r\n    - Wrap all vertical operations in calls to `bycolumn`. Since there are two sets of vertical operations separated by horizontal operations, two calls to `bycolumn` are needed.\r\n    - Add the vertical advection of TKE.\r\n    - Ensure that TKE is only advected when `use_prognostic_tke` returns `true`.\r\n    - Add comments to indicate which parts of this function will need to be moved to `implicit_vertical_advection_tendency!`.\r\n- Add `--prognostic_tke true` to the `diagnostic_edmfx_aquaplanet` job. Since the initial TKE is 0 for this job, the simulation will not crash when TKE is advected.\r\n- Remove `\u1d9c\u03c1a\u2070` from the cache for `DiagnosticEDMFX` because it is not being used (we approximate it with `Y.c.\u03c1`).\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-25T01:15:02Z",
+    "deletions": 92,
+    "labels": [],
+    "mergedAt": "2023-07-27T11:17:13Z",
+    "number": 1917,
+    "title": "Add toggle for prognostic TKE and fix TKE advection"
+  },
+  {
+    "additions": 97,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies, which includes https://github.com/CliMA/ClimaCore.jl/pull/1392",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-27T17:49:01Z",
+    "deletions": 91,
+    "labels": [],
+    "mergedAt": "2023-07-27T21:19:16Z",
+    "number": 1922,
+    "title": "Update manifest files"
+  }
+]

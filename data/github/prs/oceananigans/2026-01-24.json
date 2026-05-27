@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 54,
+    "author": {
+      "id": "MDQ6VXNlcjMyNjQxNTc3",
+      "is_bot": false,
+      "login": "Mikolaj-A-Kowalski",
+      "name": "Mikolaj Adam Kowalski"
+    },
+    "body": "As described in the title I think this is what was happening. \r\n\r\nTagging @jagoosw since I run into the problem while doing OceanBioME with MPI.\r\n\r\n<details>\r\n<summary> Julia script reproducing the problem </summary>\r\n\r\n```julia\r\nusing OceanBioME, Oceananigans, Printf\r\nusing Oceananigans.Units\r\nusing MPI\r\nusing Oceananigans.DistributedComputations\r\n\r\n# Initialize MPI\r\nMPI.Init()\r\n\r\ncomm = MPI.COMM_WORLD\r\nrank = MPI.Comm_rank(comm)\r\nnranks = MPI.Comm_size(comm)\r\n\r\nMPI.Barrier(comm)\r\n\r\nRx = 1\r\nRy = 1\r\nRz = 1\r\n\r\n@assert Rx * Ry * Rz == nranks  # Product of the process grid dimensions must equal the number of MPI ranks.\r\n\r\npartition = Partition(;\r\n    x = Rx, \r\n    y = Ry, \r\n    z = Rz,\r\n)\r\n# Set the architecture to use.\r\narch = Distributed(\r\n    CPU(); \r\n    partition, \r\n    communicator = MPI.COMM_WORLD,\r\n    synchronized_communication=true\r\n)\r\n\r\nduration = 10days # Duration of the simulation\r\n\r\n\r\n# set the number of gridpoints in each direction\r\nNx = 16\r\nNy = 16\r\nNz = 8\r\n\r\n# set the domain size\r\nLx = 1kilometer\r\nLy = 1kilometer\r\nLz = 100meters\r\n\r\ndistributed_grid = RectilinearGrid(arch, size = (Nx, Ny, Nz), extent = (Lx, Ly, Lz))\r\ngrid = distributed_grid # alias for convenience\r\n\r\n# Set the Coriolis and buoyancy models.\r\ncoriolis = FPlane(f = 1e-4) # [s\u207b\u00b9]\r\nbuoyancy = SeawaterBuoyancy()\r\n\r\n# Specify parameters that are used to construct the background state.\r\nbackground_state_parameters = (M = 1e-4,       # s\u207b\u00b9, geostrophic shear\r\n                               f = coriolis.f, # s\u207b\u00b9, Coriolis parameter\r\n                               N = 1e-4,       # s\u207b\u00b9, buoyancy frequency\r\n                               H = grid.Lz,\r\n                               g = buoyancy.gravitational_acceleration,\r\n                               \u03b1 = buoyancy.equation_of_state.thermal_expansion)\r\n\r\n\r\nT(x, y, z, t, p) = (p.M^2 * x + p.N^2 * (z + p.H)) / (p.g * p.\u03b1)\r\nV(x, y, z, t, p) = p.M^2 / p.f * (z + p.H)\r\n\r\nV_field = BackgroundField(V, parameters = background_state_parameters)\r\nT_field = BackgroundField(T, parameters = background_state_parameters)\r\n\r\n# Specify some horizontal and vertical viscosity and diffusivity.\r\n\u03bd\u1d65 = \u03ba\u1d65 = 1e-4 # [m\u00b2 s\u207b\u00b9]\r\nvertical_diffusivity = VerticalScalarDiffusivity(\u03bd = \u03bd\u1d65, \u03ba = \u03ba\u1d65)\r\n\r\n# Setup the biogeochemical model with optional carbonate chemistry turned on.\r\nbiogeochemistry = LOBSTER(; grid,\r\n                            carbonate_system = CarbonateSystem(),\r\n                            oxygen = Oxygen(),\r\n                            detritus = VariableRedfieldDetritus(grid),\r\n                            scale_negatives = true)\r\n\r\n\r\n\r\nDIC_bcs = FieldBoundaryConditions(top = CarbonDioxideGasExchangeBoundaryCondition())\r\n\r\n\r\n# Model instantiation\r\nmodel = NonhydrostaticModel(; grid,\r\n                              biogeochemistry,\r\n                              boundary_conditions = (DIC = DIC_bcs, ),\r\n                              advection = WENO(),\r\n                              timestepper = :RungeKutta3,\r\n                              coriolis,\r\n                              tracers = (:T, :S),\r\n                              buoyancy,\r\n                              background_fields = (T = T_field, v = V_field),\r\n                              closure = vertical_diffusivity)\r\n\r\n\r\n\r\nMPI.Barrier(comm)\r\nMPI.Finalize()\r\n```\r\n</details>\r\n\r\nI would get the message that the `CommunicationBuffers` do not have property `time` (also with `clock` variable beeing of type `CommunicationBuffers`) form: \r\nhttps://github.com/CliMA/Oceananigans.jl/blob/d69596970e275240a54aa734a85476078cf66afe/src/BoundaryConditions/continuous_boundary_function.jl#L182-L191 \r\n\r\nI think that the problem was what I have changed in this PR, that is that the `buffer` would get slurped into `args...` and incorrectly passed to the kernel here: \r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/d69596970e275240a54aa734a85476078cf66afe/src/DistributedComputations/halo_communication.jl#L96\r\n\r\nI am not sure though  if I am not missing some use case where the first argument should be the buffers...   ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-22T12:17:44Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-01-24T11:59:54Z",
+    "number": 5063,
+    "title": "Do not pass `CommunicationBuffers` as `clock` to BC"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Examples within docstrings aren't executed.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-24T08:06:48Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-24T12:42:13Z",
+    "number": 5197,
+    "title": "Convert examples in docstrings to doctests"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-24T19:20:39Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-24T19:56:58Z",
+    "number": 5198,
+    "title": "Fix typo"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Reordered example scripts for efficient documentation building.\r\n\r\nThis order is based on reported times each example takes from a recent documentation built.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-24T06:51:59Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-24T20:05:52Z",
+    "number": 5196,
+    "title": "Rearrange example scripts in make.jl"
+  }
+]

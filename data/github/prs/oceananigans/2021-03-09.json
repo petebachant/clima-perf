@@ -1,0 +1,138 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I was trying to understand the dims pattern in the branching in `plan_transforms`, and ended up re-writing it a bit to understand it. Not sure if this is a preferable form, but I thought I'd open a PR in case. I need to double-check the logic, but maybe someone can confirm.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-08T04:31:37Z",
+    "deletions": 100,
+    "labels": [],
+    "mergedAt": "2021-03-09T00:37:48Z",
+    "number": 1435,
+    "title": "Make discrete transform plans more compact"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR removes \r\n\r\n* `src/TurbulenceClosures/turbulence_closure_implementations/rozema_anisotropic_minimum_dissipation.jl`\r\n* `src/TurbulenceClosures/turbulence_closure_implementations/blasius_smagorinsky.jl`\r\n\r\nfrom the source.\r\n\r\nIt also does a bit of refactoring, since types like `AbstractSmagorinsky` are no longer needed to organize the Smagorinsky implementations.\r\n\r\nRIP `AbstractSmagorinsky`.\r\n\r\nPS @ali-ramadhan you might have some opinions about how I should provide citations in the source code / docstrings, which I am happy to oblige on this PR. Plus any other misc. cleanup. This PR makes progress towards #1381, and\r\n\r\nResolves #1002 (since the other concerns raised in #1002 can be addressed when resolving #1381).",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTA5MzEwMTM=",
+        "number": 1002,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1002"
+      }
+    ],
+    "createdAt": "2021-03-05T14:54:52Z",
+    "deletions": 435,
+    "labels": [],
+    "mergedAt": "2021-03-09T01:43:05Z",
+    "number": 1428,
+    "title": "Nuke deprecated RozemaAnisotropicMinimumDissipation and BlasiusSmagorinsky"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "cc @sandreza ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-09T14:53:54Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2021-03-09T16:28:42Z",
+    "number": 1445,
+    "title": "Adds a bctype_str method for Nothing boundary conditions"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-09T14:42:38Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-03-09T18:28:48Z",
+    "number": 1442,
+    "title": "fix advection fluxes in `ShallowWaterModel`"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-09T14:40:58Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2021-03-09T18:33:02Z",
+    "number": 1441,
+    "title": "Adding in terms to set the flux boundary conditions"
+  },
+  {
+    "additions": 138,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements `PrescribedVelocityFields` for `HydrostaticFreeSurfaceModel` (or more precisely, moves the implementation from `validation/` to `src/`).\r\n\r\n`PrescribedVelocityFields` acts similar to the `velocities` tuple, except that `velocities.u, velocities.v, velocities.w` are prescribed functions of `x, y, z, t` and optional `parameters`.\r\n\r\nUsing the kwarg `velocities=PrescribedVelocityFields(...)` in the constructor for `HydrostaticFreeSurfaceModel` causes the free surface to be set to `nothing` and elides memory allocations for velocity and free surface tendency fields. The model then amounts to tracer advection by the prescribed fields.\r\n\r\nThis feature was discussed on #958, where it was envisioned this feature would be implemented in `IncompressibleModel`. Right now the implementation is specific to `HydrostaticFreeSurfaceModel`. However, I think the tracer advection-diffusion physics permitted by `IncompressibleModel` and `HydrostaticFreeSurfaceModel` are identical right now. So perhaps this PR closes #958?",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDQzNjU0MzA=",
+        "number": 958,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/958"
+      }
+    ],
+    "createdAt": "2021-03-04T23:38:21Z",
+    "deletions": 81,
+    "labels": [],
+    "mergedAt": "2021-03-09T21:44:21Z",
+    "number": 1426,
+    "title": "PrescribedVelocityFields for HydrostaticFreeSurfaceModel"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 924,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR introduces a major refactor of `FieldBoundaryConditions` and changes the user API.\r\n\r\nThe `grid` and field location are no longer necessary to build `FieldBoundaryConditions`. This means that the constructors `TracerBoundaryConditions`, `UVelocityBoundaryConditions`, etc, are gone. Instead we have only `FieldBoundaryConditions`, which is used like\r\n\r\n```julia\r\nu_bcs = FieldBoundaryConditions(top=FluxBoundaryCondition(-1e-4), bottom=FluxBoundaryCondition((x, y, t, u) = -1e-3 * u, field_dependencies=:u))\r\n\r\nT_bcs = FieldBoundaryConditions(top=FluxBoundaryCondition(1e-8))\r\n```\r\n\r\nThere's also a new constructor `AuxiliaryFieldBoundaryConditions` which takes the place of `ComputedFieldBoundaryConditions` and is now the default for `Field` and `ComputedField`. The difference is that `AuxiliaryFieldBoundaryConditions` have `nothing` instead of an `ImpenetrableBoundaryCondition` in `Bounded` directions when they're located on faces.\r\n\r\nUnder the hood the `FieldBoundaryConditions` struct is \"flattened\" so there's no more `CoordinateBoundaryConditions`. In addition, a new field `immersed` is added to `FieldBoundaryConditions` in addition to `east`, `west`, etc. This will be used to support boundary conditions on immersed boundaries in the future.\r\n\r\nThere's still quite a few validation experiments to clean up and probably some lingering issues with tests, but I was able to get the examples to run so I thought it was the right time to open the PR.\r\n\r\nOn the API changes: it seemed like a positive change that we don't need `grid` in the boundary conditions constructor, and that we only have one name `FieldBoundaryConditions` rather than 4. However, if others feel they liked the old API, we can add convenience functions `TracerBoundaryConditions`, etc back to the source.",
+    "changedFiles": 67,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-09T19:52:25Z",
+    "deletions": 1054,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2021-07-15T11:03:49Z",
+    "number": 1843,
+    "title": "Major refactor of `FieldBoundaryConditions`"
+  }
+]

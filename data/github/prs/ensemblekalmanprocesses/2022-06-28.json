@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\n\r\n### Purpose\r\nChange use of `@test_logs` to allow unit tests to pass when dependencies raise deprecation warnings. The writeup in issue #175 makes the case that the solution implemented here is the best way to deal with the case where the deprecation warning is raised in code we don't control. \r\n\r\n### Content\r\nFor all uses of `@test_logs` in unit tests,\r\n1) add a filter to match the text of the expected warning message,\r\n2) add `match_mode=:any`, to allow the test to pass when deprecation errors are raised.\r\n\r\n\r\n\r\n## Benefits and Risks\r\n\r\n### Benefits\r\nUnit test suite now passes without needing to wait for the deprecations in Distributions.jl to be fixed in a new release;\r\n\r\n### Risks\r\nIf other, \"serious\" warnings are raised in addition to the warning being tested for, this implementation will give a false negative. As discussed in issue #175, as far as I know there's no way to optionally filter out deprecation warnings only.\r\n\r\n## Linked Issues\r\n- Closes #175\r\n\r\n## PR Checklist\r\n- [X] This PR has a corresponding issue OR is linked to an SDI.\r\n- [X] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [X] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [X] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [X] I linted my code on my local machine prior to submission OR N/A.\r\n- [X] Unit tests are included OR N/A.\r\n- [X] Code used in an integration test OR N/A.\r\n- [X] All tests ran successfully on my local machine OR N/A.\r\n- [X] All classes, modules, and function contain docstrings OR N/A.\r\n- [X] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585MshRB",
+        "number": 175,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/175"
+      }
+    ],
+    "createdAt": "2022-06-28T05:16:37Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-06-28T19:29:20Z",
+    "number": 176,
+    "title": "Include expected warning text in @test_logs"
+  }
+]

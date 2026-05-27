@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 106,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds an option `async::Bool` to the `NetCDFOutputWriter`. By default `async=false`. When `async=true` the data to be written to disk is copied and is asynchronously written to disk  by a second worker/process. This is especially useful when running models on the GPU as writing and compressing NetCDF output is time consuming and the GPU is just idle while this is happening.\r\n\r\nIn particular, compressing NetCDF seems to be very inefficient. It takes way too long. I'm considering setting `compress=0` or trying out NCDatasets.jl. We can also just write output to JLD then convert all the JLD files to one big NetCDF after the model is done time stepping.\r\n\r\nSee the free convection example to see this feature in action.\r\n\r\nI tried to keep all the parallel computing stuff under the hood but unfortunately I could not get this feature to work without manually calling `addprocs()` and `@everywhere using Oceananigans` in the example, so for now it requires some work on the user's part.\r\n\r\ncc: @SandreOuza \r\n\r\nResolves #124.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-19T12:52:06Z",
+    "deletions": 60,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2019-03-19T16:58:16Z",
+    "number": 137,
+    "title": "Asynchronous NetCDF output."
+  }
+]

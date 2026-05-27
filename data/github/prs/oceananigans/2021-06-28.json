@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Let me know what everyone else thinks, but I think the left menu of the docs has too much stuff already, making it kinda hard to make sense of the structure if you're not already familiar with the docs. Since the Publications section is so small I figured it makes more sense to make it a subsection of the Home page, instead of giving it it's own section.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-26T15:46:40Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-06-28T17:21:14Z",
+    "number": 1773,
+    "title": "Move Publications section to index.md"
+  },
+  {
+    "additions": 1588,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This somewhat large and WIP PR implements immersed boundary in the non-hydrostatic algorithm used by `IncompressibleModel`. \r\n\r\nIt also accelerates using `ImmersedBoundaryGrid` with high-order advection by encoding the \"boundary buffer\" (the number of grid points away from the boundary where second-order advection must be used) in the type signature of each advection scheme. This allows us to use dispatch to identify the correct criterion to use to determine whether a grid point is \"near boundary\" or not.\r\n\r\nIt adds two validation tests: `shallow_water_flow_past_cape.jl` and `immersed_bickley_jet.jl`. The intent of `immersed_bickley_jet.jl` is to compare simulations with a \"native\" boundary and an immersed boundary with the same effective domain size, grid spacing, and numerics.\r\n\r\n@whitleyv I suggest that we merge this PR once we verify that the validation scripts run efficiently. After that we can work on careful testing and analysis of the validation case.",
+    "changedFiles": 28,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-02T23:12:09Z",
+    "deletions": 123,
+    "labels": [],
+    "mergedAt": "2021-06-28T19:55:22Z",
+    "number": 1733,
+    "title": "GridFittedBoundary for IncompressibleModel and faster ImmersedBoundaryGrid with high-order advection"
+  }
+]

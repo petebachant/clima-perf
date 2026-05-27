@@ -1,0 +1,172 @@
+[
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I went to fix some of the broken implicit stencil operator tests and realized that the tests were not configured exactly correctly: we were not doing in-place operations, and it seems that function barriers may be needed to get zero allocations.\r\n\r\nThis PR corrects this and changes some of our `@test_broken` to `@test`.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-28T16:32:32Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2022-06-28T17:28:02Z",
+    "number": 775,
+    "title": "Update implicit opt tests"
+  },
+  {
+    "additions": 163,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an attempt to improve the `Cannot infer eltype` error message, which can be very opaque. This is an attempt to close #720.\r\n\r\nThe error message in the added test in main:\r\n```julia\r\nInference failure message: Error During Test at /Users/charliekawczynski/Dropbox/Caltech/work/dev/CliMA/ClimaCore.jl/test/Fields/field.jl:319\r\n  Got exception outside of a @test\r\n  BroadcastInferenceError: cannot infer eltype.\r\n  MethodInstance for (::var\"#ics_foo#4\")(::Type{Float64}, ::ClimaCore.Geometry.LocalGeometry{(1, 2), ClimaCore.Geometry.XYPoint{Float64}, Float64, SMatrix{2, 2, Float64, 4}}, ::InferenceFoo{Float64})\r\n    from (::var\"#ics_foo#4\")(::Type{FT}, lg, foo) where FT in Main at /Users/charliekawczynski/Dropbox/Caltech/work/dev/CliMA/ClimaCore.jl/test/Fields/field.jl:321\r\n  Static Parameters\r\n    FT = Float64\r\n  Arguments\r\n    #self#::Core.Const(var\"#ics_foo#4\"())\r\n    _::Core.Const(Float64)\r\n    lg::ClimaCore.Geometry.LocalGeometry{(1, 2), ClimaCore.Geometry.XYPoint{Float64}, Float64, SMatrix{2, 2, Float64, 4}}\r\n    foo::InferenceFoo{Float64}\r\n  Locals\r\n    y::Union{}\r\n    z::ClimaCore.Geometry.Covariant12Vector{Float64}\r\n    uv::ClimaCore.Geometry.UVVector{Float64}\r\n  Body::Union{}\r\n  1 \u2500 %1 = ClimaCore.Geometry.UVVector::Core.Const(ClimaCore.Geometry.UVVector)\r\n  \u2502   %2 = ($(Expr(:static_parameter, 1)))(0)::Core.Const(0.0)\r\n  \u2502   %3 = ($(Expr(:static_parameter, 1)))(0)::Core.Const(0.0)\r\n  \u2502        (uv = (%1)(%2, %3))\r\n  \u2502   %5 = ClimaCore.Geometry.Covariant12Vector::Core.Const(ClimaCore.Geometry.Covariant12Vector)\r\n  \u2502   %6 = uv::Core.Const([0.0, 0.0])\r\n  \u2502        (z = (%5)(%6, lg))\r\n  \u2502        (y = Base.getproperty(foo, :baz))\r\n  \u2502        Core.Const((:x,))\r\n  \u2502        Core.Const(:(Core.apply_type(Core.NamedTuple, %9)))\r\n  \u2502        Core.Const(:(($(Expr(:static_parameter, 1)))(0)))\r\n  \u2502        Core.Const(:(%11 + y))\r\n  \u2502        Core.Const(:(Core.tuple(%12)))\r\n  \u2502        Core.Const(:((%10)(%13)))\r\n  \u2514\u2500\u2500      Core.Const(:(return %14))\r\n  \r\n  \r\n  Stacktrace:\r\n    [1] copy(bc::Base.Broadcast.Broadcasted{\r\n```\r\n\r\nThe error message in the added test in this PR:\r\n```julia\r\n\u250c Warning: Attempting to throw more informative error message:\r\n\u2514 @ ClimaCore.Fields ~/Dropbox/Caltech/work/dev/CliMA/ClimaCore.jl/src/Fields/broadcast.jl:83\r\nTest Summary:             |\r\nInference failure message | No tests\r\nERROR: LoadError: type InferenceFoo has no field baz\r\nStacktrace:\r\n  [1] getproperty\r\n    @ ./Base.jl:42 [inlined]\r\n  [2] (::var\"#ics_foo#7\")(#unused#::Type{Float64}, lg::ClimaCore.Geometry.LocalGeometry{(1, 2), ClimaCore.Geometry.XYPoint{Float64}, Float64, SMatrix{2, 2, Float64, 4}}, foo::InferenceFoo{Float64})\r\n    @ Main ~/Dropbox/Caltech/work/dev/CliMA/ClimaCore.jl/test/Fields/field.jl:324\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5JqabF",
+        "number": 720,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/720"
+      }
+    ],
+    "createdAt": "2022-06-21T16:32:22Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "19EF23",
+        "description": "",
+        "id": "LA_kwDOFT2Pms79nLyh",
+        "name": "Debugging"
+      }
+    ],
+    "mergedAt": "2022-06-28T17:28:03Z",
+    "number": 761,
+    "title": "Improve `Cannot infer eltype` error message"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "This closes #773 \r\n\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5Mq6iH",
+        "number": 773,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/773"
+      }
+    ],
+    "createdAt": "2022-06-27T20:32:52Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-06-28T18:27:01Z",
+    "number": 774,
+    "title": "Scaling plots: increase margin"
+  },
+  {
+    "additions": 120,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Update `def_space_coord` to handle TerrainWarpedIntervalTopology. Existing tests remain unaffected \r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-21T21:00:17Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2022-06-28T18:27:01Z",
+    "number": 764,
+    "title": "Update def_coord_space for TerrainWarpedIntervalTopology remapped output"
+  },
+  {
+    "additions": 107,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This should make it easier to apply multiple column operations in a single pass, and leverage threading.\r\n\r\nExample:\r\n```\r\nbycolumn(axes(f)) do colidx\r\n    @. dg[colidx] = \u2207(f[colidx])\r\n    @. df[colidx] = div(g[colidx])\r\nend\r\n```\r\n\r\nThe reason to use `getindex` here is that it doesn't get broadcasted by `@.`, so makes writing these operations easier.\r\n\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-17T22:31:51Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-06-28T18:27:01Z",
+    "number": 760,
+    "title": "add bycolumn function"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes some unused type parameters. This turned out to be a performance bug in RootSolvers.jl, which was fixed in [RS#36](https://github.com/CliMA/RootSolvers.jl/pull/36).\r\n\r\nHopefully this will reduce the allocations in the dss operations.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-28T21:46:22Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2022-06-28T22:37:15Z",
+    "number": 779,
+    "title": "Remove unused type parameters"
+  }
+]

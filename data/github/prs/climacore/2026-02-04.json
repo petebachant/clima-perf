@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 152,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nWhen a low resolution simulation is ran, the solver, which runs one thread per column, will not saturate the gpu. With the current launch config, a portion of the multiprocessors remain unused. This adds a function to catch that case, and use smaller block sizes.\r\n\r\nThreads for stencils and pointwise operations were being launched by converting a single block and single grid index into a linear index, and then converting that into a cartesian index of (I, J, V, H), but the data is stored as (VIJFH). This adds special cases for v=63 and v=64, when i=j=4, that uses multiple block and grid dimensions, and indexes so adjacent threads are likely in the same column. Profiling shows this massively increases cache access patterns.\r\nBefore: 2.0 of the 32 bytes transmitted per sector are utilized (L2)\r\nAfter: 26.2 of the 32 bytes transmitted per sector are utilized (L2)\r\n\r\nThese changes to not get fully tested within ClimaCore because most of the tests running on gpus are at a lower vertical and horizontal resolution. It has been tested with ClimaAtmos and ClimaCoupler, as well as tested in ClimaCore by temporarily running the tests at a higher resolution.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n\r\n## TODO\r\n\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms7nt3Ea",
+        "number": 2448,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2448"
+      }
+    ],
+    "createdAt": "2025-11-24T23:03:27Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-02-04T01:04:15Z",
+    "number": 2396,
+    "title": "Tr/mem access patterns"
+  },
+  {
+    "additions": 708,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "As a first step towards https://github.com/CliMA/ClimaCore.jl/issues/2421, this PR introduces `PfullPoint` and interpolation from spaces whose vertical component consists of `ZPoint`s to spaces whose vertical component consists of `PfullPoint`s.\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-14T21:45:54Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-02-04T04:19:39Z",
+    "number": 2422,
+    "title": "Add pressure point and space with pressure as the vertical direction"
+  }
+]

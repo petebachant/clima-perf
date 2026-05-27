@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 487,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "`CombinedStateFluxes`, while simple, is not super physically less sound (combining states of different component models into a single average state is necessarily the best idea). In addition to this, `CombinedStateFluxes` relies on the infrastructure in ClimaAtmos to compute turbulent fluxes, which is highly complex and difficult to understand.\r\n\r\nThis commit fixes `PartionedStateFluxes` and switches all the jobs to use this system. `PartionedStateFluxes` was broken for certain jobs because it was not setting certain values, such as ustar, which are needed (e.g., in EDMF).\r\n\r\nIn this commit, we also change how surface temperature is propagated to atmos. Here, we take directly the area-weighted value computed from the surface models and directly set it in atmos.\r\n\r\nThis PR also fixes a few other things along the way:\r\n- Using `CC.to_cpu` instead of implementing our own\r\n- Fixing Eisenman compatibility with partition fluxes\r\n- Allowing debug plots to plot quantities with NaNs or Infs\r\n- Adding a default `show` method for simulations (otherwise the REPL is overwhelmed with text)\r\n\r\nPassing AMIP buildkite: https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/318",
+    "changedFiles": 41,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-12T00:08:19Z",
+    "deletions": 411,
+    "labels": [],
+    "mergedAt": "2025-04-11T14:43:25Z",
+    "number": 1117,
+    "title": "Switch to PartitionedFluxes"
+  }
+]

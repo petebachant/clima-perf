@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 62,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Might not be enough so let's check.\r\n\r\nI think maybe `GridFittedBottom` and `GridFittedBoundary` need to know about `Flat` too?\r\n\r\nShould add a test too.\r\n\r\n@simone-silvestri \r\n@raphaelouillon\r\n\r\nCloses #2479",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5IkRgm",
+        "number": 2479,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2479"
+      }
+    ],
+    "createdAt": "2022-05-07T00:22:26Z",
+    "deletions": 33,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2022-06-14T16:00:34Z",
+    "number": 2532,
+    "title": "Improve support for immersed boundaries with `Flat`"
+  },
+  {
+    "additions": 1024,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a near-global one degree setup to `validation/near_global_lat_lon`. This is mostly @sandreza and @simone-silvestri 's work. The setup spans -75S to 75N and is implemented on a regular `LatitudeLongitudeGrid` with 1 degree horizontal resolution and 50 vertical levels.\r\n\r\nIt's WIP right now partly because @sandreza is still sorting out some difficulties with including a `IsopycnalSkewSymmetricDiffusivity` closure to this setup. In addition, I'm going to update the `closure_tuples.jl` implementation because this setup may require a tuple of 5 closures.\r\n\r\nAs a teaser, the file `validation/near_global_lat_lon/one_degree_setups/plot_bathymetry.jl` produces\r\n\r\n![image](https://user-images.githubusercontent.com/15271942/164785636-5bbf0e2d-0e0c-458e-9c92-758afbaf96d3.png)\r\n\r\nThe bathymetry file is small (not much larger than few dozen long text files), so I've uploaded it directly into the repo from this PR. If we don't want to do this, I can reopen this PR with the same `.jl` files and download the bathymetry from `OceananigansArtifacts.jl` instead.\r\n\r\nI'm thinking that we should add at least two one degree setups in this PR:\r\n\r\n1. A \"realistic\" setup with initial conditions and surface relaxation or fluxes loaded from file (which @sandreza is working on)\r\n\r\n2. An \"idealized\" setup that uses idealized and constant momentum and temperature forcing (perhaps with `constant_salinity=35.0`)\r\n\r\nand possibly others.\r\n\r\nBased on this experience, we can go in a similar direction with the 1/4 degree setup.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-22T20:02:35Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-06-14T23:42:28Z",
+    "number": 2463,
+    "title": "Near global one degree setup"
+  }
+]

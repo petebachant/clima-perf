@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 997,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the grid implementation so that the coordinate arrays `xC`, `yC`, `zC`, `xF`, `yF`, and `zF` have nodal points within the halo regions of fields and are reshape to match their respective dimension.\r\n\r\nIn other words, we now have `size(c, 2) == length(yC)` and `size(u, 1) == length(xF)`, for example, and `xC * yC * zC` produces an object of `size(c)`.\r\n\r\nThere are three new methods `xnodes(loc, grid::AbstractGrid)`, `ynodes(loc, grid::AbstractGrid)`, `znodes(loc, grid::AbstractGrid)`. For example, `xnodes(Cell, grid)` extracts a view over the interior nodes `grid.xC`, while `xnodes(Face, grid) extracts a view over the physical points of `grid.xF`, which include both boundaries for `Bounded` directions.\r\n\r\nIn addition, the `RegularCartesianGrid` keyword `length` is changed to `extent`, and the `VerticallyStretchedCartesianGrid` no longer accepts a keyword `length`, or a keyword `z`.\r\nNote that the `VerticallyStretchedCartesianGrid` implementation is incomplete and untested.\r\n\r\nThis PR should enable saving the halos of fields in NetCDF data if desired, which is needed for reconstructing field gradients and interpolating fields in post-processing. ~~However, it seems the output writer is currently broken and tests are failing. Thus this PR is WIP.~~",
+    "changedFiles": 43,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-03-25T00:33:24Z",
+    "deletions": 611,
+    "labels": [],
+    "mergedAt": "2020-04-22T18:03:39Z",
+    "number": 715,
+    "title": "Reshape and offset grid coordinate arrays"
+  },
+  {
+    "additions": 131,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Any comments about moving `TimeStepWizard` to `Oceananigans.Simulations`?\r\n\r\nI'm fine to leave it in `Utils`. Either way this PR should close #725 .",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1ODk1OTI0Nzk=",
+        "number": 725,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/725"
+      }
+    ],
+    "createdAt": "2020-04-11T12:57:35Z",
+    "deletions": 112,
+    "labels": [],
+    "mergedAt": "2020-04-22T19:57:40Z",
+    "number": 729,
+    "title": "Adds diffusive criterion to dt update in TimeStepWizard"
+  }
+]

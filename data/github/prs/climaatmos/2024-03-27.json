@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-27T17:50:24Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-03-27T20:38:30Z",
+    "number": 2845,
+    "title": "Update nsight module in gpu pipeline"
+  },
+  {
+    "additions": 201,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR leverages the [infrastructure for data handling](https://github.com/CliMA/ClimaLand.jl/pull/465) I built for ClimaLand to read aerosol data from file.\r\n\r\nI moved the code to [ClimaUtilities](https://github.com/CliMA/ClimaUtilities.jl/tree/gb/inputs). I didn't port over the tests yet because they are tied to ClimaLand. Also, we don't want ClimaUtilities to depend on TempestRemap/NCDatasets/Interpolations/XXX, so everything there should be moved to extensions.\r\n\r\nHere's what happens:\r\n\r\nHigh level:\r\n\r\nNew Fields are added to the cache. Every time the radiation callback is called, the values of the Fields is updated using data read from file. All the complexity is hidden away in ClimaUtilities. Users can choose what aerosols to add by specifying their names in the yml file (e.g, `[\"CB1\", \"CB2\"]`). These aerosols have to exist in a predefined and suitably preprocessed file.\r\n\r\n### The input file\r\n\r\nThe original input file with the aerosol concentrations is defined in `lon, lat, lvl, time`. First I converted this to pressure coordinates using the formula described in the [CF conventions](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#_atmosphere_hybrid_sigma_pressure_coordinate). Then, I assumed a simple hydristatic balance and converted to z with $P = P_0 exp(-z/H)$, where I hardcoded $P_0 = 1e5$ and $H = 7000$. Next, I resampled the entire file to be defined on the same $z$s (defined equispaced in hydrostatic pressure levels from 10 m to 50 km). This interpolation is linear and for those points for which data is not available (e.g., because they are below mountains), I used \"copy\" boundary conditions. I repeat this for every time in the original file. At the end, this procudes a new NetCDF file with the aerosol concentration as a function of `lon, lat, z, time`.\r\n\r\nAll of this is described in the `artifacts/aerosol` folder, where I provide a sketch of readme and the code.\r\n\r\n(as discussed with @szy21)\r\n\r\n### Regridder\r\n\r\nI perform linear interpolation separately across the different dimensions (lon, lat, z). I do this greedly: ie, every MPI process read the entire file to CPU and prepares an interpolation object for all the points (even those that do not belong to that process). This is memory intensive, but it won't be a problem for the aerosols (I think). Then, I move the object to the GPU, and I evaluate it for the points owned by the process, yielding a Field defined on the computational grid. I validated this regridder against TempestRemap and found that differences can be significant (20% relative error for the variable I was looking at). Interpolation is time is a linear interpolation across two snapshots (nearest neighbor interpolation is already implemented too).\r\n\r\nExtrapolation conditions for interpotions in lon is periodic, in lat is \"copy\", in z and in time is \"throw an error\" (ie, no extrapolation is allowed).\r\n\r\nEverything runs and is GPU and MPI compatible. \r\n\r\ncc: @tapios @szy21 (@trontrytel too)\r\n\r\nSteps to be completed:\r\n- [x] At the moment, I only processed one file and one aerosol, CB1. Repeat for what is needed, complete the artifact README.\r\n- [x] Write/ports tests in ClimaUtilities\r\n- [x] Move everything into extensions in ClimaUtilities\r\n- [x] Write documentation in ClimaUtilities\r\n- [ ] Release ClimaUtilities and merge this PR\r\n- [ ] Use aerosols :)",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-20T17:55:11Z",
+    "deletions": 51,
+    "labels": [],
+    "mergedAt": "2024-03-27T23:11:40Z",
+    "number": 2815,
+    "title": "Add prescribed aerosols"
+  }
+]

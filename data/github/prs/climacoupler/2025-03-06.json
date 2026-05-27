@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 899,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit implements a way to restart simulations by saving both state and caches of component models, as well as the coupler fields.\r\n\r\nGiven that caches are complex object, I implemented this using JLD2 files.\r\n\r\nThe challenges with JLD2 files are that:\r\n- they are not MPI compatible,\r\n- they are not GPU compatible.\r\n\r\nFor this reason, I have to move everything to the CPU, and have each process write to its own output. This adds a restriction: only the same number of MPI process (and the same machine) can be used for restarts.\r\n\r\nIn addition to this, this approach requires component models to implement their functions to restore their caches.\r\n\r\nSomething that can be improved in the future is that, ClimaAtmos is currently producing two checkpoints, one independently, and one from ClimaCoupler. This should not be needed, but it is currently needed because there's no other way to start ClimaAtmos at a different time.\r\n\r\n\r\nMore over, when restarting, ClimaAtmos `t_end` will be from the `t_start`, which is different from climacoupler `t_end`.\r\n\r\nThe other problem here is that the MPI test occasionally hangs (as it does in ClimaAtmos).p\r\n\r\nCloses #1063 ",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-06T20:27:37Z",
+    "deletions": 199,
+    "labels": [],
+    "mergedAt": "2025-03-06T18:35:15Z",
+    "number": 1179,
+    "title": "Support identical restarts with JLD2 files"
+  }
+]

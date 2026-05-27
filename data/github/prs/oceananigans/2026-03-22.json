@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 200,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This PR makes the serial tripolar test a bit cleaner and more comprehensive by (i) making sure that all halo points and staggered locations are tested, and (ii) by adding a slightly different way of testing the rotational symmetry (a double check).\r\n\r\nThis PR does the following:\r\n- Adds FF (Face, Face) field to tests all 4 stagger locations\r\n- Extends indices for tests to cover the entire halo region \r\n- Adds a extra test using the `rot180` function\r\n- Fixes ASCII diagram pivot point placement (F was on wrong row)\r\n- Organizes tests into `@testset` blocks\r\n\r\nI wanted to do this to make sure that the serial fold is 100% correct, after a discussion with @simone-silvestri. We also discussed changing the `RightFaceFolded` implementation to have no extra row but `Ny+1`-sized `v`, as this will likely be simpler for users and help with implementing the distributed case. If this happens these tests will need to be adjusted, but I think it should be fairly easy to make these adjustments.\r\n\r\n---\r\n\r\nI have also added a validation script that visualizes the origin of all the north halo fills, with arcs going from interior source to halo destination, for all topologies and all field locations. The PNGs it produces:\r\n\r\n<img width=\"2000\" height=\"2400\" alt=\"image\" src=\"https://github.com/user-attachments/assets/6810b945-50e5-4cc7-b204-77535056a49c\" />\r\n\r\n<img width=\"2000\" height=\"2400\" alt=\"image\" src=\"https://github.com/user-attachments/assets/b868c6e0-0b57-4e81-a6d1-93cd672fa657\" />\r\n\r\n\r\nThese might be helpful for the distributed case too.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-17T01:20:28Z",
+    "deletions": 70,
+    "labels": [],
+    "mergedAt": "2026-03-22T10:54:32Z",
+    "number": 5405,
+    "title": "Improve serial tripolar grid fold tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "* always run the benchmarking script, not just when certain files are modified: while that'd be the right thing to do when the entire process is handled through GitHub Actions, the benchmark pipeline in Buildkite is always run, so we'd be better following what we do in Buildkite\r\n* ClimaSeaIce is completely unused, ref: https://github.com/CliMA/Oceananigans.jl/issues/5418#issuecomment-4102208366",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-21T13:28:27Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-03-22T16:44:47Z",
+    "number": 5421,
+    "title": "Small improvements to the benchmarking pipeline"
+  }
+]

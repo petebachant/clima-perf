@@ -1,0 +1,69 @@
+[
+  {
+    "additions": 138,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR computes intermediate quantities in the soil Jacobian for the Richards and EnergyHydrology model. This circumvents performance issues in ClimaCore when many matrix field broadcast operations are fused.\r\n\r\nThis improves the Richards benchmark time from 1.5s to 0.6s, and the snowy land benchmark time from 3.29s to 0.741s. It changes the long run SYPD as:\r\nsnowy land model: 20 SYPD -> ~60 SYPD\r\n\r\n\r\n## To-do\r\n- understand why more NaNs appear in the full soil long run (this is due to PR #1113; not this current PR)\r\n\r\n## Content\r\n- adds bidiagonal matrix row fields to scratch space for the soil model, uses these in the jacobian computation\r\n- does the same with a covariant3vector field\r\n- updates benchmark times\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-23T17:00:49Z",
+    "deletions": 129,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      },
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2025-04-24T16:43:42Z",
+    "number": 1121,
+    "title": "Performance improvements"
+  },
+  {
+    "additions": 209,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "calibration doc page\r\n\r\nhttps://clima.github.io/ClimaLand.jl/previews/PR1053/calibration/",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-28T19:17:48Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-04-24T20:32:30Z",
+    "number": 1053,
+    "title": "calibration docs"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nChange alpha_horizon - alpha_0 to Delta alpha. If Delta alpha > 0, and k>0, then the albedo when the sun is at the horizon will always be larger than the albedo we get when the sun is higher in the sky\r\n## To-do\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-24T00:35:40Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-04-24T21:25:12Z",
+    "number": 1124,
+    "title": "change albedo parameterization to enforce physicality"
+  }
+]

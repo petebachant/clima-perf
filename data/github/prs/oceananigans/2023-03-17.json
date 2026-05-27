@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 1144,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds regridding in x (and there was previously untested regridding in y). Regridding is only supported for tracer fields (though it's not a huge amount of work to extend the schemes for any field).\r\n\r\nI believe the regridding is conservative for `RectilinearGrid`, and also conservative for `LatitudeLongitudeGrid` when the grids are aligned (ie when all grid lines of the coarser of the two grids is shared with the finer grid).\r\n\r\nIn the case of partial overlaps on curvilinear grids, the volumes of the overlaps are approximated and thus the regridding is not perfectly conservative. It could make sense to emit a warning in this case.\r\n\r\nIn principle, this should allow regridding in 3D by forming intermediate regridding in x, y, and z. We leave multi-dimensional regridding to the user for now.\r\n\r\nThis PR also adds a `minimum_turbulent_kinetic_energy` and `negative_turbulent_kinetic_energy_damping_timescale` to `CATKEVerticalDiffusivity`, either of which can help stabilize 2D or 3D simulations with CATKE (where due to advection TKE may go negative).\r\n",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-01-26T16:12:24Z",
+    "deletions": 1130,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "ff0000",
+        "description": "Because danger is the spice of life",
+        "id": "LA_kwDOCRy_aM7rBhJG",
+        "name": "experimental feature \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2023-03-17T18:54:05Z",
+    "number": 2881,
+    "title": "Horizontal regridding and stabilizing CATKE features"
+  }
+]

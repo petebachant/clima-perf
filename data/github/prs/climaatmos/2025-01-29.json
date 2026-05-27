@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 343,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Manifests.toml are a burden to maintain and add a lot of git diff noise. The one benefit of Manifests.toml is that they help with tracking version dependencies.\r\n\r\nHowever:\r\n- For `docs`, the precise version of dependencies is not important, there is pretty much no version-dependent code being executed there\r\n- `perf` and `examples` can be consolidated into a single `.buildkite` environment. This environment only has to have one manifest checked, the one for which buildkite is run (and not one for each version of Julia).\r\n- The `perf` environment can be removed all together. It is a more niche environment: if reproducing a specific result is required, developers can use the `.buildkite` Manifest. If not, developers can also consider keeping the relevant tools (mainly JET) in the base environment.\r\n\r\nThis is the same pattern we have in other repos such as ClimaCore.\r\n\r\n(Builds off #3546)\r\n\r\nCloses #3548 \r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-27T16:44:42Z",
+    "deletions": 14147,
+    "labels": [],
+    "mergedAt": "2025-01-29T18:55:00Z",
+    "number": 3547,
+    "title": "Consolidate manifests"
+  }
+]

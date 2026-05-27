@@ -1,0 +1,123 @@
+[
+  {
+    "additions": 3027,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR resolves #2052 by consolidating `Field` to encompass:\r\n- `Field`\r\n- `ComputedField`\r\n- `ReducedField`\r\n- `AveragedField`\r\n\r\nIn addition, it gets rid of `KernelComputedField` since that functionality is now covered by `KernelComputedOperation` + `Field`.\r\n\r\n`Field` will no longer explicitly keep track of `architecture`, because `architecture` belongs to `grid` now.\r\n\r\nThis PR also change the API for constructing fields:\r\n\r\n```julia\r\na = Field{Face, Face, Center}(grid) # constructs a field at `(Face, Face, Center)`\r\nb = Field{Nothing, Face, Center}(grid) # constructs a field that is reduced in the x-direction at `(Face, Center)` in `y, z`\r\nc = Field{Center, Center, Center}(grid)\r\ncsq = Field(c^2) # constructs a \"computed field\" that calculates and stores c^2 via `compute!(c_sq)`\r\n```\r\n\r\nThere are also convenience constructors that take a tuple of locations:\r\n\r\n```julia\r\nloc = (Face, Face, Center)\r\na = Field(loc, grid)\r\n```\r\n\r\n`AveragedField` functionality is now wrapped into `Field`. Rather than writing `c_sq_avg = AveragedField(c^2, dims=(1, 2))`, we now write\r\n\r\n```julia\r\nc_sq_avg = Field(Average(c^2, dims=(1, 2)))\r\n```\r\n\r\nThere is also an interface for generic reductions, so another possibility is\r\n\r\n```julia\r\nc_sq_max = Field(Reduction(maximum!, c^2, dims=(1, 2)))\r\ncompute!(c_sq_max)\r\n```\r\n\r\nIt was already possible to compute `maximum!` with a `ReducedField` and an `AbstractField`; this interface simply provides a way to compute these things on the fly for diagnostics purposes while running simulations.\r\n\r\nIn summary, this PR is meant to reduce the amount of code we have to maintain, significantly declutter our `Field` implementations, clean up the API, and hopefully make it easier to extend `Field` implementations in the future, especially regarding reductions of operations such as `SummedField`, `SlicedField`, etc.",
+    "changedFiles": 158,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM4-nOqk",
+        "number": 2052,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2052"
+      }
+    ],
+    "createdAt": "2021-12-15T16:54:28Z",
+    "deletions": 3646,
+    "labels": [],
+    "mergedAt": "2022-01-15T00:18:18Z",
+    "number": 2121,
+    "title": "`Field` major refactor: one `Field` to rule them all"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjY5OTI3NjE=",
+      "is_bot": false,
+      "login": "aramirezreyes",
+      "name": "Argel Ram\u00edrez Reyes"
+    },
+    "body": "This makes the docstring consistent with the changes to the constructor from https://github.com/CliMA/Oceananigans.jl/pull/2078/",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-27T05:09:31Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-01-15T05:35:21Z",
+    "number": 2128,
+    "title": "Removes `architecture` from `ShallowWaterModel` docstring"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #2135 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5BMiBd",
+        "number": 2135,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2135"
+      }
+    ],
+    "createdAt": "2022-01-05T20:19:04Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2022-01-15T09:36:52Z",
+    "number": 2137,
+    "title": "Fix return statement in `test_matrix_poisson_solver.jl`"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-05T20:24:46Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2022-01-15T20:31:44Z",
+    "number": 2138,
+    "title": "Use julia 1.6.5"
+  }
+]

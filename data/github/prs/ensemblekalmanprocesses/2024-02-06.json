@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #359\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Change all `MvNormal(m,C)` to `m .+ sqrt(C) * MvNormal(0,I)`, which can handle semi-definite \"C\"\r\n- bugfix: Add `rng` into sample_empirical_gaussian\r\n- Remove DMC test for Sparse inversion as it no longer seems to converge. _I believe this was likely unstable even in previous version of the code, stick with constant timesteppers_\r\n-  allow users to provide an additive inflation matrix, defaults to prior covariance. `additive_inflation_cov = ...` in update to provide this. This allows for users to break the subspace property\r\n- Unit tests for the new interface\r\n- updated the inflation docs page [here](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR360/inflation/)\r\n\r\n### Testing \r\nE.g in `Examples/LorenzAccelerated/lorenz_accelerated.jl`,  on `main` the following breaks\r\n```julia\r\nupdate_ensemble!(...,additive_inflation=true, s=1e-2)\r\n``` \r\nwhile it works on the current branch (with different choices of inflation matrix too)\r\n```julia\r\nupdate_ensemble!(...,additive_inflation=true, s=1e-2)\r\nX = 0.1*I\r\nupdate_ensemble!(...,additive_inflation=true, additive_inflation_cov = X, s=1e-2)\r\n```\r\n## Interface Note\r\nBefore the inflation default was effectively to inflate using `additive_inflation_cov = get_cov_u_final(ekp)`  now it defaults to the  `additive_inflation_cov = get_cov_u_prior(ekp)`. This is because you are likely not going to use the former situation - this is better completed using multiplicative inflation.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD5853OMtJ",
+        "number": 359,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/359"
+      }
+    ],
+    "createdAt": "2023-11-18T04:27:37Z",
+    "deletions": 53,
+    "labels": [],
+    "mergedAt": "2024-02-06T00:27:42Z",
+    "number": 360,
+    "title": "remove positive definiteness constraints, allow user defined additive inflation"
+  }
+]

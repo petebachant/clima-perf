@@ -1,0 +1,109 @@
+[
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "In light of #344 I have modified the `ECCO_metadata.jl` and `examples/one_degree_simulation.jl` to download ECCO data directly using the `download_datasets` function prior to defining the grid etc. This is because the memory requirements of regridding the bathymetry were too high and the code failed before the download could be initiated on the login node. \r\n\r\nHappy to discuss if moving the downloads to the top of the code is reasonable - I think that it is, as it also requires some user input re: download directories and dates. \r\n\r\nI have only altered the ECCO downloads so far - ETOPO and JRA55 are still occurring further down. \r\n\r\nI have also altered the `ECCO_metadata.jl` file to print that the data is downloading (if it doesn't exist) or that the data can be found in <metadata.dir>. This is mostly so the user knows what exactly is happening, but happy to remove. ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys6sQ5pE",
+        "number": 363,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/363"
+      }
+    ],
+    "createdAt": "2025-03-03T05:56:13Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "LA_kwDOIOi2Ys8AAAABFpJxcw",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2025-03-07T05:18:21Z",
+    "number": 364,
+    "title": "Moved ECCO downloading to beginning of code in `examples/one_degree_simulation.jl`"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR gets things going, but a bit of refactoring will remain. In particular, we need to define the interface for an atmosphere, and then define `PrescribedAtmosphere` somewhat later. Right now the interface for an atmosphere is partly contained inside `PrescribedAtmosphere`.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-26T04:55:17Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2025-03-07T14:36:10Z",
+    "number": 355,
+    "title": "Lay the groundwork for prognostic atmospheres"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I think #379 it's because i removed the limitation on native bathymetry coordinates but still try interpolating in passes with the target grid limits. \r\n\r\nHowever, this is a hot-fix that allows examples to be run.\r\nI ll open soon a PR to have a diffusion of the bathymetry based on a maximum-slope criteria rather than a passes interpolation.\r\n\r\ncloses #379 \r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys6s71wR",
+        "number": 379,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/379"
+      }
+    ],
+    "createdAt": "2025-03-07T08:42:09Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-03-07T14:45:41Z",
+    "number": 382,
+    "title": "Fix bathyemtry example"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-07T16:09:58Z",
+    "deletions": 130,
+    "labels": [],
+    "mergedAt": "2025-03-07T20:42:50Z",
+    "number": 383,
+    "title": "(0.4.6) Remove thermodynamics step from ClimaOcean and use new ClimaSeaIce version"
+  }
+]

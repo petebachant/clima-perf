@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 525,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "Initial specification of surface topography, and functions to warp\r\ninner mesh. \r\n\r\nCo-authored-by: jakebolewski \r\nCo-authored-by: simonbyrne \r\nCo-authored-by: akshaysridhar \r\nAdd tests to terrain warp (Check generated volume)\r\n        modified:   /src/Hypsography/adaptspace.jl\r\n\tmodified:   /test/Spaces/terrain_warp.jl\r\n\tmodified:   src/Hypsography/adaptspace.jl",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-15T18:01:38Z",
+    "deletions": 47,
+    "labels": [],
+    "mergedAt": "2022-03-30T04:24:08Z",
+    "number": 535,
+    "title": "Terrain warping support + flow over mountain test case"
+  },
+  {
+    "additions": 371,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR reverts all the hybrid examples that use `driver.jl` to how they looked before #613; that is, it isolates all distributed computations to `driver.jl`. The interface for using `driver.jl` is unchanged, except now one must specify `horizontal_mesh_description`, `npoly`, `zmax`, and `zelem` instead of specifying `space` (this is to allow the driver to construct a distributed horizontal topology before constructing the entire hybrid space). Since the inertial gravity wave test case works with `driver.jl` again, I've added it back to the Buildkite pipeline.\r\n\r\nIn addition, this PR allows restart files to work in distributed mode (any restart file that needs to get read by or written to from multiple processors gets `_pid$pid` appended to its name). Also, while testing this PR, I found it useful to modify `t_end` and `dt_save_to_disk` from the run script (by setting `ENV[T_END]` and `ENV[DT_SAVE_TO_DISK]`), instead of repeatedly modifying the test case files. I've left this change in the PR, in case others also find it helpful.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-29T16:38:43Z",
+    "deletions": 829,
+    "labels": [],
+    "mergedAt": "2022-03-30T18:38:24Z",
+    "number": 638,
+    "title": "Update driver for distributed runs"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "cc: @szy21 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-30T20:12:43Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-03-30T21:28:59Z",
+    "number": 641,
+    "title": "apply dss to the state at every timestep"
+  }
+]

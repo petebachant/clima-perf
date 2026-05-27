@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 427,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #41\r\n\r\nThis PR adds functionality to `DataHandler`, `TimeVaryingInputs`, and `SpaceVaryingInputs` to enable composing multiple input variables into one data variable. To do this, the user must specify a composing function, multiple variable names, and the file paths where they can be read from.\r\n\r\nMost of the changes have been made at the `DataHandler` level. Each input variable has its own unique `FileReader` object, and each composed data variable has one `Time/SpaceVaryingInput` and one `DataHandler`. The composing function itself is applied in the `regridded_snapshot` function, just before regridding. The user will interact with this feature at the `Time/SpaceVaryingInput` level.\r\n\r\nThis feature is only available when using `InterpolationsRegridder`, not `TempestRegridder`.\r\n\r\nDesign decisions made include:\r\n- If a pre-processing function is provided, it is applied to each input variable before they are composed.\r\n- Variables are composed before regridding, to preserve higher resolution information\r\n- We assume that all input variables have the same temporal and spatial dimensions. This is explicitly checked in the `DataHandler` constructor, and will raise an informative error message if it is not true.\r\n- Multiple input variables can come from one file, or each from their own unique file. We don't currently support arbitrary numbers of input variables and files, since this would require more work to implement and is not an expected use case in the near term.\r\n\r\n## To-do\r\n- [x] DataHandler: add field to store Dict mapping input varnames to FileReaders\r\n- [x] DataHandler: add field to store list of input varnames\r\n- [x] DataHandler: add field to store composing function\r\n- [x] DH constructor: assert number of file paths supplied == number of varnames\r\n- [x] DH constructor: assert compose function is provided when multiple input vars provided\r\n- [x] DH regrid_snapshot: apply compose function to input vars, regrid result and return it\r\n- [x] SVI/TVI constructors: add fields for multiple file paths, multiple varnames, composing function (optional)\r\n- [x] update all docs\r\n- [x] add usage example to docs\r\n\r\n\r\n## Tests\r\n- [x] DH constructor: num file_paths != num varnames && num file_paths > 1 (should fail)\r\n- [x] DH constructor: multiple input vars, no compose func (should fail)\r\n- [x] DH constructor: 1 input var, compose func (should fail)\r\n- [x] DH constructor: TempestRegrid with multiple vars (should fail)\r\n- [x] DH constructor: 1 input var, no compose func (should pass)\r\n- [x] DH constructor: multiple input vars, compose func (should pass)\r\n- [x] SVI/TVI constructors with + without varnames\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6GUeY_",
+        "number": 41,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/41"
+      }
+    ],
+    "createdAt": "2024-09-05T17:57:50Z",
+    "deletions": 61,
+    "labels": [],
+    "mergedAt": "2024-09-09T18:28:28Z",
+    "number": 105,
+    "title": "enable composing input data"
+  }
+]

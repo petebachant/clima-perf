@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 244,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the surface handling in several ways:\r\n - Caches the surface fluxes object, so it can later be used by the edmf model\r\n - Caches the surface fluxes inputs, so that we can more simply dispatch\r\n - Changes (maybe fixes) `get_surface_density_and_humidity` to be mutating (now `set_surface_density_and_humidity!`) cc @szy21, @LenkaNovak, maybe we can discuss this change?\r\n - I've kept `surface_conditions` for now, just to minimize the blast radius, but I'd like to remove that since it's basically directly dependent on `SurfaceFluxConditions` and the surface flux input types (depending on which one is used)\r\n\r\nUltimately, this should allow us to delete nearly all of edmf's `get_surface` function, and just accept the already created `SurfaceFluxConditions`.\r\n\r\nEDIT:\r\n\r\n - I also replaced the `coupled` Bool with a `coupling` type because I was trying to hunt down allocations in one of the broadcast expressions. I think it turned out to be that the nested thermo state and surface fluxes input expression was a bit too complex for the compiler to infer, and things started working smoothly when that was broken up. I didn't revert the coupling type because I figure that it's not a bad idea to do that anyway, since it will yield more precise generated code than the runtime Bool.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-12T00:01:42Z",
+    "deletions": 131,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-11-14T05:23:11Z",
+    "number": 1114,
+    "title": "Refactor surface"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR comments out the debug functions. I forgot to comment these out earlier.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-14T21:37:07Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "965A87",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7yCRv-",
+        "name": "Logging :ledger:"
+      }
+    ],
+    "mergedAt": "2022-11-14T22:19:14Z",
+    "number": 1117,
+    "title": "Skip debugging filenames in contour plots"
+  }
+]

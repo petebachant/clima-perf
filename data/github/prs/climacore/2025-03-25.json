@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "When using the `DebugOnly` module to find NaNs, I'm finding that we're executing Broadcast expressions in `ImplicitEquationJacobian` due to `preconditioner_cache`. Per its doc string, it's role is not to initialize data, but only to allocate data, so I think using `similar` here is more appropriate, as the broadcast expression may contain uninitialized data. To do this, I've added `similar` support on Broadcasted objects with field and stencil styles.\r\n\r\nI think it's pretty clear that we either need to fix the doc string, or fix the code, because they are inconsistent.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-22T15:52:04Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-25T21:04:36Z",
+    "number": 2253,
+    "title": "Dont materialize bc expr with uninitialized data"
+  }
+]

@@ -1,0 +1,113 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds nsys profiling back into some of the jobs, now that we've upgraded the version of nsight systems.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-18T20:28:56Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2024-03-19T12:02:39Z",
+    "number": 2804,
+    "title": "Add nsys profiling back in"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "#2800 revealed that we're not able to always inline. The first culprit we run into is `surface_state_to_conditions`, which is quite complicated. This PR breaks off the temperature computation into a separate function, and passes less data to the function.\r\n\r\nThis function call (to `surface_state_to_conditions`) is more expensive than the call to saturation adjustment, which involves a non-linear solve. So, there is clearly a performance issue.\r\n\r\nRelated issue: #2783.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-18T21:00:35Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2024-03-19T14:11:13Z",
+    "number": 2805,
+    "title": "Simplify surface function"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the surface `surface_state_to_conditions` by:\r\n\r\n - Making `surface_state_to_conditions` take the wrapped surface setup, and a local `surface_state` is then made inside.\r\n - Made `sfc_prognostic_temp` a non-optional argument and removed the splatting (sometimes this is difficult for the compiler to infer).\r\n\r\nThere's several benefits to the first bullet:\r\n - Expressions directly inside broadcast expressions are treated differently than if they were called inside, and sometimes this will result in allocations / runtime calls (https://github.com/CliMA/ClimaCore.jl/issues/1649).\r\n - The compiler may be able to better optimize this because it is explicitly clear that `surface_state`'s can be locally defined, and a full field of `surface_state`'s is not necessary.\r\n - We also explicitly pass the local geometry and interior z fewer times to the function\r\n\r\nAccording to my local tests, this PR allows us to use `always_inline` for this kernel.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-19T17:21:18Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2024-03-19T19:41:23Z",
+    "number": 2809,
+    "title": "Refactor surface"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAlso removes `parameter_tests.toml` as it doesn't seem to be used anywhere.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-19T18:09:07Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2024-03-19T19:50:44Z",
+    "number": 2811,
+    "title": "remove alias and type in toml files"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-18T23:50:27Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2024-03-19T22:52:21Z",
+    "number": 2808,
+    "title": "fix docstring"
+  }
+]

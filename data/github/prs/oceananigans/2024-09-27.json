@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 890,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Using the `FFTBasedPoissonSolver` in complex domains on the `ImmersedBoundaryGrid` leads to resulting solution that either\r\n\r\n1. Does not conserve tracers in the flow; or\r\n2. Leads to divergent flow along the immersed boundary.\r\n\r\nOn the other hand, using the `PreconditionedConjugateGradientSolver` on complex domains leads to exact solution at a much slower speed on the GPU. This PR implements an `ImmersedPressureSolver` that uses the `FFTBasedPoissonSolver` as a preconditioner, then iterates `PreconditionedConjugateGradientSolver` to arrive at the correct solution. This approach is much faster than using a vanilla `PreconditionedConjugateGradientSolver` as the number of iterations scale much more slowly with grid size on the GPU.\r\n\r\nThis PR will include the `ImmersedPressureSolver`, a few validation examples for benchmarking purposes and a number of example use cases where this solver would be useful.\r\n\r\n@glwagner @simone-silvestri",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-17T15:09:39Z",
+    "deletions": 182,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2024-09-27T19:01:49Z",
+    "number": 3188,
+    "title": "Add `ImmersedPressureSolver` with `FFTBasedPoissonSolver` as preconditioner for complex domains"
+  },
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "closes #3681\r\n\r\nWe can probably use this PR to add also a validation for the `PartialCellBottom` and the bug-fixes in the implementation.\r\nWhat do people think?\r\n\r\ncc @jm-c ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6R_zai",
+        "number": 3681,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3681"
+      }
+    ],
+    "createdAt": "2024-08-05T20:41:47Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2024-09-27T23:51:38Z",
+    "number": 3682,
+    "title": "Fix `_immered_cell` and adapt for `PartialCellBottom`"
+  }
+]

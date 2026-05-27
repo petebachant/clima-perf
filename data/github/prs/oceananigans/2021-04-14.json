@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 583,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Documenter.jl uses KaTeX by default but MathJax3 might be better for us. Will wait for Buildkite to build and deploy the docs to see \ud83e\udd1e \r\n\r\nResolves #528 (hopefully)",
+    "changedFiles": 26,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MTk1MDgyNTA=",
+        "number": 528,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/528"
+      }
+    ],
+    "createdAt": "2021-03-31T18:03:06Z",
+    "deletions": 491,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-04-14T13:49:38Z",
+    "number": 1530,
+    "title": "Switch Documenter.jl math engine to MathJax3 + Doc Fixes"
+  },
+  {
+    "additions": 3096,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a new submodule `Oceananigans.CubedSpheres` that implements new grid and field types for running `HydrostaticFreeSurfaceModel` with a fully connected cubed sphere (should eventually also be flexible enough to just use 1 < n < 6 faces but I'm just testing 6 faces for now).\r\n\r\nThis PR is still a work-in-progress and is quite messy with some pretty horrible code (please don't judge :sob:). I'll be adding to it and refactoring it over the next few days.\r\n\r\nCompile times have increased significantly with `grid::ConformalCubedSphereGrid` which has slowed down development but should be pretty close to being able to time step. EDIT: This might only be on Julia 1.6...",
+    "changedFiles": 53,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-30T13:33:23Z",
+    "deletions": 257,
+    "labels": [],
+    "mergedAt": "2021-04-14T15:22:29Z",
+    "number": 1522,
+    "title": "Fully connected cubed sphere"
+  },
+  {
+    "additions": 214,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/1478\r\n\r\nAs mentioned in https://github.com/CliMA/Oceananigans.jl/issues/1542 I couldn't build the docs locally so I probably made some markdown mistakes along the way, which is why this is a draft pull request. This first draft is also somewhat incomplete.\r\n\r\nI figured I'd create the PR early to get some feedback along the way though. I'm especially unfamiliar with the part about converting arrays to CUDA etc., so some help/collaboration there is much appreciated.\r\n\r\nCC @ali-ramadhan @glwagner @navidcy @francispoulin ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MzI2OTU3ODc=",
+        "number": 1478,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1478"
+      }
+    ],
+    "createdAt": "2021-04-04T16:26:14Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-04-14T15:26:40Z",
+    "number": 1543,
+    "title": "Includes simulation tips section in the docs"
+  },
+  {
+    "additions": 51,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "The `@hascuda` macro used to be necessary but with the addition of `CUDA.has_cuda()` I don't think it is anymore.\r\n\r\nSo this PR finally gets rid of the `@hascuda` macro.\r\n\r\nIt's been a source of errors for users, especially when using Oceananigans on clusters where some nodes have GPUs and others do not. So hopefully this PR will help reduce errors for users on clusters.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-14T17:32:47Z",
+    "deletions": 65,
+    "labels": [],
+    "mergedAt": "2021-04-14T18:28:06Z",
+    "number": 1589,
+    "title": "Stop using `@hascuda` macro"
+  }
+]

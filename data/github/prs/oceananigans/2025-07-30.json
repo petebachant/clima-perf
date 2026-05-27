@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/4684\r\n\r\nHere the changes now expose `ibg` to active cells (which includes partial cells), and then using `\u1d43`-type difference operators for the case then the cells are not at the immersed boundaries.\r\n\r\nApplying this fix now to the MWE in https://github.com/CliMA/Oceananigans.jl/issues/4684 we get \r\n<img width=\"1600\" height=\"800\" alt=\"conditional_difference_MWE\" src=\"https://github.com/user-attachments/assets/d18cb3b1-5da5-4d43-84c5-2b1e9d5d8fc4\" />\r\nwhich is the expected behavior.\r\n\r\nAlso note that this fix addresses the MWE in https://github.com/CliMA/Oceananigans.jl/issues/4634 for the flat bottom case where there is a row of flat bottomed-partial cells, but does not fully solve the problem as divergence issues persists with other nontrivial bottom topography such as a linear slope.\r\n\r\n@glwagner @simone-silvestri ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7DNez0",
+        "number": 4684,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4684"
+      }
+    ],
+    "createdAt": "2025-07-29T22:13:27Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-07-30T15:08:44Z",
+    "number": 4685,
+    "title": "Make nested functions in conditional differences immersed metric-aware"
+  }
+]

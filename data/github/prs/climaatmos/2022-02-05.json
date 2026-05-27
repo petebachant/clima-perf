@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 176,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "As of commit `fbde6a58b7b877e040606458ec8d3599914a2cb8`, running the `run_1d_ekman_column.jl` is unstable for `dt = 2.0` (the timestep used in the ClimaCore example). While the solution is stable for `dt = 0.01`, the results allocate more than 1TB and takes over 15 min to run:\r\n\r\n```julia\r\njulia> using Revise; include(\"test/test_cases/run_1d_ekman_column.jl\");\r\n\r\njulia> @time run_1d_ekman_column(Float64; dt = 0.01, test_mode=:validation)\r\n896.577026 seconds (10.56 G allocations: 1.550 TiB, 50.28% gc time, 0.04% compilation time)\r\n```\r\n\r\nThere are clearly performance / allocation issues with the existing driver, so I think it's perhaps easiest for us to\r\n\r\n - start from scratch with the `run_1d_ekman_column.jl` (and use the ClimaCore example, which takes ~8 seconds in `OrdinaryDiffEq.solve`)\r\n - hook in the regression tests for the solution at `t_final`\r\n - start iterating on an interface (and try adopting some pieces from the existing interface)\r\n\r\nThis will also make it easy to preserve using the OrdinaryDiffEq `integrator` object, so that we can continuously monitor performance.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-05T05:05:48Z",
+    "deletions": 208,
+    "labels": [],
+    "mergedAt": "2022-02-05T06:06:42Z",
+    "number": 206,
+    "title": "Restart Ekman from scratch"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This may help with our CI init time a bit. We can add things back in as needed, but we should probably only add the things that we need for now.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-05T05:20:58Z",
+    "deletions": 37,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-02-05T06:19:37Z",
+    "number": 207,
+    "title": "Remove unnecessary deps"
+  },
+  {
+    "additions": 71,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-05T07:17:51Z",
+    "deletions": 68,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-02-05T07:31:43Z",
+    "number": 208,
+    "title": "Reduce use of Global scope, use cache"
+  }
+]

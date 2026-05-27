@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1238,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds tendency derivatives for the 1-moment microphysics and non-equilibrium cloud formation. They are to be used in the implicit solver in the Atmos model.\r\n\r\n- For cloud condensation/evaporation and deposition/sublimation we provide a full derivative and a simplified one equal to 1/timescale\r\n- We neglect the derivatives for collision terms like autoconversion and accretion\r\n- We model the snow melt, snow deposition/sublimation and rain evaporation derivatives as source/q\r\n\r\nThe derivatives are provided as individual functions. Additionally, a `bulk_microphysics_derivatives` convenience function is added, that returns a tuple of all four derivatives. This matches the pattern of `bulk_microphysics_tendencies`.\r\n\r\nI have added to the documentation pages and included some plots. I have also added to the tests, including some tests based on finite-difference \"manual\" calculation of the derivatives.\r\n\r\nGoing forward, it would not be hard to add more analytical terms for the derivatives. Or, in case we want to make the derivative free of having to redo the math if we change the parameterization functions, I could code all of those as a finite difference numerical computation (something like `deriv = (micro_func(q+eps) - micro_func(q)) / eps`)\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-13T01:29:22Z",
+    "deletions": 41,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "Bigger research oriented project",
+        "id": "MDU6TGFiZWwzMjAxNzIwNjAz",
+        "name": "Research project"
+      }
+    ],
+    "mergedAt": "2026-02-20T02:19:07Z",
+    "number": 682,
+    "title": "Wip on Jacobian derivatives"
+  }
+]

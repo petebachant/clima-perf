@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjI1NTMwMzMy",
+      "is_bot": false,
+      "login": "milankl",
+      "name": "Milan Kl\u00f6wer"
+    },
+    "body": "I don't know how relevant these changes are, but I found some more type instabilities in the split explicit free surface model's adams bashforth time integrator. Removing them similar to #3212 \r\n\r\nAlternatively we could also hardcode the constants\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9140a74536784396d368cf8205432433a9deea3d/src/Models/HydrostaticFreeSurfaceModels/split_explicit_free_surface_kernels.jl#L11-L19\r\n\r\nas Float32\r\n\r\n```julia\r\nconst \u03b2 = 0.281105f0\r\nconst \u03b1 = 1.5f0 + \u03b2\r\n```\r\netc. as this will directly upcast to Float64 if that's used, but not cause a type instability with Float32. But this will again cause problems if we ever want to use something else than Float32/64... Now just the `U\u2605, \u03b7\u2605` get a bit lengthier!\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-08T20:40:29Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2023-08-10T21:27:57Z",
+    "number": 3213,
+    "title": "Remove type instability in AB2/3"
+  }
+]

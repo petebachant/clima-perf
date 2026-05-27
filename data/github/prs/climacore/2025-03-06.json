@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 240,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "`write!` on Fields is now dispatched off the input\r\nfield's space. When it is a point space, the local\r\ngeometry data is written. When read_field is called,\r\nand no grid is present, then the field is assumed\r\nto be on a point space.\r\n\r\nWhen the reader recreates a field from a HDF5, it called\r\neval on a parsed input string. This replaces that with a function\r\nthat ensures there are no function calls inside the parsed string\r\nbefore eval'ing it. This is based on JLD.jl code.\r\n\r\nCloses #2171 \r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6oUZQO",
+        "number": 2171,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2171"
+      }
+    ],
+    "createdAt": "2025-01-27T16:14:35Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2025-03-06T03:09:22Z",
+    "number": 2162,
+    "title": "Add support for HDF5 read and write with PointSpaces"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nInstead of using vectors that are all zeroes, this change uses the coordinates themselves to create more unique values so the tests are more specific.\r\n\r\nResolves #1996 \r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6XDpvI",
+        "number": 1996,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1996"
+      }
+    ],
+    "createdAt": "2025-03-03T19:41:36Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-03-06T14:04:23Z",
+    "number": 2205,
+    "title": "Use more unique values in InputOutput hybrid box tests"
+  },
+  {
+    "additions": 767,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a nodal mask into the `SpectralElementGrid2D`, and allows users to update it with `set_mask!(::Function, space::AbstractSpace)`. This is an initial step towards this [SDI](https://github.com/CliMA/ClimaLand.jl/issues/488).\r\n\r\nI imagine that just the pointwise and stencil operations will go a long way, but we may need to iterate to find out what else is needed.\r\n\r\nNote to self: I think we also need to thread the mask through in some `materialize!` calls for implicit pieces, assuming that they call `copyto!`\r\n\r\nSupersedes #2085\r\n\r\nHere is a rough summary of how this works\r\n\r\n### Summary\r\n\r\n - We add the mask, in the form of a DataLayout to the horizontal grid, or a `DataLayouts.NoMask` object\r\n   - Using different types like this allows us to dispatch on behavior when the mask is present and absent, effectively becoming a no-op when the mask is absent\r\n - We then extract and pass that mask to our kernels (i.e., `Base.copyto!`)\r\n - Inside `Base.copyto!`, if the mask is a datalayout, we check if `mask == 0` for a particular `i, j, f, v, h`, before doing the broadcast assignment (`dest[I] = bc[I]`) then we skip, via `continue` (or `return nothing`, in the case of cuda kernels).",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-25T20:29:46Z",
+    "deletions": 82,
+    "labels": [],
+    "mergedAt": "2025-03-06T14:08:40Z",
+    "number": 2201,
+    "title": "Add nodal mask"
+  }
+]

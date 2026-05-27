@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request makes improvements to type stability and explicit type handling in the air saturation functions, and adds more comprehensive type stability tests for the `relative_humidity` function.\r\n\r\n**Type stability and explicit type handling:**\r\n\r\n* Ensured that the result of the condensate calculation in `src/air_saturation_functions.jl` is explicitly cast to the floating point type `FT`, improving type stability and consistency in return types.\r\n\r\nWhen calling `relative_humidity` without specifying `q_liq`, `q_ice`, they are set to `Int64(0)`.\r\nThis function calls `saturation_vapor_pressure(param_set, T, q_liq, q_ice)`, which calls `\u03bb = liquid_fraction(param_set, T, q_liq, q_ice)`, which may return `q_liq / q_c`, where `q_c = q_liq + q_ice`.\r\nSince the numerator and denominator are integers, the result is `Float64`.\r\nWrap the result in `FT`, to ensure type stability.\r\n\r\n\r\n\r\n**Testing improvements:**\r\n\r\n* Added additional tests in `test/type_stability.jl` to verify that `relative_humidity` returns the correct type (`FT`) for various combinations of input arguments, increasing test coverage and ensuring type stability.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T01:12:35Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-03-27T02:44:58Z",
+    "number": 320,
+    "title": "fix: liquid_fraction type stability"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 221,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates and refactors the benchmarks in a few ways:\r\n - If a column is the same for all benchmarks, then simply include that information at the table's header and remove the column\r\n - Starts a dictionary for device specs and uses `CUDA.name(CUDA.device())` to look up the device specs\r\n\r\n```julia\r\nfunction device_info()\r\n    device_specs =\r\n        Dict(\"NVIDIA A100-SXM4-80GB\" => (; device_bandwidth_GBs = 2_039))\r\n    is_cuda = ClimaComms.device() isa ClimaComms.CUDADevice\r\n    if is_cuda && haskey(device_specs, CUDA.name(CUDA.device()))\r\n        (; device_bandwidth_GBs) = device_specs[CUDA.name(CUDA.device())]\r\n        return (;\r\n            device_bandwidth_GBs,\r\n            exists = true,\r\n            name = CUDA.name(CUDA.device()),\r\n        )\r\n    else\r\n        return (;\r\n            device_bandwidth_GBs = 1,\r\n            exists = false,\r\n            name = CUDA.name(CUDA.device()),\r\n        )\r\n    end\r\nend\r\n```\r\nNow, we can add more devices in `device_specs`.\r\n\r\n -  Pass in `kernel_time_s` to `push_info` so that it's decoupled from `nreps`. This is clearer and becomes compatible with benchmarks generated from BenchmarkTools\r\n - Pass in `problem_size` into `push_info`, so that a benchmark table can have multiple problem sizes (this is helpful for our copyto benchmarks)\r\n - Use the benchmark utils in the `copyto!` benchmarks.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-30T15:16:36Z",
+    "deletions": 131,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2024-08-30T18:51:10Z",
+    "number": 1965,
+    "title": "Refactor and update benchmarks"
+  }
+]

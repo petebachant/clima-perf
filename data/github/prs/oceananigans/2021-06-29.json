@@ -1,0 +1,103 @@
+[
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The floating point type can and should be determined from `eltype(grid)`, since `grid` is a required argument for constructing `IncompressibleModel`. An independent `float_type` argument is not only redundant but creates the possibility that models can have inconsistent float types. Eliminating this argument and using `eltype(grid)` as the source of knowledge re: floating point types solves this problem.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-29T10:01:03Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2021-06-29T14:54:04Z",
+    "number": 1786,
+    "title": "Nuke float_type arg for IncompressibleModel"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "\"2... 32... hut, hut... !\"\r\n\r\nNo idea if this resolves #1764 but perhaps.\r\n\r\nWhy? Because CUDA replaces `Int64` with `Float64` when exponentiating:\r\n\r\nhttps://github.com/JuliaGPU/CUDA.jl/blob/5d6127dbbef495c94d3dd8de98162188062e11b1/src/device/intrinsics/math.jl#L218-L224\r\n\r\n(If I'm understanding that code correctly.)\r\n\r\nFor `Int32` it calls CUDA function that's specific to integer exponents.\r\n\r\nHmm!",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5Mjk3MDA2MzY=",
+        "number": 1764,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1764"
+      }
+    ],
+    "createdAt": "2021-06-25T21:33:19Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "8B0000",
+        "description": "",
+        "id": "MDU6TGFiZWwyMzkyMDY1ODU1",
+        "name": "\ud83d\udea8 high priority \ud83d\udea8"
+      }
+    ],
+    "mergedAt": "2021-06-29T15:33:14Z",
+    "number": 1770,
+    "title": "Exponentiate with Int32 not Int64"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #1777.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MzEwMTQzMzI=",
+        "number": 1777,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1777"
+      }
+    ],
+    "createdAt": "2021-06-29T11:30:12Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-06-29T17:37:10Z",
+    "number": 1787,
+    "title": "Docs: adds Oceananigans' path first in `LOAD_PATH` order"
+  }
+]

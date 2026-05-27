@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 410,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "This is an updated version of https://github.com/CliMA/Oceananigans.jl/pull/5372, with the driver script now written in Julia. \r\n\r\nUsage:\r\n```sh\r\njulia verify_restart.jl /path/to/my_simulation.jl\r\n```\r\n\r\nTo test all examples:\r\n```sh\r\ncd Oceananigans.jl/examples/utils\r\njulia restart_verification.jl ../*.jl\r\n```\r\nThis will create a subdirectory per simulation script provided, which will generally look like:\r\n```sh\r\nbaroclinic_adjustment_0.jl  # auto-generated no-restart script\r\nbaroclinic_adjustment_1.jl  # auto-generated restart script\r\ncompare_restart.log         # empty if norestart_iteration200.jld2 and restarted_iteration200.jld2 are identical\r\nlog.run0\r\nlog.run1\r\nnorestart_iteration0.jld2\r\nnorestart_iteration100.jld2\r\nnorestart_iteration200.jld2\r\nrestarted_iteration200.jld2\r\n```\r\n\r\nThe checkpoint comparison is automatically performed by the accompanying utility script, which runs quietly by default. It can also be run on its own:\r\n```\r\nUsage: julia compare_checkpoints.jl <filepath1> <filepath2> [-v|--verbose]\r\n```\r\n\r\nCurrent results:\r\n| Example Problem | Restart is Bitwise Identical | Notes |\r\n| --- | --- | --- |\r\n| baroclinic_adjustment.jl | \u2705 | |\r\n| convecting_plankton.jl | \u2705 | |\r\n| horizontal_convection.jl | \u2705 | |\r\n| hydrostatic_lock_exchange.jl | \u2705 | |\r\n| internal_tide.jl | \u2705 | |\r\n| internal_wave.jl | \u2705 | |\r\n| kelvin_helmholtz_instability.jl | \u2705 | manually tested restart |\r\n| langmuir_turbulence.jl | \u2705 | ran on CPU, reduced problem to 64x64x32; warning that halo size was increased to (5,5,5) for ImmersedBoundaryGrid |\r\n| ocean_wind_mixing_and_convection.jl | \u2611\ufe0f abs diff \u2272 O(1e-13) | ran on CPU, reduced problem to 64x64x32; warning that halo size was increased to (4,4,4) for ImmersedBoundaryGrid |\r\n| one_dimensional_diffusion.jl | \u2705 | |\r\n| shallow_water_Bickley_jet.jl | \u2705 | |\r\n| spherical_baroclinic_instability.jl (lat-lon) | \u2705 | ran on CPU |\r\n| spherical_baroclinic_instability.jl (tripolar) | \u2705* | ran on CPU; `velocities`, `tracers`, and `free_surface` fields identical but NaN found in `timestepper.G\u207f.u` |\r\n| spherical_baroclinic_instability.jl (rotated lat-lon) | \u2705 | ran on CPU |\r\n| two_dimensional_turbulence.jl | \u2705 | |",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-06T17:23:38Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-03-20T03:12:43Z",
+    "number": 5379,
+    "title": "Add restart verification script"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "Addresses https://github.com/CliMA/Oceananigans.jl/pull/5317#issuecomment-4082118005\r\n\r\n---\r\n\r\nEDIT: This is my quick band-aid fix, pointing to the \"archived\" directory, so that the docs build during CI. But maybe you guys want to revise that section of the docs and point to the new \"benchmarking\" directory?",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-18T22:48:38Z",
+    "deletions": 3923,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-03-20T04:15:34Z",
+    "number": 5412,
+    "title": "Temporarily drop Benchmark section from Docs + delete `legacy_benchmarks`"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "see https://github.com/NumericalEarth/Breeze.jl/pull/565. cc @Pangoraw. Avoids a problematic code path in 1.12 when using Reactant.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-19T20:02:34Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-03-20T06:39:38Z",
+    "number": 5415,
+    "title": "Fix issue downstream in Reactant on 1.12"
+  }
+]

@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 311,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Currently the rain_evaporation test breaks on the GPU. I'm suspecting the gamma function, but I don't have a proof:\r\n\r\n```\r\nReason: unsupported dynamic function invocation (call to +)\r\n--\r\n\u00a0 | Stacktrace:\r\n\u00a0 | [1] En_expand_origin_general\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/expint.jl:322\r\n\u00a0 | [2] En_expand_origin\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/expint.jl:375\r\n\u00a0 | [3] _expint\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/expint.jl:431\r\n\u00a0 | [4] expint (repeats 2 times)\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/expint.jl:516\r\n\u00a0 | [5] _gamma\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/gamma_inc.jl:1137\r\n\u00a0 | [6] gamma\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/depot/gpu/packages/SpecialFunctions/QH8rV/src/gamma_inc.jl:1115\r\n\u00a0 | [7] rain_evaporation\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/cloudmicrophysics-ci/207/cloudmicrophysics-ci/src/Microphysics2M.jl:442\r\n```\r\n\r\nI tested it locally on the CPU and it seems that the function is type stable (at least for me)\r\n\r\n```\r\njulia> using JET\r\n\r\njulia> @test_opt CM2.rain_evaporation(evpSB2006, air_props, thermo_params, q, qr, \u03c1, Nr, T)\r\nTest Passed\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM5tzvFJ",
+        "number": 153,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/153"
+      }
+    ],
+    "createdAt": "2023-09-28T22:11:11Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "44F958",
+        "description": "Relevant to GPU performance",
+        "id": "LA_kwDOFzm_uM8AAAABXOclPA",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2023-10-02T17:32:09Z",
+    "number": 245,
+    "title": "add 2-moment GPU tests"
+  },
+  {
+    "additions": 164,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Content\r\n- Updates the pipeline.yml to better practices.\r\n- Remove `CUDAKernels`, update to latest version of `KernelAbstractions`\r\n- Adds a function `setup_output` to setup the output array for each test set.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM5u2THt",
+        "number": 173,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/173"
+      }
+    ],
+    "createdAt": "2023-09-29T20:59:16Z",
+    "deletions": 289,
+    "labels": [],
+    "mergedAt": "2023-10-02T19:45:11Z",
+    "number": 246,
+    "title": "Update GPU tests to use latest KernelAbstractions version"
+  }
+]

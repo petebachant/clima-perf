@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 95,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements `Callback`, designed to be used with `Simulation`.\r\n\r\nIllustration:\r\n\r\n```julia\r\nusing Oceananigans\r\n\r\nmodel = NonhydrostaticModel(grid = RegularRectilinearGrid(size=(128, 128), extent=(2\u03c0, 2\u03c0), topology=(Periodic, Periodic, Flat)),\r\n                            timestepper = :RungeKutta3,\r\n                            advection = UpwindBiasedFifthOrder(),\r\n                            buoyancy = nothing,\r\n                            tracers = nothing)\r\n\r\nset!(model, u = (x, y, z) -> randn(), v = (x, y, z) -> randn())\r\n\r\nsimulation = Simulation(model, \u0394t=0.01, stop_iteration=100)\r\n\r\nprint_progress(sim) = @info \"Iteration: $(sim.model.clock.iteration), time: $(sim.model.clock.time)\"\r\nsimulation.callbacks[:progress] = Callback(print_progress, schedule=IterationInterval(10))\r\n\r\nrun!(simulation)\r\n```\r\n\r\nwe get\r\n\r\n```julia\r\njulia> run!(simulation)\r\n[ Info: Iteration: 0, time: 0.0\r\n[ Info: Iteration: 10, time: 0.09999999999999999\r\n[ Info: Iteration: 20, time: 0.19999999999999984\r\n[ Info: Iteration: 30, time: 0.30000000000000004\r\n[ Info: Iteration: 40, time: 0.4000000000000007\r\n[ Info: Iteration: 50, time: 0.5000000000000013\r\n[ Info: Iteration: 60, time: 0.6000000000000003\r\n[ Info: Iteration: 70, time: 0.6999999999999993\r\n[ Info: Iteration: 80, time: 0.7999999999999983\r\n[ Info: Iteration: 90, time: 0.8999999999999972\r\n[ Info: Iteration: 100, time: 0.9999999999999962\r\n[ Info: Simulation is stopping. Model iteration 100 has hit or exceeded simulation stop iteration 100.\r\n```\r\n\r\nWe also support passing an iterable of callbacks to `run!`:\r\n\r\n```julia\r\nprogress_callback = Callback(print_progress, schedule=IterationInterval(10))\r\nrun!(simulation, callbacks=[progress_callback])\r\n```\r\n\r\njust in case someone wants to do that...\r\n\r\nI think we could also redesign `TimeStepWizard` to be a special kind of `Callback`, and nuke the `progress` property.\r\n\r\nWhat do others think? Are they ok with this big change to the API?\r\n\r\ncc @navidcy @ali-ramadhan @francispoulin \r\n\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-23T13:48:14Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2021-07-24T01:08:29Z",
+    "number": 1894,
+    "title": "Introducing Callback for Simulations"
+  },
+  {
+    "additions": 776,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the Poisson solvers so that:\r\n\r\n1. All our solvers (FFT-based, mixed FFT / tridiagonal, tridiagonal, and preconditioned conjugate gradient) have a consistent interface that's reminiscent of linear algebra solvers, eg we use the syntax\r\n\r\n```julia\r\nsolve!(x, solver, b)\r\n```\r\n\r\nwhich solves `A*x = b` for `x`, where `A` is described by `solver`. This resembles the syntax `ldiv!(x, A, b)` implemented by `LinearAlgebra.jl`. One exception is the mixed FFT / tridiagonal solver, which also permits `solve!(x, solver)` as an optimization. This extension is used because the \"source term\" is represented differently (eg in a way that depends on the vertical grid spacing) than the other Poisson solvers. The mixed solver also accepts `solve!(x, solver, b)` like the others; this will launch an extra kernel to copy and scale `b` appropriately.\r\n\r\n2. The FFT-based solver supports the \"screened\" Poisson equation\r\n\r\n```\r\n(\u2207\u00b2 + m) \u03d5 = b\r\n```\r\n\r\nvia `solve!(x, solver, b, m)`, where `m` is a _constant_.\r\n\r\nThis will allow us to solve the elliptic equation posed by an implicit time discretization of the free surface evolution equation.\r\n\r\nTodo:\r\n\r\n- [x] Implement an FFT-based solver for the implicit free surface\r\n- [x] Test demonstrating that the preconditioned conjugate gradient solver and FFT-based solver get the same answer.",
+    "changedFiles": 31,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-18T12:05:22Z",
+    "deletions": 332,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2021-07-24T11:41:21Z",
+    "number": 1869,
+    "title": "Refactors Poisson solver interfaces and new implicit free surface solver"
+  },
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "There was breaking changes in Literate.jl v2.9; see https://github.com/fredrikekre/Literate.jl/blob/v2.9.0/CHANGELOG.md#290---2021-07-09",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-24T10:50:22Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-07-24T18:15:23Z",
+    "number": 1896,
+    "title": "Updates Docs packages"
+  }
+]

@@ -1,0 +1,113 @@
+[
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies, and removes the broadcast rules for some of the dependency packages.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-05T03:58:34Z",
+    "deletions": 88,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-04-05T05:18:13Z",
+    "number": 1543,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes real_center_indices loops. A step towards https://github.com/CliMA/ClimaAtmos.jl/issues/887.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-05T19:21:28Z",
+    "deletions": 109,
+    "labels": [],
+    "mergedAt": "2023-04-05T20:21:14Z",
+    "number": 1547,
+    "title": "Remove real_center_indices"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes the generic CLI script (which I tend to use for my workflow):\r\n\r\n```julia\r\nusing Revise; include(\"examples/hybrid/cli_options.jl\");\r\ndict = parsed_args_per_job_id();\r\nparsed_args = dict[\"edmf_soares\"]; # (edmf_soares is the job_id)\r\nparsed_args[\"enable_threading\"] = false; # can re-set specific parsed args\r\ninclude(\"examples/hybrid/driver.jl\")\r\n```\r\n\r\n - `s` is not defined when `!(@isdefined parsed_args)` is false\r\n - `hyperdiff_name` is `false` (`Bool`) for this particular example, and results in the `Uncaught diffusion model type.` error\r\n\r\nThe second bullet is a bit odd to me, since this is run in CI. Two thoughts on why this may fail:\r\n - `cli_defaults(s)` is used differently, and results in different results than when `!(@isdefined parsed_args)` is false\r\n - Maybe only parsing (types-strings) need to be fixed when `!(@isdefined parsed_args)` is false.\r\n\r\nI am a bit concerned about `parsed_args` being returned in\r\n\r\n```julia\r\nparams, parsed_args = create_parameter_set(FT, parsed_args, cli_defaults(s))\r\n```\r\nUsers may be surprised that parsed args they've defined may be overwritten. We should probably be very clear about the precedence that these parameters are used, define them once and ensure that they are never re-defined. I like the way we do this in the flame graph script ([here](https://github.com/CliMA/ClimaAtmos.jl/blob/fd7450d293556eb0f2d2c82b76e8ebe9f8ac0809/perf/config_parsed_args.jl#L1-L47)). cc @nefrathenrici ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-05T15:44:56Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "279035",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xN8BK",
+        "name": "Workflow :gear: :ocean:"
+      }
+    ],
+    "mergedAt": "2023-04-05T20:21:14Z",
+    "number": 1546,
+    "title": "Fix cli script"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Delete unused code.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-05T21:47:47Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "89D76B",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7wjPCy",
+        "name": "House cleaning :broom:"
+      }
+    ],
+    "mergedAt": "2023-04-05T22:48:19Z",
+    "number": 1549,
+    "title": "Delete unused functions"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes some now unused getindex / setindex defined on AbstractArrays \ud83c\udf89 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-05T21:47:46Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2023-04-05T22:48:19Z",
+    "number": 1548,
+    "title": "Try removing getsetindex on arrays"
+  }
+]

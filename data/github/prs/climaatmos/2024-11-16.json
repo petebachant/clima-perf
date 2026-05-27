@@ -1,0 +1,57 @@
+[
+  {
+    "additions": 452,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds docs, unit tests, and refactors the reproducibility test infrastructure. In adding unit tests and documentation, I've realized that some of the terminology around the repro tests needs revised for certain terminology to be well defined.\r\n\r\nIn particular, if we consider the situation where commits are reverted, we can end up with multiple and diverging paths (multiple paths with the same reference counter, but made at different periods in development). For example, if our reference counter history looks like (top being most recent):\r\n\r\n```julia\r\n137\r\n     /PR10 # is PR6 even valid to compare against, here?\r\n136\r\n     /PR9\r\n     /PR10 # should this compare with PRs 4 and 5?\r\n135  # Reverted\r\n     /PR8 # should this compare with commits in PRs 1,2,3?\r\n138\r\n     /PR7\r\n137\r\n     /PR6\r\n136\r\n     /PR4\r\n     /PR5\r\n135\r\n     /PR1\r\n     /PR2\r\n     /PR3\r\n```\r\nWe could clean up older commits, but I think a safer option is to change the `latest_comparable_paths` to use the (newly) added function `compute_bins`. I originally used the term `bundle` (e.g., `compute_bundles`), which I'm almost leaning towards returning to. It's a longer name but sounds more...tidy.\r\n\r\nThis was previously not an issue when `latest_comparable_paths` was `latest_comparable_path`, because we always grabbed the most _recent_ matched reference to compare against, eliminating this potential issue.\r\n\r\nI'll update the README once we land on a design that is coherent, but I think it might take a bit more refactoring to get there.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-15T14:37:32Z",
+    "deletions": 57,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA1",
+        "name": "documentation"
+      },
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      },
+      {
+        "color": "6F8DE9",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABStXt9A",
+        "name": "Reproducibility tests \ud83c\udfb2"
+      }
+    ],
+    "mergedAt": "2024-11-16T04:52:51Z",
+    "number": 3439,
+    "title": "Add docs, unit tests, and refactor repro test infra"
+  },
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nbiweekly release + dependency updates\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-15T20:47:51Z",
+    "deletions": 63,
+    "labels": [],
+    "mergedAt": "2024-11-16T06:13:49Z",
+    "number": 3440,
+    "title": "tag v0.27.9; up deps"
+  }
+]

@@ -1,0 +1,140 @@
+[
+  {
+    "additions": 547,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "We still have a performance issue related to the implicit solver. It is very difficult to diagnose. I tried to remove splatting where possible and the `Val(tracer_index)` to see if that creates weird problems. This PR is open just to see if the tests speed up with this change. \r\n\r\nEdit: this PR also allows to use the `discrete_form` diffusivity with `field` dependency, which were not previously passed to the implicit solver",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-10T16:38:12Z",
+    "deletions": 390,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2025-10-13T07:38:30Z",
+    "number": 4383,
+    "title": "Clean up unnecessary splatting and allow `fields` to be passed in the implicit solver"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Previously, `VarianceDissipation` included the computation of gradients squared to be able to compute effective diffusivities.\r\n\r\nThis was changed when refactoring this method in #4522\r\n\r\nHowever, the `gradients_squared` fields remained in the `VarianceDissipation` type. This PR cleans up the tyoe removing thee vestiagial fields.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-13T08:45:20Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2025-10-13T10:45:03Z",
+    "number": 4850,
+    "title": "Clean up `VarianceDissipation`"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I am afraid that, given the very low values given to velocity, and an almost constant temperature and salinity, the benchmark tests do not really run in a fair way. I had already noticed a case where the performance depended on the initial conditions (i.e. if your velocities are zeros, the kernel automatically does not compute the reconstructions).\r\n\r\nThis PR changes the initial conditions of the benchmark tests to make sure they are fair, i.e. a stratified fluid in z with much higher velocity fluctuations that cannot die out in the first iteration",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-10T06:19:52Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2025-10-13T12:00:35Z",
+    "number": 4842,
+    "title": "Improve benchmark tests"
+  },
+  {
+    "additions": 154,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR cleans up the overview section of the Model docs tutorial.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-10T13:32:21Z",
+    "deletions": 283,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-10-13T14:55:25Z",
+    "number": 4843,
+    "title": "Improve the overview of the Models docs tutorial"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #4853\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7RTwLV",
+        "number": 4853,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4853"
+      }
+    ],
+    "createdAt": "2025-10-13T22:13:19Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-10-13T23:30:49Z",
+    "number": 4854,
+    "title": "Reorder Buildkite test group execution order to speed up test builds"
+  }
+]

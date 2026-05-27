@@ -1,0 +1,146 @@
+[
+  {
+    "additions": 978,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "In this PR I'll be updating the documentation, especially the model setup section, to reflect the many recent changes and additions to the API.\r\n\r\nTo avoid this problem of documentation going out of date, I will also be converting and adding `jldoctest`s so we should actually get an error when documentation goes out of date. A lot of `@example` blocks don't run anymore and we even have a `jldoctest` failure but Travis CI seems to pass so I'll look into making Travis CI fail the doc build if a doctest fails.\r\n\r\nIf we have a lot of doctests it might actually be easy to keep them updated: https://juliadocs.github.io/Documenter.jl/latest/man/doctests/#Fixing-Outdated-Doctests",
+    "changedFiles": 41,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-14T12:37:18Z",
+    "deletions": 444,
+    "labels": [],
+    "mergedAt": "2020-07-22T11:56:40Z",
+    "number": 799,
+    "title": "Updating the documentation and keeping it up to date"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T14:28:11Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2020-07-22T14:46:42Z",
+    "number": 809,
+    "title": "Update documentation links in README"
+  },
+  {
+    "additions": 588,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR rewrites every kernel and kernel launcher to use `KernelAbstractions` rather than `GPUifyLoops`.\r\n\r\nA key new function is `launch!`:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/7bc83752f72508d6147a8d2e940baf69eff762c0/src/Utils/kernel_launching.jl#L58-L69\r\n\r\nThis function launches a kernel over `layout`.\r\n\r\nPerformance differences are a crucial question. To start, I've written a function `work_layout` to define the workgroup and worksize for each of our layouts:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/7bc83752f72508d6147a8d2e940baf69eff762c0/src/Utils/kernel_launching.jl#L41-L54\r\n\r\nThis function may need to be improved for performance reasons.\r\n\r\nHopefully this is the right way to use `KernelAbstractions`...\r\n\r\ncc @vchuravy, @leios ",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-16T13:36:37Z",
+    "deletions": 618,
+    "labels": [],
+    "mergedAt": "2020-07-22T16:35:58Z",
+    "number": 805,
+    "title": "Switches from GPUifyLoops backend to KernelAbstractions"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "We should merge this after PR #805.\r\n\r\n# Release notes\r\n\r\nThis release fixes a major bug where you couldn't run GPU models so if you're using GPUs you should upgrade to this version.  **Oceananigans.jl now requires Julia 1.4+.**\r\n\r\nMajor changes:\r\n* Updated the backend to use [KernelAbstractions.jl](https://github.com/JuliaGPU/KernelAbstractions.jl) instead of [GPUifyLoops.jl](https://github.com/vchuravy/GPUifyLoops.jl).\r\n* Updated to using [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) instead of CuArrays.jl, CUDAnative.jl, and CUDAdrv.jl.\r\n* Updated and slightly expanded the model setup documentation.\r\n* Added a bibliography and citations to the documentation.\r\n* Generalized `ConstantIsotropicDiffusivity` and `ConstantAnisotropicDiffusivity` to accept functions of `x, y, z, t` as well as constants. These types are called `IsotropicDiffusivity` and `AnisotropicDiffusivity`; `ConstantIsotropicDiffusivity` and `ConstantAnisotropicDiffusivity` aliases are provided for backwards compatibility.\r\n* Lots of new convergence tests confirming the accuracy of the model!\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T14:39:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-07-22T16:50:08Z",
+    "number": 810,
+    "title": "Bump v0.31.0"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T17:44:08Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-07-22T17:45:09Z",
+    "number": 812,
+    "title": "Run CompatHelper every hour and use Julia 1.4"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T18:11:31Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2020-07-22T18:12:08Z",
+    "number": 813,
+    "title": "Add compat entry for KernelAbstractions.jl"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T18:44:00Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-07-22T19:06:44Z",
+    "number": 814,
+    "title": "Slightly better README examples"
+  },
+  {
+    "additions": 334,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a new submodule called `Oceananigans.Advection`.\r\n\r\nThe advection scheme for a model is chosen by using the advection keyword in the constructor for `IncompressibleModel`. For example,\r\n\r\n```julia\r\nmodel = IncompressibleModel(advection=CenteredSecondOrder(), ...)\r\n```\r\n\r\nThis PR also adds a `CenteredFourthOrder` advection scheme. Convergence tests and instantiation tests are forthcoming.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T18:58:45Z",
+    "deletions": 133,
+    "labels": [],
+    "mergedAt": "2020-07-22T22:11:35Z",
+    "number": 815,
+    "title": "Advection scheme abstraction plus centered fourth order advection"
+  }
+]

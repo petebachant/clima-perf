@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 83,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit restores OutputPathGenerator for directory managment and adds a new option, `output_dir_style` to control its behavior.\r\n\r\nBy default OutputPathGenerator uses the ActiveLinkStyle, meaning that new subfolders are created within `output_dir` every time a Simulation object is created. The most recent output can always be found in `output_dir/output_active`. This style preserves existing data, and running multiple times on the same `output_dir` will lead to a list of `output_dir/output_0123` folders with the data for each separate run.\r\n\r\nThe other style currently implemented is `RemovePreexisting`. With this style, if `output_dir` already exists, it will be overwritten with the new one.\r\n\r\nCloses #3048 ",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6KB4AG",
+        "number": 3048,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3048"
+      }
+    ],
+    "createdAt": "2024-05-24T18:20:44Z",
+    "deletions": 55,
+    "labels": [],
+    "mergedAt": "2024-06-04T05:47:55Z",
+    "number": 3049,
+    "title": "Restore OutputPathGenerator"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "With 3e9288c, atmos uses a feature that is available only in ClimaCore 0.14.6 onward\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-04T04:24:11Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-06-04T12:57:57Z",
+    "number": 3060,
+    "title": "Fix compat for ClimaCore"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "ClimaCoupler tests are failing for a field2array error (https://buildkite.com/clima/climacoupler-ci/builds/3901). It could be a mismatch between the ClimaAtmos and ClimaCoupler versions, so I'd like to make a new release of Atmos.\r\n\r\n```\r\nERROR: LoadError: DimensionMismatch: array size 15360 must be divisible by the product of the new dimensions (10, 10, 10, 1, Colon())\r\nStacktrace:\r\n  [1] (::Base.var\"#throw2#330\")(A::SubArray{\u2026}, dims::Tuple{\u2026})\r\n    @ Base ./reshapedarray.jl:123\r\n  [2] _reshape_uncolon\r\n    @ ./reshapedarray.jl:129 [inlined]\r\n  [3] reshape(parent::SubArray{Float64, 2, Matrix{\u2026}, Tuple{\u2026}, false}, dims::Tuple{Int64, Int64, Int64, Int64, Colon})\r\n    @ Base ./reshapedarray.jl:119\r\n  [4] reshape\r\n    @ ./reshapedarray.jl:118 [inlined]\r\n  [5] array2data(array::SubArray{\u2026}, ::ClimaCore.DataLayouts.VIJFH{\u2026})\r\n    @ ClimaAtmos.RRTMGPInterface /central/scratch/esm/slurm-buildkite/climacoupler-ci/depot/cpu/packages/ClimaAtmos/OGwjS/src/parameterized_tendencies/radiation/RRTMGPInterface.jl:86\r\n  [6] array2field(array::SubArray{\u2026}, space::ClimaCore.Spaces.ExtrudedFiniteDifferenceSpace{\u2026})\r\n    @ ClimaAtmos.RRTMGPInterface /central/scratch/esm/slurm-buildkite/climacoupler-ci/depot/cpu/packages/ClimaAtmos/OGwjS/src/parameterized_tendencies/radiation/RRTMGPInterface.jl:61\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-04T14:27:41Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-06-04T16:06:11Z",
+    "number": 3061,
+    "title": "Bump to 0.24.2"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This should allow us to see more of CUDA's `@profile` table, which is currently getting cut off pretty badly: https://github.com/ronisbr/PrettyTables.jl/issues/11#issuecomment-2145550354",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-04T18:56:27Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2024-06-04T21:40:09Z",
+    "number": 3062,
+    "title": "Use ClimaTimeSteppers hcrop in benchmark_step"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes some type instabilities, and makes the `RosenbrockTableau` fields concretely typed.\r\n\r\nFound in https://buildkite.com/clima/climaatmos-ci/builds/20495#0191e6bb-8f3f-4c0e-b74c-27bb4170f8da (where I've added `@test_opt SciMLBase.step!(integrator)` to the ClimaAtmos driver).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-12T15:52:13Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "5FCFC1",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABJeGIZw",
+        "name": "Inference :mag:"
+      }
+    ],
+    "mergedAt": "2024-09-12T18:37:52Z",
+    "number": 310,
+    "title": "Fix type instabilities in Rosenbrock `step_u!`"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I forgot that we always use Float64 for our coefficients,, so the main branch is breaking for float32 simulations. This PR fixes this by allowing for type promotions. Inference should still be fixed by the previous PR, the main issue there was not having `init`, and lack of concrete types in the tableau.\r\n\r\nI tested this locally and it works, merging.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-12T19:42:38Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-09-12T19:42:45Z",
+    "number": 311,
+    "title": "Allow mixed types for Rosenbrock coeffs"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This fixes `n_calls_per_step`, which is broken on main.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-12T20:39:11Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2024-09-12T20:40:06Z",
+    "number": 312,
+    "title": "Fix `n_calls_per_step`"
+  }
+]

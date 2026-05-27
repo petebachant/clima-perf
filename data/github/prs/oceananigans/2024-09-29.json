@@ -1,0 +1,72 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/3795 by changing the default configuration of  `NonhydrostaticModel` to `hydrostatic_pressure_anomaly = CenterField(grid)`. The spurious large-scale flow is developed due to numerical noise in the buoyancy field when the hydrostatic pressure anomaly is treated explicitly. When hydrostatic pressure anomaly is computed using the implicit integral of the buoyancy field, no spurious kinetic energy is introduced.\r\nHere's the MWE as in https://github.com/CliMA/Oceananigans.jl/issues/3795:\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing SeawaterPolynomials\r\nusing SeawaterPolynomials.TEOS10\r\nusing Printf\r\n\r\neos = TEOS10.TEOS10EquationOfState()\r\n\r\narch = CPU()\r\ngrid = RectilinearGrid(CPU(), Float64,\r\n                       topology = (Bounded, Flat, Bounded),\r\n                       size = (100, 100),\r\n                       halo = (4, 4),\r\n                          x = (0, 100),\r\n                          z = (-100, 0))\r\n\r\nmodel = NonhydrostaticModel(; grid = grid,\r\n                          buoyancy = SeawaterBuoyancy(),\r\n                          advection = UpwindBiased(order=1),\r\n                          timestepper = :RungeKutta3,\r\n                          tracers = (:T, :S))\r\n\r\n@inline T_initial(x, z) = 20\r\n@inline S_initial(x, z) = 35\r\n@inline w_initial(x, z) = rand() * 1e-6\r\n\r\nset!(model, T=T_initial, S=S_initial, w=w_initial)\r\n\r\nu, v, w = model.velocities\r\nT, S = model.tracers.T, model.tracers.S\r\n\r\nKE = @at (Center, Center, Center) 0.5 * (u^2 + v^2 + w^2)\r\nKE_total = Field(Integral(KE))\r\n\r\nsimulation = Simulation(model, \u0394t=1e-3, stop_time=40days)\r\nwizard = TimeStepWizard(max_change=1.05, max_\u0394t=10minutes, cfl=0.6)\r\nsimulation.callbacks[:wizard] = Callback(wizard, IterationInterval(10))\r\n\r\nwall_clock = [time_ns()]\r\n\r\nfunction print_progress(sim)\r\n  compute!(KE_total)\r\n    @printf(\"[%05.2f%%] i: %d, t: %s, wall time: %s, max(u): (%6.3e, %6.3e, %6.3e) m/s, max(T) %6.3e, max(S) %6.3e, Total KE %6.3e, next \u0394t: %s\\n\",\r\n            100 * (sim.model.clock.time / sim.stop_time),\r\n            sim.model.clock.iteration,\r\n            prettytime(sim.model.clock.time),\r\n            prettytime(1e-9 * (time_ns() - wall_clock[1])),\r\n            maximum(abs, sim.model.velocities.u),\r\n            maximum(abs, sim.model.velocities.v),\r\n            maximum(abs, sim.model.velocities.w),\r\n            maximum(abs, sim.model.tracers.T),\r\n            maximum(abs, sim.model.tracers.S),\r\n            maximum(KE_total),\r\n            prettytime(sim.\u0394t))\r\n\r\n    wall_clock[1] = time_ns()\r\n\r\n    return nothing\r\nend\r\n\r\nsimulation.callbacks[:print_progress] = Callback(print_progress, IterationInterval(1000))\r\n\r\nrun!(simulation)\r\n```\r\n\r\nHere's the output now that hydrostatic pressure integral is treated implicitly:\r\n```julia\r\n[ Info: Initializing simulation...\r\n[00.00%] i: 0, t: 0 seconds, wall time: 5.459 seconds, max(u): (4.452e-07, 0.000e+00, 5.593e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 2.025e-10, next \u0394t: 1.050 ms\r\n[ Info:     ... simulation initialization complete (5.237 seconds)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (3.569 seconds).\r\n[00.00%] i: 1000, t: 27.405 seconds, wall time: 7.989 seconds, max(u): (4.452e-07, 0.000e+00, 5.593e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 2.025e-10, next \u0394t: 138.076 ms\r\n[00.11%] i: 2000, t: 1.009 hours, wall time: 4.283 seconds, max(u): (4.449e-07, 0.000e+00, 5.591e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 2.023e-10, next \u0394t: 18.157 seconds\r\n[08.39%] i: 3000, t: 3.354 days, wall time: 4.340 seconds, max(u): (4.195e-07, 0.000e+00, 5.393e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.879e-10, next \u0394t: 10 minutes\r\n[25.75%] i: 4000, t: 10.299 days, wall time: 4.455 seconds, max(u): (3.739e-07, 0.000e+00, 4.983e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.632e-10, next \u0394t: 10 minutes\r\n[43.11%] i: 5000, t: 17.243 days, wall time: 4.470 seconds, max(u): (3.365e-07, 0.000e+00, 4.596e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.440e-10, next \u0394t: 10 minutes\r\n[60.47%] i: 6000, t: 24.188 days, wall time: 4.402 seconds, max(u): (3.049e-07, 0.000e+00, 4.242e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.286e-10, next \u0394t: 10 minutes\r\n[77.83%] i: 7000, t: 31.132 days, wall time: 4.416 seconds, max(u): (2.779e-07, 0.000e+00, 3.925e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.160e-10, next \u0394t: 10 minutes\r\n[95.19%] i: 8000, t: 38.077 days, wall time: 4.495 seconds, max(u): (2.545e-07, 0.000e+00, 3.739e-07) m/s, max(T) 2.000e+01, max(S) 3.500e+01, Total KE 1.055e-10, next \u0394t: 10 minutes\r\n[ Info: Simulation is stopping after running for 45.330 seconds.\r\n[ Info: Simulation time 40 days equals or exceeds stop time 40 days.\r\n```\r\nThis is the expected behavior as no spurious kinetic energy is introduced.\r\n\r\n@glwagner @simone-silvestri @sandreza ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6YE4hg",
+        "number": 3795,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3795"
+      }
+    ],
+    "createdAt": "2024-09-26T20:10:14Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2024-09-29T06:06:19Z",
+    "number": 3796,
+    "title": "Change default `hydrostatic_pressure_anomaly` to `CenterField(grid)` in `NonhydrostaticModel`"
+  },
+  {
+    "additions": 123,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Who's with me?",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-05T20:48:45Z",
+    "deletions": 120,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-09-29T16:00:27Z",
+    "number": 3580,
+    "title": "(0.92.0) Make RungeKutta3 the default time-stepper for NonhydrostaticModel"
+  }
+]

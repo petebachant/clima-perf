@@ -1,0 +1,130 @@
+[
+  {
+    "additions": 923,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is still a work-in-progress but I'm opening it to make the future design of the pressure solver module more transparent as we will be adding some new pressure solvers soon, including a conjugate-gradient solver by @christophernhill.\r\n\r\n# Motivation\r\n\r\nIn PR #290 I implemented a pressure solver for the `(Periodic, Bounded, Bounded)` channel topology using the 2D fast cosine transform algorithm described by Makhoul (1982) as CUFFT does not provide cosine transforms for the GPU and does not support FFTs along non-batched dimensions (see https://github.com/JuliaGPU/CUDA.jl/issues/119).\r\n\r\nThis has been a very unpopular decision for good reasons. The 2D DCT algorithm is quite slow (channels are ~2x slower than doubly periodic on GPUs) and is quite complicated. Due to my inexperience, I didn't realize that transposing the array to do the FFT was the way forward.\r\n\r\nThe pressure solver module is also quite out of date, it hasn't been updated since topologies were introduced (#614) almost exactly a year ago.\r\n\r\nThis PR refactors the pressure solver module to:\r\n1. Support all topologies on the CPU and GPU performing transposes and index permutations as needed by each transform.\r\n2. Use the fastest transforms as allowed by the topology. This means batching dimensions when possible.\r\n3. Consolidating all pressure solvers into a single solver for all topologies. This should simplify the code and make it easier to extend.\r\n\r\nResolves #586\r\nResolves #593\r\nResolves #594\r\nResolves #1007\r\n\r\n# To batch or not to batch for FFTW on CPUs?\r\n\r\nTODO:\r\n- [x] Benchmark 1D {FFT, IFFT}{x, y, z}.\r\n- [x] Benchmark 3D {FFT, IFFT}\r\n- [x] Benchmark 1D {DCT, IDCT}{x, y, z}.\r\n- [x] Benchmark 3D {DCT, IDCT}\r\n- [x] Try N = 16, 64, 256\r\n- [x] Is it faster to do 3 1D transforms or 1 3D transform? Answer: 1 3D transform.\r\n\r\nTo see whether we should just do 1D transforms for everything or whether batching is faster I ran some 1D and 3D FFT benchmarks. The results for triply-periodic are posted below.\r\n\r\nBased on the benchmarks, it seems that for 256^3 doing three 1D transforms is ~15% slower than doing one 3D transform. So it makes sense to batch transforms when possible.\r\n\r\nNote than FFT along dimension 1 is the fastest and FFT along dimension 2 is the slowest. FFT along dimension 3 is in the middle. So whatever FFTW is doing under the hood, FFTs along non-batched dimensions (e.g. along dimension 2) are slow.\r\n\r\n```\r\n                                               FFT benchmarks\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Architectures \u2502  Ns \u2502      dims \u2502        min \u2502     median \u2502       mean \u2502        max \u2502    memory \u2502 allocs \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502           CPU \u2502  16 \u2502 (1, 2, 3) \u2502  13.948 \u03bcs \u2502  14.043 \u03bcs \u2502  20.717 \u03bcs \u2502  80.605 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  64 \u2502 (1, 2, 3) \u2502   1.656 ms \u2502   1.717 ms \u2502   1.809 ms \u2502   2.697 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502 256 \u2502 (1, 2, 3) \u2502 229.619 ms \u2502 233.008 ms \u2502 234.033 ms \u2502 243.288 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  16 \u2502         1 \u2502   3.240 \u03bcs \u2502   3.255 \u03bcs \u2502   3.603 \u03bcs \u2502   6.746 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  64 \u2502         1 \u2502 445.803 \u03bcs \u2502 458.928 \u03bcs \u2502 513.041 \u03bcs \u2502 755.937 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502 256 \u2502         1 \u2502  61.083 ms \u2502  63.464 ms \u2502  63.969 ms \u2502  67.009 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  16 \u2502         2 \u2502   4.085 \u03bcs \u2502   4.135 \u03bcs \u2502   4.723 \u03bcs \u2502   8.088 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  64 \u2502         2 \u2502 564.769 \u03bcs \u2502 579.278 \u03bcs \u2502 615.731 \u03bcs \u2502 804.859 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502 256 \u2502         2 \u2502 110.718 ms \u2502 111.560 ms \u2502 111.506 ms \u2502 112.525 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  16 \u2502         3 \u2502   7.772 \u03bcs \u2502   7.787 \u03bcs \u2502   9.499 \u03bcs \u2502  24.886 \u03bcs \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502  64 \u2502         3 \u2502 684.541 \u03bcs \u2502 688.275 \u03bcs \u2502 811.874 \u03bcs \u2502   1.463 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2502           CPU \u2502 256 \u2502         3 \u2502  93.902 ms \u2502  94.489 ms \u2502  94.604 ms \u2502  95.639 ms \u2502   0 bytes \u2502      0 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n\r\n3D FFT --> 3 \u00d7 1D FFTs slowdown:\r\nCPU,  16: 1.0807x\r\nCPU,  64: 1.0053x\r\nCPU, 256: 1.1567x\r\n```\r\n\r\n# To batch or not to batch for CUFFT on GPUs?\r\n\r\nWe should investigate this separately for CUFFT since FFT along dimension 2 requires a transpose.\r\n\r\nTODO:\r\n- [x] Figure out how to do a FFT_y on the GPU!\r\n- [x] Implement and benchmark doing it the distributed way.\r\n- [x] Benchmark 1 3D FFT with 3 1D FFTs.\r\n- [x] Benchmark 1 3D DCT with 3 1D DCTs.\r\n\r\nSame benchmarks for the GPU are posted below. Batching is much faster (by a factor of 2-3) so we should batch when possible.\r\n\r\nNote that FFTs along non-batched dimensions (dimension 2 in this case) are much slower since it involves two transpose operations.\r\n\r\nBatching will not be possible for some topologies in which cases so we'll take a performance hit. But if the pressure solver is still 10~15% then a 2x hit on the pressure solver is not that large. The hit will mostly affect topologies we don't currently support anyways.\r\n\r\n```\r\n                                               FFT benchmarks\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Architectures \u2502  Ns \u2502      dims \u2502        min \u2502     median \u2502       mean \u2502        max \u2502    memory \u2502 allocs \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502           GPU \u2502  16 \u2502 (1, 2, 3) \u2502  25.478 \u03bcs \u2502  32.459 \u03bcs \u2502 122.062 \u03bcs \u2502 703.376 \u03bcs \u2502 224 bytes \u2502     13 \u2502\r\n\u2502           GPU \u2502  64 \u2502 (1, 2, 3) \u2502  67.226 \u03bcs \u2502  71.497 \u03bcs \u2502 146.042 \u03bcs \u2502 647.734 \u03bcs \u2502 224 bytes \u2502     13 \u2502\r\n\u2502           GPU \u2502 256 \u2502 (1, 2, 3) \u2502   2.982 ms \u2502   3.041 ms \u2502   3.036 ms \u2502   3.116 ms \u2502 224 bytes \u2502     13 \u2502\r\n\u2502           GPU \u2502  16 \u2502         1 \u2502  14.755 \u03bcs \u2502  30.020 \u03bcs \u2502 107.932 \u03bcs \u2502 677.045 \u03bcs \u2502  96 bytes \u2502      5 \u2502\r\n\u2502           GPU \u2502  64 \u2502         1 \u2502  26.521 \u03bcs \u2502  41.294 \u03bcs \u2502 114.587 \u03bcs \u2502 674.834 \u03bcs \u2502  96 bytes \u2502      5 \u2502\r\n\u2502           GPU \u2502 256 \u2502         1 \u2502 930.371 \u03bcs \u2502 936.222 \u03bcs \u2502 954.771 \u03bcs \u2502   1.060 ms \u2502  96 bytes \u2502      5 \u2502\r\n\u2502           GPU \u2502  16 \u2502         2 \u2502  26.547 \u03bcs \u2502  49.440 \u03bcs \u2502 127.426 \u03bcs \u2502 768.771 \u03bcs \u2502  1.41 KiB \u2502     59 \u2502\r\n\u2502           GPU \u2502  64 \u2502         2 \u2502 116.160 \u03bcs \u2502 117.772 \u03bcs \u2502 193.909 \u03bcs \u2502 797.293 \u03bcs \u2502  1.41 KiB \u2502     59 \u2502\r\n\u2502           GPU \u2502 256 \u2502         2 \u2502   4.963 ms \u2502   5.010 ms \u2502   5.014 ms \u2502   5.073 ms \u2502  1.41 KiB \u2502     59 \u2502\r\n\u2502           GPU \u2502  16 \u2502         3 \u2502  14.918 \u03bcs \u2502  22.509 \u03bcs \u2502  40.029 \u03bcs \u2502 110.119 \u03bcs \u2502 224 bytes \u2502     13 \u2502\r\n\u2502           GPU \u2502  64 \u2502         3 \u2502  40.151 \u03bcs \u2502  45.495 \u03bcs \u2502 124.422 \u03bcs \u2502 646.093 \u03bcs \u2502 224 bytes \u2502     13 \u2502\r\n\u2502           GPU \u2502 256 \u2502         3 \u2502   1.062 ms \u2502   1.067 ms \u2502   1.101 ms \u2502   1.292 ms \u2502 224 bytes \u2502     13 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n\r\n3D FFT --> 3 \u00d7 1D FFTs slowdown:\r\nGPU,  16: 3.1414x\r\nGPU,  64: 2.8611x\r\nGPU, 256: 2.3062x\r\n```",
+    "changedFiles": 27,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NDE0Nzk3MjE=",
+        "number": 586,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/586"
+      },
+      {
+        "id": "MDU6SXNzdWU1NTA4Mzc5OTY=",
+        "number": 593,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/593"
+      },
+      {
+        "id": "MDU6SXNzdWU1NTA4NDIwNzc=",
+        "number": 594,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/594"
+      },
+      {
+        "id": "MDU6SXNzdWU3MTE5MDY3MjI=",
+        "number": 1007,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1007"
+      }
+    ],
+    "createdAt": "2021-02-03T18:06:11Z",
+    "deletions": 1106,
+    "labels": [],
+    "mergedAt": "2021-02-08T16:48:20Z",
+    "number": 1338,
+    "title": "Faster, cleaner pressure solvers for all topologies on CPUs and GPUs"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR removes the section discussing grid topology restrictions since all the restrictions were alleviated after #1338.\r\n\r\nAlso, it removes discussions regarding `Flat` topologies since, at the moment, this functionality is not functional (see #1023 and #1024).\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-08T19:12:52Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-02-08T19:58:19Z",
+    "number": 1343,
+    "title": "Updates Docs (Grids section)"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #1344.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MDM5MDEzMDU=",
+        "number": 1344,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1344"
+      }
+    ],
+    "createdAt": "2021-02-08T20:17:29Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-02-08T20:28:42Z",
+    "number": 1345,
+    "title": "CompatHelper with Julia v1.5"
+  }
+]

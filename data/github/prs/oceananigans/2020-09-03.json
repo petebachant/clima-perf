@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 105,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds the keyword arguments `time_averaging_window` and `time_averaging_stride` to the constructors for `JLD2OutputWriter` and `NetCDFOutputWriter`. A non-`nothing` `time_averaging_window` transforms all the specified output to a `WindowedTimeAverage`.\r\n\r\nI have implemented this feature for `JLD2OutputWriter` only so far. ~~@ali-ramadhan, can you confirm that the pattern applied to `JLD2OutputWriter` will work for `NetCDFOutputWriter`? I'm not 100% sure how it would work with the \"slice\" functionality of the `NetCDFOutputWriter`.~~\r\n\r\nTodo:\r\n\r\n- ~~[ ] Implement convenience kwargs for `NetCDFOutputWriter`~~\r\n- [ ] Tests for `JLD2OutputWriter`\r\n- ~~[ ] Tests for `NetCDFOutputWriter`~~\r\n\r\nEdit: I think we should just get this working for the `JLD2OutputWriter` for now. The `NetCDFOutputWriter` needs a bit of work anyways. We can extend `NetCDFOutputWriter` to averaged output once that preliminary work is complete.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-08-30T21:29:01Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2020-09-03T11:21:13Z",
+    "number": 887,
+    "title": "Convenience kwargs in `JLD2OutputWriter` constructor for averaging output"
+  },
+  {
+    "additions": 445,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR simplifies the API for specifying boundary conditions that are functions.\r\n\r\nWe build boundary conditions by writing\r\n\r\n```julia\r\nbc = BoundaryCondition(BCType, condition)\r\n```\r\n\r\nwhere `BCType` is the \"type\" of the boundary condition (`Value`, `Gradient`, `Flux`, `NormalFlow`), and `condition` is the boundary condition.\r\n\r\nIf `condition` is a function, it is now assumed it can be called with the signature `condition(\u03be, \u03b7, t)`, where `(\u03be, \u03b7)` are spatial coordinates that vary along the boundary in question (`y, z` for `x`-boundaries, `x, z` for `y`-boundaries, and `x, y` for `z`-boundaries).\r\n\r\nDifferent behavior is achieved by specifying keyword arguments of `BoundaryCondition`. For example, a non-`nothing` `parameters` keyword argument means that the last argument of condition is `parameters`: `condition(\u03be, \u03b7, t, parameters)`.\r\n\r\nIf `discrete_form=true`, the original behavior of `BoundaryCondition` is recovered, so that `condition` is called with the \"discrete form\" `condition(i, j, grid, clock, state)`, where `i, j` are indicies that vary along the boundary in question. Specifying both `discrete_form=true` and non-`nothing` `parameters` transforms `condition` into a `ParameterizedDiscreteBoundaryFunction`, which is called with `condition(i, j, grid, clock, state, parameters)`.\r\n\r\nUnder the hood, this functionality is achieved by assuming that boundary conditions for fields are always built with `FieldBoundaryConditions`. This assumptions means we can use the information provided there to ensure that `BoundaryFunction`s are always tagged with the correct boundary plane and cell location. This relieves the user from having to specify the boundary plane and cell location of a `BoundaryFunction` explicitly. We hope this simplifies the API.\r\n\r\nResolves #769 ",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2MzQ2OTY3MzM=",
+        "number": 769,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/769"
+      }
+    ],
+    "createdAt": "2020-09-01T14:10:30Z",
+    "deletions": 302,
+    "labels": [],
+    "mergedAt": "2020-09-03T11:22:01Z",
+    "number": 894,
+    "title": "Simplifies boundary condition interface, types, and constructors"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #906",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2OTE5NTcxMDQ=",
+        "number": 906,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/906"
+      }
+    ],
+    "createdAt": "2020-09-03T14:39:11Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2020-09-03T17:59:22Z",
+    "number": 907,
+    "title": "Fix size for averages with halos of face-centered fields along bounded dimensions"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #780 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2NDg0OTUyMzg=",
+        "number": 780,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/780"
+      }
+    ],
+    "createdAt": "2020-09-03T16:49:52Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2020-09-03T18:56:31Z",
+    "number": 909,
+    "title": "Update test to also catch multiple of 16 bug"
+  },
+  {
+    "additions": 228,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR generalizes `fill_halo_regions!` for flux boundary conditions to work correctly for biharmonic diffusivities, in addition to second-order diffusivities. This will allow biharmonic diffusivities to be used in closed domains or along `Bounded` dimensions.\r\n\r\nIn particular (and after tweaking the definition of `AnisotropicBiharmonicDiffusivity`), no flux conditions on any even diffusion operator are enforced by ensuring that odd derivatives across the boundary are zero. This was already done for the first derivative, but did not work for third derivatives and higher. In this PR, kernels are written that _reflect_ fields across the boundary for flux boundary conditions. Reflection implies that odd derivatives are zero and ensures that no flux is enforced for diffusivities of order higher than two.\r\n\r\nNote that `Value` and `Gradient` boundary conditions do not work for biharmonic diffusivity (and likely never will). Thus only `Flux` and `Periodic` boundary conditions are supported with biharmonic diffusivity.\r\n\r\nThis PR also does some minor shuffling of file content and names, and generalizes the tracer and momentum budget tests.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-03T08:28:49Z",
+    "deletions": 99,
+    "labels": [],
+    "mergedAt": "2020-09-03T18:58:45Z",
+    "number": 904,
+    "title": "Generalizes halo filling for flux boundary conditions"
+  }
+]

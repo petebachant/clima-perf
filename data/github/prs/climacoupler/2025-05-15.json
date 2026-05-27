@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Apologies, but I need to update the ClimaParams version again. Here is my attempt. This is in anticipation of this PR: https://github.com/CliMA/ClimaAtmos.jl/pull/3802",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-14T22:40:28Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-05-15T00:01:10Z",
+    "number": 1352,
+    "title": "Update to ClimaParams v0.10.30"
+  },
+  {
+    "additions": 369,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nSpecify an exchange grid from the coupler, and make the land space independent of the atmosphere space. This also necessitates meaningful remapping, rather than the `dummmy_remap!` function that has been used so far. This PR introduces non-conservative, MPI-aware (but inefficient) remapping.\r\n\r\nNote that this PR worsens conservation, since the atmosphere and land are now using different spaces, and we don't have conservative remapping. This will be improved once we have conservative remapping.\r\n\r\nRequires MPI support enabled in ClimaLand v0.16.1\r\n\r\ncloses #1282\r\n\r\n## Content\r\n- [x] define exchange grid/space in coupler, independent of atmosphere space\r\n- [x] expose specification of land space in ClimaLandSimulation/BucketSimulation constructors\r\n- [x] remap in all `update_field!` methods\r\n- [x] remove `Utilities.swap_space!` - replace with `Interfacer.remap!`\r\n- [x] increase conservation limit\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6zKniK",
+        "number": 1282,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1282"
+      }
+    ],
+    "createdAt": "2025-04-22T23:13:01Z",
+    "deletions": 192,
+    "labels": [],
+    "mergedAt": "2025-05-15T14:27:56Z",
+    "number": 1292,
+    "title": "independent exchange space"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1322 \r\n\r\n\r\n## To-do\r\n`parent` is still used in the following test:\r\n\r\n```\r\n        land_fraction = CC.Fields.ones(test_space)\r\n        dims = size(parent(land_fraction))\r\n        m = dims[1]\r\n        n = dims[2]\r\n        parent(land_fraction)[1:(m \u00f7 2), :, :, :] .= FT(0)\r\n\r\n        # Construct ice fraction of 0s on left, 0.5s on right\r\n        ice_d = CC.Fields.zeros(test_space)\r\n        parent(ice_d)[:, (n \u00f7 2 + 1):n, :, :] .= FT(0.5)\r\n```\r\n\r\nIt could probably be replaced with `CC.Fields.field2array`, but I was not sure\r\nif the top half/ bottom half and left/right relationships are important for the test. \r\n\r\n## Content\r\nReplace `parent` usage with field comparisons in tests.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc602Nu2",
+        "number": 1322,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1322"
+      }
+    ],
+    "createdAt": "2025-05-09T18:16:30Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2025-05-15T16:39:42Z",
+    "number": 1342,
+    "title": "Remove uneeded usage of parent in tests"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "closes #1351\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc62fLae",
+        "number": 1351,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1351"
+      }
+    ],
+    "createdAt": "2025-05-15T20:17:28Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-05-15T21:28:12Z",
+    "number": 1357,
+    "title": "Fix co2_model"
+  },
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit moves some chunks of code in their own functions, in an effort to make setting up and running a coupled simulation more direct.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-12T15:52:19Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2025-05-15T22:04:40Z",
+    "number": 1347,
+    "title": "Move some code into functions in setup_run"
+  }
+]

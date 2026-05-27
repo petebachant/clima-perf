@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 1307,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes some changes to the `HydrostaticFreeSurfaceModel` to permit the simulation of an \"ensemble of columns\". This abstraction uses a `Flat, Flat, Bounded` topology but non-zero resolution in `x, y`, leading to a model of `Nx, Ny` independent, non-communicating columns. In addition, we support using a 2D array of turbulence closures with this \"column ensemble\" abstraction (but only with this abstraction, not generally, to hopefully minimize unexpected behavior) so that each column can simulate a different surface boundary condition and parameterization independently. An example of usage is implemented in `validation/vertical_mixing_closures/many_tke_based_free_convection.jl` and `validation/vertical_mixing_closures/gpu_tkevd_ensemble.jl`.\r\n\r\nThe result is a model that can simulate thousands of columns simultaneously on the GPU efficiently. A small benchmark for an ensemble of 8000 columns (400 by 20) achieves\r\n\r\n```julia\r\n[ Info: Benchmarking...\r\n  3.265 ms (6015 allocations: 2.54 MiB)\r\n```\r\n\r\nper time-step on a Titan V. This is a speed up of 1800x over a single column simulation with Oceananigans. This will hopefully prove useful for calibrating boundary layer parameterizations.\r\n\r\n@xiaozhour we can use a similar \"slice ensemble\" abstraction to simulate independent 2D slices for the purpose of calibrating mesoscale parameterizations, potentially.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-05T23:56:02Z",
+    "deletions": 70,
+    "labels": [],
+    "mergedAt": "2021-08-06T12:59:21Z",
+    "number": 1924,
+    "title": "SingleColumn enhancements and \"ensemble of columns\" abstraction"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjEzMDIxNTE1",
+      "is_bot": false,
+      "login": "xiaozhour",
+      "name": "Xiaozhou Ruan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-06T17:31:45Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-08-06T19:31:57Z",
+    "number": 1925,
+    "title": "Typo in the doc"
+  }
+]

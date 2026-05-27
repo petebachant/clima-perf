@@ -1,0 +1,122 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": " And infer eltype from AbstractOperations in Field building.\r\n\r\nRegister comparison operators (>, <, >=, <=) as binary operations on fields, and use Base.promote_op to infer the result type of all AbstractOperation constructors instead of hardcoding eltype(grid). Field(op) now allocates data matching the operation's eltype, so boolean operations produce Bool arrays.\r\n\r\nCloses #5307\r\n\r\ncc @mmr0 @navidcy ",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7rwPAQ",
+        "number": 5307,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5307"
+      }
+    ],
+    "createdAt": "2026-02-18T03:01:05Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2026-02-20T00:20:54Z",
+    "number": 5309,
+    "title": "Support boolean comparison operations on fields"
+  },
+  {
+    "additions": 36,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Add regression tests for `DynamicSmagorinsky` closure with both directional averaging (`averaging=(1, 2)`) and Lagrangian averaging\n- Register data dependencies for the 4 new regression truth data files (2 averaging types \u00d7 2 iterations each)\n- Update closure name resolution in the ocean LES regression test to handle `DynamicSmagorinsky` variants\n\n## TODO\n- [ ] Generate regression truth data (spinup + checkpoint)\n- [ ] Upload truth data to [OceananigansArtifacts.jl](https://github.com/glwagner/OceananigansArtifacts.jl) under `data_for_regression_tests/`\n\n## Test plan\n- Tests are expected to **fail** until regression truth data is uploaded\n- Once data is available, run: `julia --project -e 'using Pkg; Pkg.test(\"Oceananigans\", test_args=[\"nonhydrostatic_regression\"])'`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-18T19:08:59Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-02-20T01:14:01Z",
+    "number": 5310,
+    "title": "Add DynamicSmagorinsky nonhydrostatic regression tests"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Add `op(a::ConstantField, b::ConstantField)` disambiguating method inside `define_binary_operator` to resolve ambiguity between `op(a::AbstractField, b::ConstantField)` and `op(a::ConstantField, b::AbstractField)` (since `ConstantField <: AbstractField`)\n- Fixes 5 pre-existing ambiguities (one each for `+`, `-`, `/`, `^`, `*`)\n- Lowers ambiguity threshold from 355 to 328\n\n## Test plan\n- [x] Verified `detect_ambiguities(Oceananigans; recursive=true)` returns 328 (down from 333)\n- [ ] CI passes quality assurance tests\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-20T00:56:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-02-20T15:11:35Z",
+    "number": 5313,
+    "title": "Reduce method ambiguities by disambiguating ConstantField binary ops"
+  },
+  {
+    "additions": 757,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #4875.\r\n\r\nThis PR aims to extend output writers so that we can pass in schedules which are `AveragedSpecifiedTimes(times::Array{<:Number}, window=w::Array{<:Number}, ...)` into output writers. \r\n\r\nOne compelling use case for this (at least for me) is to perform time averaging in `Year` units when running realistic coupled simulations in `ClimaOcean.jl`. For example, if I want to compute yearly averages over realistic years, each year would have different number of days, and the time interval between the end of each year is also not uniform. This calls for `schedule = AveragedSpecifiedTimes(...)`, thus making this feature request a compelling one.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7Sq7F3",
+        "number": 4875,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4875"
+      }
+    ],
+    "createdAt": "2025-10-21T01:19:07Z",
+    "deletions": 126,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-02-20T19:36:13Z",
+    "number": 4876,
+    "title": "Enable `AveragedSpecifiedTimes` to be used in output writers"
+  }
+]

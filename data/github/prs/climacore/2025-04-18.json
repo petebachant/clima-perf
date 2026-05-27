@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 176,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "After reviewing performance in the land model, I've come to accept that performance characteristics using multi-dimensional launch configurations are quite sharp. For example, we see good performance with high resolution simulations, but excessively poor if the vertical resolution is low.\r\n\r\nAll three parts of the launch config and index management:\r\n\r\n - Reasoning about the launch configuration\r\n - Computing the universal index from the thread / block IDs\r\n - and checking for valid indices\r\n\r\nare entangled, and increasing complexity of the launch configuration requires increasing complexity of the other two.\r\n\r\nSo, I took a second look at the previous design that I had put in place: always use linear launch configurations and use `CartesianIndices`. The issue with that is that `CartesianIndices(...)[::Int]` results in integer division, which is slow and can hurt performance by as much as 2x.\r\n\r\nFortunately, I managed to get something that seems to be working, and I started the registration process for [ClimaCartesianIndices.jl](https://github.com/CliMA/ClimaCartesianIndices.jl), which defines `FastCartesianIndices`, a drop-in replacement for `CartesianIndices`. The difference is that `FastCartesianIndices(...)[::Int]` avoids integer division by using bit tricks.\r\n\r\nSee the ClimaCartesianIndices.jl [documentation](https://clima.github.io/ClimaCartesianIndices.jl/dev/) for more information. We could reach near linear indexing speeds by passing `FastCartesianIndices` through to kernels via `Val`, but that will allocate because `Nh` is not in the type domain (we removed it because it, for some unknown reason, spiked compilation times). For now, I think it's still a better trade-off to use CartesianIndices and have more robust performance.\r\n\r\nAs a result, I'm going to revert most of our multi-dimensional launch configurations to linear ones, and start using `FastCartesianIndices`.\r\n\r\nFor now, I'm going to skip the kernels that use shared memory (SEM and FD shmem), since we never had linear launch configurations for those to begin with, and I'm not yet sure how to make that work. That will likely be next on the ticket.\r\n\r\nOverall, these changes should yield good performance improvements for the land model, and recover performance losses for our lower resolution experiments, across the board.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-18T13:18:41Z",
+    "deletions": 407,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-04-18T18:23:09Z",
+    "number": 2296,
+    "title": "Tune kernels for use with FastCartesianIndices"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-18T20:49:40Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-04-18T20:49:47Z",
+    "number": 2300,
+    "title": "Bump patch for release"
+  }
+]

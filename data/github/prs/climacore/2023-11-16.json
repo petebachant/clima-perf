@@ -1,0 +1,155 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Disables the forward-compatible CUDA driver (basically, it will insist that we always used the system one).\r\n\r\nThis appears to fix the segfaults we were seeing, and _may_ fix some of the other errors as well.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-15T18:40:26Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-11-16T00:26:30Z",
+    "number": 1546,
+    "title": "disable forward-compatible driver"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "(Used for Point spaces)\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-15T22:00:17Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-11-16T02:35:47Z",
+    "number": 1547,
+    "title": "Add support for copyto! and fill! for DataF"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Otherwise everything is hardcoded to run on CPU\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-15T22:25:54Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-11-16T04:35:09Z",
+    "number": 1548,
+    "title": "Make IntervalTopology(mesh) pick up ClimaComms.device()"
+  },
+  {
+    "additions": 97,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This upgrades to HDF5_jll 1.14. As it is now built against MPI, this means some stuff breaks with our existing setup.\r\n\r\nSo I'm trying out using [MPItrampoline](https://github.com/eschnett/MPItrampoline). The key advantage is that all the binaries should now \"just work\". The downside is that we need to build [MPIwrapper](https://github.com/eschnett/MPIwrapper) around the MPI library.\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-14T19:59:06Z",
+    "deletions": 94,
+    "labels": [],
+    "mergedAt": "2023-11-16T05:42:07Z",
+    "number": 1543,
+    "title": "upgrade to HDF5_jll 1.14, switch to MPItrampoline"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-16T17:36:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-11-16T18:32:25Z",
+    "number": 1550,
+    "title": "Bump version"
+  },
+  {
+    "additions": 3715,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Fixes #1120 and #1467.\r\n\r\nI've gone with option 2 in https://github.com/CliMA/ClimaCore.jl/issues/1120#issuecomment-1737903200.\r\n\r\nIn the following benchmark:\r\n```julia\r\nusing ClimaComms\r\n\r\nimport ClimaCore:\r\n    ClimaCore,\r\n    slab,\r\n    Spaces,\r\n    Domains,\r\n    Meshes,\r\n    Geometry,\r\n    Topologies,\r\n    Spaces,\r\n    Fields,\r\n    Operators\r\n\r\n\r\nFT = Float64\r\nvertdomain = Domains.IntervalDomain(\r\n    Geometry.ZPoint{FT}(0.0),\r\n    Geometry.ZPoint{FT}(1.0);\r\n    boundary_tags = (:bottom, :top),\r\n)\r\nvertmesh = Meshes.IntervalMesh(vertdomain, nelems = 10)\r\nvert_center_space = Spaces.CenterFiniteDifferenceSpace(vertmesh)\r\n\r\nhorzdomain = Domains.SphereDomain(30.0)\r\nhorzmesh = Meshes.EquiangularCubedSphere(horzdomain, 4)\r\nhorztopology = Topologies.Topology2D(\r\n    ClimaComms.SingletonCommsContext(ClimaComms.CPUSingleThreaded()),\r\n    horzmesh,\r\n)\r\nquad = Spaces.Quadratures.GLL{3 + 1}()\r\nhorzspace = Spaces.SpectralElementSpace2D(horztopology, quad)\r\n\r\nhv_center_space =\r\n    Spaces.ExtrudedFiniteDifferenceSpace(horzspace, vert_center_space)\r\n\r\ncoords = Fields.coordinate_field(hv_center_space)\r\nx = Geometry.UVWVector.(cosd.(coords.lat), 0.0, 0.0)\r\n\r\n\r\nt = ntuple(i -> x, 80);\r\nf(t) = t\r\n@time f(t);\r\n```\r\n\r\nOn main:\r\n```julia\r\njulia> @time f(t);\r\n  1.455831 seconds (343 allocations: 24.953 KiB, 100.00% compilation time)\r\n```\r\non this branch\r\n```julia\r\njulia> @time f(t);\r\n  0.002401 seconds (343 allocations: 24.953 KiB, 99.12% compilation time)\r\n```\r\n\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 82,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5dxSG_",
+        "number": 1120,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1120"
+      },
+      {
+        "id": "I_kwDOFT2Pms5xrtMF",
+        "number": 1467,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1467"
+      }
+    ],
+    "createdAt": "2023-10-04T17:17:01Z",
+    "deletions": 2944,
+    "labels": [],
+    "mergedAt": "2023-11-16T20:55:58Z",
+    "number": 1487,
+    "title": "Add Grids, make them mutable objects"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This change ensures that the parent array for fields read from HDF5 files reflect the current context.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-16T21:52:22Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-11-16T22:29:55Z",
+    "number": 1552,
+    "title": "Allocate correct parent array when reading from H5"
+  }
+]

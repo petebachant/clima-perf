@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 400,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR modifies `fill_halo_regions!` and `calculate_boundary_source_terms!` so that halo regions are used to enforced `Value` and `Gradient` boundary conditions. This is done by linearly extrapolating the interior field across the boundary into the halo region, using\r\n\r\n* the specified gradient (for `Gradient` boundary conditions)\r\n* the gradient between the interior node of a field and the associated boundary where the boundary condition is prescribed (for `Value` boundary conditions)\r\n\r\n`calculate_boundary_source_terms!` is still a part of the algorithm and is used to enforce `Flux` boundary conditions. This function may also prove useful in the future for more sophisticated boundary conditions and for enforcing boundary conditions associated with irregular boundaries.\r\n\r\nThis algorithm permits the gradients of fields to be computed accurately on the boundary both in time stepping and post processing (which is useful, for example, for computing nonlinear diffusivities on the boundary when `Value` or `Gradient` boundary conditions are prescribed), and the code is more mathematically correct as a result. It also means that diffusivities are never involved in enforcing boundary conditions, which is an important simplification.\r\n\r\nPreviously, the diffusivity of a field (or some proxy for diffusivity) on the boundary was used to add the flux associated with a `Value` or `Gradient` boundary condition. \r\n\r\nThis PR also adds special boundary conditions for tendency terms (sometimes called 'source terms' in the code), and for the pressure field.\r\n\r\nFinally, we introduce the boundary condition `BoundaryCondition{Flux, Nothing}` as a synonym for a no-flux boundary condition that does not require the calculation of boundary source terms, to save a few accesses to global memory.\r\n\r\nRight now there is a bit left to do:\r\n\r\n- [x] adapt the checkpointer for the new `timestepper` structure (checkpointer tests currently fail)\r\n- [ ] decide whether pressure boundary conditions should be precomputed and stored in `poisson_solver` (currently they are computed at the beginning of a time-stepping cycle inside `time_step!`).\r\n\r\nIf we add pressure boundary conditions to `poisson_solver`, we can also get rid of the special `PoissonBCs` types, since the pressure fields now have explicit bcs associated with them. But this is not urgent.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-30T17:53:55Z",
+    "deletions": 373,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-09-08T18:25:48Z",
+    "number": 389,
+    "title": "Use halo regions to enforce Value and Gradient boundary conditions"
+  }
+]

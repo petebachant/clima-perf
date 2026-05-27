@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 369,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/4553.\r\n\r\nThis fixes the immersed-aware mean pressure to be zero at every preconditioning step, effectively avoiding numerical blowup due to floating point error accumulation.\r\n\r\nHowever this also means that without using the preconditioner, the error in mean pressure can and will accumulate and grow over time. However this is perhaps an unlikely use case as it garners no benefits vs. using the FFT preconditioner.\r\n\r\nHere I show the results with FFT preconditioner with the test case in https://github.com/CliMA/Oceananigans.jl/issues/4553\r\n\r\n```julia\r\n[ Info: Initializing simulation...\r\n[ Info: Iter: 0, time: 0.000e+00, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.646e+01, max v: 0.000e+00, max w: 3.451e+01, max d: 1.653e-05, max pressure: 1.516e+01, mean pressure: -9.107e-18\r\n[ Info:     ... simulation initialization complete (2.146 seconds)\r\n[ Info: Executing initial time step...\r\n[ Info: Iter: 1, time: 1.600e-04, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.743e+01, max v: 0.000e+00, max w: 3.522e+01, max d: 2.001e-07, max pressure: 2.320e+03, mean pressure: -7.460e-16\r\n[ Info:     ... initial time step complete (1.005 seconds).\r\n[ Info: Iter: 2, time: 3.200e-04, \u0394t: 1.600e-04, Poisson iters: 10, max u: 6.774e+01, max v: 0.000e+00, max w: 3.553e+01, max d: 1.412e-06, max pressure: 2.295e+03, mean pressure: -7.460e-16\r\n[ Info: Iter: 3, time: 4.800e-04, \u0394t: 1.600e-04, Poisson iters: 10, max u: 6.743e+01, max v: 0.000e+00, max w: 3.541e+01, max d: 9.215e-07, max pressure: 2.254e+03, mean pressure: -1.492e-15\r\n[ Info: Iter: 4, time: 6.400e-04, \u0394t: 1.600e-04, Poisson iters: 10, max u: 6.688e+01, max v: 0.000e+00, max w: 3.506e+01, max d: 5.800e-07, max pressure: 2.240e+03, mean pressure: 0.000e+00\r\n[ Info: Iter: 5, time: 8.000e-04, \u0394t: 1.600e-04, Poisson iters: 10, max u: 6.618e+01, max v: 0.000e+00, max w: 3.459e+01, max d: 4.424e-07, max pressure: 2.214e+03, mean pressure: -3.730e-16\r\n[ Info: Iter: 6, time: 9.600e-04, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.541e+01, max v: 0.000e+00, max w: 3.406e+01, max d: 8.807e-08, max pressure: 2.160e+03, mean pressure: 0.000e+00\r\n[ Info: Iter: 7, time: 1.120e-03, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.473e+01, max v: 0.000e+00, max w: 3.351e+01, max d: 6.340e-08, max pressure: 2.095e+03, mean pressure: 3.730e-16\r\n[ Info: Iter: 8, time: 1.280e-03, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.423e+01, max v: 0.000e+00, max w: 3.298e+01, max d: 7.278e-08, max pressure: 2.026e+03, mean pressure: -1.492e-15\r\n[ Info: Iter: 9, time: 1.440e-03, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.382e+01, max v: 0.000e+00, max w: 3.252e+01, max d: 7.359e-08, max pressure: 1.955e+03, mean pressure: 0.000e+00\r\n[ Info: Simulation is stopping after running for 3.875 seconds.\r\n[ Info: Model iteration 10 equals or exceeds stop iteration 10.\r\n[ Info: Iter: 10, time: 1.600e-03, \u0394t: 1.600e-04, Poisson iters: 11, max u: 6.348e+01, max v: 0.000e+00, max w: 3.219e+01, max d: 8.471e-08, max pressure: 1.888e+03, mean pressure: -7.460e-16\r\n```\r\n\r\nHere we see that the mean pressure is effectively maintained at zero.\r\n\r\nAlternatively, to solve the issue in cases where no preconditioner is used as well, we can use @Yixiao-Zhang 's proposal which is to modify https://github.com/CliMA/Oceananigans.jl/blob/f6463bd4a8280dfa2d7182ccdc2d8e438e49d384/src/Solvers/conjugate_gradient_solver.jl#L242C1-L242C55:\r\n```julia\r\nfunction update_solution_and_residuals!(x, r, q, p, \u03b1)\r\n    xp = parent(x)\r\n    rp = parent(r)\r\n    qp = parent(q)\r\n    pp = parent(p)\r\n\r\n    xp .+= \u03b1 .* pp\r\n    rp .-= \u03b1 .* qp\r\n\r\n    mean_r = mean(r)\r\n    grid = r.grid\r\n    arch = architecture(grid)\r\n    launch!(arch, grid, :xyz, subtract_and_mask!, r, grid, mean_r)\r\n\r\n    return nothing\r\nend\r\n```\r\n\r\nThis touches the internals of the `ConjugateGradientSolver`, and this will fail other arbitrary problems solvable by conjugate gradient where there is no gauge invariance. We can perhaps argue that solving the pressure Poisson equation with Neumann boundary conditions is a special use case of the `ConjugateGradientSolver`. If we decide to address the issue within the conjugate gradient iteration we should perhaps think of modifying the API slightly to not do it for all arbitrary problems. Also if we take this approach we should also do the `subtract_and_mask!` on `x` as well, no reason not to.\r\n\r\nAlso for reference, here is what the MWE script does:\r\n\r\nhttps://github.com/user-attachments/assets/dace32b5-3b34-4c3b-b7c1-29bc1756f7a7\r\n\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM64c5MI",
+        "number": 4553,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4553"
+      }
+    ],
+    "createdAt": "2025-05-27T17:10:45Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-06-13T03:37:18Z",
+    "number": 4554,
+    "title": "fix mean pressure in FFT preconditioner for `ConjugateGradientPoissonSolver` for immersed boundaries"
+  }
+]

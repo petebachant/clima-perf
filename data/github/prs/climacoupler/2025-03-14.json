@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 774,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1182\r\n\r\nAdds a struct `ClimaLandSimulation` for the full, integrated land model. This PR also extends the necessary Interfacer functions for a simulation type (`get_field`, `update_field!`, `step!`, etc).\r\n\r\nThis PR requires https://github.com/CliMA/ClimaLand.jl/pull/1035 from ClimaLand, so it uses that branch in the `experiments/ClimaEarth/` environment. That PR will need to be merged and a release of ClimaLand made before we can merge this PR. - This is done as of 3/13/25\r\n\r\n### Content\r\n- [x] add `get_field` functions\r\n- [x] add `update_field!` functions\r\n- [x] add method for `add_coupler_fields!`, following https://github.com/CliMA/ClimaCoupler.jl/pull/1207\r\n  - coupler exchange fields when running with the full land model will include the defaults \r\n    - `[:z0m_sfc, :z0b_sfc, :beta, :emissivity, :F_turb_energy, :F_turb_moisture, :F_turb_\u03c1\u03c4xz, :F_turb_\u03c1\u03c4yz, :temp1, :temp2]` \r\n  - and land model-specific quantities \r\n    - `[:SW_d, :LW_d, :cos_zenith_angle, :diffuse_fraction, :c_co2, :d_sfc, :P_air, :T_air, :q_air]`\r\n- [x] add test to check that constructor is initialized correctly and can be stepped\r\n\r\n### Next steps\r\nThis PR adds a lot of the software infrastructure to set up and run a `LandModel` in a coupled simulation, but doesn't actually run a coupled simulation with it. Next, we'll update partitioned turbulent fluxes to support the integrated land model, and then we can try using it in a coupled simulation.\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6pGKpl",
+        "number": 1182,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1182"
+      }
+    ],
+    "createdAt": "2025-02-19T21:59:37Z",
+    "deletions": 249,
+    "labels": [],
+    "mergedAt": "2025-03-14T18:13:58Z",
+    "number": 1199,
+    "title": "add ClimaLandSimulation struct"
+  }
+]

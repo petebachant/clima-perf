@@ -1,0 +1,124 @@
+[
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds some finite difference CUDA allocation tests. This is a step towards https://github.com/CliMA/ClimaCore.jl/issues/1602.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-26T14:57:07Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2024-02-26T20:44:55Z",
+    "number": 1626,
+    "title": "Add FD and cuda allocation tests"
+  },
+  {
+    "additions": 1107,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR largely rewrites the non-conservative remapping module to improve its performance. CPU performance was improved by a factor of 6, GPU performance by orders of magnitude. The new code is completely non-allocating (except for the final result of the interpolation).\r\n\r\nI re-wrote the entire thing because the previous version of the code was mostly designed to work for one point at the time, there was work that had to be done over and over. This new version computes all the relevant weights and allocates all the memory only once, and uses them over and over. Unfortunately, there is a lot of redundancy (as there was in the original version of the code). This redundancy is needed to tackle horizontal/extruded spaces, and CPU/GPU while keeping top-notch performance. \r\n\r\nThis is not a simple piece of code, but I tried to comment it extensively.\r\n\r\nThis is a breaking change because it removes the `physical_z` option. I decided to remove that option and always perform interpolation in reference space because it became clear with SLEVE that supporting that would be a large burden. Instead, the transformation can be done in post (I will implement in ClimaAnalysis).\r\n\r\nI verified that the new code reproduces the same values as the old one, up to roundoff precision.\r\n\r\nGPU flamegraph before:\r\n![image](https://github.com/CliMA/ClimaCore.jl/assets/9167485/f89ae47c-10e4-4fbe-bba7-af2eba943123)\r\n\r\nGPU flamegraph after:\r\n![image](https://github.com/CliMA/ClimaCore.jl/assets/9167485/a1244ea9-f7b3-4b1a-934d-231c093b731c)\r\n\r\nNow interpolation is < 1 % of total execution for a diagnostic-heavy job. Almost all of that < 1 % is data movement and dealing with views (which are needed for MPI runs).",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-08T18:24:12Z",
+    "deletions": 628,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "05DE9D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7X_S9e",
+        "name": "distributed"
+      },
+      {
+        "color": "BBDA8D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABAH1nOQ",
+        "name": "remapping"
+      },
+      {
+        "color": "F31151",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABEZCqBQ",
+        "name": "diagnostic"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABLo_y9Q",
+        "name": "software"
+      },
+      {
+        "color": "A5181B",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABiMmfnw",
+        "name": "breaking :boom:"
+      }
+    ],
+    "mergedAt": "2024-02-26T21:39:39Z",
+    "number": 1610,
+    "title": "Rewrite non-conservative interpolation"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a broken allocation test for when we assign SArrays and Tuples. Related issue: #1015.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-13T18:07:23Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2024-02-26T21:55:08Z",
+    "number": 1016,
+    "title": "Add broken alloc tests for assigning SArrays and tuples"
+  }
+]

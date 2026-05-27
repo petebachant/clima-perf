@@ -1,0 +1,96 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Hopefully, `ClimaAtmos` does not directly require `Colors` to run ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-15T23:32:04Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2024-08-16T16:03:53Z",
+    "number": 3240,
+    "title": "Remove direct dependency on Colors"
+  },
+  {
+    "additions": 4589,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "Adds gcm-driven single-column calibration for interactive radiation setup, with minibatching. Calibrates SCM parameters based on profiles from Shen at al. 2022 LES runs.\r\n\r\n\r\nThis setup provide tools for calibrating both prognostic and diagnostic EDMF variants to LES profiles, given the same forcings and boundary conditions. The gcm-driven EDMF setup is employed in single-column mode, which uses both interactive radiation and surface fluxes. The setup is run to the top of the atmosphere to compute radiation, but calibrations statistics are computed only on the lower 4km (`z_max`), where LES output is available.\r\n\r\nLES profiles are available for different geolocations (\"cfsites\"), spanning seasons, forcing host models, and climates (AMIP, AMIP4K). A given LES simulation is referred to as a \"configuration\". Calibrations employ batching by default and stack multiple configurations (a number equal to the `batch_size`) in a given iteration. The observation vector for a single configuration is formed by concatenating profiles across calibration variables, where each geophysical variable is normalized to have approximately unit variance and zero mean. These variable-by-variable normalization factors are precomputed (`norm_factors_dict`) and applied to all observations. Following this operation, the spatiotemporal calibration window is applied and temporal means are computed to form the observation vector `y`. Because variables are normalized, a constant, diagonal noise matrix is used (configurable as `const_noise`).\r\n\r\nCloses https://github.com/CliMA/ClimaAtmos.jl/issues/3014\r\nCloses https://github.com/CliMA/ClimaAtmos.jl/issues/3013\r\nCloses https://github.com/CliMA/ClimaAtmos.jl/issues/3092\r\n\r\n\r\n## Ensemble spread plots after 2 EKI iterations. \r\nPrognostic EDMF Potential Temperature:\r\n![prognostic_ensemble_plot_thetaa_i_2](https://github.com/user-attachments/assets/0eb45009-7838-4fa7-9dc7-431874f4ecc2)\r\n\r\nDiagnostic EDMF Potential Temperature:\r\n![diagnostic_ensemble_plot_thetaa_i_2](https://github.com/user-attachments/assets/222cbbb2-2924-4bb4-85ad-11484ecbe178)\r\n\r\n\r\n\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6I33w5",
+        "number": 3013,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3013"
+      },
+      {
+        "id": "I_kwDOFoZ0Vs6I34U0",
+        "number": 3014,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3014"
+      },
+      {
+        "id": "I_kwDOFoZ0Vs6MUVVv",
+        "number": 3092,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3092"
+      }
+    ],
+    "createdAt": "2024-08-02T20:00:45Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-08-16T20:45:09Z",
+    "number": 3223,
+    "title": "Add gcm-driven calibration setup "
+  },
+  {
+    "additions": 334,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Using the new schedules defined in https://github.com/CliMA/ClimaDiagnostics.jl/pull/67\r\n\r\nFloating point errors can lead to some accumulated variables having one additional timestep.\r\n\r\nUse in the yaml with `1months`",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-15T04:06:38Z",
+    "deletions": 200,
+    "labels": [],
+    "mergedAt": "2024-08-16T23:14:53Z",
+    "number": 3235,
+    "title": "Add support for monthly calendar diagnostics"
+  }
+]

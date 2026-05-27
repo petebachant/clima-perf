@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nUpdate how we handle evaporation when the bucket is not saturated: E = beta*E_0(q_sat)\r\n\r\nThe current code relies on the snow cover fraction being either 0 or 1. Snow and soil covered surfaces have the same surface temperature and roughness lengths, in the model, but the specific humidity at the surface changes depending on the surface coverage. If the snow cover fraction is 0 or 1, we can store a single value q_sfc in `p`, which is computed as the saturation specific humidity over ice or liquid water depending on if SCF is 0 or 1.\r\n\r\nSimilarly, we have an effective beta = (1-sigma)*beta + sigma*1.\r\n\r\nEvaporation is the computed with beta_eff and the single value of q_sfc.\r\n\r\nIf the snow cover fraction was not 1, we would need to separately store the surface q over both snow and soil, and compute two sets of fluxes, using different values of beta.\r\n\r\nCloses #123 \r\n\r\n## To-do\r\n\r\n\r\n\r\n## Review checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5XuTEs",
+        "number": 123,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/123"
+      }
+    ],
+    "createdAt": "2022-12-01T18:25:21Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2022-12-21T17:58:45Z",
+    "number": 124,
+    "title": "update beta factor for evaporation"
+  }
+]

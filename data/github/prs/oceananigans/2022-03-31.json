@@ -1,0 +1,148 @@
+[
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/2391",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5GpBvI",
+        "number": 2391,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2391"
+      }
+    ],
+    "createdAt": "2022-03-29T17:38:20Z",
+    "deletions": 48,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2022-03-31T04:22:55Z",
+    "number": 2392,
+    "title": "Fixes and tests `Field(u::Field; indices)` and `Field(u::AbstractOperation; indices)`"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-31T00:50:28Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2022-03-31T12:32:32Z",
+    "number": 2400,
+    "title": "Bug in vertical WENO topological conditional flux"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "closes #2398 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5Gwsyg",
+        "number": 2398,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2398"
+      }
+    ],
+    "createdAt": "2022-03-31T00:03:30Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-03-31T12:32:34Z",
+    "number": 2399,
+    "title": "fix the show for nonhydrostatic model"
+  },
+  {
+    "additions": 503,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a closure that's similar in spirit to [Pacanowski-Philander](https://journals.ametsoc.org/view/journals/phoc/11/11/1520-0485_1981_011_1443_povmin_2_0_co_2.xml) but should also work for convective mixing.\r\n\r\nIn short, there are two mixing coefficients: a viscosity for momentum and a diffusivity for tracers. They both have the form\r\n\r\n```julia\r\n\u03ba = \u03ba\u2080 * step_down(Ri, Ri\u2080, Ri\u1d5f)\r\n```\r\n\r\nwhere ` \u03ba\u2080` is the diffusivity when the buoyancy gradient is negative and there's no shear (ie, convection), and `Ri` is the Richardson number. `step_down` is a function that's `1` for `Ri < Ri\u2080`, `0` for `Ri > Ri\u2080 + Ri\u1d5f`, and linearly varying between `1` and `0` otherwise.\r\n\r\nAnother way to view this closure is as a generalization of convective adjustment to cases with shear.\r\n\r\nThis closure has 6 parameters, 3 each for viscosity and diffusivity.\r\n\r\nI'd like to calibrate parameters to the LESbrary before merging, so this PR is just a draft for now.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-23T17:18:29Z",
+    "deletions": 1116,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2022-03-31T14:57:11Z",
+    "number": 2379,
+    "title": "Implements RiBasedVerticalDiffusivity"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Before this PR:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> NamedTuple()\r\nError showing value of type NamedTuple{(), Tuple{}}:\r\nERROR: ArgumentError: collection must be non-empty\r\n```\r\n\r\nAfter this PR:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n[ Info: Precompiling Oceananigans [9e8cae18-63c1-5223-a75c-80ca9d6e9a09]\r\n[ Info: Oceananigans will use 8 threads\r\n\r\njulia> NamedTuple()\r\nNamedTuple()\r\n```\r\n\r\nyou'd think this stuff would be easy.\r\n\r\nCloses #2398 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5Gwsyg",
+        "number": 2398,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2398"
+      }
+    ],
+    "createdAt": "2022-03-31T13:38:41Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-03-31T16:51:41Z",
+    "number": 2401,
+    "title": "Fancy `show` for `NamedTuple` of `Field` without being a type pirate"
+  }
+]

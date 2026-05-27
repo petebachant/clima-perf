@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nOur CI takes more than 1 hour, and it would be helpful to development time if we can shorten it.\r\n\r\nThe goals of our regular CI are to make sure PRs don't break functionality, and to have some results we can compare back to (e.g. to ensure results haven't changed if we don't want them to). For the first goal, running for 2 timesteps is sufficient, and for the second, running for 1 day should be sufficient (plots should be made with diagnostics from the first day).\r\n\r\nEspecially now that we have the nightly AMIP runs I think it's okay to have slightly less strict (and also less expensive) regular CI.\r\n\r\nThis PR shortens CI by nearly 50% (1.5 hours -> 50 minutes)\r\n\r\n### Restart test `dt_rad`\r\n[Build](https://buildkite.com/clima/climacoupler-ci/builds/6601) with radiation called once every 2dt in the restart test - MPI restarts take 41 minutes, GPU restarts take 36 minutes\r\n[Build](https://buildkite.com/clima/climacoupler-ci/builds/6604) with radiation called once every dt in the restart test - MPI restarts take 41 minutes, GPU restarts take 31 minutes\r\n--> Since the timing between these two is so similar, I'll leave `dt_rad` as it is in the restart test\r\n\r\n## To-do\r\n- [x] decrease max simulation length in regular CI from 10 days to 1 day\r\n- [x] since `experiments/ClimaEarth/test/runtests.jl` takes a very long time, separate the restart test into its own run so it can run in parallel\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-23T18:58:27Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2025-05-27T19:28:10Z",
+    "number": 1364,
+    "title": "shorten regular CI"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWhen we construct a boundary space _not_ based on the atmosphere space, it should be entirely independent of the atmosphere simulation/space. It's helpful to be able to create the space without creating the atmosphere sim, especially when debugging.\r\n\r\nThis PR changes the independent boundary space to use `n_quad_points = 4`. I chose this value because it's the default used by both ClimaCore and ClimaAtmos, and it's higher resolution than `n_quad_points = 0` used by the land. We can expose this as an option later on if users want to change it.\r\n\r\ncloses #1365 \r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc64CWz9",
+        "number": 1365,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1365"
+      }
+    ],
+    "createdAt": "2025-05-26T21:17:50Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2025-05-27T19:34:10Z",
+    "number": 1369,
+    "title": "use nq=4 for boundary space"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe new longruns had various problems when run this past weekend ([build](https://buildkite.com/clima/climacoupler-longruns/builds/881#_)). This PR fixes the ones we currently know how to fix, i.e. the first 3 points in #1370\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-27T19:05:37Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2025-05-27T20:40:57Z",
+    "number": 1373,
+    "title": "fix slabplanet, DecayWithHeight longruns"
+  }
+]

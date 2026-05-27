@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 2466,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR improves the currently implemented split explicit surface solver in serial mode\r\n(partially using the algorithm in Shchepetkin & McWilliams, Ocean Modelling 9, 2005 albeit with a linear free surface) and implements single-node parallel (`MultiRegion`), and multi-node parallel (`Distributed`) split explicit free surface\r\n\r\nIn addition, quite some improvements have been made to the distributed module to allow a distributed `LatitudeLongituteGrid` and `IBG` and various comments in the `MultiRegion` module\r\n\r\nEdit: MPI does not exploit CUDA-aware message passing for CuArray views, so this PR also implements buffered Halo communication for distributed models, unifying a bit of the code for Distributed and MultiRegion. This is a fundamental step to achieve the goals of the next PR which will deal with heterogenous distributed - shared models (i.e. a MultiRegionGrid of a DistributedGrid) \r\n\r\nEdit Edit: apparently CUDA-aware MPI allows passing views of CuArrays. Buffers are still implemented for those architectures where CUDA-aware MPI is not available\r\n\r\nEdit Edit Edit: apparently for Oceananigans that sends strided memory, buffers are crucial because\r\n> Note that derived datatypes, both contiguous and non-contiguous, are supported. However, the non-contiguous\r\n> datatypes currently have high overhead because of the many calls to cuMemcpy to copy all the pieces of the\r\n> buffer into the intermediate buffer.\r\n\r\n(from [openmpi-link](https://www.open-mpi.org/faq/?category=runcuda#mpi-cuda-support))\r\n\r\n\r\n\r\nEdit: This PR adds the possibility of distributing along a `Bounded` direction, and the possibility of having correct 2D parallelization with Coriolis. Previously it was not possible because corners were not communicated correctly\r\n\r\nDoesn't have to be merged now.\r\n\r\n(Validation cases are not necessary and will be deleted prior to merging)\r\n\r\n",
+    "changedFiles": 80,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-01-31T17:38:42Z",
+    "deletions": 1234,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-02-21T02:43:38Z",
+    "number": 2888,
+    "title": "Parallel and Serial Split Explicit Free Surface"
+  }
+]

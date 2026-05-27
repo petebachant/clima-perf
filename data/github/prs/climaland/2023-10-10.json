@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 96,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nPreviously, we had accounted for the surface resistance to evaporation/vapor loss by calling a wrapper function (defined in ClimaLSM) of SurfaceFluxes functions:\r\nhttps://github.com/CliMA/ClimaLSM.jl/blob/2b56772e704e4b53f2b46a7d2f7f6805ff8404a1/src/shared_utilities/drivers.jl#L149\r\nhttps://github.com/CliMA/ClimaLSM.jl/blob/2b56772e704e4b53f2b46a7d2f7f6805ff8404a1/src/shared_utilities/drivers.jl#L195.\r\nand then taking the returned LHF and E and correcting them for the surface resistance. However, we realized E shows up in the SHF as well, and this has to be corrected also.\r\n\r\nThis PR does two things:\r\n1. Accounts for surface resistance when computing SHF as well as LHF, and E, because E appears in the SHF expression.\r\n2. Moves the r_sfc computation inside of the surface_fluxes wrapper function, which also obtains T_sfc, q_sfc, etc. Then this function only returns the resistance-corrected SHF, LHF, and E, and does not require the correction to happen outside of the surface fluxes wrapper function.\r\n\r\nIn order to achieve the latter, we defined a new function `surface_resistance(model, ...)` which returns the surface resistance for that land component `model`. The default is zero (no additional resistance).\r\n\r\n\r\n## To-do\r\n\r\n## Content\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-05T23:52:18Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2023-10-10T23:27:48Z",
+    "number": 348,
+    "title": "Surface resistance effects on SHF"
+  }
+]

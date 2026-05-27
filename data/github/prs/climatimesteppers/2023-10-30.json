@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "While working on the limiters, it occurred to me that when we have limiters with `i = 1` in the ARK method:\r\n\r\n```julia\r\n@. U = u\r\n\r\nfor j in 1:(i - 1)\r\n    iszero(a_exp[i, j]) && continue\r\n    @. U += dt * a_exp[i, j] * T_lim[j]\r\nend\r\nlim!(U, p, t_exp, u)\r\n```\r\nwe have \r\n```julia\r\n@. U = u\r\nlim!(U, p, t_exp, u)\r\n```\r\nand I think that, since `u` is just a copy of `U`, `lim!(U, p, t_exp, u)` will do nothing (based on the existing implementation with automatically computing bounds). Therefore, we can eliminate this call (for `i = 1`).\r\n\r\nDoing this optimization of course assumes that `lim!(U, p, t_exp, U)` does nothing, and this will be wrong if later we decide that it should do something. However, it's not clear to me that we will need to/want to change it.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-21T18:57:18Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "DEB1E4",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABB4eaeA",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2023-10-30T22:58:32Z",
+    "number": 232,
+    "title": "Eliminate a call to `lim!`"
+  }
+]

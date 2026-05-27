@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 229,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n-Renames the functions in the canopy and soil model which compute the actual fluxes used in the tendency.\r\n-Allocates space for these in `aux`\r\n-updates the values stored in these pre-allocated spaces with `update_boundary_fluxes!`, which must be called in tendencies and jacobian computations\r\n\r\n\r\n## To-do\r\nFuture PR (more nebulous)\r\n- move outside of the tendency function, but still call after update_aux! and before the tendency evaluation\r\n- define a method of `make_update_boundary_fluxes` for SoilCanopyModel (and other integrated models, or is there a default?)\r\n- does this take the place of interactions update aux?  yes?\r\n- add an explanation of what is in aux and when it is updated (tutorial) and docs\r\n\r\n\r\n## Content\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-30T01:03:25Z",
+    "deletions": 100,
+    "labels": [],
+    "mergedAt": "2023-12-05T02:17:27Z",
+    "number": 414,
+    "title": "Kd/unify bc computation"
+  },
+  {
+    "additions": 387,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nCloses #215 \r\nAdds Farquhar optimality model of Smith et al. 2019. This model removes Vcmax25 as a parameter and instead computes it each timestep.\r\n\r\n## To-do\r\n[X] Test with ozark site and make sure output looks reasonable (offline) - do we want to have this running?\r\n[X] add more unit tests\r\nFuture PR. - add intercellular concentration optimality model - see #419 \r\n\r\n\r\n## Content\r\nAdds Vcmax25 to aux\r\nAdds OptimalityFarquharModel and Parameters\r\nAdds update_photosynthesis! function which dispatches off of the photosynthesis model type and updates An, Rd, and Vcmax25 in place.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-30T23:48:48Z",
+    "deletions": 52,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2023-12-05T23:39:51Z",
+    "number": 415,
+    "title": "Optimality model for Vcmax"
+  }
+]

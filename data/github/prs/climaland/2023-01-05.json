@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 690,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nThis PR completes the Soil Biogeochemistry module for prescribed soil drivers in a simpler soil co2 model. A tutorial using the module will come in a future PR. See issue #113.\r\n\r\n\r\n## To-do\r\n\r\n\r\n\r\n## Content\r\nAdds the right hand side function and update aux function for the biogeochemistry model, using a simpler parameterization.\r\n\r\nRemoves previous parameterizations which required antecedent conditions from soil.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-01-05T17:46:55Z",
+    "deletions": 455,
+    "labels": [],
+    "mergedAt": "2023-01-05T21:33:30Z",
+    "number": 132,
+    "title": "Simpler co2 model"
+  },
+  {
+    "additions": 891,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## For reviewers\r\nThis is a big PR - the major files changed are src/Bucket/Bucket.jl, src/Regridder.jl, and src/SharedUtilities/models.jl.\r\n\r\n## Purpose \r\nThis PR adds in the capability to read in a NetCDF file of surface albedo from a file, store in the the auxiliary state. Currently this only supports fields that do not vary in time; future PRs will address updating the albedo at each step/ at each X number of steps, and will ensure that the correct entry is being read in and used for the first timestep, based on t0.\r\n\r\nThis has been tested with the coupler in both MPI and non-MPI runs.\r\n\r\n## Content\r\n- Added Regridder utils from ClimaCoupler. Longer term, perhaps we should have one copy of these tools, living in a separate repo (ClimaCoreTempestRemap?), to avoid duplication.\r\n- Created artifacts.jl file in `src/Bucket/artifacts` which can stored the needed artifacts for the global bucket simulation.\r\n- Created a new struct \"MapInfo\", which stores needed information for reading in netcdf files, regridding and making a field of them. Any parameter which is read from a file will longer term be passed in as type ::MapInfo, rather than e.g. `FT` or a `Function`.\r\n- Created an albedo model type which uses `MapInfo` rather than a prescribed `f::Function` for albedo = f(lat,lon). The two options are now `BulkAlbedoFunction` (where soil albedo is a function) and `BulkAlbedoMap`, where soil albedo is of type `MapInfo`.\r\n- Added soil albedo to auxiliary variables. For both albedo models, we compute the albedo once, up front (see next item), and store in the auxiliary state. If the albedo needs to be updated in time, the `update_aux` function is ready to be used for that.\r\n- Created a `set_initial_aux_state!` function which inits the aux variables (based on initial conditions for the prognostic state) as well as inits any parameters read from a dataset that are also stored in aux\r\n- Added partial testing of new capabilities. The Regridder utils are already tested in ClimaCoupler. Longer term, we should import these functions rather than redefine (and retest) here.\r\n- Updated all bucket tests and tutorials to use the new albedo types.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5YZKvd",
+        "number": 126,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/126"
+      }
+    ],
+    "createdAt": "2022-12-07T21:35:56Z",
+    "deletions": 61,
+    "labels": [],
+    "mergedAt": "2023-01-05T23:56:07Z",
+    "number": 125,
+    "title": "Albedo from file"
+  }
+]

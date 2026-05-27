@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1462,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Snow model implementation\n\nThis PR implements a layered snow model on top of the 0-layer slab ice model.\n\n### Algorithm\n\nThe snow layer sits on top of the ice as an independent thermodynamic layer. The ice model is completely unaware of the snow \u2014 only the boundary conditions change. The coupling is **one-way**: snow determines the ice top boundary condition.\n\n**Thermodynamic time step:**\n1. Solve for the snow surface temperature T_u via flux balance (atmospheric fluxes vs combined conductive flux), constrained by the snow melting point (0\u00b0C)\n2. Compute the snow\u2013ice interface temperature T_si analytically and pass it to the ice as a `PrescribedTemperature` top boundary condition\n3. Ice does its thing (unchanged from the bare-ice case)\n4. Snow thickness evolves: accumulation from precipitation, surface melt, and snow-ice formation (flooding)\n\n### Math\n\n**Combined conductive flux** (thermal resistors in series):\n\n```\nF_c = (T_b - T_u) / (h_s / k_s + h_i / k_i)\n```\n\nwhere h_s, k_s \u2248 0.31 W/(m\u00b7K) are the snow thickness and conductivity, and h_i, k_i \u2248 2 W/(m\u00b7K) are the ice thickness and conductivity. When h_s = 0, this reduces to the bare-ice conductive flux k_i (T_b - T_u) / h_i.\n\n**Interface temperature** (from linear temperature profile through resistors):\n\n```\nT_si = T_b + (T_u - T_b) \u00b7 R_i / (R_s + R_i)\n```\n\nwhere R_i = h_i / k_i and R_s = h_s / k_s. When h_s = 0, R_s = 0 and T_si = T_u \u2014 the ice sees its own surface temperature, identical to the no-snow case.\n\n**Surface melt energy partition**: When T_u hits the melting point, the excess energy \u03b4Q = Q_external - Q_conductive first melts snow (up to its capacity \u03c1_s \u00b7 L_s \u00b7 h_s / \u0394t), and any remainder melts ice from the top.\n\n**Snow-ice formation** (flooding): When the snow load pushes ice below the waterline (negative freeboard), seawater floods the snow:\n\n```\nh_f = h_i \u00b7 (1 - \u03c1_i / \u03c1_w) - h_s \u00b7 \u03c1_s / \u03c1_w < 0\n```\n\nThe flooding conversion is energy-conserving.\n\n**Snow thickness evolution:**\n\n```\ndh_s/dt = P_s / \u03c1_s - G_melt - G_flooding + (h_s / \u2135) \u00b7 d\u2135/dt\n```\n\nwhere P_s is precipitation rate (kg/m\u00b2/s), and the last term conserves snow volume when ice concentration \u2135 changes.\n\n### \"No snow\" case\n\nThe formulation degrades gracefully when h_s = 0:\n- F_c reduces to bare-ice conductive flux\n- T_si = T_u (ice sees its own surface temperature)\n- Snow accumulates only where ice exists (\u2135 > 0)\n- Snow is removed entirely when ice disappears\n\n### Design\n\n- Snow is a **passive tracer** for momentum: advected with ice velocities but does not enter the rheology\n- One additional field: `snow_thickness` (shares concentration \u2135 with sea ice)\n- The `IceSnowConductiveFlux` type handles the combined thermal resistance\n- When `snow_thermodynamics` is provided to `SeaIceModel`, the constructor automatically wires the layered coupling\n\n### Examples\n\nThe thermodynamic examples include both \"bare\" (ice only) and \"snow\" modes showing that snow insulation delays both melting and freezing.",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-14T10:17:03Z",
+    "deletions": 441,
+    "labels": [],
+    "mergedAt": "2026-04-15T10:47:09Z",
+    "number": 123,
+    "title": "Snow model implementation"
+  }
+]

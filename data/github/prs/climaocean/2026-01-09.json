@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The choice of major basins is performed on main, on an extended grid that is used to compute the connectivity in case of a Periodic direction. It might be, therefore, that large basins such as the Caspian sea are repeated within the extended grid, and are removed from the extended grid without changing the interior of the bottom height which is what we actually want to mask out. \r\n\r\nIn this PR we still compute the connectivity (the labels) using an extended grid, but we rank the basins only on the labels in the interior of the grid, correcting the behavior of `major_basins`. \r\nFor example the output of this script:\r\n```julia\r\ngrid = TripolarGrid(size = (360, 180, 1), z = (-5000, 0))\r\nbottom_fields = [Array(interior(regrid_bathymetry(grid; minimum_depth = 10,  major_basins = i), :, :, 1)) for i in 1:6]\r\ndiffs = [bottom_fields[i] .- bottom_fields[i+1] for i in 1:5]\r\n\r\nfig = Figure(size = (800, 1400), fontsize = 14)\r\n\r\nfor i in 1:5\r\n    ax = Axis(fig[i, 1], title = \"major_basins = $(i+1) \u2212 $i\", aspect = DataAspect())\r\n    heatmap!(ax, diffs[i]; colorrange = (-0.001, 0.001))\r\n    hidedecorations!(ax)\r\nend\r\n```\r\n\r\non main:\r\n<img width=\"800\" height=\"1400\" alt=\"bathymetry_main\" src=\"https://github.com/user-attachments/assets/fa8f7bd9-de3c-485b-8e10-e8f045d5b2cb\" />\r\n\r\non this PR:\r\n<img width=\"800\" height=\"1400\" alt=\"bathymetry_PR\" src=\"https://github.com/user-attachments/assets/a603694c-9a98-469d-8b31-c47694b93814\" />\r\n\r\ncc @taimoorsohail ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-18T09:10:07Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "934950",
+        "description": "When things aren't as smooth as expected",
+        "id": "LA_kwDOIOi2Ys8AAAABTTpmuQ",
+        "name": "bathymetry \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-01-09T19:11:18Z",
+    "number": 708,
+    "title": "Fix major basins behavior"
+  },
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Just sprucing up the coupled climate simulation example a little bit.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-04T03:16:17Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "c5def5",
+        "description": "Add this label to built the docs in a PR",
+        "id": "LA_kwDOIOi2Ys8AAAABr9hy2w",
+        "name": "build docs"
+      }
+    ],
+    "mergedAt": "2026-01-09T23:39:40Z",
+    "number": 695,
+    "title": "Update atmosphere model description in simulation"
+  }
+]

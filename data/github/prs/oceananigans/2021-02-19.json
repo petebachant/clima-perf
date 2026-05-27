@@ -1,0 +1,141 @@
+[
+  {
+    "additions": 516,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a new turbulence closure called `HorizontalCurvilinearDiffusivity`, following section 2.15.7 in the MITgcm documentation:\r\n\r\nhttps://mitgcm.readthedocs.io/en/latest/algorithm/algorithm.html#horizontal-dissipation\r\n\r\nThere it is stated that this closure\r\n\r\n> conserves potential vorticity (thickness weighted relative vorticity) and divergence and dissipates energy, enstrophy and divergence squared\r\n\r\nThe same details are not given for tracer diffusion, so I left the tracer diffusivity at zero for now. @christophernhill please advise.\r\n\r\nI also needed to add a few operators. I'm not sure where to put them since we have both \"closure_operators.jl\" and \"viscous_dissipation_operators.jl\". It might make sense to clean this up a bit in this PR --- @ali-ramadhan let me know what you think.\r\n\r\nTo do:\r\n\r\n- [x] Tracer diffusion valid on curvilinear grids\r\n- [x] Some clean up of `TurbulenceClosures` module\r\n- [x] Unit tests",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-18T12:05:18Z",
+    "deletions": 286,
+    "labels": [],
+    "mergedAt": "2021-02-19T11:38:27Z",
+    "number": 1375,
+    "title": "HorizontalCurvilinearDiffusivity for dissipation on horizontally-curvilinear grids"
+  },
+  {
+    "additions": 601,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR _finally_ revives the half-baked `VerticallyStretchedCartesianGrid` implementation that's been living in Oceananigans.jl for over a year.\r\n\r\nIt also formalizes the `FourierTridiagonalPoissonSolver` that's been living in `test_solvers.jl` for a while as well.\r\n\r\nI re-ran the regression tests using a `VerticallyStretchedCartesianGrid` with constant spacing as a sanity check and they pass on the CPU which is good and helped uncover some functions that needed generalization.\r\n\r\nThere's still quite a bit to do and test so maybe we should merge this PR after a bit of polish and continue developing and testing the `VerticallyStretchedCartesianGrid` in subsequent smaller PRs?\r\n\r\nTODO off the top of my head:\r\n1. Adapt `VerticallyStretchedCartesianGrid` to work in GPU kernels. It has some offset arrays.\r\n2. Test the `FourierTridiagonalPoissonSolver` for other/all topologies.\r\n3. Add some dynamics tests?\r\n4. Validation experiment: Stratified Couette flow (Vreugdenhil & Taylor, 2018).\r\n5. Benchmarks! The xy FFT + z Tridiagonal solver might be faster than xyz FFT.\r\n\r\nResolves #471\r\n\r\nAnd of course, no PR is complete without eye candy (had to use matplotlib for irregular heatmaps):\r\n\r\n\r\nhttps://user-images.githubusercontent.com/20099589/107367287-1fc7b400-6aad-11eb-945f-1fb2694392b2.mp4\r\n\r\n",
+    "changedFiles": 25,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MDYyMzg1MjU=",
+        "number": 471,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/471"
+      }
+    ],
+    "createdAt": "2021-02-09T13:04:12Z",
+    "deletions": 328,
+    "labels": [],
+    "mergedAt": "2021-02-19T20:11:30Z",
+    "number": 1348,
+    "title": "Vertically stretched grid (finally)"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR tests whether `push_previews` will work with buildkite using the latest version of Documenter.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-19T20:10:43Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-02-19T21:13:33Z",
+    "number": 1387,
+    "title": "Update Documenter v0.26.2"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes #1275\r\n\r\nI'm not sure how to verify if this works. I can't think of any other reason (other than `function` in the first line) why the docstrings would be weird though.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NjkxNDI2NzA=",
+        "number": 1275,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1275"
+      }
+    ],
+    "createdAt": "2021-02-19T03:15:45Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-02-19T22:18:07Z",
+    "number": 1383,
+    "title": "Update netcdf_output_writer.jl"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR adds instructions for how a contributor can build the documentations locally and preview them.\r\n\r\nI was tempted to add some info about doc previews but I think doc previews are not generated for PR that come from forks so it's not a good idea to have it in the Contributors Guide.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-19T21:22:24Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-02-19T23:27:46Z",
+    "number": 1389,
+    "title": "Adds instruction for building docs locally in the Contributors Guide"
+  }
+]

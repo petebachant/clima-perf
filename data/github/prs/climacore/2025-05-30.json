@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This will allow us to use `nothing` in `\u2202x\u2202\u03be` and still allow `transform` and `project` to work.\r\n\r\nChanging `dual(axes(local_geometry.\u2202x\u2202\u03be, 2))` to `ContravariantAxis{I}()` and `dual(axes(local_geometry.\u2202\u03be\u2202x, 1)` to `CovariantAxis{I}()` will always be true, based on the definition of LocalGeometry:\r\n\r\n```julia\r\nstruct LocalGeometry{I, C <: AbstractPoint, FT, \u2202x\u2202\u03beT, \u2202\u03be\u2202xT, g\u2071\u02b2T, g\u1d62\u2c7cT}\r\n    ...\r\n    \u2202x\u2202\u03be::\u2202x\u2202\u03beT #::Axis2Tensor{FT, Tuple{LocalAxis{I}, CovariantAxis{I}}, S}\r\n    \u2202\u03be\u2202x::\u2202\u03be\u2202xT #::Axis2Tensor{FT, Tuple{ContravariantAxis{I}, LocalAxis{I}}, S}\r\n```\r\nNote that we no longer strictly enforce these types (so that we can use `nothing` when they are unused), however they are the only non-nothing types supported.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-29T19:53:35Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      }
+    ],
+    "mergedAt": "2025-05-30T01:02:57Z",
+    "number": 2340,
+    "title": "Don't reference LocalGeometry fields unnecessarily"
+  },
+  {
+    "additions": 977,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR abstracts all but the physics from https://github.com/CliMA/ClimaAtmos.jl/pull/3655, and implements `columnwise!`.\r\n\r\nThis operator can be used to assign a large number of broadcast operations, all within the same kernel.\r\n\r\nThe idea is that we can use this function\r\n\r\n - once in `implicit_tendency!` (which will set all of the tendencies in a single kernel)\r\n - 2 or 3 times in `remaining_tendency!` (before / after dss, before / after horizontal terms)\r\n\r\nSome preliminary results from the dry baro wave:\r\n\r\n```\r\nunfused & multiple broadcasts (set-precomputed + implicit): 4.31997 ms\r\nsingle fused broadcast without shmem: 7.18 ms\r\nsingle fused broadcast with shmem for state: 3.47 ms\r\nsingle fused broadcast with shmem for state + LG: 4.73 ms\r\nsingle fused broadcast with shmem for state + needed parts of LG: 3.93 ms (** though shmem is allocated for all of LG)\r\nsingle fused broadcast with shmem for state + PartialLocalGeometry from #2332: 1.37 ms \ud83d\ude80\r\n```\r\n\r\nFor `ldiv!` and `wfact!`, I think we may need to rethink their implementations.\r\n\r\nThe only optimizations I've done in this operator is shared memory. There is probably a lot of room in tuning and improving memory access. A big benefit of this approach is that this will drastically reduce the number of kernel launches, and sequential memory reads.\r\n\r\nThis approach also helps push us towards https://github.com/CliMA/ClimaAtmos.jl/issues/3594.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-16T20:15:33Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "D42900",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABhYG1Qg",
+        "name": "Design"
+      }
+    ],
+    "mergedAt": "2025-05-30T21:07:42Z",
+    "number": 2328,
+    "title": "Implement a columnwise shmem operator"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Bump patch version for new release. We're passing ClimaAtmos [here](https://buildkite.com/clima/climaatmos-ci/builds/24368).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-30T23:20:44Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-30T23:20:54Z",
+    "number": 2342,
+    "title": "Bump patch version"
+  }
+]

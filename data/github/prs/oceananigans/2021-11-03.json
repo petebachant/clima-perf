@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 813,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR overhauls the API for `Simulation`, `TimeStepWizard`, and printing of progress. It also simplifies the implementation of `run!`.\r\n\r\nAfter this PR, `Simulation` no longer accepts the keyword arguments `iteration_interval` or `progress`. Instead, progress printing is achieved with callbacks, eg:\r\n\r\n```julia\r\nprogress(sim) = @info \"Iteration: $(iteration(sim)), time: $(time(sim))\"\r\nsimulation.callbacks[:progress] = Callback(progress, IterationInterval(100))\r\n```\r\n\r\nIt also refactors the `TimeStepWizard` so that it can be used as a callback, eg\r\n\r\n```julia\r\nwizard = TimeStepWizard(cfl=1.0, max_change=1.1, max_\u0394t=2minutes)\r\nsimulation.callbacks[:wizard] = Callback(wizard, IterationInterval(10))\r\n```\r\n\r\nThis is a better design for a few reasons:\r\n\r\n1. Adaptive time-stepping and progress printing are not longer arbitrarily constrained to occur on the same iteration interval.\r\n2. Both progress printing and adaptive time-stepping can use any `schedule` (rather than only `IterationInterval`).\r\n3. The simulation time-step is always `simulation.\u0394t`. No more shenanigans like `simulation.\u0394t.\u0394t`.\r\n\r\nEventually, we should also eliminate the \"diagnostics\" list so that we have only two lists of callback-like objects: `simulation.callbacks` and `simulation.output_writers`.\r\n\r\nI think this resolves an issue or two but I need to find them. Also, I've so far only updated the examples. There are probably tests and validation cases that need to be updated for the new API as well.\r\n\r\nThis PR is an important step toward generalizing `Oceananigans.Simulation` so that it can be used by [`ClimaAtmos.jl`](https://github.com/CliMA/ClimaAtmos.jl). cc @bischtob @akshaysridhar ",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-09-09T03:18:44Z",
+    "deletions": 538,
+    "labels": [],
+    "mergedAt": "2021-11-03T03:01:24Z",
+    "number": 1971,
+    "title": "New Simulation API: more callbacks, less \"progress\""
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Bumping down to 0.64.0 since #1971 accidentally bumped too far to 0.65.0.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-03T03:11:51Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-11-03T11:57:48Z",
+    "number": 2038,
+    "title": "Bump down to 0.64.0"
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR stops generating the regression test data in-CI, and instead downloads regression data from `OceananigansArtifacts.jl` to compare against the CI-generated data. With @simone-silvestri \r\n\r\nResolves #2031 ",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-02T22:45:39Z",
+    "deletions": 59,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2021-11-03T17:48:30Z",
+    "number": 2036,
+    "title": "Complete implementation of `HydrostaticFreeSurfaceModel` regression test"
+  }
+]

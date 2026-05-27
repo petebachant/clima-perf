@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 82,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This fixes the performance issues in ClimaShallowWater.jl\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-13T22:47:37Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2023-04-14T00:21:26Z",
+    "number": 1186,
+    "title": "Disable bounds checking for gpu spectral element operators"
+  },
+  {
+    "additions": 338,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This [build](https://buildkite.com/clima/climacore-ci/builds/1925#01877d24-260a-429a-9fad-12761524528e) broke and did not touch the src code, so the axis tensor tests are either broken (axis tensor conversions seem more sparse now) or flakey somehow.\r\n\r\nThis PR:\r\n - Trims whitespaces in `method_info`\r\n - Adds a flag for conveniently printing entries of `method_info`\r\n\r\nIf this happens again, it should be easy enough to update the `method_info` entries",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-14T03:15:10Z",
+    "deletions": 329,
+    "labels": [
+      {
+        "color": "369A20",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7o-S2-",
+        "name": "Workflow :gear: :ocean:"
+      }
+    ],
+    "mergedAt": "2023-04-14T06:49:21Z",
+    "number": 1187,
+    "title": "Make updating axis tensor tests easier"
+  },
+  {
+    "additions": 506,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds spectral operator benchmarks for cuda kernels. Some of this was ported over from ClimaShallowWater for convenience.\r\n\r\nI think the simplest thing to do for now is to compare these kernels with a `copyto!` with the same size data-- this should provide a very rough estimate of each kernel's performance.\r\n\r\n\r\nThis is what the output looks like\r\n\r\n```julia\r\njulia> using Revise; using ClimaCore; include(joinpath(pkgdir(ClimaCore), \"test\", \"Operators\", \"spectralelement\", \"benchmark_cuda.jl\"))\r\n\u250c Info: Setting up benchmark\r\n\u2502   device = ClimaComms.CPU()\r\n\u2502   context = ClimaComms.SingletonCommsContext{ClimaComms.CPU}(ClimaComms.CPU())\r\n\u2502   float_type = Float64\r\n\u2502   panel_size = 8\r\n\u2514   poly_nodes = 4\r\n[ Info: Benchmarking kernel_spectral_wdiv!...\r\n[ Info: Benchmarking kernel_spectral_grad!...\r\n[ Info: Benchmarking kernel_spectral_grad_norm!...\r\n[ Info: Benchmarking kernel_spectral_div_grad!...\r\n[ Info: Benchmarking kernel_spectral_wgrad_div!...\r\n[ Info: Benchmarking kernel_spectral_wcurl_curl!...\r\n[ Info: Benchmarking kernel_spectral_u_cross_curl_u!...\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Operator                        \u2502  Mean time \u2502 Mean time \u2502 N-samples \u2502\r\n\u2502                                 \u2502  ClimaCore \u2502     Array \u2502           \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 kernel_spectral_wdiv!           \u2502  82.002 \u03bcs \u2502  1.070 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_grad!           \u2502  77.473 \u03bcs \u2502  1.080 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_grad_norm!      \u2502 102.390 \u03bcs \u2502  1.056 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_div_grad!       \u2502 149.563 \u03bcs \u2502  1.065 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_wgrad_div!      \u2502 170.619 \u03bcs \u2502  1.064 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_wcurl_curl!     \u2502 186.472 \u03bcs \u2502  1.082 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_u_cross_curl_u! \u2502  99.879 \u03bcs \u2502  1.069 \u03bcs \u2502     10000 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n    best_times[:kernel_spectral_wdiv!] = 82002.2282\r\n    best_times[:kernel_spectral_grad!] = 77473.0846\r\n    best_times[:kernel_spectral_grad_norm!] = 102389.9114\r\n    best_times[:kernel_spectral_div_grad!] = 149562.6584\r\n    best_times[:kernel_spectral_wgrad_div!] = 170619.4726\r\n    best_times[:kernel_spectral_wcurl_curl!] = 186471.8404\r\n    best_times[:kernel_spectral_u_cross_curl_u!] = 99878.7363\r\n[ Info: Spectral element CUDA operator benchmarks passed \ud83c\udf89\r\n```\r\n\r\nThe new table, with changes in #1186, is:\r\n\r\n```\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Operator                        \u2502 Mean time \u2502 Mean time \u2502 N-samples \u2502\r\n\u2502                                 \u2502 ClimaCore \u2502     Array \u2502           \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 kernel_spectral_wdiv!           \u2502 21.999 \u03bcs \u2502 67.361 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_grad!           \u2502 22.262 \u03bcs \u2502 67.415 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_grad_norm!      \u2502 52.984 \u03bcs \u2502 67.599 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_div_grad!       \u2502 23.876 \u03bcs \u2502 67.305 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_wgrad_div!      \u2502 25.003 \u03bcs \u2502 67.381 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_wcurl_curl!     \u2502 75.570 \u03bcs \u2502 67.219 \u03bcs \u2502     10000 \u2502\r\n\u2502 kernel_spectral_u_cross_curl_u! \u2502 35.943 \u03bcs \u2502 67.032 \u03bcs \u2502     10000 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-13T04:56:52Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2023-04-14T13:52:18Z",
+    "number": 1185,
+    "title": "Add spectral operator benchmarks for cuda kernel"
+  },
+  {
+    "additions": 137,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR extends the spectral element benchmarks to include: CPU / CUDA, Float32 / Float64.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-14T17:13:32Z",
+    "deletions": 54,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2023-04-14T21:40:42Z",
+    "number": 1188,
+    "title": "Extend spectral element benchmarks"
+  }
+]

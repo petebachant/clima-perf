@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This allows us to implement \"divergence damping\" for large scale ocean models via `ScalarDiffusivity`:\r\n\r\n```julia\r\nusing Oceananigans.TurbulenceClosures: HorizontalDivergenceFormulation\r\ndivergence_damping = ScalarDiffusivity(HorizontalDivergenceFormulation(), \u03bd=1)\r\n```\r\n\r\nWe probably also want vorticity damping. There also might be other names, for vorticity damping the coefficient is often referred to as the \"rotational viscosity\".\r\n\r\nA few other things:\r\n\r\n* Possibly one should throw an error if users specify kappa, since this closure has no tracer diffusion.\r\n* I added an abstract type for the formulations\r\n* Should we use flux=0 fallbacks? We have a substantial amount of code devoted to emitting zero fluxes for many cases (eg zero tracer flux in this case).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-15T16:44:50Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-04-26T11:29:43Z",
+    "number": 2440,
+    "title": "Adds HorizontalDivergenceFormulation for scalar diffusions"
+  },
+  {
+    "additions": 1803,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR will implement support boundary conditions on immersed boundaries.\r\n\r\nThe design is to add a new function to the tendency kernel function for each field that represents the contribution to the viscous / diffusive flux divergence in boundary-adjacent cells due to the user-defined immersed boundary condition.\r\n\r\nThis PR will support `Flux` boundary conditions for sure.\r\n\r\nIf it turns out to be simple, this PR will also support `Value` / `Gradient` boundary conditions for `ScalarDiffusivity`. There may be some challenges when `ScalarDiffusivity` is embedded in a closure tuple (ie the case we get for wall-resolved LES). Hopefully the solution to that is not too complicated.\r\n\r\nAnother problem to solve is how to \"regularize\" `ContinuousBoundaryFunction`. Immersed boundary conditions are 3D, so function of `i, j, k`. Thus we need a slightly different interface for them. `discrete_form=true` will also have a different signature (`i, j, k, grid, ...` rather than `i, j, grid, ...`).",
+    "changedFiles": 47,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-14T14:04:08Z",
+    "deletions": 816,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2022-04-26T15:02:01Z",
+    "number": 2437,
+    "title": "Support boundary conditions on immersed boundaries"
+  }
+]

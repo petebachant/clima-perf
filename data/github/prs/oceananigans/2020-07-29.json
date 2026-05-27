@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 555,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds new features to the `NetCDFOutputWriter` and fixes some bugs.\r\n\r\n1. It now always writes useful metadata to all NetCDF files (the date the file was generated, the Julia version, and the Oceananigans version used). This is essential for reproducibility.\r\n2. Add a `verbose` flag (default is `false`) in case you want to track what's being to disk and how long it takes for each output to be computed.\r\n3. Add an `include_halos` flag (default is `false`) in case you want to use the full grid including halos to write fields and custom output. Added new tests for this.\r\n4. Test that the x, y, z coordinates being written to NetCDF files are correct. They were not (I think this happened when we switched to using offset arrays for `grid.xC`, etc.). This has been fixed.\r\n5. Added jldoctest examples showing how to write fields and custom output to NetCDF.\r\n6. There was a bug in showing/printing grid domains for bounded dimensions, e.g.\r\n   ```julia\r\n   julia> grid = RegularCartesianGrid(size=(16, 16, 16), extent=(1, 1, 1))\r\n   RegularCartesianGrid{Float64, Periodic, Periodic, Bounded}\r\n                      domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0625]\r\n                    topology: (Periodic, Periodic, Bounded)\r\n     resolution (Nx, Ny, Nz): (16, 16, 16)\r\n      halo size (Hx, Hy, Hz): (1, 1, 1)\r\n   grid spacing (\u0394x, \u0394y, \u0394z): (0.0625, 0.0625, 0.0625)\r\n   ```\r\n   Notice that `z \u2208 [-1.0, 0.0625]` should be `z \u2208 [-1.0, 0.0]`. This has been fixed now.\r\n\r\nI'd like to start using these features in LESbrary.jl (and in PR #572) so I'll tag v0.33.0 once this PR is merged.\r\n\r\nResolves #683",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NzY2NTIzNjI=",
+        "number": 683,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/683"
+      }
+    ],
+    "createdAt": "2020-07-27T11:09:47Z",
+    "deletions": 399,
+    "labels": [],
+    "mergedAt": "2020-07-29T09:44:01Z",
+    "number": 823,
+    "title": "NetCDFOutputWriter: new features and bug fixes"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Release notes:\r\n\r\nThis release adds new features to the `NetCDFOutputWriter` and fixes some bugs.\r\n* The date the file was generated, the Julia version, and the Oceananigans version used are always written as global attributes (metadata) to all NetCDF files.\r\n* Added `with_halos` and `verbose` keyword arguments to `NetCDFOutputWriter`.\r\n* Fixed bug in writing grid coordinates to NetCDF (they were previously offset).\r\n* Fixed bug in printing of grid coordinate ranges for `Bounded` dimensions.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-29T09:47:53Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-07-29T14:32:53Z",
+    "number": 825,
+    "title": "Bump v0.33.0"
+  }
+]

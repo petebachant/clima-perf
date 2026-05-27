@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 229,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n\r\n - adds some unit tests and some comments on some thread-block configurations that could be improved.\r\n - Slightly refactors the `masked_partition` so that we can more easily unit-test it\r\n - Renames `fd_stencil_partition` to `fd_shmem_stencil_partition`\r\n\r\nIt's unfortunate that https://github.com/maleadt/StaticCartesian.jl doesn't work. If it did, we could basically eliminate all of these functions and just use `linear_partition` + `CartesianIndices` with static ranges, and we would get fairly good performance for all of our kernels.\r\n\r\nInstead, we occasionally get 2x slower with `linear_partition`, and need to carefully tune each of our `partition` methods.\r\n\r\nOnce we merge this, I can fix some of the configurations that result in the expensive surface kernels.\r\n\r\nAlso, it looks like we could even improve performance for the masked partition. So, that could give us a significant boost.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-15T21:03:29Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2025-04-16T12:23:26Z",
+    "number": 2291,
+    "title": "Add performance tuning tests"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "`Remapping.Remapper` performs spectral interpolation. When interpolating, every point in a given element is used to calculate the target value. As a result, the result is incorrect if one or more of the nodes in an element are masked.\r\n\r\nThis commit prevents users from accidentally obtaining subtly incorrect results by calling the Remapper on a space that is not supported.\r\n\r\nNote that if none of the nodes in an element are masked, the interpolation routine would be fine. A more refined implementation of this check could take this into consideration, but this is deferred to when such need arises.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-15T23:45:25Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-04-16T18:10:28Z",
+    "number": 2292,
+    "title": "Prevent mask from being incorrectly used when Remapping on a non-supported space"
+  }
+]

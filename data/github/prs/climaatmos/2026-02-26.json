@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 538,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR addresses the next issue from the list https://github.com/CliMA/ClimaAtmos.jl/issues/4285\r\n- renames `precipitation_precomputed_quantities.jl` to `microphysics_cache.jl` \r\n- moves the `set_diagnostic_edmf_precomputed_quantities_env_precipitation!` and `set_prognostic_edmf_precomputed_quantities_precipitation!` to `microphysics_cache.jl`\r\n- moves updraft tracers sedimentation velocity computations from `set_microphysics_tendency_cache!` to `set_precipitation_velocities!` along with the rest of precipitation velocities computations for microphysics. \r\n\r\n`set_precipitation_velocities` function is not merged with `set_microphysics_tendency_cache`, because we can re-use the same velocity computation logic for no-EDMF and diagnostic-EDMF configurations. \r\n\r\nThe velocity computations in `set_precipitation_velocities` are repetetive, but difficult to turn into a more concise loop because of the small differences between microphysics species. I'll think on how to refactor that part.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-25T22:32:58Z",
+    "deletions": 633,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-02-26T22:55:55Z",
+    "number": 4328,
+    "title": "Clean up microphysics cache"
+  }
+]

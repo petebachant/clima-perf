@@ -1,0 +1,211 @@
+[
+  {
+    "additions": 128,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Implements `FractionalIndices` for spatial interpolation and `TimeInterpolator` for time interpolation. Both of these can be precomputed outside of a kernel, and possibly stored (in the case of `FractionalIndices`) for repeated spatial interpolation. Precomputing and storing the \"interpolation indices\" simplifies interpolation kernels and may also help save a bit of computation.\r\n\r\ncc @simone-silvestri ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-28T00:09:38Z",
+    "deletions": 77,
+    "labels": [],
+    "mergedAt": "2025-03-03T04:24:31Z",
+    "number": 4146,
+    "title": "Expanded interpolation utilities"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T04:25:21Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-03T04:25:34Z",
+    "number": 4154,
+    "title": "Bump to 0.95.15"
+  },
+  {
+    "additions": 259,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "~~I believe this PR will depend on #4150.~~\r\n\r\nThe constructor for `OrthogonalSphericalShellGrid` when using `arch=ReactantState()` is broken and not tested, this PR fixes that.\r\n\r\nThis PR also generalizes the types of metric and coordinate terms in `LatitudeLongitudeGrid` and `OrthogonalSphericalShellGrid`. This is necessary because the process of compiling the grid into kernels as a compile time constant requires encoding the array size of the metric terms in the types. Therefore, metrics at, for example, (face, center, center) have a different type than arrays at (center, face, center).\r\n\r\nThese changes may be also required for RectilinearGrid. However, we don't have any tests or immediate need for that, so I'm holding off on it for now.\r\n\r\nFinally, another possible solution to this would be to pad the arrays so that all arrays are the same size. This introduces a (very small) memory penalty. It's hard for me to deduce which strategy is a better design. A narrow range of types has advantages for catching constructor bugs, and also making dispatch simpler. This motivates padding arrays. However, having different array sizes / types also provides an alternative way to identify the metrics. This is also a bug catching mechanism, because some bugs are caught through out-of-bounds errors (including on this PR).\r\n\r\nPadding may also be helpful for automatic distribution.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-01T15:51:09Z",
+    "deletions": 213,
+    "labels": [],
+    "mergedAt": "2025-03-03T06:58:26Z",
+    "number": 4151,
+    "title": "(0.95.15) Fix bugs in ReactantExt for OrthogonalSphericalShellGrid"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T06:58:51Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-03T06:58:57Z",
+    "number": 4155,
+    "title": "Bump to 0.95.16"
+  },
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjc1ODEyMTAz",
+      "is_bot": false,
+      "login": "jbisits",
+      "name": "Josef Bisits"
+    },
+    "body": "This PR defines a new method for `maximum_numeric_diffusivity` to compute the maximum point wise diffusivity when diffusivity is defined as a `DiscreteDiffusionFunction`. This allows the diffusive cfl condition to be evaluated which previously errored when the diffusivity is a `DiscreteDiffusionFunction`. I also added a simple test.\r\n\r\nThere are many changes in the `src/TurbulenceClosures/abstract_scalar_diffusivity_closure.jl` file but most of them are due to my editors preferences which remove extraneous white spaces (sorry about this!). The only notable change to this file is the addition of `\u03ba\u1d9c\u1d9c\u1d9c`. I think that `\u03bd\u1d9c\u1d9c\u1d9c` could have been used instead of introducing `\u03ba\u1d9c\u1d9c\u1d9c` but given there are methods defined at the same location for $\\nu$ and $\\kappa$, e.g. `\u03bd\u1da0\u1d9c\u1da0` and `\u03ba\u1da0\u1d9c\u1da0`, I added this.\r\n\r\n~A similar method could be used to compute maximum point wise diffusivity when diffusivity is a `Function` as currently it just returns zero,~\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/897c71d953926ec11122169a04d9b743235407b5/src/TurbulenceClosures/turbulence_closure_diagnostics.jl#L31\r\n\r\n~but perhaps that is a job for another PR?~\r\n\r\nBased on comment below this PR also adds a method to compute maximum pointwise diffusivity for a `Function`. This can easily be extended to include a `ContinuousDiffusionFunction` (see #3840) if something like this gets added.\r\n\r\nCloses #4094 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6ptTyv",
+        "number": 4094,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4094"
+      }
+    ],
+    "createdAt": "2025-02-14T00:57:40Z",
+    "deletions": 57,
+    "labels": [],
+    "mergedAt": "2025-03-03T07:41:49Z",
+    "number": 4101,
+    "title": "Add method to `maximum_numeric_diffusivity` for `DiscreteDiffusionFunction`"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Testing @giordano's [claim](https://github.com/CliMA/Oceananigans.jl/pull/4124#discussion_r1976449272) (although I believe the test still require allocating MtlArray --- not sure if that is possible if GPU is available? But what is real anyways -- I could not claim to know.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-02T05:23:48Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2025-03-03T15:50:56Z",
+    "number": 4152,
+    "title": "Really try to make sure that Metal is being used in test_metal.jl"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #4130 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6rmY5x",
+        "number": 4130,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4130"
+      }
+    ],
+    "createdAt": "2025-02-27T17:55:21Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2025-03-03T15:51:11Z",
+    "number": 4142,
+    "title": "Add more UnaryOperations with @unary"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Because Distributed tests are currently broken, I found this issue running the tests locally. It might be helpful @simone-silvestri if you can reproduce that the tests pass.\r\n\r\nAlso there is no specific unit test for `reconstruct_global_grid`. This error is found indirectly by the hydrostatic models test. @simone-silvestri I suggest adding a specific unit test in another PR.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T17:13:31Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-03-03T21:32:46Z",
+    "number": 4157,
+    "title": "Fix reconstruct_global_grid"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T21:33:15Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-03T21:33:23Z",
+    "number": 4159,
+    "title": "Bump to 0.95.17"
+  }
+]

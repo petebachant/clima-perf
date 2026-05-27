@@ -1,0 +1,167 @@
+[
+  {
+    "additions": 196,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "Resolves #5212 ",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7mBtI_",
+        "number": 5212,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5212"
+      }
+    ],
+    "createdAt": "2026-01-28T01:49:24Z",
+    "deletions": 188,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-01-30T03:12:25Z",
+    "number": 5218,
+    "title": "Add support for `OffsetArray` in `restore_prognostic_state!` + minor variable name changes"
+  },
+  {
+    "additions": 252,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #5227 cc @briochemc \r\n\r\nmwe:\r\n\r\n```julia\r\nusing Oceananigans\r\n\r\n# Create grid and time series\r\ngrid = RectilinearGrid(size=(4, 4, 4), extent=(1, 1, 1))\r\ntimes = 0:0.1:1.0\r\n\r\n# Create velocity FieldTimeSeries and populate with set!\r\nu_fts = FieldTimeSeries{Face, Center, Center}(grid, times)\r\nfor (n, t) in enumerate(times)\r\n    set!(u_fts, t, n)  # u = t at each time index\r\nend\r\n\r\n# Use with PrescribedVelocityFields\r\nvelocities = PrescribedVelocityFields(; u=u_fts)\r\nmodel = HydrostaticFreeSurfaceModel(grid; velocities, tracers=:c)\r\n\r\n# At t=0, velocity field should interpolate to u=0\r\nu = model.velocities.u\r\n@show u[1, 1, 1]  # Should return 0.0\r\n\r\n# Time step to t=0.05\r\ntime_step!(model, 0.05)\r\n\r\n# Now u should interpolate to 0.05 (between t=0 and t=0.1)\r\n@show u[1, 1, 1]  # Should return 0.05\r\n\r\n# Time step further to t=0.15\r\ntime_step!(model, 0.10)\r\n\r\n# Now u should interpolate to 0.15\r\n@show u[1, 1, 1]  # Should return 0.15\r\n```",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7mnm0W",
+        "number": 5227,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5227"
+      }
+    ],
+    "createdAt": "2026-01-29T19:43:44Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-01-30T14:42:41Z",
+    "number": 5233,
+    "title": "Implement TimeSeriesInterpolatedField and support FieldTimeSeries in PrescribedVelocityFields"
+  },
+  {
+    "additions": 198,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-30T14:53:37Z",
+    "deletions": 190,
+    "labels": [],
+    "mergedAt": "2026-01-30T14:54:35Z",
+    "number": 5241,
+    "title": "Jlk9/reactant clock stage 1"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "Setting the initial stage for Clocks of Reactant Grids to be 1, matching the default in Oceananigans/Timesteppers/clock.jl\r\n\r\nI'm not entirely sure why there's a difference between the two - let me know if there was a motivation for it.\r\n\r\nThis fixes an error present in `https://github.com/PRONTOLab/GB-25/pull/250`.\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-29T23:47:58Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-01-30T18:20:47Z",
+    "number": 5236,
+    "title": "Use `stage=1` in `Clock` constructor for ReactantGrid"
+  },
+  {
+    "additions": 105,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR adds FFTBasedPoisonSolve method for AMDGPU.\r\n\r\nCloses #4591",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM66rHfl",
+        "number": 4591,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4591"
+      }
+    ],
+    "createdAt": "2025-06-10T06:52:43Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-01-30T23:49:29Z",
+    "number": 4593,
+    "title": "Extend FFTBasedPoissonSolver to work on AMDGPU"
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 331,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #65 - This PR add `Var.resampled_as` which has the same functionality as `resample` in ClimaCoupler. Additionally, `Var._check_dims_consistent` is made to help with checking that the `dim` in two OutputVar are consistent. Lastly, Var.dim_type is added to find the type of a dimension given the name of the dimension.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc6UCpO8",
+        "number": 65,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/65"
+      }
+    ],
+    "createdAt": "2024-08-23T20:21:31Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-08-29T00:20:48Z",
+    "number": 66,
+    "title": "Add Var.resampled_as"
+  },
+  {
+    "additions": 351,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit adds support for physical units managed by Unitful.jl.\r\n\r\nUnitful is added as an extension. Currently, ClimaAnalysis.jl always includes this extension (and Unitful is a hard dependency of\r\nClimaAnalysis), but this opens a pathway to making Unitful an optional dependency in the future if we decide to do so. (I am taking this idea from Unitful itself.)\r\n\r\nThe technical choice on how to integrate Unitful is the following:\r\n\r\nIn the constructor, ClimaAnalysis scans for the `units` keyword in the attributes. When found, we try to parse it with \r\n`Unitful.uparse`. If possible, we replace the value for `units` in `attributes` with the `Unitful` version. If it is not possible, we leave the string.\r\n\r\nWhen units are requested with `ClimaAnalysis.units`, we always return a string.\r\n\r\nThe choice being made here is that we modify the input given (from `String` to `Unitful`), instead of creating a separate box where to put this information. The reason for this choice is that it removes the need to keep information synced and provide a single ground truth of what units are.\r\n\r\nWe also decide to not attach units directly to `data` to avoid performance penalties with manipulating large arrays.\r\n\r\nThis PR also cleans up a couple of things about extensions along the way.\r\n\r\nCloses #53 (except for dimensions)",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc6R3-EN",
+        "number": 53,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/53"
+      }
+    ],
+    "createdAt": "2024-08-29T00:04:38Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2024-08-29T16:03:02Z",
+    "number": 70,
+    "title": "Add support for unitful"
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "Consider the following MWE:\r\n\r\n```\r\njulia> using Oceananigans\r\n\u250c Warning: You are using Julia v1.11 or later!\"\r\n\u2502 Oceananigans is currently tested on Julia v1.10.\"\r\n\u2502 If you find issues with Julia v1.11 or later,\"\r\n\u2502 please report at https://github.com/CliMA/Oceananigans.jl/issues/new\r\n\u2514 @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Oceananigans.jl:124\r\n[ Info: Oceananigans will use 8 threads\r\n\r\njulia> arch = CPU()\r\nCPU()\r\n\r\njulia> Nx, Ny, Nz = 4, 4, 4\r\n(4, 4, 4)\r\n\r\njulia> grid = ConformalCubedSphereGrid(arch; panel_size=(Nx, Ny, Nz), z=(-1, 0), horizontal_direction_halo=2, radius=1)\r\nConformalCubedSphereGrid{Float64, Oceananigans.Grids.FullyConnected, Oceananigans.Grids.FullyConnected, Bounded} partitioned on CPU():\r\n\u251c\u2500\u2500 grids: 4\u00d74\u00d74 OrthogonalSphericalShellGrid{Float64, Oceananigans.Grids.FullyConnected, Oceananigans.Grids.FullyConnected, Bounded} on CPU with 2\u00d72\u00d72 halo and with precomputed metrics\r\n\u251c\u2500\u2500 partitioning: CubedSpherePartition with (1 region in each panel)\r\n\u251c\u2500\u2500 connectivity: CubedSphereConnectivity\r\n\u2514\u2500\u2500 devices: (CPU(), CPU(), CPU(), CPU(), CPU(), CPU())\r\n\r\njulia> c = CenterField(grid)\r\nCubedSphereField{Center, Center, Center}\r\n\u251c\u2500\u2500 grid: 4\u00d74\u00d74 ConformalCubedSphereGrid{Float64, Oceananigans.Grids.FullyConnected, Oceananigans.Grids.FullyConnected, Bounded} on CPU with 2\u00d72\u00d72 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2514\u2500\u2500 data: MultiRegionObject{NTuple{6, OffsetArrays.OffsetArray{Float64, 3, Array{Float64, 3}}}, NTuple{6, CPU}, KernelAbstractions.CPU}\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0\r\n\r\njulia> set!(c, 1)\r\n```\r\n\r\nBefore this PR:\r\n```\r\njulia> interior(c)\r\nERROR: MethodError: no method matching interior(::MultiRegionObject{\u2026}, ::Tuple{\u2026}, ::ConformalCubedSphereGrid{\u2026}, ::MultiRegionObject{\u2026})\r\nThe function `interior` exists, but no method is defined for this combination of argument types.\r\n\r\nClosest candidates are:\r\n  interior(::FieldTimeSeries, ::Any...)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/OutputReaders/field_time_series.jl:720\r\n  interior(::Field, ::Any...)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:424\r\n  interior(::OffsetArrays.OffsetArray, ::Any, ::Any, ::Any)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:423\r\n  ...\r\n\r\nStacktrace:\r\n [1] interior(f::Field{Center, Center, Center, Nothing, ConformalCubedSphereGrid{\u2026}, MultiRegionObject{\u2026}, MultiRegionObject{\u2026}, Any, MultiRegionObject{\u2026}, Nothing, MultiRegionObject{\u2026}})\r\n   @ Oceananigans.Fields ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:422\r\n [2] top-level scope\r\n   @ REPL[8]:1\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```\r\nAfter this PR,\r\n```\r\njulia> interior(c)\r\nMultiRegionObject{NTuple{6, SubArray{Float64, 3, Array{Float64, 3}, Tuple{UnitRange{Int64}, UnitRange{Int64}, UnitRange{Int64}}, false}}, NTuple{6, CPU}, KernelAbstractions.CPU}(([1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0], [1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0], [1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0], [1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0], [1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0], [1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0;;; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0]), (CPU(), CPU(), CPU(), CPU(), CPU(), CPU()), KernelAbstractions.CPU(false))\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-30T16:02:48Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-09-01T10:44:28Z",
+    "number": 4743,
+    "title": "Extend the interior function to MultiRegionFields"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "Consider the following MWE:\r\n```\r\njulia> using Oceananigans\r\n\u250c Warning: You are using Julia v1.11 or later!\"\r\n\u2502 Oceananigans is currently tested on Julia v1.10.\"\r\n\u2502 If you find issues with Julia v1.11 or later,\"\r\n\u2502 please report at https://github.com/CliMA/Oceananigans.jl/issues/new\r\n\u2514 @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Oceananigans.jl:124\r\n[ Info: Oceananigans will use 8 threads\r\n\r\njulia> arch = CPU()\r\nCPU()\r\n\r\njulia> Nx, Ny, Nz = 4, 4, 4\r\n(4, 4, 4)\r\n\r\njulia> grid = ConformalCubedSphereGrid(arch; panel_size=(Nx, Ny, Nz), z=(-1, 0), horizontal_direction_halo=2, radius=1)\r\nConformalCubedSphereGrid{Float64, Oceananigans.Grids.FullyConnected, Oceananigans.Grids.FullyConnected, Bounded} partitioned on CPU():\r\n\u251c\u2500\u2500 grids: 4\u00d74\u00d74 OrthogonalSphericalShellGrid{Float64, Oceananigans.Grids.FullyConnected, Oceananigans.Grids.FullyConnected, Bounded} on CPU with 2\u00d72\u00d72 halo and with precomputed metrics\r\n\u251c\u2500\u2500 partitioning: CubedSpherePartition with (1 region in each panel)\r\n\u251c\u2500\u2500 connectivity: CubedSphereConnectivity\r\n\u2514\u2500\u2500 devices: (CPU(), CPU(), CPU(), CPU(), CPU(), CPU())\r\n```\r\nBefore this PR:\r\n```\r\njulia> minimum_xspacing(grid)\r\nERROR: MethodError: no method matching interior(::MultiRegionObject{\u2026}, ::Tuple{\u2026}, ::ConformalCubedSphereGrid{\u2026}, ::MultiRegionObject{\u2026})\r\nThe function `interior` exists, but no method is defined for this combination of argument types.\r\n\r\nClosest candidates are:\r\n  interior(::FieldTimeSeries, ::Any...)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/OutputReaders/field_time_series.jl:720\r\n  interior(::Field, ::Any...)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:424\r\n  interior(::OffsetArrays.OffsetArray, ::Any, ::Any, ::Any)\r\n   @ Oceananigans ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:423\r\n  ...\r\n\r\nStacktrace:\r\n [1] interior(f::Field{Nothing, Nothing, Nothing, Nothing, ConformalCubedSphereGrid{\u2026}, MultiRegionObject{\u2026}, MultiRegionObject{\u2026}, Any, MultiRegionObject{\u2026}, Nothing, MultiRegionObject{\u2026}})\r\n   @ Oceananigans.Fields ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:422\r\n [2] initialize_reduced_field!(::typeof(minimum!), f::Function, r::Field{\u2026}, c::Oceananigans.AbstractOperations.ConditionalOperation{\u2026})\r\n   @ Oceananigans.Fields ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:649\r\n [3] minimum(f::Function, c::KernelFunctionOperation{Center, Center, Center, ConformalCubedSphereGrid{\u2026}, Float64, typeof(Oceananigans.Operators.\u0394x), Tuple{\u2026}}; condition::Nothing, mask::Float64, dims::Function)\r\n   @ Oceananigans.Fields ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:752\r\n [4] minimum\r\n   @ ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:742 [inlined]\r\n [5] minimum\r\n   @ ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Fields/field.jl:762 [inlined]\r\n [6] minimum_xspacing(grid::ConformalCubedSphereGrid{\u2026})\r\n   @ Oceananigans.Grids ~/Library/CloudStorage/Dropbox/StudyFolder/PostDocMITDesktop/Codes/Oceananigans/main/src/Grids/nodes_and_spacings.jl:160\r\n [7] top-level scope\r\n   @ REPL[6]:1\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```\r\nAfter this PR:\r\n```\r\njulia> minimum_xspacing(grid)\r\n0.29955685403289395\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-30T19:40:47Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-09-01T10:56:36Z",
+    "number": 4744,
+    "title": "Extend minimum spacing functions without location arguments to MultiRegionGrids"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-01T21:14:21Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-09-01T21:14:31Z",
+    "number": 4752,
+    "title": "Add Wang et al. 2025"
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 155,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "## Purpose and Content\r\nApplies more column operations to the implicit tendency evaluation\r\n\r\n## Benefits and Risks\r\n~~At the moment this still causes significant memory allocations. Need to figure out what is going on.~~\r\nThe autodiff handling was causing inference issues. Fixed by adding a function barrier to extract variables\r\n\r\n## Linked Issues\r\n(Provide references to any link issues. Use closes #issuenum to automatically close an open issue)\r\n- Fixes #\r\n- Closes #\r\n\r\n## PR Checklist\r\n- [x] This PR has a corresponding issue OR is linked to an SDI.\r\n- [x] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [x] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [x] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [x] I linted my code on my local machine prior to submission OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code used in an integration test OR N/A.\r\n- [x] All tests ran successfully on my local machine OR N/A.\r\n- [x] All classes, modules, and function contain docstrings OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-11T22:51:20Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2022-07-18T21:12:22Z",
+    "number": 620,
+    "title": "Use bycolumn on implicit_tendency"
+  },
+  {
+    "additions": 244,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a job to tabulate a summary of performance changes to the performance targets. A few pieces are added here:\r\n\r\n - For each performance target job, we export a `perf_benchmark_$job_id.json` file.\r\n - After all example/perf jobs run, we merge all of these files into a `perf_benchmarks.json` file in the `tabulate_perf_summary.jl` script.\r\n - We then tabulate the results from `perf_benchmarks.json`\r\n - In the `move_output` job, we also move the `perf_benchmarks.json` into main (for future comparisons)\r\n\r\nThe table for the unthreaded job looks like this:\r\n\r\n```\r\n[ Info: ##################################### Perf summary for job `perf_target_unthreaded`\r\n[ Info: Metric: Allocations\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Function                    \u2502 older_commit \u2502 old_commit \u2502   This PR \u2502         Percent change \u2502\r\n\u2502                             \u2502              \u2502            \u2502           \u2502 (PR - main)/main \u00d7 100 \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 Wfact                       \u2502    33.88 MiB \u2502  33.88 MiB \u2502 33.88 MiB \u2502                    0.0 \u2502\r\n\u2502 linsolve                    \u2502    18.68 MiB \u2502  18.68 MiB \u2502 18.68 MiB \u2502                    0.0 \u2502\r\n\u2502 implicit_tendency!          \u2502    11.45 KiB \u2502  11.45 KiB \u2502 11.45 KiB \u2502                    0.0 \u2502\r\n\u2502 remaining_tendency!         \u2502    25.38 KiB \u2502  25.38 KiB \u2502 25.38 KiB \u2502                    0.0 \u2502\r\n\u2502 default_remaining_tendency! \u2502    21.47 KiB \u2502  21.47 KiB \u2502 21.47 KiB \u2502                    0.0 \u2502\r\n\u2502 hyperdiffusion_tendency!    \u2502     2.59 KiB \u2502   2.59 KiB \u2502  2.59 KiB \u2502                    0.0 \u2502\r\n\u2502 step!                       \u2502    71.88 MiB \u2502  71.88 MiB \u2502 71.88 MiB \u2502                    0.0 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n[ Info: Metric: Time (ave)\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Function                    \u2502 older_commit \u2502 old_commit \u2502    This PR \u2502         Percent change \u2502\r\n\u2502                             \u2502              \u2502            \u2502            \u2502 (PR - main)/main \u00d7 100 \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 Wfact                       \u2502    30.525 ms \u2502  30.132 ms \u2502  31.126 ms \u2502                3.30028 \u2502\r\n\u2502 linsolve                    \u2502    19.054 ms \u2502  19.903 ms \u2502  18.732 ms \u2502               -5.88384 \u2502\r\n\u2502 implicit_tendency!          \u2502    24.031 ms \u2502  20.306 ms \u2502  21.967 ms \u2502                8.18074 \u2502\r\n\u2502 remaining_tendency!         \u2502    51.728 ms \u2502  51.678 ms \u2502  54.697 ms \u2502                5.84343 \u2502\r\n\u2502 default_remaining_tendency! \u2502    41.309 ms \u2502  41.648 ms \u2502  41.018 ms \u2502               -1.51275 \u2502\r\n\u2502 hyperdiffusion_tendency!    \u2502     8.844 ms \u2502   8.823 ms \u2502  10.608 ms \u2502                20.2361 \u2502\r\n\u2502 step!                       \u2502   287.502 ms \u2502 283.691 ms \u2502 294.938 ms \u2502                3.96463 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```\r\n\r\nIn addition, the percent change column is color-coded indicating performance improvement (green) and degradation (bad).\r\n\r\nAlso, the `older_commit` and `old_commit` will be commit hashes.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-16T20:31:42Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2022-07-18T21:45:22Z",
+    "number": 664,
+    "title": "Add job to tabulate performance summary"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\nThis PR adds high resolution hs simulations to longrun buildkite.\r\nIt sets up mpi with 128 tasks.\r\n\r\n## Benefits and Risks\r\n(State concisely the benefits to be derived from and the risks associated with this PR)\r\n\r\n## Linked Issues\r\n(Provide references to any link issues. Use closes #issuenum to automatically close an open issue)\r\n- Fixes #\r\n- Closes #\r\n\r\n## PR Checklist\r\n- [ ] This PR has a corresponding issue OR is linked to an SDI.\r\n- [ ] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [ ] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [ ] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [ ] I linted my code on my local machine prior to submission OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code used in an integration test OR N/A.\r\n- [ ] All tests ran successfully on my local machine OR N/A.\r\n- [ ] All classes, modules, and function contain docstrings OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-15T16:04:11Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-07-18T21:45:22Z",
+    "number": 657,
+    "title": "add hs with AMIP targeted resolution to longrun"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is an attempt to fix uploading the flame graph to GCP so that we can load it into [Firefox profiler](https://profiler.firefox.com/).\r\n\r\ncc @simonbyrne ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-18T20:57:51Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2022-07-18T23:59:23Z",
+    "number": 669,
+    "title": "Upload flame graph to GCP"
+  }
+]

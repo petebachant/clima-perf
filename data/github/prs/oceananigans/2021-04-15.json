@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "As discusse in #1591 .   Now I have to create a reference.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NTgxOTczNjI=",
+        "number": 1591,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1591"
+      }
+    ],
+    "createdAt": "2021-04-14T19:51:32Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-04-15T15:04:23Z",
+    "number": 1592,
+    "title": "Fix typo in coriolis_forces.md"
+  },
+  {
+    "additions": 617,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the `PreconditionedConjugateGradientSolver` and `ImplicitFreeSurface` and their tests. It adds one new test that ensures a single time-step of the `HydrostaticFreeSurfaceModel` can be made with `free_surface = ImplicitFreeSurface()`.\r\n\r\nIn the new interface the maximum iterations and tolerance of the conjugate gradient solver used for the implicit free surface step are adjusted via kwargs to `ImplicitFreeSurface`. For example:\r\n\r\n```julia\r\nfree_surface = ImplicitFreeSurface(tolerance = 1e-7, maximum_iterations = Nx * Ny)\r\n```",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-13T19:17:47Z",
+    "deletions": 698,
+    "labels": [],
+    "mergedAt": "2021-04-15T17:05:04Z",
+    "number": 1575,
+    "title": "PreconditionedConjugateGradientSolver and ImplicitFreeSurface refactor"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "Two  changes.\r\n\r\nOne change is a typo as we had `viscosties` instead of `viscosities`.\r\n\r\nThe other change is that I think its better to use the buoyancy frequency instead of the coriolis frequency to compute the CFL condition since buoyancy is more restrictive.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-15T15:15:32Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2021-04-15T17:12:56Z",
+    "number": 1594,
+    "title": "Update eady_turbulence.jl"
+  },
+  {
+    "additions": 102,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Previously, we used the type of `field.data` to infer the architecture of an `AbstractField`. However, this strategy fields for distributed models. In this PR we hold onto the architecture in a type parameter of `AbstractField`.\r\n\r\n~~We may also want to add a field `architecture` to all fields that require confirmation if runtime information will ever be kept within architecture (for example, the layout of a distributed computation)... please advice @ali-ramadhan~~\r\n\r\nWe also add `architecture` as a property to all fields where `!isnothing(architecture(field))`.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-13T22:49:35Z",
+    "deletions": 116,
+    "labels": [],
+    "mergedAt": "2021-04-15T23:03:23Z",
+    "number": 1578,
+    "title": "Changes fourth type parameter of AbstractField to architecture"
+  }
+]

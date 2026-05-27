@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 350,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis pull request wraps the entire test suite in `@testset`. This ensures that even if one `@testset` fails, the rest of the testsuite attempts to run, so that you get an overview of _all_ issues with a proposed change from running the tests just once.\r\n- There might be specific cases where this is undesirable. For those cases, we can add the option `failfast=true` to the `@testset` ([ref](https://docs.julialang.org/en/v1/stdlib/Test/#Test.@testset)) which has the effect:\r\n    - `failfast`: if `true`, any test failure or error will cause the testset and any child testsets to return immediately (the default is `false`).\r\n\r\nAdditionally:\r\n- all tests now consistently `import Test as TT` (instead of e.g. `using Test`)\r\n- any `@testset` that loops over options, e.g. `for FT in (Float64, Float32)`, does so with a consistent pattern that is supported by `Test`, e.g.:\r\n```Julia\r\nTT.@testset \"Aerosol Activation Tests ($FT)\" for FT in (Float64, Float32)\r\n    test_aerosol_activation(FT)\r\nend\r\n```\r\n- these kinds of `@testset` loops is an example of a nice place to add `failfast=true`... presumably if a test fails on `Float64`, it does so too on `Float32`.\r\n- add `artifact_calling_tests.jl` (was missing)\r\n\r\nTo compare how a _successful_ test suite would look like, compare this PR's buildkite ([link](https://buildkite.com/clima/cloudmicrophysics-ci/builds/2140#0197904c-2a33-49ce-8fbd-2caaa8925713/184-1624)) to e.g. this PR's buildkite ([link](https://buildkite.com/clima/cloudmicrophysics-ci/builds/2143#01979dc7-adf5-4e68-96bb-498a01c7f397/184-187))\r\nIf any tests fail, the `Test Summary` will expand to show much more detail about the failing test(s). In addition, the stack trace of each failing test is printed, of course:\r\n<details> <summary> click to see example of failing test </summary>\r\n\r\n```Julia\r\n# [...]\r\n\r\nMelting Smoke Test: Test Failed at /Users/haakon/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:542\r\n  Expression: false\r\n\r\nStacktrace:\r\n [1] macro expansion\r\n   @ ~/.julia/juliaup/julia-1.11.5+0.aarch64.apple.darwin14/share/julia/stdlib/v1.11/Test/src/Test.jl:679 [inlined]\r\n [2] macro expansion\r\n   @ ~/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:542 [inlined]\r\n [3] macro expansion\r\n   @ ~/.julia/juliaup/julia-1.11.5+0.aarch64.apple.darwin14/share/julia/stdlib/v1.11/Test/src/Test.jl:1704 [inlined]\r\n [4] test_p3_melting(FT::Type{Float64})\r\n   @ Main ~/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:514\r\nMelting Smoke Test: Test Failed at /Users/haakon/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:542\r\n  Expression: false\r\n\r\nStacktrace:\r\n [1] macro expansion\r\n   @ ~/.julia/juliaup/julia-1.11.5+0.aarch64.apple.darwin14/share/julia/stdlib/v1.11/Test/src/Test.jl:679 [inlined]\r\n [2] macro expansion\r\n   @ ~/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:542 [inlined]\r\n [3] macro expansion\r\n   @ ~/.julia/juliaup/julia-1.11.5+0.aarch64.apple.darwin14/share/julia/stdlib/v1.11/Test/src/Test.jl:1704 [inlined]\r\n [4] test_p3_melting(FT::Type{Float32})\r\n   @ Main ~/Documents/CliMA/clima-codes/CloudMicrophysics.jl/test/p3_tests.jl:514\r\n\r\n# [...]\r\n\r\nTest Summary:                                                       | Pass  Fail  Broken  Total     Time\r\nAll tests                                                           | 3159     2      28   3189  3m34.6s\r\n  Aerosol Activation Tests (Float64)                                |   44                   44     1.5s\r\n  Aerosol Activation Tests (Float32)                                |   44                   44     1.5s\r\n  Heterogeneous Ice Nucleation Tests (Float64)                      |   37                   37     0.7s\r\n  Heterogeneous Ice Nucleation Tests (Float32)                      |   37                   37     0.8s\r\n  Homogeneous Ice Nucleation Tests (Float64)                        |    4                    4     0.1s\r\n  Homogeneous Ice Nucleation Tests (Float32)                        |    4                    4     0.1s\r\n  Microphysics 0M Tests (Float64)                                   |   16                   16     0.1s\r\n  Microphysics 0M Tests (Float32)                                   |   16                   16     0.1s\r\n  Microphysics 1M Tests (Float64)                                   |   63                   63     1.4s\r\n  Microphysics 1M Tests (Float32)                                   |   63                   63     1.4s\r\n  Microphysics 2M Tests (Float64)                                   |  241                  241     7.7s\r\n  Microphysics 2M Tests (Float32)                                   |  241                  241     8.1s\r\n  Microphysics Non-Equilibrium Tests (Float64)                      |   27                   27     0.8s\r\n  Microphysics Non-Equilibrium Tests (Float32)                      |   27                   27     0.7s\r\n  Cloud Diagnostics Tests (Float64)                                 |   26                   26     0.3s\r\n  Cloud Diagnostics Tests (Float32)                                 |   26                   26     0.3s\r\n  logistic_function unit tests                                      |    8                    8     0.0s\r\n  logistic_function_integral unit tests                             |    8                    8     0.0s\r\n  Common Functions Tests (Float64)                                  |   22                   22     0.5s\r\n  Common Functions Tests (Float32)                                  |   22                   22     0.5s\r\n  Broadcasting over common types tests (Float64)                    |                         0     0.0s\r\n  Broadcasting over common types tests (Float32)                    |                         0     0.0s\r\n  Nucleation Unit Tests                                             |   24                   24     0.0s\r\n  precipitation_susceptibility_SB2006                               |    5                    5     0.0s\r\n  P3 tests (Float64)                                                |  828     1      11    840     4.0s\r\n    P3State Creation and Properties                                 |    9                    9     0.0s\r\n    Thresholds - exact solution                                     |   29             1     30     0.0s\r\n    Thresholds - mass, area, density, aspect ratio                  |   18                   18     0.0s\r\n    Shape parameters - nonlinear solver                             |  296                  296     0.0s\r\n    Shape parameters - nonlinear solver                             |  296                  296     0.0s\r\n    Numerical integrals sanity checks for N, velocity and diameter  |   80                   80     1.3s\r\n    Smoke tests for cloud/rain particle terminal vel from Chen 2022 |   10                   10     0.0s\r\n    Smoke tests for ice particle terminal vel from Chen 2022        |   20                   20     0.0s\r\n    Smoke tests for mixed phase particle terminal velocity          |   10            10     20     0.0s\r\n    Mass and number weighted terminal velocities                    |   24                   24     0.6s\r\n    Mass-weighted mean diameters                                    |    4                    4     0.0s\r\n    Heterogeneous Freezing Smoke Test                               |   24                   24     0.0s\r\n    Melting Smoke Test                                              |    8     1              9     0.2s\r\n  P3 tests (Float32)                                                |  828     1      11    840     3.8s\r\n    P3State Creation and Properties                                 |    9                    9     0.0s\r\n    Thresholds - exact solution                                     |   29             1     30     0.0s\r\n    Thresholds - mass, area, density, aspect ratio                  |   18                   18     0.0s\r\n    Shape parameters - nonlinear solver                             |  296                  296     0.0s\r\n    Shape parameters - nonlinear solver                             |  296                  296     0.0s\r\n    Numerical integrals sanity checks for N, velocity and diameter  |   80                   80     1.4s\r\n    Smoke tests for cloud/rain particle terminal vel from Chen 2022 |   10                   10     0.0s\r\n    Smoke tests for ice particle terminal vel from Chen 2022        |   20                   20     0.0s\r\n    Smoke tests for mixed phase particle terminal velocity          |   10            10     20     0.0s\r\n    Mass and number weighted terminal velocities                    |   24                   24     0.2s\r\n    Mass-weighted mean diameters                                    |    4                    4     0.0s\r\n    Heterogeneous Freezing Smoke Test                               |   24                   24     0.0s\r\n    Melting Smoke Test                                              |    8     1              9     0.2s\r\n  Quality assurance - Aqua                                          |   10                   10     1.1s\r\n  Performance Tests (Float64)                                       |  225                  225    49.8s\r\n  Performance Tests (Float32)                                       |  225                  225    48.5s\r\n  Aerosol activation test: Calibrated ARG                           |    7                    7  1m06.0s\r\n  Ice Nucleation perfect model calibration on ABDINM                |                  2      2     4.2s\r\n  Ice Nucleation perfect model calibration on ABIFM                 |                  2      2     2.9s\r\n  Ice Nucleation perfect model calibration on ABHOM                 |                  2      2     5.0s\r\n  Ventilation Tests (Float64)                                       |    5                    5     0.0s\r\n  Ventilation Tests (Float32)                                       |    5                    5     0.1s\r\n  DistributionTools                                                 |   21                   21     0.0s\r\n```\r\n\r\n</details>\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 24,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-21T02:11:56Z",
+    "deletions": 387,
+    "labels": [],
+    "mergedAt": "2025-06-25T00:49:18Z",
+    "number": 595,
+    "title": "rft: wrap all tests in @testset"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "* terminate if EKP is done to reduce # of warnings, see lines:\r\n```julia\r\nterminate = EKP.update_ensemble!(ensemble_kalman_process, pred_ens)\r\nterminate == true && break\r\n```\r\n* other minor refactoring\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-23T18:01:10Z",
+    "deletions": 50,
+    "labels": [],
+    "mergedAt": "2025-06-25T02:27:58Z",
+    "number": 597,
+    "title": "rft: clean up calibration test"
+  },
+  {
+    "additions": 127,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nfixes #600\r\n\r\nalso took the liberty to change the file from `Plots` to `Makie` :) \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM686d4j",
+        "number": 600,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/600"
+      }
+    ],
+    "createdAt": "2025-06-23T22:58:40Z",
+    "deletions": 235,
+    "labels": [],
+    "mergedAt": "2025-06-25T17:36:05Z",
+    "number": 601,
+    "title": "fix: julia 1.11 list comprehension bug + use Makie"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\n#14 -- this will link to issue 14\nCloses #2 -- this will automatically close issue 2 on PR merge\n-->\n\n\n## To-do\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \n- Proposed task\n-->\n\n\n## Content\n<!---  specific tasks that are currently complete \n- Solution implemented\n-->\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-25T00:08:56Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-06-25T18:24:03Z",
+    "number": 603,
+    "title": "fix: typeinfo in nested structs"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nTo clear depot (for corrupted precompilation),\r\n1. go to buildkite > pipelines\r\n2. search for and select \"Clear depot\"\r\n3. New build, select `options`\r\n4. In \"Environment Variables\", write: `slug=cloudmicrophysics-ci` and click \"Create Build\"\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-25T21:59:00Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-06-25T23:07:05Z",
+    "number": 605,
+    "title": "feat: use shared depot for buildkite jobs"
+  }
+]

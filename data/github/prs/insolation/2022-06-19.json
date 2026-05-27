@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 149,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades Insolation.jl to use the new way of handling clima parameters, by:\r\n - Defining a `InsolationParameters` struct that has its own parameters, and populating them via a toml dictionary from CLIMAParameters. As a result, Insolation.jl (like all other packages) no longer needs to depend on CLIMAParameters. Our test, examples, and docs directory may still need to depend on CLIMAParameters in order to test the package with values from CLIMAParameters.\r\n\r\nThis PR has a lot of changes, but it does seem to pass all the tests. I've applied the same sort of pattern in this package as others in order to make the organization familiar to users if they dig into other packages with their own parameters.\r\n\r\nBecause there are so many changes (this has been CLIMAParameter changes in only one of many repos), it would be helpful if people could pitch in with updating the docs regarding the new handling of parameters. Maybe we can follow up with a docs fixup in a subsequent PR since all of these changes are breaking (while doc changes are not), and they need to be propagated in a quick sweep through many packages.\r\n\r\nI've also made changes to GHA to use the latest version of julia and embraced the `import FooBar as FB` syntax, since it really helps managing scope compactly",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODx1b8s5LPucQ",
+        "number": 36,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTM1ODIzMjI=",
+          "name": "Insolation.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Insolation.jl/issues/36"
+      }
+    ],
+    "createdAt": "2022-06-18T23:35:23Z",
+    "deletions": 106,
+    "labels": [],
+    "mergedAt": "2022-06-19T05:10:26Z",
+    "number": 39,
+    "title": "Use new way of handling clima parameters"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 148,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR removes a bunch of scalar operations introduced by #3575 on the GPU and instead performs operations on CPU and converts to CuArrays afterwards.\r\n\r\nThere are two issues that don't allow us to create the grid natively on the GPU but rather force us to create the grid on CPU and then convert it.\r\n\r\n1. The metrics for the `OrthogonalSphericalShellGrid` use scalar operations; see the functions that are called at https://github.com/CliMA/Oceananigans.jl/blob/4c853b94e6c99949134981153250a4e2391bb0f1/src/Grids/orthogonal_spherical_shell_grid.jl#L780-L782\r\n\r\n2. When we create the `ConformalCubedSphreGrid`, to fill the metric and coordinate horizontal halos properly we use the same functionality that we use to fill halos for prognostic variables. To do that, we create Fields with the coordinate and metric values, call `fill_halo_regions!` on these fields, and then copy back the data from the Fields to the metrics. Copying the data from the metrics to the fields and vice-versa requires scalar operations, e.g., see \r\nhttps://github.com/CliMA/Oceananigans.jl/blob/7f12be3d82486b8be2923d8675d2e59c84efd722/src/MultiRegion/cubed_sphere_grid.jl#L280-L292\r\n\r\ncc @siddharthabishnu ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-04T07:29:02Z",
+    "deletions": 111,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2024-06-11T02:00:53Z",
+    "number": 3579,
+    "title": "Speedup constructing a `ConformalCubedSphereGrid` on GPU"
+  }
+]

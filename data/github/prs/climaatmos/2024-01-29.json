@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "CloudMicrophysics parameter constructors do not log parameters that they use, triggering an error when logging parameter information in `src/solver/type_getters.jl`. \r\n\r\nThis PR disables strict logging, allow unlogged parameter overrides with a warning.\r\n\r\nTo reproduce the bug, create a TOML file:\r\n```\r\n[rain_autoconversion_timescale]\r\nvalue = 360\r\ntype = \"float\"\r\n```\r\nThen run:\r\n```\r\nimport ClimaAtmos as CA\r\nconfig = CA.AtmosConfig(Dict(\"toml\" =>[\"toml/test.toml\"], \"precip_model\" => \"1M\"))\r\ninclude(\"examples/hybrid/driver.jl\")\r\n```\r\n\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-29T19:25:05Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-01-29T22:13:44Z",
+    "number": 2599,
+    "title": "Allow unlogged parameters in TOML files"
+  }
+]

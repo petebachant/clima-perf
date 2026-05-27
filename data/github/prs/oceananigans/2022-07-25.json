@@ -1,0 +1,94 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjM4NTYyNTk1",
+      "is_bot": false,
+      "login": "pitmonticone",
+      "name": "Pietro Monticone"
+    },
+    "body": "",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-23T22:08:23Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2022-07-25T14:11:52Z",
+    "number": 2679,
+    "title": "Fix a few typos in README, docs and docstrings"
+  },
+  {
+    "additions": 3790,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In this PR:\r\n- Refactoring of advection to have three different reconstruction schemes: `Centered`, `UpwindBiased` and `WENO`\r\n- advection schemes can be constructed with an `order` keyword argument which goes up to 12 for `Centered` and 11 for upwind schemes\r\n- Reimplementation of boundary treatment: reconstruction method `_symmetric_`, `_left_biased_` and `_right_biased` have their own boundary treatment which entails checking the points for each method differently\r\n- advection scheme have a `boundary_scheme` field which will is used to reconstruct values near the boundary. Boundary schemes use the same method as the _parent_ scheme but with a lower order:\r\n     For example, when using a WENO 9th order, closing in near the boundaries the order will be progressively decreased to 7th, 5th, 3rd and finally 1st.\r\n\r\nIt also solves various bugs associated with advection and immersed boundary.",
+    "changedFiles": 113,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-08T20:09:58Z",
+    "deletions": 1834,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2022-07-25T23:06:27Z",
+    "number": 2603,
+    "title": "High-order advection stencils, overhaul of boundary treatment, and bugfix in advection reconstruction"
+  },
+  {
+    "additions": 4013,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR sets out to develop a `MultiDimensionalScheme` which allows an _effective_ high order reconstruction in non-linear 2D and 3D advection problems.\r\n\r\nThe possible implementations are two:\r\n- A _true_ multidimensional reconstruction, which involves nested reconstructions in all directions and preserves the original 1D order (https://www.sciencedirect.com/science/article/pii/S0021999104002281)\r\n- A _simplified_ reconstruction which is faster but does not formally preserve the 1D order (https://d-nb.info/1124132775/34)\r\n",
+    "changedFiles": 106,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-05T13:38:07Z",
+    "deletions": 1754,
+    "labels": [],
+    "mergedAt": "2022-07-25T23:06:29Z",
+    "number": 2643,
+    "title": "Multi Dimensional Advection scheme"
+  },
+  {
+    "additions": 4013,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR sets out to refactor advection along the lines proposed in #2454\r\nA final form for the new advection scheme is still to be decided though",
+    "changedFiles": 106,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-05T13:35:16Z",
+    "deletions": 1754,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2022-07-25T23:06:29Z",
+    "number": 2642,
+    "title": "Advection Refactor"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 330,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAs opposed to in the bucket model's step (which is how it is done now). This version continues to use the `CL.turbulent_fluxes!` method, as opposed to #1816 which copies the internals of that function into the coupler and as a result is much more complicated.\r\n\r\nAlso adds some functions to simplify the flux calculation code structure.\r\n\r\nI find it odd that we were calling `CL.turbulent_fluxes!` from the bucket's `compute_surface_fluxes!` method, even though the fluxes were already computed in the bucket's step. I expect this was just extra computation but didn't change the values.\r\n\r\nRequires https://github.com/CliMA/ClimaLand.jl/pull/1677 + land release\r\n\r\n## Content\r\n- [x] Add `get_roughness_params` to reduce code duplication\r\n- [x] Add `update_flux_fields!` to split work into smaller functions with clear roles (and reduce code duplication)\r\n- [x] Use new land branch, where fluxes aren't computed in `step!`\r\n\r\n## Dependency updates\r\n```\r\n    Updating `~/clima/ClimaCoupler.jl/experiments/CMIP/Project.toml`\r\n  [b2c96348] \u2191 ClimaAtmos v0.38.0 \u21d2 v0.38.1\r\n  [1ecacbb8] \u2191 ClimaDiagnostics v0.3.3 \u21d2 v0.3.4\r\n  [08f4d4ce] \u2191 ClimaLand v1.6.5 \u21d2 v1.7.0\r\n  [0376089a] \u2191 ClimaOcean v0.9.4 \u21d2 v0.9.5\r\n  [85f8d34a] \u2191 NCDatasets v0.14.14 \u21d2 v0.14.15\r\n```\r\nI accidentally switched the `Manifest.toml` files from julia 1.10 to 1.12 earlier this week, so this PR switches them back to 1.10.\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-07T18:52:12Z",
+    "deletions": 348,
+    "labels": [],
+    "mergedAt": "2026-04-09T07:24:16Z",
+    "number": 1865,
+    "title": "compute bucket fluxes in compute_surface_fluxes"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Closes #1866\r\n\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc77lV54",
+        "number": 1866,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1866"
+      }
+    ],
+    "createdAt": "2026-04-08T18:02:30Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-04-09T15:37:41Z",
+    "number": 1867,
+    "title": "Fix ocean polar mask bug"
+  }
+]

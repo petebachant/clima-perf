@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "[Previously referenced issue](https://github.com/CliMA/Oceananigans.jl/issues/1241) is now closed and I'm replacing it by the [newly-created one](https://github.com/CliMA/Oceananigans.jl/issues/1886), which summarizes everything.\r\n\r\n@glwagner ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-22T14:00:25Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2021-07-22T18:47:55Z",
+    "number": 1887,
+    "title": "Update issue referenced in `simulation_tips.md`"
+  },
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes #1878\r\n\r\nI ran the most relevant tests locally and they all passed for me (didn't have time/resources to run all), but I'd appreciate some thorough reviews in this case since \"diffusivities\" is a word that happens a lot in the repo so it's easy to miss something when making such a change.",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5NDg3MTA4OTI=",
+        "number": 1878,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1878"
+      }
+    ],
+    "createdAt": "2021-07-22T01:16:59Z",
+    "deletions": 91,
+    "labels": [],
+    "mergedAt": "2021-07-22T18:49:25Z",
+    "number": 1884,
+    "title": "Changes model field `diffusivities` to `diffusivity_fields`"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR reformulates TKEBasedVerticalDiffusivity simply through a redefinition of parameters.\r\n\r\nIt also makes a more important change to the code that passes `model.closure` and `model.buoyancy` to the kernels that evaluate boundary fluxes. This is necessary to make `TKEBasedVerticalDiffusivity` models robust against changes to parameters after model construction. The changes are made in a way that have no affect on the API or other models.\r\n\r\nResolves #1695 .\r\n\r\ncc @adelinehillier",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MDE0NzYzODQ=",
+        "number": 1695,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1695"
+      }
+    ],
+    "createdAt": "2021-07-21T19:06:32Z",
+    "deletions": 68,
+    "labels": [
+      {
+        "color": "AAFEBB",
+        "description": "Fudge factors and hand-waving",
+        "id": "MDU6TGFiZWwzMDMxMzc4MDU1",
+        "name": "parameterizations"
+      }
+    ],
+    "mergedAt": "2021-07-22T20:02:47Z",
+    "number": 1883,
+    "title": "Reformulates TKEBasedVerticalDiffusivity"
+  },
+  {
+    "additions": 452,
+    "author": {
+      "id": "MDQ6VXNlcjY3NTkzODYx",
+      "is_bot": false,
+      "login": "whitleyv",
+      "name": "Victoria Whitley Clark"
+    },
+    "body": "This PR masks tracers inside immersed solids in the same way velocities are already being masked:\r\n\r\n`mask_immersed_tracers!(tracers, arch, grid::GFIBG) = Tuple(mask_immersed_field!(c) for c in tracers)`\r\n\r\n Tracers are masked in `update_state!` before filling tracer halos.\r\n\r\nThis also updates the cylinder validation to run with this immersed boundary method with tracers and analysis. The analysis is mostly for no slip boundary conditions which are not implemented yet (just free slip).\r\n\r\nIncludes visuals like,\r\n\r\nhttps://user-images.githubusercontent.com/67593861/126657679-1daa523e-c1da-4097-b994-d16966a9b578.mp4\r\n\r\nand analysis of the pressure and friction coefficient (known for no slip BC), the normal and tangential velocities, and the tracer conservation, taken as the leakage in the fluid as compared to the initial state. Right now the tracers won't look right. @glwagner has found some problems with the diffusivities and tracers to be fixed\r\n\r\n![analysis_cylinder_tracer_Nh_350_CenteredSecondOrder](https://user-images.githubusercontent.com/67593861/126657698-bbfec9bb-0820-4ed5-866d-54f9b3ac7dd5.png)\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-22T14:43:52Z",
+    "deletions": 117,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-07-22T20:16:17Z",
+    "number": 1888,
+    "title": "Mask tracers for immersed boundaries"
+  }
+]

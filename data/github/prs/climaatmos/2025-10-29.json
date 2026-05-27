@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request extends the configurability of the Smagorinsky-Lilly turbulence model by allowing users to specify whether the model should be applied in the horizontal direction only, vertical direction only, both together, or each separately. This enhancement is reflected in configuration options, documentation, and the underlying implementation.\r\n\r\n**Smagorinsky-Lilly model configurability:**\r\n\r\n* Added support for new configuration options for the Smagorinsky-Lilly model: `UV` (horizontal only), `W` (vertical only), and `UV_W` (horizontal and vertical treated separately), in addition to the existing `UVW` (all directions). (`config/default_configs/default_config.yml`, `src/solver/model_getters.jl`, `src/solver/types.jl`) [[1]](diffhunk://#diff-a507a5b1b0f8375040a7694778c1ce9ad5ec72a4465b76b7ba5d2aa693dcb574L173-R173) [[2]](diffhunk://#diff-ab240b0d863b064ad1bd28f7844952c3809af57b3424ed31794a4835f6349e47R179-R187) [[3]](diffhunk://#diff-2f94c7adf07b3cbc2396d99087f28bfb189a773943c7e1994754d81ef01e1d66R249-R251)\r\n* Updated the assertion in `get_smagorinsky_lilly_model` to allow the new configuration symbols. (`src/solver/model_getters.jl`)\r\n* Improved documentation for the Smagorinsky-Lilly model to describe all possible configuration flags and their effects. (`src/solver/model_getters.jl`, `src/solver/types.jl`) [[1]](diffhunk://#diff-ab240b0d863b064ad1bd28f7844952c3809af57b3424ed31794a4835f6349e47R179-R187) [[2]](diffhunk://#diff-2f94c7adf07b3cbc2396d99087f28bfb189a773943c7e1994754d81ef01e1d66R249-R251)\r\n\r\n**Implementation logic:**\r\n\r\n* Updated logic in `set_smagorinsky_lilly_precomputed_quantities!` to correctly compute horizontal and vertical length scales (`\u1d9cL_h`, `\u1d9cL_v`) depending on the chosen model configuration. (`src/parameterized_tendencies/les_sgs_models/smagorinsky_lilly.jl`)\r\n* Modified the `is_smagorinsky_vertical` and `is_smagorinsky_horizontal` helper functions to recognize the new configuration options. (`src/solver/types.jl`) [[1]](diffhunk://#diff-2f94c7adf07b3cbc2396d99087f28bfb189a773943c7e1994754d81ef01e1d66L268-R271) [[2]](diffhunk://#diff-2f94c7adf07b3cbc2396d99087f28bfb189a773943c7e1994754d81ef01e1d66L279-R282)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-14T00:05:53Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2025-10-29T01:54:42Z",
+    "number": 4054,
+    "title": "rft: split Smagorinsky diffusive model to horizontal and vertical components"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjUwOTk2OTI1",
+      "is_bot": false,
+      "login": "oalcabes",
+      "name": "Olivia Alcabes"
+    },
+    "body": "Remove use of float(dt) and replace with FT(dt) to prevent type instability",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-28T23:14:28Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2025-10-29T23:30:43Z",
+    "number": 4078,
+    "title": "Fix dt float type instability"
+  }
+]

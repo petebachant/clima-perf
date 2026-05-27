@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "`posdef_correct` was modifying inputs in-place due to the for loop over diagonal elements in the symmetric matrix case. This resulted in the DMC scheduler directly modifying the EKP obs_noise_cov matrix in the first iteration. This PR:\r\n1. Uses deepcopy to prevent in-place modification of the EKP obs_noise_cov and modify tests to detect this.\r\n2. Exports `posdef_correct` for external use.\r\n\r\nNote: examples/LearningRateSchedulers is using `UniformScaling` and remains unaffected. ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-22T19:53:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwyNTE2MDYyMjI2",
+        "name": "bug"
+      }
+    ],
+    "mergedAt": "2023-10-23T18:25:07Z",
+    "number": 338,
+    "title": "Prevent DataMisfitController scheduler from modifying EKP obs_noise_cov"
+  }
+]

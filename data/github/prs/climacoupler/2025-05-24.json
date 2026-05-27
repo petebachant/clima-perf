@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 86,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUse one ocean remapper instead of 3. Remap all fields onto `Center, Center` coordinates of the ocean grid, then use Oceananigans functions to remap them to the appropriate locations (`Face, Center`, `Center, Face`) as needed.\r\n\r\n## Content\r\n- [x] only use center/center remapper (remove other 2)\r\n- [x] use `set_from_extrinsic_vectors!` to rotate and interpolate once on ocean grid (this requires filling halo regions, just for u and v)\r\n- [x] don't fill halo regions for other fluxes, since it isn't needed\r\n- [x] define `_rotate_vectors!`, `_interpolate_vectors!`\r\n- [x] make sure `set_from_extrinsic_vectors!` is launching 2D kernels\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-14T23:34:45Z",
+    "deletions": 80,
+    "labels": [],
+    "mergedAt": "2025-05-24T01:10:10Z",
+    "number": 1354,
+    "title": "use one ocean remapper"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n2 fixes to bugs that were recently introduced - see [this build](https://buildkite.com/clima/climacoupler-longruns/builds/878) for failures\r\n1. When using `DecayWithHeight` vertical diffusion, as in the runs added in #1361, we need to also set `turbconv: ~`. This PR sets it for our 2 new DecayWithHeight longruns.\r\n2. In #1292, we use `config_dict[\"h_elem\"]` to construct the boundary space when it isn't being taken from the atmosphere model, but this option isn't always set in our configs. This PR adds a default of `h_elem = 16`.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-24T06:29:54Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-05-24T06:35:35Z",
+    "number": 1367,
+    "title": "fix longrun configs"
+  }
+]

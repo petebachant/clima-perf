@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 530,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "I have created a new branch called \"ShallowWaterS1waveeqn\". S1 is for step 1. It doesn't do much right now but I'm trying to set up the skeleton so that we can actually do something intereting, like evolve the equation.\r\n\r\nAt the moment I have the following:\r\n\r\n1. Created a ShallowWaterModels folder\r\n\r\n2. Created a ShallowWaterModels.jl module. It doesn't do much except include shallowwater_model.jl\r\n\r\n3. shallowwater_model.jl defines a mutable struct and a function. I couldn't get a lot of things to work but it does regularlize the boundary condtions, set up the velocities and a new variable called layer_depth. The name is not great and can go with depth or height, as people prefer. It will be in in the governing equations.\r\n\r\n4. Created an example, in the same folder, called onedim_shallowwater.jl. Currently, this includes the module mentioned above, defines a grid (yes, a single point!), defines the initial conditions and sets the velocity.\r\n\r\nQuestions:\r\n\r\n1. This is pretty bare bones so far but does this follow the philosophy of Oceananigans?\r\n\r\n2. I have tried to inititalze the layer_depth by adding an argument into the set! command but it failed. Below is the command that I thought would work and below is the error because layer_depth is not model.velocities or model.tracers. Can someone help me to see what silliness I am doing?\r\n\r\n```\r\nset!(model, u = u, v = v, layer_deth = layer_depth)\r\nfails with \"ERROR: LoadError: ArgumentError: name layer_depth not found in model.velocities or model.tracers.\"\r\n\r\n\r\nAfter I get the initial conditions defined I then need to specify the fluxes for the PDE.  That should not be difficult but one issue is the nomenclature.  The vector we have now is velocities, but we actually want, velocity transport.  I should use and define hu and hv instead of u and v.  That should be easy enough, I think.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-17T18:43:33Z",
+    "deletions": 47,
+    "labels": [],
+    "mergedAt": "2020-11-20T16:30:26Z",
+    "number": 1188,
+    "title": "A new ShallowWaterModel type"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR adds explicit install of required packages for each example.\r\n\r\nThis is related to the discussion in #1149.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-15T03:59:56Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2020-11-20T21:27:46Z",
+    "number": 1184,
+    "title": "Explicit install of deps in Examples"
+  }
+]

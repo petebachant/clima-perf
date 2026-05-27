@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 382,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds `column_integral_definite!`, a non-allocating definite integral for columns. The idea is that it will replace the existing (allocating) definite integral [here](https://github.com/CliMA/ClimaAtmos.jl/blob/44cee55def2a51433c5dcdcdae010b7777cd741b/examples/hybrid/sphere/baroclinic_wave_utilities.jl#L167-L186). However, this implementation has several advantages:\r\n - It's compatible with `bycolumn`, so the computation can occur in parallel\r\n - It's allocation-free\r\n - It's _tested_ on single column and sphere configurations\r\n\r\nLooking at the flame graph for allocations (using the Julia 1.8 Allocs module with `sample_rate=1`), this is responsible for most of the remaining allocations in ClimaAtmos:\r\n<img width=\"1993\" alt=\"Screen Shot 2022-09-26 at 7 57 05 AM\" src=\"https://user-images.githubusercontent.com/1880641/192353757-03101c41-2c0b-4ccb-a8b9-43faa78680f8.png\">\r\n\r\n\r\nThe interface for the added function captures two cases:\r\n\r\n```julia\r\nfunction column_integral_definite!(col\u222bfield::Field, field::Field)\r\n    bycolumn(axes(field)) do colidx\r\n        column_integral_definite!(col\u222bfield[colidx], field[colidx])\r\n        nothing\r\n    end\r\n    return nothing\r\nend\r\n```\r\nand\r\n```julia\r\nfunction column_integral_definite!(\r\n    col\u222bfield::PointField,\r\n    field::ColumnField,\r\n)\r\n    @inbounds col\u222bfield[] = column_integral_definite(field)\r\n    return nothing\r\nend\r\n```\r\n\r\nA step towards closing #943, #748, [CA#686](https://github.com/CliMA/ClimaAtmos.jl/issues/686).\r\n\r\n## A note on an alternative approach\r\nIdeally, we would write this function as `column_integral_definite!(fn, args...)` where we might be able to write a broadcast statement like:\r\n\r\n```julia\r\n@. f2D = column_integral_definite(f3D) do z\r\n     f3D.x * z^2\r\nend\r\n```\r\n\r\nhowever, this would require us to define broadcasting between planar and 3D domains, which is not trivial (or maybe not possible) because of ambiguities. The ambiguities arise because (2D, 3D) broadcasting may want different things in different cases, for example:\r\n\r\n - (f2D, f3D) -> f3D: mul full 3D field by planar surface value\r\n - (f2D, f3D) -> f2D: perform reduction over z-coordinate to yield 2D field\r\n\r\nThe situation is similar when thinking about what happens when we make views. For example,\r\n\r\n```julia\r\nFields.bycolumn(axes(f3D)) do colidx\r\n     @. f2D[colidx] = column_integral_definite(f3D[colidx]) do z\r\n         f3D[colidx].x * z^2\r\n      end\r\nend\r\n```\r\n\r\nNow, we have to define how `DataF` data layouts broadcast with `VF`. Again, we have two cases:\r\n\r\n - (f0D, f1D) -> f1D: mul full 1D field by 0D field\r\n - (f0D, f1D) -> f0D: perform reduction over z-coordinate to yield 0D field\r\n\r\nMy vote/preference is to support the first cases (which is partially supported already) and write custom functions (e.g., reductions) that operate on single fields for the second case.\r\n\r\nA step towards closing [CA#686](https://github.com/CliMA/ClimaAtmos.jl/issues/686)",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-26T18:51:23Z",
+    "deletions": 153,
+    "labels": [],
+    "mergedAt": "2022-10-01T04:03:07Z",
+    "number": 962,
+    "title": "Add support for definite column integrals"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds an Aqua test for method ambiguities that ClimaCore creates. Apparently this can hurt [compile times](https://github.com/SciML/OrdinaryDiffEq.jl/issues/1750), so I think it'd be good to hook in a test and try to drive them down.\r\n\r\nThis PR also fixes some of our most egregious ambiguities and knocks them down from 129 to 17 \ud83d\ude80.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-23T19:22:28Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "11DC9E",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABEZGepg",
+        "name": "Latency"
+      }
+    ],
+    "mergedAt": "2022-10-01T18:33:18Z",
+    "number": 961,
+    "title": "Add Aqua ambiguities test"
+  },
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - \"fixes\" the broken allocation tests for broadcasting with `Ref` by moving functions outside of `@testset`\r\n - Adds a \"working\" broken allocation test, `Allocations StencilCoefs Ref with ComposeStencils broadcasting`, which reproduces the allocations we see in ClimaAtmos' linear solve. It seems to be an interaction between broadcasting over `StencilCoefs`, `ComposeStencils`, and `Ref`s. Removing the `compose` eliminates the allocations, and eliminating the `Ref(StencilCoefs(...))` eliminates the allocations.\r\n\r\nRelated issue: #963.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-01T21:50:07Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2022-10-01T22:46:57Z",
+    "number": 975,
+    "title": "Fix some tests, try to fix broken tests"
+  }
+]

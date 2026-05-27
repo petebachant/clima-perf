@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "I noticed that in a couple of tests in `test_grids.jl` the code was written in way that leads to some not-so-clear statements such as:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/182e75c80645af0d6a7105ed2d8d4fcbceb7bccc/test/test_grids.jl#L381\r\n\r\nThe above seems wrong at first but it's actually correct since `\u0394z\u1d43\u1d43\u1d9c()` is defined the same way as `grid.\u0394z\u1d43\u1d43\u1da0`.\r\n\r\nThis PR changes that to make the notation clearer (i.e. `grid.\u0394z\u1d43\u1d43\u1da0[2:Nz] == \u0394z\u1d43\u1d43\u1da0.(2:Nz)`) and condenses 3 separate test functions for stretched grids (needing three separate grid instantiations) into one function (with the same tests).\r\n\r\nEDIT:\r\n\r\nThis also implements a suggestion by @glwagner in https://github.com/CliMA/Oceananigans.jl/pull/2865 that couldn't be implemented then. I'll open another PR in the near future to further condense some other tests.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-10T20:35:08Z",
+    "deletions": 40,
+    "labels": [],
+    "mergedAt": "2023-02-11T09:30:08Z",
+    "number": 2917,
+    "title": "Refactor of some stretched rectilinear grid tests"
+  }
+]

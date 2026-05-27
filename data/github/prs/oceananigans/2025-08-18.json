@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 131,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR introduces CATKE for RK3.\r\nSubstepping is not supported at the moment.\r\n\r\nI am trying to reproduce figures 15 and 16 of [Wagner et al](https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1029/2024MS004522), I think the LES data I have might be wrong, so disregard the LES, but just looking at the time-step dependency, it looks like RK3 does help a bit with decreasing the dependency with respect to vanilla AB2. @glwagner, what do you think? Maybe if it is quick, we can try doing a recalibration with RK3?\r\n\r\nThe solutions seem to be slightly different in the case of AB2 vs RK3 (probably very slightly)\r\n\r\n## Vanilla AB2 (`tke_time_step = nothing`)\r\n[ab2_step.pdf](https://github.com/user-attachments/files/21685527/ab2_step.pdf)\r\n\r\n<img width=\"1200\" alt=\"ab2_step\" src=\"https://github.com/user-attachments/assets/77a3bd24-34ee-4269-b9ce-6af69f3982a7\" />\r\n\r\n## Substepped AB2 (`tke_time_step = 2minutes`)\r\n[ab2_step_2min.pdf](https://github.com/user-attachments/files/21685526/ab2_step_2min.pdf)\r\n\r\n<img width=\"1200\" alt=\"ab2_step_2min\" src=\"https://github.com/user-attachments/assets/89c1f1ff-c464-4b7e-aed2-608ed5960660\" />\r\n\r\n## Split RKE (`tke_time_step` does not matter)\r\n[rk3_step.pdf](https://github.com/user-attachments/files/21733565/rk3_step.pdf)\r\n\r\n<img width=\"824\" height=\"345\" alt=\"image\" src=\"https://github.com/user-attachments/assets/f7478c54-8380-41f1-87aa-13f7b4446269\" />\r\n\r\nAnother option is to remove the `time_step_tke!` equation in case of an RK3 and add a term in the tendency computation like I am doing in this branch: https://github.com/CliMA/Oceananigans.jl/blob/ss/omip-branch/src/TurbulenceClosures/turbulence_closure_implementations/TKEBasedVerticalDiffusivities/time_step_catke_equation.jl",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-08T13:55:51Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2025-08-18T08:01:12Z",
+    "number": 4705,
+    "title": "RK3 CATKE Implementation"
+  }
+]

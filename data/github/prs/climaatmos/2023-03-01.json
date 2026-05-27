@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nIn the process of debugging #1327, we have found the the anelastic option is not implemented correctly. It has two issues:\r\n- the pressure `p.\u1d9cp` is initially set in `init_tc!` (which #1327 removes), and it is used to set the thermodynamic state `p.\u1d9cts` at the start of each tendency evaluation, but the thermodynamic state is then in turn used to set the pressure\r\n- more importantly, the thermodynamic state computed from the pressure implies a certain value for density, but this is not the same as the density `Y.c.\u03c1` that is used throughout ClimaAtmos (i.e., the prognostic variable that gets evolved by the time stepper)\r\n\r\nThe first issue can be easily fixed by adding some additional if-statements to the code, but the fixing the second issue would require updating all of ClimaAtmos to switch between using density as a prognostic variable or as a diagnostic variable. Instead of doing this, we will simply delete the two remaining anelastic TRMM cases in CI, along with all of the code for running the model in anelastic mode.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-28T02:46:16Z",
+    "deletions": 194,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-03-01T00:27:21Z",
+    "number": 1407,
+    "title": "Remove incorrect anelastic option"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "## Purpose \r\nSome of these flags were a bit confusing and/or unnecessary\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-28T22:40:18Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2023-03-01T19:10:53Z",
+    "number": 1408,
+    "title": "Fix some slurm flags on pipeline"
+  },
+  {
+    "additions": 1092,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake EDMF and the dycore use a single interface for defining and setting initial conditions. Close #1295.\r\n\r\nFix two general issues with our current implementation of initial conditions:\r\n - The code for initializing EDMF involves many computations and re-computations of variables, a lot of which ultimately go unused, and the sequence of these computations is hard to follow. This makes it difficult to debug the code.\r\n - Every block of code that specifies an initial condition makes numerous assumptions about the structure of the atmosphere model. This makes it difficult to extend the model without also modifying all of the code for initial conditions.\r\n\r\n## Content\r\n - Add a struct, `LocalState`, for initial conditions to use in order to specify the state at a particular point, but without needing to know about the model configuration.\r\n - Add a function, `atmos_state`, that converts the generic representation of a state into a model-specific one. This is essentially a combination of the code that is currently [here](https://github.com/CliMA/ClimaAtmos.jl/blob/6daa7c3d9344e78b4ca56cfd1f4ff5173835812a/src/InitialConditions/InitialConditions.jl#L24-L84) and [here](https://github.com/CliMA/ClimaAtmos.jl/blob/6daa7c3d9344e78b4ca56cfd1f4ff5173835812a/src/TurbulenceConvection/variables.jl#L164-L200), except that it now initializes all prognostic variables and is written in terms of `LocalState`.\r\n - Make all initial conditions currently used in ClimaAtmos into objects of the same type (`InitialCondition`), and rewrite them in terms of `LocalState`. This involves combining what is currently `src/InitialConditions/baro_wave.jl`, `src/InitialConditions/sphere.jl`, `src/InitialConditions/box.jl`, `src/InitialConditions/single_column.jl`, and `tc_driver/Cases.jl` into a single file, `src/InitialConditions/initial_conditions.jl`. In the process, a lot of redundant and unnecessary code is removed. Since TurbulenceConvection uses its own surface parametrization, which is distinct from the rest of ClimaAtmos, the `surface_params` methods from `tc_driver/Cases.jl` are also moved into `src/InitialConditions/initial_conditions.jl`. Unifying our surface parametrizations could be a good follow-up task.\r\n - Modify `examples/hybrid/driver.jl`, `examples/hybrid/TurbulenceConvectionUtils.jl`, `examples/hybrid/types.jl`, and `src/discrete_hydrostatic_balance.jl` to use the new initial conditions interface. Remove all other code related to the old interface; e.g., the `get_state_fresh_start` function and the `TurbulenceConvectionUtils.init_tc!` function (along with everything it calls, like `initialize_edmf`, `initialize_covariance`, and `initialize_updrafts`). Keep some of the logic from `get_state_fresh_start` in `get_initial_condition`.\r\n - Remove all code related to the surface reference state that was removed in #1330: `src/ref_state.jl`, as well as the `set_thermo_state_p\u03b8q!` and `set_grid_mean_from_thermo_state!` functions in `tc_driver/dycore.jl`.\r\n - Run the `tc_callback` before the first step in order to ensure that the boundary conditions are satisfied.\r\n - Fix a bug in the old implementation that was allocating `Y.c.\u03c1q_tot` whenever the EDMF model was in use, even when the moisture model was a `DryModel`. This required making it so that the `dif_flux_\u03c1q_tot` and `dif_flux_\u03c1q_tot_bc` cached fields and the `sfc_evaporation` diagnostic field are only allocated when `:\u03c1q_tot in propertynames(Y.c)`, making it so that the EDMF model only sets the tendency of `Y.c.\u03c1q_tot` when it is available, and making it so that the remap pipeline only uses `sfc_evaporation` when it is available.\r\n - Modify the \"explicit EDMF on a sphere\" CI example by renaming it from `sphere_baroclinic_wave_rhoe_equilmoist_mo_edmf` to `sphere_baroclinic_wave_rhoe_equilmoist_edmf` and removing the `--turbconv_case Soares` flag (this PR makes the flag unnecessary; this example will now use the baroclinic wave initial condition, without overwriting it with the Soares initial condition).\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 22,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5dKm3U",
+        "number": 1295,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1295"
+      }
+    ],
+    "createdAt": "2023-02-07T21:08:24Z",
+    "deletions": 1585,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-03-01T20:01:22Z",
+    "number": 1327,
+    "title": "Unify initial conditions of dycore and EDMF"
+  }
+]

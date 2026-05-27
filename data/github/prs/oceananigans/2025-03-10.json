@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "These were not add originally because they were not needed, but may be needed now @simone-silvestri ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T03:25:02Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2025-03-10T10:02:37Z",
+    "number": 4185,
+    "title": "Add non-trivial default boundary conditions for `FieldTimeSeries`"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "To asynchronously fill the halos of distributed fields, the code uses an incremental counter to track how many MPI requests are live and update the MPI send and receive tag. The counter is reset when communication is synchronized.\r\n\r\nAs it is defined right now, the counter is always incremented at the end of a `fill_halo_regions!` on a distributed grid, irrespective of what happened in the `fill_halo_regions!`, with the assumption that all cores participate in the `fill_halo_regions!` so the counters are correctly synchronized. \r\nhttps://github.com/CliMA/Oceananigans.jl/blob/315e66bb330b44acc2a0daf74ae357ee66e801d1/src/DistributedComputations/halo_communication.jl#L117-L121\r\n\r\nUnfortunately, I experienced a situation where this was not the case. \r\nIn this case, I wanted to do different things on different cores, which is allowed when using the `only_local_halos = true` keyword argument (a very rare occurrence, but a possibility nonetheless).\r\n\r\nFor example, if we execute this code on the main branch\r\n```julia\r\narch = Distributed(CPU())\r\ngrid = RectilinearGrid(size = (2, 2, 1), extent = (1, 1, 1))\r\nc = Field(grid)\r\n\r\nif arch.local_rank == 0\r\n    fill_halo_regions!(c; only_local_halos = true)\r\nend\r\n```\r\nThe mpi_tag will be `1` on rank 0 and `0` on other ranks. This means that in subsequent halo passes, MPI will stall because it cannot match the tag between the send and receive operations of cores that communicate with rank 0.\r\n\r\nThis PR fixes this issue by incrementing the counter _only_ if we have actually launched a mpi send or receive operation, that happens when at least one of the `bcs` is a distributed boundary condition _and_ `only_local_halos == false`",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-16T20:30:10Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2025-03-10T12:28:00Z",
+    "number": 3714,
+    "title": "Bugfix in distributed fill halos"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "to capture #3714 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T12:39:00Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-10T12:39:42Z",
+    "number": 4188,
+    "title": "(0.95.22) bump minor version"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I think we need this after updating a partially in memory field",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T07:50:59Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-03-10T19:34:31Z",
+    "number": 4186,
+    "title": "Fill halos after the update step"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T16:27:17Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-03-10T20:15:15Z",
+    "number": 4191,
+    "title": "Fix the `euler` keyword in `time_step!(sim::ReactantSimulation)`"
+  }
+]

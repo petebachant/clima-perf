@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nSeven parameter container structs (`CloudPhaseParams1M`, `PrecipPhaseParams1M`, `WarmRainParams2M`, `P3IceParams`, `Chen2022VelType`, `TerminalVelocityParams`, `H2SO4SolutionParameters`) did not subtype `ParametersType{FT}` and therefore lacked `Base.broadcastable`, causing problems when used in broadcast expressions.\r\n\r\nChanges:\r\n\r\n* Add `<: ParametersType{FT}` to 6 container structs so they inherit broadcastable from \r\n`AbstractTypes.jl`\r\n* Add `<: TerminalVelocityType{FT}` to `Chen2022VelType` (consistent with `Blk1MVelType`)\r\n* Remove the redundant broadcastable/ndims/size/getindex loop at the bottom of \r\n`Parameters.jl`, which was overriding the inherited broadcastable for types that already had it\r\n* Bumps patch release\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-09T06:10:26Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2026-02-11T17:36:10Z",
+    "number": 675,
+    "title": "Add Base.broadcastable to all CMP parameter types"
+  },
+  {
+    "additions": 707,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n- make type check stronger by returning NamedTuples instead of writing floats to arrays. Arrays with floats allow for incorrect Float32/Float64 type changes, while arrays with NamedTuples ensure same type.\r\n- fix GPU indexing bug: Group -> Global\r\n- make more `@testset`s for easier overview\r\n- fix AerosolActivation.M_activated_per_mode, which incorrectly always returned Float64\r\n\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n<details> <summary> Example of how nested testsets improves overview for failing tests </summary>\r\n\r\nNote: Sub-sections are _only_ expanded if tests fail. If all tests succeed, they'd look like:\r\n```\r\nTest Summary:       | Pass  Broken  Total   Time\r\nGPU tests (Float64) |  111       1    112  38.7s\r\nTest Summary:       | Pass  Broken  Total   Time\r\nGPU tests (Float32) |  111       1    112  39.7s\r\n```\r\n\r\nIf some tests fail, it may look like:\r\n```\r\nGPU tests (Float64)                                           |   88     1      9     98  2m07.2s\r\n  Aerosol activation kernels                                  |    6                   6     0.6s\r\n  non-equilibrium microphysics kernels                        |                 1      1     1.4s\r\n  Chen 2022 terminal velocity kernels                         |    4                   4     0.5s\r\n  0-moment microphysics kernels                               |    1                   1     0.1s\r\n  1-moment microphysics kernels                               |   11                  11     0.9s\r\n  2-moment microphysics kernels                               |   45     1            46     1.2s\r\n    2-moment autoconversion                                   |    6                   6     0.2s\r\n    2-moment accretion                                        |    3     1             4     0.4s\r\n  Common Kernels                                              |    7                   7     0.4s\r\n  Ice Nucleation kernels                                      |    3            7     10     2.2s\r\n    CMI_het.IN.dust_activated_number_fraction                 |                 1      1     0.6s\r\n    CMI_het.IN.MohlerDepositionRate                           |                 1      1     0.4s\r\n    CMI_het.IN.deposition_J                                   |                 1      1     0.2s\r\n    CMI_het.IN.ABIFM_J                                        |                 1      1     0.2s\r\n    CMI_het.P3_deposition_N_i                                 |                 1      1     0.2s\r\n    CMI_het.P3_het_N_i                                        |                 1      1     0.2s\r\n    CMI_het.INP_concentration_frequency                       |                 1      1     0.2s\r\n    CMI_het.homogeneous_J_cubic, CMI_het.homogeneous_J_linear |    3                   3     0.1s\r\n  Modal nucleation kernels                                    |    3                   3     0.5s\r\n  Bulk microphysics tendencies kernels                        |    8            1      9     1.9s\r\n    0M                                                        |    3                   3     0.1s\r\n    1M                                                        |    2                   2     0.4s\r\n    2M warm                                                   |    3                   3     0.2s\r\n    2M+P3                                                     |                 1      1     1.2s\r\n```\r\n\r\n</details\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-11T03:45:05Z",
+    "deletions": 1321,
+    "labels": [],
+    "mergedAt": "2026-02-11T19:48:36Z",
+    "number": 677,
+    "title": "fix: gpu tests"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nBumping SpecialFunctions.jl to v2.7.1 fixes GPU compatibility for the P3 scheme. For details, see https://github.com/JuliaMath/SpecialFunctions.jl/pull/514\r\n- added GPU tests for bulk P3 tendency\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-11T22:15:56Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2026-02-11T22:50:14Z",
+    "number": 678,
+    "title": "fix: P3 gpu compatibility, bump to v0.31.6"
+  }
+]

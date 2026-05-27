@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 224,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nOur current `turbulent_fluxes_at_a_point` functions are not `isbits` (not GPU compatible) because the return type (4-Tuple vs 6-Tuple) depends on the value of an input (`return_momentum_fluxes`). This PR fixes this by changing `return_momentum_fluxes` from a `Boolean` to a `Val` that we can dispatch on, and it also pulls out a lot of the code in `turbulent_fluxes_at_a_point` into a shared function `turbulent_fluxes_helper` for the two cases.\r\n\r\nAlso tags a new patch release to use this change downstream.\r\n\r\n## Content\r\n- [x] change `return_momentum_fluxes` to a `Val`, dispatch on this in `turbulent_fluxes_at_a_point`\r\n- [x] add `turbulent_fluxes_helper` function to do the shared computation\r\n- [x] test from ClimaCoupler (on GPU \ud83d\ude05) - on this branch https://github.com/CliMA/ClimaCoupler.jl/pull/1220\r\n- [x] tag v0.15.13 so this can be used in ClimaCoupler\r\n\r\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **Refactor**\n  - Streamlined turbulent flux computations across atmospheric, soil, and vegetation modules by clearly separating cases with or without momentum fluxes, improving clarity and efficiency.\n\n- **Bug Fixes**\n  - Resolved GPU compatibility issues in coupled land model flux calculations.\n\n- **Chores**\n  - Updated dependency versions and project manifests, including a version bump to v0.15.13, to ensure improved stability and compatibility.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-29T00:08:23Z",
+    "deletions": 159,
+    "labels": [],
+    "mergedAt": "2025-04-01T00:01:38Z",
+    "number": 1093,
+    "title": "dispatch on return_momentum_fluxes type in flux calculations; tag v0.15.13"
+  }
+]

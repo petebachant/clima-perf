@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 51,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "which should happen as soon as `model.clock.time > last(ECCO_times(metadata))`",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-10T15:58:33Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-12-11T09:04:07Z",
+    "number": 290,
+    "title": "Bugfix `set!`ting ECCO FTS with cycling boundaries"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This makes sure that the CPU and GPU tests handle different files so that the tests do not crash",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-11T09:03:37Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-12-11T12:18:22Z",
+    "number": 293,
+    "title": "Fix JRA55 tests"
+  },
+  {
+    "additions": 401,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors `PrescribedAtmosphere` so that we can set up ocean simulations beneath idealized atmospheres.\r\n\r\nI did the minimum possible in this PR, which basically preserves the kind of atmosphere that JRA55 uses --- everything as a FieldTimeSeries. Even to get this to work I needed to make some changes, including to `Oceananigans`. So it depends on https://github.com/CliMA/Oceananigans.jl/pull/3928\r\n\r\nI also had to use a hacked version of `OrthogonalSphericalShellGrids` (#glw/fix) since it's broken for Oceananigans 0.94 currently.\r\n\r\nI added an example called `idealized_single_column_simulation.jl` which evolves a linearly stratified ocean beneath constant 10 m/s winds at 20 deg C and with 400 W / m^2 solar insolation. It's interesting to see the difference between this and the typical idealized forcing that we use --- with constant winds, there is significant cooling and evaporation. Also, the fluxes decrease in time because 1) the ocean cools and 2) the ocean speeds up, decreasing the momentum flux in a relative winds bulk formulation, which in turn decreases the latent heat flux because the latent heat flux is proportional to the friction velocity.\r\n\r\nHere's a movie of the results:\r\n\r\nhttps://github.com/user-attachments/assets/1837bf42-9fda-42e7-b562-77ba0a7167cb\r\n\r\nHere's the single column setup:\r\n\r\n```julia\r\nusing ClimaOcean\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing SeawaterPolynomials\r\n\r\n# Ocean state parameters\r\nT\u2080 = 20   # Surface temperature, \u1d52C\r\nS\u2080 = 35   # Surface salinity\r\nN\u00b2 = 1e-4 # Buoyancy gradient due to temperature stratification\r\nf = 0     # Coriolis parameter\r\n\r\n# Atmospheric state parameters\r\nT\u2090 = 273.15 + 20 # Kelvin\r\nu\u2081\u2080 = 10 # wind at 10 m, m/s\r\nq\u2090 = 0.01 # specific humidity\r\nQ\u2113 = 400 # shortwave radiation (W m\u207b\u00b2, positive means heating right now)\r\n\r\n# Build the atmosphere\r\natmosphere_grid = RectilinearGrid(size=(), topology=(Flat, Flat, Flat))\r\natmosphere_times = range(0, 1day, length=3)\r\natmosphere = PrescribedAtmosphere(atmosphere_grid, atmosphere_times)\r\n\r\nparent(atmosphere.tracers.T) .= T\u2090     # K\r\nparent(atmosphere.velocities.u) .= u\u2081\u2080 # m/s\r\nparent(atmosphere.tracers.q) .= q\u2090     # mass ratio\r\nparent(atmosphere.downwelling_radiation.shortwave) .= Q\u2113 # W\r\n\r\n# Build ocean model at rest with initial temperature stratification\r\ngrid = RectilinearGrid(size=100, z=(-400, 0), topology=(Flat, Flat, Bounded))\r\nocean = ocean_simulation(grid, coriolis=FPlane(; f))\r\n\r\neos = ocean.model.buoyancy.model.equation_of_state\r\ng = ocean.model.buoyancy.model.gravitational_acceleration\r\n\u03b1 = SeawaterPolynomials.thermal_expansion(T\u2080, S\u2080, 0, eos)\r\ndTdz = N\u00b2 / (\u03b1 * g)\r\nT\u1d62(z) = T\u2080 + dTdz * z\r\nset!(ocean.model, T=T\u1d62, S=S\u2080)\r\n\r\nradiation = Radiation(ocean_albedo=0.1)\r\nmodel = OceanSeaIceModel(ocean; atmosphere, radiation)\r\nsimulation = Simulation(model, \u0394t=5minutes, stop_time=30days)\r\n```\r\n",
+    "changedFiles": 24,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-15T04:36:59Z",
+    "deletions": 113,
+    "labels": [],
+    "mergedAt": "2024-12-11T19:55:16Z",
+    "number": 251,
+    "title": "Refactor PrescribedAtmosphere and add an idealized atmosphere simulation"
+  }
+]

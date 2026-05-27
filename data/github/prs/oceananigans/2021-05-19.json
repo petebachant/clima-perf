@@ -1,0 +1,161 @@
+[
+  {
+    "additions": 638,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a primitive immersed boundary scheme that is \"fitted\" to the grid.\r\n\r\nThe scheme is specified with a function of `(x, y, z)` that is true when \"solid\" and false when \"fluid\". (A better name for the model kwarg than `immersed_boundary` might be `immersed_solid`.) It only supports no flux boundary conditions, but it should be \"relatively\" straightforward to support user specified flux boundary conditions.\r\n\r\nThe scheme has the following ingredients:\r\n\r\n* Masking of solid cells to 0 for both velocities and tracers.\r\n* Elides diffusive fluxes across solid boundaries with an explicit `ifelse` embedded in diffusive flux and viscous flux functions.\r\n\r\nBecause of the second point the scheme is \"invasive\" in that it requires the immersed boundary to be inserted into the tendency calculation. On the upside, it is likely cheap since it doesn't require any extra loops (except for the masking).\r\n\r\nEDIT: the implementation in this PR is _very_ invasive in that it introduces a grid wrapper that implements the immersed boundary functionality. Grid wrappers make the implementation of more sophisticated immersed boundary methods such as partial cell and shaved cells much easier.\r\n\r\nTo support user-specified fluxes, we'd have to distinguish between a `solid_node` and a `fluid_solid_boundary_node`, and drop in the user-specified flux when appropriate.\r\n\r\nThere's a primitive validation test in `validation/immersed_boundary/immersed_hydrostatic_diffusion.jl` that produces this plot:\r\n\r\n<img width=\"587\" alt=\"image\" src=\"https://user-images.githubusercontent.com/15271942/117931760-0dc40000-b2ac-11eb-8978-2c376d706948.png\">\r\n\r\nI'm not sure how the immersed boundary will interact with the free surface, so we'd have to test that.\r\n\r\nIn order to implement this scheme in `IncompressibleModel`, we'll have to get rid of the existing implementation. It's also unclear how accurate either this or the previous approximation is without modification of the pressure solver algorithm.\r\n\r\nI think to merge this we need 1) unit tests and 2) a validation tests that exercises the momentum equations. Supporting user-specified fluxes can come in a subsequent PR.\r\n\r\nSome of the pieces to support immersed boundaries with VerticallyImplicitTimeDiscretization are in place but it's not 100% supported yet.\r\n\r\ncc @hdrake @ali-ramadhan ",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-12T06:58:47Z",
+    "deletions": 217,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-05-19T07:31:27Z",
+    "number": 1654,
+    "title": "Basic `ImmersedBoundaryGrid` + `GridFittedBoundary` implementation"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "Assert that the topology is Flat in the vertical and also have a test that `Periodic` or `Bounded` in the vertical creates an error. ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-17T18:30:11Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2021-05-19T11:06:19Z",
+    "number": 1662,
+    "title": "assert shallow water model is flat and add test"
+  },
+  {
+    "additions": 486,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is a first stab at tackling #1493.\r\n\r\nIt adds a `FieldTimeSeries` type that stores a time series of an entire field taken from a JLD2 file and a `FieldDataset` function that stores all the fields from a JLD2 file in a `Dict{String,FieldTimeSeries}`.\r\n\r\nThere are two flavors: `FieldTimeSeries{InMemory}` where the data is loaded fully into memory into a 4D array, and `FieldTimeSeries{OnDisk}` which lazily loads different time snapshots from disk.\r\n\r\nIndexing linearly into a `FieldTimeSeries` returns a `Field`.\r\n\r\nImmediate TODO:\r\n- [x] Test `architecture = GPU()`.\r\n\r\nRight now it's pretty barebones. Some more work on `Oceananigans.Fields` might be needed before we get a fully-featured `FieldTimeSeries`. Eventually it would be great to be able to be able to:\r\n1. Have `FieldTimeSeries` work with abstract operations like it was a `Field` broadcasting over time.\r\n2. Work with `FieldTimeSeries` as if it were a 4D array (with operations ignoring the halos).\r\n2. Have named dimensions, slick selectors, and references dimensions through DimensionalData.jl.\r\n\r\nSome things to think about:\r\n1. Since the aim is to work with abstract operations, `FieldTimeSeries` right now only work with JLD2 data that includes halos. Do we want to support loading data without halos?\r\n2. Do we want `FieldTimeSeries` to support reading from NetCDF? If the answer to (1) is yes then this shouldn't be hard to support.\r\n3. Right now function boundary conditions are lost in serialization. We should probably allow users to specify boundary conditions on `FieldTimeSeries`.",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-07T22:54:26Z",
+    "deletions": 99,
+    "labels": [],
+    "mergedAt": "2021-05-19T12:00:59Z",
+    "number": 1641,
+    "title": "Prototyping `Oceananigans.OutputReaders`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-19T15:30:12Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-05-19T15:32:02Z",
+    "number": 1671,
+    "title": "Bump to 0.57.3"
+  },
+  {
+    "additions": 595,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Just updating the `Manifest.toml` and the Buildkite Julia version number to see if everything passes. I've been using 1.6 fine on my laptop so this should test 1.6 + GPUs.",
+    "changedFiles": 48,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-29T11:28:19Z",
+    "deletions": 438,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2021-05-19T17:44:18Z",
+    "number": 1514,
+    "title": "Upgrade to Julia 1.6"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Don't think we need it anymore and it's blocking the v0.58.0 tag: https://github.com/JuliaRegistries/General/pull/37071",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-19T18:42:02Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-05-19T20:06:03Z",
+    "number": 1674,
+    "title": "No need for explicit dependence on ArrayInterface.jl anymore"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": ":)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-19T20:23:05Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-05-19T22:45:59Z",
+    "number": 1675,
+    "title": "Replaces a leftover Julia 1.5 -> 1.6"
+  }
+]

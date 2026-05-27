@@ -1,0 +1,128 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This test occasionally fails as I set the tolerance a little low.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-12T23:05:09Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-09-13T01:02:58Z",
+    "number": 400,
+    "title": "Increase tolerance for tracer conservation test"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a minor performance optimization that changes the 'default' boundary condition type to `BoundaryCondition{Flux, Nothing}`.\r\n\r\nUsing this type elides the adding of 0's in the case of zero flux boundary conditions.\r\n\r\nThe functionality for eliding computation in this case was already implemented; however it was not used by default. \r\n\r\nThis may address #397, but @ali-ramadhan we need to benchmark.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-13T10:19:03Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-09-13T12:47:16Z",
+    "number": 402,
+    "title": "Use {Flux, Nothing} for default boundary condition type rather than {Flux, 0}"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Add a warning if trying to create a GPU model with a grid where `Nx` or `Ny` are not a multiple of 16.\r\n\r\nSome GPU kernels still use the hard-coded `Tx = Ty = 16` for calculating thread-block layouts. See PR https://github.com/climate-machine/Oceananigans.jl/pull/308 for why.\r\n\r\nEven if we were to get rid of the hard-coded `Tx, Ty` there will always be weird grid sizes like 17x33x47 that you can run no problem on a CPU, but might not be able to create a perfect thread-block layout for without having extra threads that do nothing, but extra threads can do bad stuff like apply a boundary condition twice if we're not careful.\r\n\r\nApologies to @beta-effect who was burned by this in the past.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-11T14:12:25Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-09-13T14:57:06Z",
+    "number": 398,
+    "title": "Add warning if GPU model grid Nx, Ny are not multiple of 16"
+  },
+  {
+    "additions": 173,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR simplifies and generalizes the model constructor, which is a major change to the API. Except for `initialize_tracers` and `float_type`, all of the keyword arguments to `Model` now correspond semantically to the fields of model. In addition to clarifying the arguments of the model constructor, this will make checkpointing easier. \r\n\r\nIn addition, model fields that contain arrays, and thus are involved with large amounts of memory allocation, can be initialized through the model constructor. This should enable upgrades to the checkpointer that make it possible to checkpoint very large models that fill GPU memory.\r\n\r\nFinally, we add three new convenience constructors that retain the legacy behavior of model, and provide convenient ways to initialize particular models: `BasicModel`, `BasicChannelModel`, and `NonDimensionalModel`. `BasicModel` and `BasicChannelModel` closely resembles the original model constructor, while `NonDimensionalModel` allow parameters to be set by specifying non-dimensional numbers, rather than dimensional constants.\r\n\r\nResolves #372.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0ODYxMTU1NzA=",
+        "number": 372,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/372"
+      }
+    ],
+    "createdAt": "2019-09-13T02:12:24Z",
+    "deletions": 162,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-09-13T16:48:36Z",
+    "number": 401,
+    "title": "Simplification and generalization of Model constructors"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2108,
+    "author": {
+      "id": "MDQ6VXNlcjEwMTA0Njc=",
+      "is_bot": false,
+      "login": "SimonDanisch",
+      "name": "Simon"
+    },
+    "body": "Use lift to visualize a changing field.\r\nThe updated code is designed in a way, that the mesh doesn't need recalculating if the sphere itself doesn't change, so only color values will get updated, which is much more efficient.\r\nAlso, started using the Makie native types to avoid conversions.\r\nWith this PR, a basic slider example works:\r\n```julia\r\nfig = Figure()\r\nlevel_s = Slider(fig[2, 1], range = 1:n)\r\n# plot level at slider\r\nlevel_field = map(level_s.value) do n\r\n    ClimaCore.level(T, n)\r\nend\r\nplot(fig[1, 1], level_field, axis=(show_axis=false,))\r\nfig\r\n```\r\n![clima-slider](https://user-images.githubusercontent.com/1010467/189872611-e27d5f45-ba3c-4616-8e97-b8d5599230b5.gif)\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-13T10:01:52Z",
+    "deletions": 102,
+    "labels": [],
+    "mergedAt": "2022-12-17T06:11:12Z",
+    "number": 940,
+    "title": "Make slider interaction work for Makie Field recipe"
+  }
+]

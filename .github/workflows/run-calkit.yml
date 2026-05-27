@@ -32,9 +32,19 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          # The clima-data pixi env (under .calkit/envs/clima-data) installs
+          # itself on first use; we just need pixi on PATH here.
+          run-install: false
       - name: Install Calkit
         run: uv tool install calkit-python
       - name: Run Calkit
         uses: calkit/run-action@v2
         env:
           BUILDKITE_PAT: ${{ secrets.BUILDKITE_PAT }}
+          # gh CLI inside the clima-data pixi env picks up GH_TOKEN
+          # automatically, so no `gh auth login` is needed in CI.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO || 'petebachant@gmail.com' }}

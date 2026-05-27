@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 245,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds shmem support for InterpolateC2F.\r\n\r\nI'm observing some difference between profiling with `@benchmark CUDA.@sync bench_kernels!($fields)` and using `CUDA.@profile`. The latter is better matching what I see in nsight compute, and I'm more inclined to believe those numbers. It may be that the former is also capturing launch latency, which may be more dominant.\r\n\r\nSo, it might be a good idea to switch some of our timings to use `CUDA.@profile` as the device activity shrinks.\r\n\r\nThe dry baro wave on this branch is now at [4 SYPD](https://buildkite.com/clima/climaatmos-target-gpu-simulations/builds/417#019639ac-f657-45b9-ad04-a3014fc64ec1/169-569), the most recent main branch run was at [3.479 SYPD](https://buildkite.com/clima/climaatmos-target-gpu-simulations/builds/406#01953356-6127-4dc4-b624-6062ba0382a5/169-569).\r\n\r\nThat said, it looks like shmem is not well optimized at low vertical resolution. So, we should either use a heuristic to disable shmem for low vertical resolution, or use a better threading pattern at low vertical resolution. That's a separate issue that we can tackle.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-15T13:31:33Z",
+    "deletions": 144,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-04-15T17:48:54Z",
+    "number": 2290,
+    "title": "Add shmem support for InterpolateC2F"
+  }
+]

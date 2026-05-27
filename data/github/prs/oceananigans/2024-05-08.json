@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #3583",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6H5lod",
+        "number": 3583,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3583"
+      }
+    ],
+    "createdAt": "2024-05-08T06:29:47Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2024-05-08T15:09:30Z",
+    "number": 3591,
+    "title": "Fix typo in callbacks example"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTcxMTY2",
+      "is_bot": false,
+      "login": "hdrake",
+      "name": "Henri Drake"
+    },
+    "body": "This example includes no explicit modification to the BCs on buoyancy, meaning that it defaults to a no-flux BC (or `FluxBoundaryCondition()`) on buoyancy.\r\n\r\nFollowing equation (6) of [Wenegrat and Thomas (2020)](https://journals.ametsoc.org/view/journals/phoc/50/6/JPO-D-20-0027.1.xml), we instead enforce a no-normal diffusive flux boundary condition on the *total* buoyancy, i.e. the perturbation plus the constantly-stratified `BackgroundField`. Because Oceananigans.jl does not allow diffusion to act on `BackgroundField`s, the background part of the no-flux BC is missing. However, we here can enforce it by specifying a perturbation flux BC that matches the implied background flux.\r\n\r\nOther minor changes:\r\n- Added equally-spaced buoyancy surfaces to movie panels\r\n- Guess timestep by minimum of advective and diffusive timescales, instead of just the advective timescale\r\n\r\nThis addresses the problem with the `tilted_bottom_boundary_layer.jl` example identified by @liuchihl and noted in https://github.com/CliMA/Oceananigans.jl/issues/3568. Recommend closing that issue but perhaps continuing some of the discussion in a \"Discussion\" post.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-05T22:14:39Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2024-05-08T21:23:03Z",
+    "number": 3581,
+    "title": "Enforce total buoyancy flux BC in tilted geometry example"
+  }
+]

@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-19T21:49:40Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-05-20T04:01:58Z",
+    "number": 4525,
+    "title": "FirstTimeStep: don't call update_state twice in a row"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This prevents wrong answers when repeatedly calling `update_state!`\r\n\r\ncc @wsmoses @jlk9 \r\n\r\n@navidcy this may also affect CATKE checkpointing (but it still is not possible unless we cache `previous_velocities` and the time-averaged buoyancy flux).",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-19T23:21:09Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2025-05-20T04:02:24Z",
+    "number": 4526,
+    "title": "Don't time-step TKE unless warranted (add clock to CATKE and TKEDissipation)"
+  },
+  {
+    "additions": 125,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "Following discussion in https://github.com/CliMA/Oceananigans.jl/issues/4367",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-09T17:54:43Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-05-20T04:02:46Z",
+    "number": 4494,
+    "title": "Changes default AMD poincare coefficient"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The warning message when setting the timestepper assumes that all prognostic fields require an associated tendency field.\r\nHowever, not all prognostic fields need an associated tendency stored. An example is the free surface field using the `SplitExplicitFreeSurface` that evolves with $$\\frac{\\partial \\eta}{\\partial t} = - \\nabla  \\cdot \\int_0^\\eta u dz$$ where the tendency is simple enough to be computed on the fly inside the evolution kernel.\r\nThis PR updates the warning message to reflect the needs of the model.\r\n\r\nDiscussed in #4516 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-20T07:50:20Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-05-20T15:51:18Z",
+    "number": 4528,
+    "title": "Fix warning message for set timestepper"
+  }
+]

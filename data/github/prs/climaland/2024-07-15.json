@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 780,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdd a year long global simulation to run 1x per week\r\n\r\n\r\nNote that to minimize NaNs, I have decreased the resolution at the surface from to 50cm (in reality, we want something like 2.5 cm), and increased ac_canopy by 10x (in reality, ~10^3). Once we resolve the NaNs in this simulation through future PRs, we can decrease both of these.\r\n\r\nExample output after 7 days:\r\nsoil water content\r\n![slw 604800 0](https://github.com/user-attachments/assets/a8cb002f-18a3-401d-b046-4e08c05af946)\r\ngpp\r\n![gpp 604800 0](https://github.com/user-attachments/assets/7c161f9f-7edb-467c-a8c1-64a635b6a380)\r\n\r\n## Content\r\nAdd a year long global simulation to run 1x per week [`pipeline.yml`, `experiments/long_runs/land.jl`, diagnostics code]\r\n\r\nUse an updated set of soil parameters with the correct lat/lon and higher resolution [changes to `richards_runoff.jl`, `Artifacts.toml`, and soil params file name in `land.jl`]\r\n\r\nFix bug in bucket model which did not update drivers in callback [`global_bucket_function.jl`]\r\n\r\nUpdate `NEWS.md`\r\n\r\n## To-do\r\nThis PR:\r\n- restore buildkite Manifest\r\n- review\r\n\r\nFuture PRs - summarizing Alexis' comment below and adding some - \r\n1. Figure out NaNs - (a) if we make ac_canopy larger, fewer NaNs. (b) if we make the thermal timescale for phase change longer, we get fewer NaNs (c) if we make the timestep smaller, we get fewer NaNs -> issue with timestepping? better implicit solver? One other question: why NaNs, and not domain errors? \r\n2. Improve/debug diagnostics - more variables, perhaps we want monthly averages\r\n3. Make better plots, maybe animations\r\n4. Use mask in diagnostics so we only get continents\r\n5. Use units that are reasonable for the community\r\n\r\nEven later: in ClimaAnalysis, have a function to generate a local dashboard where we can use a slider to change time, a menu to change variables, maybe a play button for animations\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-02T20:49:22Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-07-15T01:57:55Z",
+    "number": 688,
+    "title": "Add a year long global simulation to run 1x per week"
+  },
+  {
+    "additions": 266,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n1. Replace PrescribedSOC (which only accepted analytically prescribed SOC) with PrescribedSoilOrganicCarbon, which now accepts a TimeVaryingInput\r\n2. SOC is now update with a driver callback and NOT every step in update_aux!\r\n3. Removes allocation of a field at every timestep since p.drivers.soc is now preallocated and updated in place.\r\n\r\n\r\n## To-do\r\n\r\n\r\n## Content\r\n1. Our driver functionality was hardcoded to have two drivers: atmos, and radiation. Functions expected and returned two arguments, one for atmos, one for radation, set to `nothing` if not needed. Now we pass in  general tuples of any length (atmos, radiation, SOC, ...etc), and an empty tuple indicates no drivers needed. This required a couple new functions (new methods of make_update_drivers and initialize_drivers)\r\n2. Adds a new driver (PrescribedSoilOrganicCarbon) and driver methods for this\r\n3. Removes PrescribedSOC from Biogeochemistry\r\n4. updates all simulations and tests\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 45,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-07T22:38:47Z",
+    "deletions": 188,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      },
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      },
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-07-15T18:11:15Z",
+    "number": 692,
+    "title": "Generalize drivers; make driver for soil organic carbon"
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "additions": 881,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR (part 3/3) upgrades the field abstraction so fields store their own boundary conditions. This simplifies the model boundary condition hierarchy and generalizes the field and boundary conditions abstractions so they can be used for a compressible model (and any other model we come up with in the future). All future fields will have boundary conditions so PRs like #601 won't be necessary again.\r\n\r\nThe only change in user interface is that you pass a named tuple to the model constructor now instead of an instance of `SolutionBoundaryConditions`.\r\n\r\nThis also works for LES diffusivities so the amount of convoluted scripting gymnastics is much reduced (see test from #601). Setting a diffusivity BC is now almost as easy as a tracer BC.\r\n\r\n```julia\r\ngrid = RegularCartesianGrid(FT, size=(16, 16, 16), length=(1, 1, 1))\r\n\r\nbuoyancy_bcs = TracerBoundaryConditions(grid, bottom=BoundaryCondition(Gradient, bz))\r\n\u03ba\u2091_bcs = DiffusivityBoundaryConditions(grid, bottom=BoundaryCondition(Value, \u03ba\u2080))\r\nmodel_bcs = (b=buoyancy_bcs, \u03ba\u2091=(b=\u03ba\u2091_bcs,))\r\n\r\nmodel = IncompressibleModel(\r\n    grid=grid, architecture=arch, float_type=FT, tracers=:b, buoyancy=BuoyancyTracer(),\r\n    closure=AnisotropicMinimumDissipation(), boundary_conditions=model_bcs\r\n)\r\n```\r\n\r\nInternally: No surprise, this change ended up being pretty invasive. But note that we now have a more flexible and easier to use package with fewer lines of code!\r\n\r\nI'm happy to discuss and iterate over the choices that were made in this PR. But glad that I was able to make these changes. Development of the compressible model can continue based on this branch.\r\n\r\nChanges:\r\n1. Fields has a new property: `field.boundary_conditions`.\r\n\r\n2. Better pretty printing for fields:\r\n```\r\nField located at (Cell, Cell, Cell)\r\n\u251c\u2500\u2500 data: OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}, size: (18, 18, 18)\r\n\u251c\u2500\u2500 grid: RegularCartesianGrid{Float64, Periodic, Periodic, Bounded}(Nx=16, Ny=16, Nz=16)\r\n\u2514\u2500\u2500 boundary conditions: x=(west=Periodic, east=Periodic), y=(south=Periodic, north=Periodic), z=(bottom=NoFlux, top=NoFlux)\r\n```\r\n\r\n3. Field tuple constructors have two versions now. One that accepts boundary conditions (useful in model constructors) and another that accepts full fields (useful for checkpoint restoration and other custom functionality).\r\n\r\n4. ~~You can pass anything into `VelocityFields` and `TracerFields`. Perhaps we should check whether everything passed into these functions is a `Field` or `AbstractField`. But for now that's extra code and it's not an exported function so I'm okay leaving it as is (we might want the flexibility in the future?).~~ A check was added in #627.\r\n\r\n5. Model no longer has the `boundary_conditions` property.\r\n\r\n6. There is no need for `SolutionBoundaryConditions` and `ModelBoundaryConditions` anymore: code is simpler :tada:\r\n\r\n7. `TurbulentDiffusivities` has been renamed to `DiffusivityFields` for consistency with `VelocityFields` and `TracerFields`, etc.\r\n\r\n8. For each turbulence closure, `DiffusivityFields` gets the same two versions (one if you want control over the full field, another if you just want to set boundary conditions).\r\n\r\n9. Halo filling and parts of the time stepping have been simplified as there is no need to juggle around and bundle up boundary conditions.\r\n\r\nSome comments:\r\n1. It's not clear whether fields for abstract operations should have boundary conditions as they don't have halos and we don't impose boundary conditions on them. Do we want to generally set their boundary conditions to `nothing`? I did this for the abstract operations tests and they all passed.\r\n2. We could further simplify the time stepping code if we adapt the `Field` abstraction to be GPU compatible (#298).\r\n3. This is probably an edge case but I don't think setting diffusivity BCs when using a tuple of closures will actually work. Or rather, I'm not sure how to specify two different diffusivity BCs, one for each closure.\r\n4. Before merging I still need to update the checkpointer and update the documentation.\r\n\r\nResolves #606\r\n\r\nNote: This PR branches off from #628.",
+    "changedFiles": 45,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NTc1NTIyOTg=",
+        "number": 606,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/606"
+      }
+    ],
+    "createdAt": "2020-02-17T04:02:47Z",
+    "deletions": 932,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2020-02-22T01:03:27Z",
+    "number": 631,
+    "title": "Upgrade fields to store boundary conditions"
+  }
+]

@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 1187,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is a first, explorational, attempt to introduce higher order (upwind and WENO) schemes in a Vector Invariant formulation (following chapter 7 of https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.705.7543&rep=rep1&type=pdf).\r\n\r\nTo test them, this PR also revamps some test cases implemented by @sandreza in #1570 and new ones from the test set of Williamson et al 1992\r\n\r\nHere a comparison between the 2nd order vector invariant scheme and the WENO vector invariant scheme on the Rossby-Haurwitz wave test case implemented in #1570 with an Implicit free surface formulation (`g = 900  ms\u207b\u00b2`) and no dissipation. The video shows contours of vertical vorticity\r\n\r\nhttps://user-images.githubusercontent.com/33547697/156962391-77527d5d-a059-450e-b3bb-a517237e485c.mp4\r\n\r\nThis is a first exploration. I am not completely convinced WENO interpolation can be used for vorticity onto curvilinear coordinates without a proper coordinate transform (although this is what we do for tracers...).\r\n\r\nIndeed, I am not completely sure about the correctness of the solution showed in the videos above... The scheme is for sure more stable, but I think it's just the byproduct of numerical diffusion being too high (there is no viscosity!). The same was happening when using uniform WENO on a stretched grid. It actually seems that a coordinate transformation should be applied and WENO weights should be different in case of a curvilinear grid (https://arxiv.org/pdf/1711.06212.pdf). \r\n\r\nApplying WENO one dimension at a time instead of doing a full 2D/3D interpolation might also be incorrect for FV...\r\n\r\n(This might also impact how we do tracer advection with WENO on curvilinear grids)",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-07T03:24:25Z",
+    "deletions": 513,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2022-03-29T02:50:55Z",
+    "number": 2317,
+    "title": "High order vector invariant advection"
+  },
+  {
+    "additions": 449,
+    "author": {
+      "id": "MDQ6VXNlcjIyNjY4NjYy",
+      "is_bot": false,
+      "login": "sandreza",
+      "name": "Andre Nogueira Souza"
+    },
+    "body": "Currently a work in progress, but it has one validation experiment (Rossby-Haurwitz) and one \"for fun\" dynamics test (Bickley Jet)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-12T16:56:11Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-03-29T02:50:57Z",
+    "number": 1570,
+    "title": "[WIP] Adds Rossby Haurwitz and Spherical Bickley jet examples"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Removes a sentence that may have been left over from some previous PR.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-27T04:01:54Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2022-03-29T03:49:06Z",
+    "number": 2387,
+    "title": "Improve `Reduction` docstring"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjIwMzM2MTEz",
+      "is_bot": false,
+      "login": "johnryantaylor",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-12T22:25:04Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2022-03-29T03:49:41Z",
+    "number": 2338,
+    "title": "Update architecture in distributed benchmark scripts"
+  }
+]

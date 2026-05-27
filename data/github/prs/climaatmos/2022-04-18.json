@@ -1,0 +1,144 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Needs some experimentation",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-15T22:20:01Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-04-18T00:36:43Z",
+    "number": 311,
+    "title": "upwind transport of energy + tracers"
+  },
+  {
+    "additions": 269,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-18T02:47:08Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2022-04-18T03:35:34Z",
+    "number": 318,
+    "title": "Add some perf monitoring scripts"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Yesterday's long run (with multi-threading enabled) is taking much longer than the single thread case. This PR:\r\n - specifies the `slurm_cpus_per_task` env for the long runs.\r\n - Tries out additional long run jobs with `dt = 600`",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-18T14:50:06Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2022-04-18T15:45:19Z",
+    "number": 319,
+    "title": "Specify slurm_cpus_per_task env, try larger dt, for long runs"
+  },
+  {
+    "additions": 550,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds regression tests, which involves adding the following code and logic:\r\n\r\nNew code at end of driver.jl:\r\n\r\n1) Simulate case with `job_id`\r\n2) load `all_best_mse` (from `mse_tables.jl`), which contains errors for each reference, and extract errors for the specific case (`best_mse` for the given `job_id`).\r\n3) export `FieldVector` at last timestep to NC file\r\n4) call `regression_test` which:\r\n   - Grabs:\r\n       - The last NC file on central that was merged into main. or\r\n       - A specific NC file on central that was merged into main.\r\n   - Returns a `computed_mse_dict` from computed NC (step 3) against the NC file on main\r\n5) Export `computed_mse_dict` to a `.json`\r\n6) Test that `computed_mse_dict` is no worse than the `best_mse` (determines if CI passes or not)\r\n\r\nAdditional jobs after all job_ids:\r\n\r\n1) Print `computed_mse_dict` for all jobs to make updating `mse_tables.jl` easy\r\n2) If on staging branch (all tests have passed, and the PR is effectively merging)\r\n  - move NC files and `computed_mse_dict` for all `job_ids` into folder on central\r\n  - folder has a commit sha prefix, and we can look this up based on when created\r\n\r\nDocs are needed, both for functions and general workflow. I'll open an issue to document this to document the code a bit more. I'd rather delay it a bit because some of this code (e.g., `NCRegressionTests.jl` can be moved to an entirely separate repo with its own docs), and other functionality is likely to be moved into ClimaCore.\r\n\r\nBeing that things are moving quickly, and this testing infrastructure makes our CI stateful, I'm inclined to get this merged earlier than later so that we can build confidence with it.\r\n\r\nI'm more than happy to answer questions, and I know that this is a large PR, but most of what's been added was transferred from TC.jl (which was built incrementally).",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-15T22:47:52Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      },
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2022-04-18T18:56:14Z",
+    "number": 312,
+    "title": "Add regression infrastructure"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Add `.dev/up_deps.jl` script for updating manifest files.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-18T18:39:54Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "279035",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xN8BK",
+        "name": "Workflow :gear: :ocean:"
+      }
+    ],
+    "mergedAt": "2022-04-18T19:19:11Z",
+    "number": 320,
+    "title": "Add .dev/up_deps.jl script"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Now that results have been saved on central, we can remove `ds_filename_reference = ds_filename_computed` in the driver so that we're comparing with a reference on main.\r\n\r\nThis is a follow-up to #312. This is a first attempt at `#4` in #301.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-18T19:02:23Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2022-04-18T21:32:10Z",
+    "number": 321,
+    "title": "Hook in regression tests"
+  }
+]

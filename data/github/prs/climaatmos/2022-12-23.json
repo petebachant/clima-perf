@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades our dependencies",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-22T02:22:18Z",
+    "deletions": 44,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-12-23T01:32:25Z",
+    "number": 1220,
+    "title": "Upgrade deps"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is a peel off from #1208.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-23T17:56:24Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-12-23T18:37:12Z",
+    "number": 1226,
+    "title": "Prepare for using T_guess"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Adds a `VerticalDiffusion` type, which incorporates `diffuse_momentum` and `C_E`\r\n - Fixes a reference to a non-constant global in the callbacks (`vert_diff`)\r\n - Changes the `vert_diff` CL option to be a string, which can still be `true`/`false`, but also `VerticalDiffusion` (which is default when `true`)\r\n\r\nI've also changed `get_surface_fluxes!` so that it dispatches on `ClimaAtmos`'s `vert_diff` (either `VerticalDiffusion` or `Nothing`) and removed the dispatching on `Coupled`/`Decoupled`, so that it can be more easily called in other contexts. cc @szy21, @LenkaNovak.\r\n\r\nTo keep things working the same here, I've added a compile-time if-else around the calls, similar to what we had before:\r\n\r\n```julia\r\n        if p.atmos.coupling isa CA.Decoupled\r\n            CA.get_surface_fluxes!(Y, p, t, colidx, vert_diff)\r\n        end\r\n```",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-23T21:37:27Z",
+    "deletions": 56,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-12-23T22:13:11Z",
+    "number": 1227,
+    "title": "Refactor vert diff BL tend"
+  }
+]

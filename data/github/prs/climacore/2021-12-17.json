@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 2048,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This is a large refactor and simplification of the Meshes and Topologies modules:\r\n\r\n- Meshes are now all very lightweight objects, currently supporting interval, rectangles and cubed spheres\r\n  -  A `RectangleMesh` is now explicitly a product of two `IntervalMesh`s\r\n  - `RectangleMesh` replaces both `EquispacedRectangleMesh` and `TensorProductMesh`\r\n  - There are various `AbstractCubedSphereMesh`es, which now encode the warping functions\r\n- Meshes now have a relatively well-specified API: basically the key function is `opposing_face` (all other properties are computed from this).\r\n   - It internally now uses Base Julia `CartesianIndex` machinery, which gets rid of a lot of manual indexing we had to do previously.\r\n   - Cubed spheres now use a different panel ordering (it matches the S2Geometry library and Oceananigans).\r\n   - Provide convenience functions for computing face and vertex connectivity matrices.\r\n- There is now only 1 2D Topology object, called (unimaginatively) `Topology2D`. This is a heavier object, in that it stores all the interior face pairs, unique vertices and boundary faces, but is the same for all meshes.\r\n  - It has an option for different element orderings (e.g. to use space-filling curves)\r\n  - This will allow adding a new `DistributedTopology2D` type (#323), which should be able to use the same mesh interface.\r\n",
+    "changedFiles": 66,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-14T06:44:33Z",
+    "deletions": 3624,
+    "labels": [
+      {
+        "color": "EA9F0A",
+        "description": "",
+        "id": "MDU6TGFiZWwzMTA1MTUwNjM4",
+        "name": "API"
+      },
+      {
+        "color": "0E712D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQ4MDA2NTAz",
+        "name": "Unstructured 2D mesh"
+      }
+    ],
+    "mergedAt": "2021-12-17T17:25:42Z",
+    "number": 349,
+    "title": "Refactor mesh and topology code"
+  },
+  {
+    "additions": 228,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "similar to transform but it add zeros values for off axis components,necessary for calculating vector field contributions over topography wrt to non orth local geometry\r\n\r\ncc @akshaysridhar \r\n\r\ncloses #338 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5AEyUx",
+        "number": 338,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/338"
+      }
+    ],
+    "createdAt": "2021-12-10T20:08:34Z",
+    "deletions": 129,
+    "labels": [],
+    "mergedAt": "2021-12-17T18:11:15Z",
+    "number": 348,
+    "title": "add AxisTensor projection operation"
+  }
+]

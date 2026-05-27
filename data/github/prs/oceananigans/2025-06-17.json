@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR adds `PiecewiseLinearMask` to the `Forcings` module.\r\n\r\nOne advantage of `PiecewiseLinearMask` over the existing `GaussianMask` is that it has a well-defined region of action, as opposed to `GaussianMask` which decays smoothly and it's up to the user to decide where the mask is small enough that it doesn't affect the solution. Another advantage is that it's probably faster than `GaussianMask`, although I haven't really tested that.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-16T23:07:15Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-06-17T04:39:33Z",
+    "number": 4607,
+    "title": "Add `PiecewiseLinearMask`"
+  },
+  {
+    "additions": 74,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "PR #4546 changed the implementation of zstar and a nonlinear free surface. In particular, before #4546 we were \r\n- 1. updating `\u03c3T`\r\n- 2. performing implicit diffusion on `\u03c3T`\r\n- 3. advancing `\u03c3`\r\n- 4. diagnosing `T` at the new timestep\r\n\r\nPR#4546 changed this in\r\n- 1. updating `\u03c3`\r\n- 2. computing directly `T` from updating `\u03c3T` and dividing by the new `\u03c3`\r\n- 3. implicit diffusion\r\n\r\nAfter #4546, the diffusion is performed on `T` and not `\u03c3T`, but #4546 did not update the vertically implicit diffusion solver  (I also think there was a bug before), for this reason, the non linear free surface solution is way more diffusive now than the same solution with a static grid. This leads to SST increasing drastically using zstar compared to using a static vertical coordinate in ClimaOcean. \r\n\r\nThis PR corrects the formulation and adds a very simple test, where if the free surface does not change, the results should be the same for static and moving grid `(H+\u03b7)_moving == H_static`.\r\nIf we run same test I added in this PR on main:\r\n```julia\r\nz_static = [i + rand() for i in -15:0]\r\nz_static[1] = -15\r\nz_static[end] = 0\r\nz_moving = MutableVerticalDiscretization(z_static ./ 1.5)\r\n    \r\nc\u2080 = rand(15)\r\n\r\ngrid_static = RectilinearGrid(size=15, z=z_static, topology=(Flat, Flat, Bounded))\r\ngrid_moving = RectilinearGrid(size=15, z=z_moving, topology=(Flat, Flat, Bounded))\r\n\r\nfill!(grid_moving.z.\u03b7\u207f,   5)\r\nfill!(grid_moving.z.\u03c3\u1d9c\u1d9c\u207b, 1.5)\r\nfill!(grid_moving.z.\u03c3\u1d9c\u1d9c\u207f, 1.5)\r\nfill!(grid_moving.z.\u03c3\u1d9c\u1da0\u207f, 1.5)\r\nfill!(grid_moving.z.\u03c3\u1da0\u1da0\u207f, 1.5)\r\nfill!(grid_moving.z.\u03c3\u1da0\u1d9c\u207f, 1.5)\r\n\r\nmodel_static = HydrostaticFreeSurfaceModel(; grid = grid_static, \r\n                                            tracers = :c,\r\n                                            closure = VerticalScalarDiffusivity(VerticallyImplicitTimeDiscretization(), \u03ba=0.1))\r\n                                                \r\nmodel_moving = HydrostaticFreeSurfaceModel(; grid = grid_moving, \r\n                                            tracers = :c,\r\n                                            closure = VerticalScalarDiffusivity(VerticallyImplicitTimeDiscretization(), \u03ba=0.1))\r\n                                        \r\nset!(model_static, c = c\u2080)\r\nset!(model_moving, c = c\u2080)\r\n\r\nfor _ in 1:1000\r\n    time_step!(model_static, 1.0)\r\n    time_step!(model_moving, 1.0)\r\nend\r\n\r\nlines(interior(model_static.tracers.c, 1, 1, :), label=\"Static Grid\")\r\nlines!(interior(model_moving.tracers.c, 1, 1, :), label=\"Moving Grid\", linestyle=:dash)\r\naxislegend()\r\n```\r\nwe get \r\n## on main\r\n![image](https://github.com/user-attachments/assets/3637ffa1-fc24-4af9-a785-f204ac500558)\r\n## on this PR\r\n![image](https://github.com/user-attachments/assets/20d82a3d-2a72-49a0-a941-bf717da338ba)\r\n\r\nThe detailed formulation of the equations we solve is begin added in #4588 \r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-09T11:42:49Z",
+    "deletions": 30,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-06-17T12:28:48Z",
+    "number": 4589,
+    "title": "(0.96.33) Correct diffusion with a non-linear free surface"
+  }
+]

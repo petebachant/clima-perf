@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 298,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "- Adds a failure handler struct to all `EnsembleKalmanProcess` objects.\r\n- Implements the `IgnoreFailures` failure handler for all `EnsembleKalmanProcess`es, which maintains the former behavior of the algorithms (i.e, do nothing upon failure).\r\n- Implements the `SampleSuccGauss` failure handler for the Inversion process, which advances the failed ensemble by sampling from an empirical gaussian formed by the successful ensemble.\r\n- Failure may be defined by the user by passing the indices of failed particles to `update_ensemble!`. If nothing is passed, failures are taken to be those forward model evaluations that contain NaNs.\r\n- Adds tests of new failure handlers.\r\n\r\nIn addition:\r\n\r\n- Update equations are encapsulated outside of `update_ensemble!`, and into functions `..._update`.\r\n- Transposes in the Sampler are encapsulated to the failsafe_update call. This allows to work with data as columns in the Sampler's version of `update_ensemble!`.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-25T06:01:05Z",
+    "deletions": 56,
+    "labels": [],
+    "mergedAt": "2022-03-03T00:12:47Z",
+    "number": 112,
+    "title": "Add failsafe EKI with sample_succ_gauss handler."
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nResolves #114 \r\n\r\n## In this PR\r\n- deepcopy in `DataContainers` constructor\r\n- tests to check copy on set and get.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585E_-44",
+        "number": 114,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/114"
+      }
+    ],
+    "createdAt": "2022-03-03T00:45:02Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-03-03T02:13:56Z",
+    "number": 116,
+    "title": "Add deepcopy to setting data"
+  },
+  {
+    "additions": 191,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "Adds the Sample-successful-gaussian Failure Handler for the Unscented Kalman Inversion.\r\n\r\nThe handler is applied during the analysis step, by computing the ill-defined means and covariances over the successful particles. In order to preserve the sum of the weighting scheme, the weights at each successful sigma point are scaled up.\r\n\r\nConsider a set of sigma points {\u03b8_j}={\u03b8_succ_j} U {\u03b8_fail_j}, from which we have to estimate E[G], Cov(G, G) and Cov(G, \u03b8) for the UI update rules. These would generally be computed through the quadrature rules of UKI (possibly modified following Huang et al 2021).\r\n\r\nFor the mean of the forward model eval we do:\r\n\r\n- E[G] \u2248 \u2211_succ [(\u2211W_j) / (\u2211_succ W_j) * W_j * G(\u03b8_succ_j)] if the center particle did not fail (rescaled quadrature).\r\n- E[G] \u2248 \u2211_succ G(\u03b8_succ_j) / len({\u03b8_succ_j}) if the center particle failed (arithmetic mean).\r\n\r\nThe second option is needed because in the modified unscented transform, W_1 = 1 and all other weights are zero. We do similarly for the mean over parameters \u03b8.\r\n\r\nFor the covariances we scale up the weights of the off-centered sigma points and compute over the successful particles,\r\n\r\n- Cov(G, \u03b8) = \u2211_succ [(\u2211_(j>1) Wc_j) / (\u2211_(succ, j>1) Wc_j) * Wc_j * (G(\u03b8_succ_j) - G(m)) * (\u03b8_succ_j - m)]\r\n- Cov(G, \u03b8) = \u2211_succ [(\u2211_(j>1) Wc_j) / (\u2211_(succ, j>1) Wc_j) * Wc_j * (\u03b8_succ_j - m) * (\u03b8_succ_j - m)]\r\n- Cov(G, G) = Wc_1 * (G(m) -E[ G]) * (G(m) -E[ G]) + \u2211_succ_(j>1) [(\u2211_(j>1) Wc_j) / (\u2211_(succ, j>1) Wc_j) * Wc_j * (G(\u03b8_succ_j) - E[G]) * (G(\u03b8_succ_j) - E[G])]\r\n\r\nNote that the term Wc_1 * (G(m) -E[ G]) * (G(m) -E[ G]) disappears when using the modified unscented transform because we take E[G]\u2248G(m). Also, notice that the rescaling is computed over the off-centered sigma points to remain consistent for both Cov(G, \u03b8) and Cov(G, G).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-03T06:08:15Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2022-03-03T20:33:54Z",
+    "number": 118,
+    "title": "Adds SampleSuccGauss FailureHandler for UKI"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "- Bumps version to 0.4 after the addition of FailureHandlers for Inversion and Unscented KalmanProcesses.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-03T20:55:38Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-03-03T21:19:06Z",
+    "number": 120,
+    "title": "Bump version to v0.4."
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-03T21:50:29Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-03-03T22:55:08Z",
+    "number": 121,
+    "title": "Add back julia compat"
+  }
+]

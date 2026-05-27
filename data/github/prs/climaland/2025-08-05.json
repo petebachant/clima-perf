@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 274,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe've been using 2 different MODIS LAI artifacts: one global map for global runs, and one dataset for 4 fluxnet sites to use for site-level simulations. After #1279, we have the ability to read in spatial maps to Point/Column spaces, so we can use the global map for global and site-level runs.\r\n\r\nThis PR switches all site-level (fluxnet) runs to use the global map, and removes the site-specific LAI artifact.\r\n\r\nCloses #1224\r\n\r\n## Content\r\n- [x] rename `find_modis_year_paths` -> `modis_lai_multiyear_paths`\r\n- [x] use `modis_lai_multiyear_paths` instead of `modis_lai_single_year_path` (if we have multiple years of data we may as well use it since this artifact isn't too large). Single year artifact still exists and is tested\r\n- [x] `modis_lai_multiyear_paths` only includes an extra year of data if the end date is in December, instead of always including an extra year of data\r\n- [x] in `modis_lai_multiyear_paths`, remove `PeriodicCalendar` extrapolation from `LinearInterpolation`. Since the data spans multiple years, we get uneven time intervals (e.g. between last date of one year and first date of the next year) so we can't use `PeriodicCalendar` with it\r\n- [x] rename `final_date` -> `end_date` in src/Artifacts.toml for consistency\r\n- [x] always pass `longlat` to domain for fluxnet simulations (this required some restructuring of drivers)\r\n\r\n## LAI values at the start of the simulation\r\n| site ID | site-level LAI artifact (main) | global LAI artifact (this PR) |\r\n| :------ | :--------------------------: | --------------------------: |\r\n| US-MOz | 0.320855   | 0.343325  |\r\n| US-Ha1 | 0.594469 | 0.532508  |\r\n| US-Var | .0962558  | 1.0596 |\r\n| US-NR1 | 0.488428 | 0.40729  |\r\n\r\nNote that the values from the global LAI artifact are identical whether we have `use_lowres_clm` true or false.\r\n\r\n## Changes in results\r\nFor most variables output from the 4 fluxnet sites, the R-squared value compared to data remained the same (variables are LHF, SHF, LWU, SWU, GPP, ET). RMSD values mostly decreased (suggesting better agreement with data) but RMSD changes range from 2.3% increase (Ha1 GPP) to 20% decrease (Ozark GPP). Overall it seems like this change slightly improves results, but does not have a strong effect.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6__HPW",
+        "number": 1224,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1224"
+      }
+    ],
+    "createdAt": "2025-07-30T23:13:42Z",
+    "deletions": 160,
+    "labels": [],
+    "mergedAt": "2025-08-05T18:07:13Z",
+    "number": 1282,
+    "title": "Use global MODIS LAI for all simulations; remove `modis_lai_fluxnet_sites` artifact"
+  }
+]

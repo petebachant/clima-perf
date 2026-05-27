@@ -1,0 +1,219 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-24T17:42:35Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2023-10-25T05:19:17Z",
+    "number": 2282,
+    "title": "Increase job memory for perf jobs and lower allocations"
+  },
+  {
+    "additions": 100,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the dependence on OrdinaryDiffEq \ud83d\udca5.\r\n\r\nI did have to add a function for computing indefinite integrals:\r\n```julia\r\nfunction column_indefinite_integral!(\r\n    f::Function,\r\n    \u1da0integral::Fields.ColumnField,\r\n    x\u2080,\r\n    \u1d9czfield::Fields.ColumnField,\r\n    average = (a, b) -> (a + b) / 2,\r\n)\r\n```\r\n(I guess we could maybe get rid of `\u1d9czfield` and extract it from `\u1da0integral`?)\r\n\r\nWhich returns a new `ColumnInterpolatableField` object:\r\n\r\n```julia\r\nstruct ColumnInterpolatableField{F, D}\r\n    f::F\r\n    data::D\r\n    function ColumnInterpolatableField(f::Fields.ColumnField)\r\n        zdata = vec(parent(Fields.Fields.coordinate_field(f).z))\r\n        fdata = vec(parent(f))\r\n        @assert length(zdata) == length(fdata)\r\n        data = Dierckx.Spline1D(zdata, fdata; k = 1)\r\n        return new{typeof(f), typeof(data)}(f, data)\r\n    end\r\nend\r\n(f::ColumnInterpolatableField)(z) = Spaces.undertype(axes(f.f))(f.data(z))\r\n```\r\n\r\nUltimately, this replaces `ODE.solve`, which itself is not an issue, but `ODE.Tsit5()` (and every other ODE algo implementation) is (reasonably) not in SciMLBase.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-03T20:17:52Z",
+    "deletions": 62,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-10-25T06:12:34Z",
+    "number": 2183,
+    "title": "Remove dependence on OrdinaryDiffEq"
+  },
+  {
+    "additions": 166,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAs discussed with Tapio, we should use some simple function forms to test entrainment and detrainment. To simplify the testing, this PR mainly combines different entrainment and detrainment into `GeneralizedEntrainment` and `GeneralizedDetrainment`. We can then test different entrainment and detrainment by using different parameters. The function forms are:\r\nEntrainment: 1/timescale + c1 * w / z + minimum area limiter\r\nDetrainment: 1/timescale + c2 * w + c3 * min(b, 0) / w + maximum area limiter\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n- [x] Replace hard-coded numbers in area limiters with parameters after #2276 \r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 25,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs50l1MY",
+        "number": 2268,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2268"
+      }
+    ],
+    "createdAt": "2023-10-24T05:01:38Z",
+    "deletions": 120,
+    "labels": [],
+    "mergedAt": "2023-10-25T07:33:12Z",
+    "number": 2278,
+    "title": "refactor entrainment and detrainment"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes OrdinaryDiffEq from the environments, a followup to #2183. Now, OrdinaryDiffEq is only a weakdep, which conditionally comes in (if used) through DiffEqCallbacks.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-25T13:36:39Z",
+    "deletions": 628,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-10-25T14:27:16Z",
+    "number": 2288,
+    "title": "Remove OrdinaryDiffEq from environments"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes an explicit use of CUDA in `benchmark_step!`, so that we have no direct package loading of CUDA.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-24T21:10:28Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-10-25T14:27:16Z",
+    "number": 2284,
+    "title": "Remove explicit use of CUDA in benchmark_step"
+  },
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Following what we discussed @szy21 , @Sbozzolo  this PR splits prognostic edmfx precomputed quantities into 3 steps\r\n1) updating environment\r\n2) updating updraft thermo state and BC\r\n3) updating the closures.\r\n\r\nI'm not sure if it actually makes anything better though. Or if you want to split the individual closures. ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-23T23:50:27Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-10-25T16:40:17Z",
+    "number": 2274,
+    "title": "separate precomputed quantities in 3 funcs"
+  },
+  {
+    "additions": 96,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-24T22:56:02Z",
+    "deletions": 46,
+    "labels": [
+      {
+        "color": "B8EBA2",
+        "description": "not important",
+        "id": "MDU6TGFiZWwzMzE1NDAwOTcz",
+        "name": "Bikeshedding"
+      },
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-10-25T17:47:50Z",
+    "number": 2286,
+    "title": "Separate diagnostic edmf precomputed quants int 4 funcs"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nLimit the area fraction in the entrainment and detrainment limiter so the exponential function wouldn't go to infinity.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-25T18:46:44Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2023-10-25T21:27:28Z",
+    "number": 2291,
+    "title": "limit area fraction in entrainment and detrainment limiter"
+  },
+  {
+    "additions": 42,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "To be merged after https://github.com/CliMA/ClimaAtmos.jl/pull/2270\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-23T23:10:09Z",
+    "deletions": 62,
+    "labels": [],
+    "mergedAt": "2023-10-25T22:42:08Z",
+    "number": 2273,
+    "title": "Move temporary variables in cache in `p.scratch`"
+  }
+]

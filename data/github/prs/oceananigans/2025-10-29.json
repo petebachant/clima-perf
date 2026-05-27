@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 282,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds an implicit free surface solver for `NonhydrostaticModel`. This will be useful for large eddy simulations of internal tide generation, breaking, and turbulent mixing. Work with @shriyafruitwala\r\n\r\nWhat we did so far:\r\n\r\n- [x] added `free_surface` property to `NonhydrostaticModel`\r\n- [x] added an `InhomogeneousFormulation` option for the tridiagonal formulation of `FourierTridiagonalPoissonSolver`\r\n- [x] started work to modify `solve_for_pressure!` and `pressure_correction!`\r\n\r\nTODO:\r\n\r\n- [x] write code to compute the inhomogeneous contribution to the source term of `FourierTridiagonalPoissonSolver`\r\n- [x] write code to modify the main diagonal of the solver prior to calling `solve!(presure, solver)` in `solve_for_pressure!`\r\n- [x] clarify \"which dz\" enter into RHS + diagonal contributions\r\n- [x] add MixedBoundaryCondition to pressure + modify `fill_halo_regions!(pressure)` so that the pressure gradient across the top boundary is correct\r\n- [x] add a routine to update the free surface following the pressure solve\r\n- [ ] reorganize code so that `materialize_free_surface` and `ImplicitFreeSurface` are available in the `NonhydrostaticModels` module (precisely how to do this is a matter of discussion)\r\n- [x] Compute the tendency and update `w*` at `k = Nz + 1` when there is non-zero vertical velocity tendency at the surface",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-29T18:38:56Z",
+    "deletions": 45,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-10-29T11:06:08Z",
+    "number": 4740,
+    "title": "Implicit free surface formulation for NonhydrostaticModel"
+  }
+]

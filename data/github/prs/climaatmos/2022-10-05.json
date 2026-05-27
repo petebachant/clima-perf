@@ -1,0 +1,230 @@
+[
+  {
+    "additions": 74,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades the dependencies.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-04T23:09:17Z",
+    "deletions": 74,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-10-05T00:40:16Z",
+    "number": 890,
+    "title": "Upgrade deps"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "revert #821, which may cause the failure in mpi jobs.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T00:27:21Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2022-10-05T03:35:13Z",
+    "number": 891,
+    "title": "Revert \"make GC deterministic in distributed\""
+  },
+  {
+    "additions": 177,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the `vertical_diffusion_boundary_layer_tendency!` to:\r\n\r\n - Not use `parent`\r\n - Use `bycolumn` to leverage threading\r\n - Remove allocations",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-03T23:33:41Z",
+    "deletions": 168,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2022-10-05T04:27:10Z",
+    "number": 884,
+    "title": "Refactor vert diff BL tendency"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "Adds a missing command line argument `--vert_diff true` to the jobid `longrun_aquaplanet_rhoe_equil_highres_allsky_ft64` (aquaplanet without edmf and topography). cc @LenkaNovak\r\n \r\n(I was wondering why it didn\u2019t break\u2026and here\u2019s why. Now the command line should be correct I think. We\u2019ll know tomorrow if it is stable:)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T04:46:03Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2022-10-05T05:40:20Z",
+    "number": 892,
+    "title": "fix a command line argument in longrun"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "Missed in #892 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T06:29:59Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-10-05T07:35:05Z",
+    "number": 893,
+    "title": "fix a command line argument in longrun"
+  },
+  {
+    "additions": 149,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - widens the allocation monitoring to include additional packages\r\n - Moves some `@nvtx` macro call to outer functions to help unindent some code",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T16:25:53Z",
+    "deletions": 138,
+    "labels": [],
+    "mergedAt": "2022-10-05T17:27:24Z",
+    "number": 894,
+    "title": "Widen allocation monitoring"
+  },
+  {
+    "additions": 683,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "Co-authored-by: Zhaoyi Shen <szy21@users.noreply.github.com>\r\nCo-authored-by: LenkaNovak <LenkaNovak@users.noreply.github.com>\r\n\r\n## Purpose and Content\r\nThis PR implements the [Alexander and Dunkerton (1999)](https://doi.org/10.1175/1520-0469(1999)056%3C4167:ASPOMF%3E2.0.CO;2) paper for non-orographic gravity wave parameterization.\r\n\r\nExamples are added to test agains the cases (Fig. 4 and 8) in the paper.\r\n\r\nHelp needed from software experts:\r\n- [x] We need a way to read in the `.nc` data file for the tests;\r\n- [ ]  The code may need considerable optimization for a good performance.\r\n@charleskawczynski @simonbyrne  We appreciate if you could take a look\r\n\r\n## Linked Issues\r\n- Closes #783 \r\n\r\n## PR Checklist\r\n- [x] This PR has a corresponding issue OR is linked to an SDI.\r\n- [ ] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [ ] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [ ] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [ ] I linted my code on my local machine prior to submission OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code used in an integration test OR N/A.\r\n- [ ] All tests ran successfully on my local machine OR N/A.\r\n- [ ] All classes, modules, and function contain docstrings OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5QxTEi",
+        "number": 783,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/783"
+      }
+    ],
+    "createdAt": "2022-09-19T17:22:37Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-10-05T19:03:34Z",
+    "number": 852,
+    "title": "Add non-or0graphic gravity wave parameterization."
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR suppresses the allocation table job to reduce our CI times, since it takes almost twice as long as the other jobs. For now, we can use the allocation tests in the flame script to help ensure that we keep an eye on allocations. Most of the remaining allocations (at least in the performance target) seem to be due to allocations in dependencies. I'll open issues for each of those items from the table (related issue #686).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T20:31:43Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      },
+      {
+        "color": "279035",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xN8BK",
+        "name": "Workflow :gear: :ocean:"
+      }
+    ],
+    "mergedAt": "2022-10-05T22:18:13Z",
+    "number": 898,
+    "title": "Suppress allocation table"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR unifies the edmf and grid-mean pressure",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-29T15:48:13Z",
+    "deletions": 56,
+    "labels": [],
+    "mergedAt": "2022-10-05T22:45:24Z",
+    "number": 875,
+    "title": "Unify edmf and grid mean pressure"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is a peel off from #896, which first adds and tackles the unbound type parameters",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-05T22:40:58Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2022-10-05T23:12:12Z",
+    "number": 900,
+    "title": "Add and fix some Aqua tests"
+  }
+]

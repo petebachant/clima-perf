@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\r\n\r\nThis PR fixes two issues I discovered while working on #2417:\r\n- When recursive unrolling was replaced with `unrolled_map` in #2413, several `@propagate_inbounds` annotations where accidentally dropped, since neither `unrolled_map` nor the anonymous functions passed to it were annotated with `@propagate_inbounds`. This has led to unnecessary bounds checking during certain broadcast operations, which can be seen in the CI flame graphs for ClimaCore and ClimaAtmos.\r\n- In #2464, I implemented several functions in terms of `Base.setindex`, including the performance-critical `struct_field_view` and `struct_indices`. It turns out that `Base.setindex` does not always inline the index value, leading to unnecessary index comparisons and bounds checks during runtime. These were also visible in the CI flame graphs, though they were not as significant as the first issue.\r\n\r\n## Content\r\n\r\nThree new functions are added to a sub-module of `Utilities`: `unrolled_setindex`, `unrolled_insert`, and `unrolled_map_with_inbounds`. These will eventually be generalized and moved to `UnrolledUtilities.jl`, but for now they can be explicitly imported from `ClimaCore.Utilities.Unrolled`. I expect we'll need to define other similar functions in the process of refactoring `DataLayouts`/`Operators`, after which we can update the `UnrolledUtilities` API to include them.\r\n\r\n---\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-09T23:43:25Z",
+    "deletions": 37,
+    "labels": [],
+    "mergedAt": "2026-04-10T03:23:00Z",
+    "number": 2488,
+    "title": "Add missing `@propagate_inbounds` and optimized form of `setindex`"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-09T23:28:30Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-04-10T18:06:15Z",
+    "number": 2487,
+    "title": "Bump version to 0.14.51"
+  }
+]

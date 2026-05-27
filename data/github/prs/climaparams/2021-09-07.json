@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 343,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "We ran into some issues as TurbulenceConvection.jl began using CLIMAParameters more heavily-- specifically with the microphysics parameters:\r\n\r\nFor planet parameters, we might use a runtime behavior like:\r\n```julia\r\nimport CLIMAParameters\r\nCLIMAParameters.Planet.grav(ps::AbstractEarthParameterSet) = ps.grav\r\n```\r\nThis same approach for certain microphysics parameters is awkward:\r\n```julia\r\nCLIMAParameters.Planet.Microphysics.E(::AbstractLiquidParameterSet, ::AbstractRainParameterSet) = ?\r\n```\r\nThe issue is, which struct should hold the value if we want it tuned? This seems arbitrary and generally problematic with this design.\r\n\r\nThis PR makes _all_ (microphysics) methods accept a single parameter set, and we can locally define extra helper methods to dispatch in convenient ways:\r\n\r\n```julia\r\n# How to add convenience methods for handling combinations\r\n\r\nabstract type Phase end\r\nstruct Liquid <: Phase end\r\nstruct Rain   <: Phase end\r\nstruct Snow   <: Phase end\r\n\r\nE(earth::AbstractEarthParameterSet, ::Liquid, ::Rain) = CLIMAParameters.Planet.Microphysics.E_liq_rai(earth)\r\nE(earth::AbstractEarthParameterSet, ::Liquid, ::Snow) = CLIMAParameters.Planet.Microphysics.E_liq_sno(earth)\r\n\r\nstruct EarthParamSet <: AbstractEarthParameterSet end\r\n\r\nearth = EarthParamSet()\r\n\r\n# locally, in the implementation, we'll have:\r\nE_liq_rai = E(earth, Liquid(), Rain())\r\nE_liq_sno = E(earth, Liquid(), Snow())\r\n```",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-25T18:04:48Z",
+    "deletions": 325,
+    "labels": [
+      {
+        "color": "81918F",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjk0NTAyNDA1",
+        "name": "breaking changes :boom:"
+      }
+    ],
+    "mergedAt": "2021-09-07T18:06:52Z",
+    "number": 54,
+    "title": "Remove microphysics types"
+  }
+]

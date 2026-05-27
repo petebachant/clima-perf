@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "There's a few issues with `mean!`: \r\n\r\n1. Broadcasting over `Field` directly is slow. So this PR changes flavors of `Statistics.mean` to use broadcasting over the underlying data rather than `Field` as an optimization.\r\n\r\n2. `conditional_length` / `conditional_sum` is slow. Not surprising because we have to sum up all the active cells (in general). This PR tries to speed it up for non-immersed grids (but this optimization may not get touched ultimately because optimization 3 below)\r\n\r\n3. We have several shortcuts for non-immersed grids, but we were missing one for `condition_operand(::typeof(Base.identity), ...)` so this PR adds that.\r\n\r\nThe objective is to make these two more similar:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Statistics\r\nusing BenchmarkTools\r\n\r\ngrid = RectilinearGrid(size=(8, 8, 8), extent=(1, 1, 1), halo=(1, 1, 1))\r\nu = XFaceField(grid)\r\nU = Field{Nothing, Nothing, Nothing}(grid)\r\nUi = zeros(1, 1, 1)\r\n\r\n@benchmark mean!(U, u)\r\n@benchmark mean!(Ui, interior(u))\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-17T12:59:41Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2025-09-18T19:15:25Z",
+    "number": 4792,
+    "title": "Collection of optimizations for `mean!` and `_mean`"
+  }
+]

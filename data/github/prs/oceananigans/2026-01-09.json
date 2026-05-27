@@ -1,0 +1,152 @@
+[
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Thanks for finding this ambiguous method @giordano!\r\n\r\nThis is a breaking change as we won't be able to do `push!(simulation.output_writers, output_writer)` anymore. This does not seem like a common pattern though.\r\n\r\nIt's an ordered dict and I think users should be forced to pick a key for each output writer and diagnostic they add. But let me know if anyone else feels otherwise!",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-07T23:17:36Z",
+    "deletions": 114,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-01-09T00:24:58Z",
+    "number": 5117,
+    "title": "(v0.104.0) Remove support for pushing output writers and diagnostics into ordered dicts without a key"
+  },
+  {
+    "additions": 2224,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR implements NetCDF supoprt for `FieldTimeSeries`. In the process it also reorganizes the code in `OceananigansNCDasasetsExt` a bit (but not the logic; I just broke it apart into different files).\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/3935\r\n\r\nTo-do list (not all of this for this PR but I'll do what I can):\r\n- [x] Make `FieldTimeSeries` work with `InMemory()` backend\r\n- [ ] Make `OnDisk()` backend work\r\n- [ ] Make `FieldDataset` work\r\n- [ ] Make chunked `FieldTimeSeries` work\r\n- [ ] Allow reading `FieldBoundaryCondition`s from `NetCDF` output\r\n- [ ] Allow for NetCDF output `with_halos` and non-default `indices` (why isn't that allowed?)\r\n- [x] Test output readers with `NetCDFWriter`\r\n\r\nNecessary NetCDFWriter enhancements:\r\n\r\n- [x] Write `Field` location to NetCDF files along `Field`s\r\n- [x] Write `Field` indices to NetCDF\r\n- [ ] ~Write boundary conditions to NetCDF somehow~",
+    "changedFiles": 25,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6fFwfA",
+        "number": 3935,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3935"
+      }
+    ],
+    "createdAt": "2025-12-05T14:33:57Z",
+    "deletions": 1901,
+    "labels": [],
+    "mergedAt": "2026-01-09T02:48:52Z",
+    "number": 5017,
+    "title": "Make `FieldTimeSeries` work with NetCDF output"
+  },
+  {
+    "additions": 576,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds developer docs for implementing a turbulence closure, using Pacanowski-Philander as an example.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-07T03:57:36Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-09T20:01:59Z",
+    "number": 5110,
+    "title": "Implement developer docs for TurbulenceClosures"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "CFL=1 is generally too high.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-09T19:56:47Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-09T23:30:14Z",
+    "number": 5130,
+    "title": "Reduce CFL in ocean mixing and convection example"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "In Julia v1.11+, the [`[sources]` section](https://pkgdocs.julialang.org/v1/toml-files/#The-%5Bsources%5D-section) of `Project.toml` is a much saner way to refer to local packages than manually fiddling with `Pkg.develop` every single time.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-09T15:19:07Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-01-09T23:31:13Z",
+    "number": 5129,
+    "title": "Add `Oceananigans` to the `docs` environment with `[sources]` section"
+  }
+]

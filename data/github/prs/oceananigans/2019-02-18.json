@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1276,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Rewrote the time stepping algorithm to perform operations element-wise which allows the MITgcm algorithm to fully utilize a GPU (for large enough problems). And the same code runs on the CPU.  Essentially we have a massive triple for loop iterating over all the grid points and functions that e.g. calculate u-momentum advection at grid point (i,j,k).\r\n\r\nThe code is ugly and unorganized right now but I just wanted to get something working. Now we can work on cleaning up the code and optimizing performance. You can see for yourselves how bad the native type element-wise operators are but the time stepping loop should clean up nicely. It's split up into 4-5 kernels as the GPU needs to synchronize between certain steps.\r\n\r\nI've had to make some compromises writing it for the GPU, mainly by stripping away all the abstractions as the GPU will only deal with native data types. But we can figure this stuff out, it can only get better from here.\r\n\r\nThis time stepping will essentially replace what's already in place (and turn the code into a CPU/GPU capable package) so might as well merge and start working on integrating it (and getting some sort sort of GPU CI working).\r\n\r\nResolves #49",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-02-18T02:49:32Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2019-02-18T13:41:35Z",
+    "number": 54,
+    "title": "Performant elementwise CPU/GPU kernels"
+  }
+]

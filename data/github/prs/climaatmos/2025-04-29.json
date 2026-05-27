@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "I am not sure why insolation was set to not be updated with `CouplerAlbedo`, but I don't think this is currently necessary.\r\n\r\nThe function `set_insolation_variables!` was manually called by ClimaCoupler as part of the coupling loop\r\n\r\nhttps://github.com/CliMA/ClimaCoupler.jl/blob/a3b32d169137f7dad2edf33fd2f5e29ebd6d5356/experiments/ClimaEarth/components/atmosphere/climaatmos.jl#L394\r\n\r\nMy guess is that this is because we wanted to update it more frequently than a radiation timestep.\r\n\r\nMaybe the point was to obtain `cos_zenith_angle`?\r\n\r\nIn this commit, I unconditionally update the insolation_tuple. I will also change ClimaCoupler to update it as it used to do, but I think that won't be needed after we remove `cos_zenith_angle` as an exchange field.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-29T16:42:52Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-04-29T20:13:53Z",
+    "number": 3788,
+    "title": "Unconditionally update insolation tuple"
+  }
+]

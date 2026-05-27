@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Julia handles keyword arguments passed with ; in a special way. According to goerz, keyword arguments passed with ; are moved to the front of the macro call. So, we have to handle this case separately\r\n    https://discourse.julialang.org/t/documentation-for-how-macros-handle-keyword-arguments/88009\r\n    \r\nWe have to support three cases:\r\n1. context is a ClimaComms.context\r\n2. context is an expression that sets :context = value\r\n3. name (!) is an expression that contains parameters that set the context\r\n\r\nThe easiest way to go about learning about this is writing a simple macro\r\n\r\n    macro mymacrotest(first, second)\r\n        println(\"First value: \", first)\r\n        println(\"First type: \", typeof(first))\r\n        println(\"Second value: \", second)\r\n        println(\"Second type: \", typeof(second))\r\n    end\r\n\r\nThen, test this with the four inputs\r\n\r\n    @mymacrotest(\"First\", \"Second\")\r\n    @mymacrotest(\"First\", second = \"Second\")\r\n    @mymacrotest(\"First\"; second = \"Second\")\r\n    second = \"Second\"; @mymacrotest(\"First\"; second)\r\n    \r\nThe unexpected inputs are last two:\r\n\r\n    First value: $(Expr(:parameters, :($(Expr(:kw, :second, \"Second\")))))\r\n    First type: Expr\r\n    Second value: First\r\n    Second type: String\r\n    \r\nAnd\r\n\r\n    First value: $(Expr(:parameters, :second))\r\n    First type: Expr\r\n    Second value: First\r\n    Second type: String\r\n\r\n\r\nI tried supporting all of this but it became a mess, so I figured that the simplest thing is to just declare that `context` has to be positional.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-23T16:26:44Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-05-28T22:47:03Z",
+    "number": 62,
+    "title": "Add warning about climaartifacts"
+  }
+]

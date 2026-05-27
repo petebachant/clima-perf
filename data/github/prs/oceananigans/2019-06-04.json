@@ -1,0 +1,162 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR fixes a recent regression in `Model` construction time due to broadcasting over an `OffsetArray{CuArray}` getting converted to a scalar operation. Constructing models should be fast again.\r\n\r\nI've also completely disabled scalar operations on CuArrays so this shouldn't happen again.\r\n\r\ncc @sandreza \r\n\r\nActually fixes #82 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTM4OTc4OTM=",
+        "number": 82,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/82"
+      }
+    ],
+    "createdAt": "2019-06-04T01:04:46Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2019-06-04T10:24:30Z",
+    "number": 264,
+    "title": "No more scalar operations on CuArrays."
+  },
+  {
+    "additions": 395,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is part 2 of n implementing halo regions (originally PR #167). n = 2 probably.\r\n\r\nHere I actually start using the halos and integrate them with the code. This involves filling in the halo regions as needed to enforce the periodic boundary conditions. I also rewrite the operators to use `i-1` and `i+1` instead of `decmod1` and `incmod1`. Hopefully this will speed things up a bit, especially on the GPU.\r\n\r\nI will release v0.6 once this is merged.\r\n\r\nResolves #104 ",
+    "changedFiles": 16,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTY5OTU1NTM=",
+        "number": 104,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/104"
+      }
+    ],
+    "createdAt": "2019-05-29T22:36:00Z",
+    "deletions": 203,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-06-04T13:20:55Z",
+    "number": 253,
+    "title": "Halo regions v2: filling halos and faster operations"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #267 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0NTIxMjg3NTE=",
+        "number": 267,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/267"
+      }
+    ],
+    "createdAt": "2019-06-04T17:53:13Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2019-06-04T18:22:17Z",
+    "number": 266,
+    "title": "Update rising thermal bubble examples in README and docs"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR directly indexes the underlying Array or CuArray to avoid the issue that broadcasting over an `OffsetArray{CuArray}` is extremely inefficient.\r\n\r\ncc @sandreza ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-04T17:59:05Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2019-06-04T18:22:40Z",
+    "number": 268,
+    "title": "Fill halo regions on CuArrays instead of OffsetArrays"
+  }
+]

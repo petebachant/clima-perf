@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Ref: #5601.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-18T09:46:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-05-18T12:08:28Z",
+    "number": 5602,
+    "title": "Recursively test for type piracy with Aqua"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-18T10:00:37Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-05-18T12:23:10Z",
+    "number": 5603,
+    "title": "Update number of ambiguities in tests"
+  },
+  {
+    "additions": 288,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\n**Supersedes #5534** \u2014 same refactor, but renames the public terminology from \"mass flux\" / \"volume flux\" to \"transport\" throughout. If this PR is merged, #5534 should be closed.\n\nMoves the model-agnostic open-boundary transport machinery out of `NonhydrostaticModels` into a shared `Models/boundary_transport.jl` and decouples its function signatures from `model.velocities` so they take the field tuple explicitly:\n\n```julia\n\u222eudA = open_boundary_inflow_transport(boundary_transport, velocities)\ncorrect_left_boundary_transport!(u, u.boundary_conditions.west, Val(:west), A\u207b\u00b9_\u222eudA)\n# \u2026 etc.\n```\n\nThese shared helpers now serve:\n\n- **Incompressible / volume-transport models** like `NonhydrostaticModel`, passing `(; u, v, w)`\n- **Anelastic / mass-transport models** (e.g. atmosphere models in downstream packages), passing `(; \u03c1u, \u03c1v, \u03c1w)`\n\nBoth satisfy the same solvability condition at open boundaries:\n\n$$ \\oint \\rho u \\cdot \\mathrm{d} A = 0 $$\n\n`enforce_net_zero_transport!` itself stays in `NonhydrostaticModels` \u2014 the zero-net-transport solvability condition it enforces is specific to `NonhydrostaticModel` (without a free surface). Downstream models compose their own variant from the shared building blocks.\n\n## Why \"transport\"\n\n\"Transport\" reads naturally for both the incompressible case (volume transport, units m\u00b3/s) and the anelastic case (mass transport, units kg/s), without privileging one interpretation. This keeps the shared API name accurate for both downstream uses.\n\n## Renames vs. #5534\n\n| Before (#5534)                              | After (this PR)                       |\n| ------------------------------------------- | ------------------------------------- |\n| `model.boundary_mass_fluxes`                | `model.boundary_transport`            |\n| `enforce_open_boundary_mass_conservation!`  | `enforce_net_zero_transport!`         |\n| `initialize_boundary_mass_fluxes`           | `initialize_boundary_transport`       |\n| `update_open_boundary_mass_fluxes!`         | `update_open_boundary_transport!`     |\n| `open_boundary_mass_flux`                   | `open_boundary_transport`             |\n| `open_boundary_mass_inflow`                 | `open_boundary_inflow_transport`      |\n| `correct_{left,right}_boundary_mass_flux!`  | `correct_{left,right}_boundary_transport!` |\n| `needs_mass_flux_correction`                | `needs_transport_correction`          |\n| `{west,east,south,north,bottom,top}_mass_flux` | `{...}_transport`                  |\n| `boundary_mass_fluxes.jl`                   | `boundary_transport.jl`               |\n\n## Changes\n\n- New shared file `src/Models/boundary_transport.jl` holds the model-agnostic helpers: `initialize_boundary_transport`, `update_open_boundary_transport!`, `open_boundary_transport`, `open_boundary_inflow_transport`, `correct_{left,right}_boundary_transport!`, and the area / per-side integrals.\n- `enforce_net_zero_transport!` lives in `src/Models/NonhydrostaticModels/enforce_net_zero_transport.jl`, composed from the shared helpers above. It is private to `NonhydrostaticModels`.\n- Old `src/Models/NonhydrostaticModels/boundary_mass_fluxes.jl` is removed.\n- `NonhydrostaticModel.compute_pressure_correction!` calls `enforce_net_zero_transport!(model.velocities, model.boundary_transport)` (passing `model.velocities` explicitly instead of `model`).\n- Shared helpers and `enforce_net_zero_transport!` are **not** exported \u2014 downstream modules import them explicitly with `using ..Models: \u2026` / `Oceananigans.Models.\u2026`.\n\nNo user-facing behavior change for `NonhydrostaticModel`. The shape of `model.boundary_transport` (a `NamedTuple`) matches the previous `model.boundary_mass_fluxes`, with field-name suffixes renamed accordingly (`west_mass_flux` \u2192 `west_transport`, etc.).\n\n## Addressing review comments from #5534\n\n- `enforce_*` stays in `NonhydrostaticModels` (tomchor's review comment that the zero-net-flux condition is specific to `NonhydrostaticModel` without a free surface).\n- Shared helpers are not exported from `Models` (tomchor's \"no need to export\" review comment).\n- Docstring wording: \"Correct boundary values in `velocities` so that the combined net transport through all `OpenBoundaryCondition` boundaries with a radiation scheme vanishes \u2014 the solvability condition\u2026\" (from tomchor's suggested edit).\n- Trailing comma in `Models.jl` export block (from tomchor's suggestion).\n\n## Test plan\n\n- [x] Package loads; symbol relocations resolve at include time\n- [x] `NonhydrostaticModel` with `PerturbationAdvection` open west/east BCs: net `\u222b\u2207\u00b7u \u2248 0` to machine precision after 1 s simulation time (existing `test_open_boundary_condition_mass_conservation` \u2014 covered by passing `cpu-time-stepping-2-tests` and `gpu-time-stepping-2-tests`)\n- [x] Steady state preserved for all three orientations (x, y, z) under `PerturbationAdvection` (existing `test_perturbation_advection_open_boundary_conditions` \u2014 same jobs)\n- [x] Checkpointer round-trips `boundary_transport` (existing `test_open_boundary_condition_scheme_checkpointing` \u2014 covered by passing `cpu-simulation-tests` and `gpu-simulation-tests`)\n- [ ] Full CI on GitHub \u2014 70 jobs pass, 1 pending (`oceananigans-dot-jl` Julia ecosystem nightly); 4 jobs fail (`buildkite/oceananigans-distributed/pr/gpu-distributed-{hydrostatic-model,hydrostatic-regression,solvers}-tests`, all with `exit status -1`). Their CPU counterparts pass and the failing jobs don't exercise `NonhydrostaticModels` open-boundary code \u2014 likely an unrelated GPU-distributed runner issue, but worth a rerun before merging.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-07T15:31:28Z",
+    "deletions": 257,
+    "labels": [],
+    "mergedAt": "2026-05-18T19:08:12Z",
+    "number": 5569,
+    "title": "Share open-boundary transport machinery across models"
+  }
+]

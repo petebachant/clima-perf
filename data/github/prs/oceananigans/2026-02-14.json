@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This PR attempts to fix 2 bugs:\r\n\r\n1. `xnodes`/`ynodes`/`znodes` ignored windowed indices on `Field`s\r\n\r\n    These called e.g. `znodes(grid, loc...)` without passing the field's indices. So `znodes(Field{C,C,C}(grid, indices=(:,:,Nz)))` returned all `Nz` nodes instead of just one.\r\n\r\n    Fixed by adding Field-specific overrides in `field.jl` that forward each dimension's index. This mirrors how `nodes(f::Field)` already correctly passed `indices=indices(f)`.\r\n\r\n2. `mask_immersed_field!` segfaulted on windowed fields\r\n\r\n    The masking kernel was launched with `launch!(arch, grid, :xyz, ...)`, which iterated over the full grid size `(Nx, Ny, Nz)`, even for a windowed field (e.g., `indices=(:,:,Nz)`), and that was bad when the data array only covered a single z-level because `@inbounds field[i, j, k]` accessed out-of-bounds memory.\r\n\r\n    Fixed in `mask_immersed_field.jl` by using `KernelParameters` built from the field's `interior_indices`, which restricts iteration to exactly the windowed range.\r\n    \r\nAlso added corresponding tests. Made with (a lot of) help from Claude.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-13T01:39:34Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-02-14T06:33:44Z",
+    "number": 5297,
+    "title": "Fix nodes and immersed masking for windowed fields"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The `HydrostaticFreeSurfaceModel` has switched to using model.transport_velocities to advect the tracers.\r\nThis needs to be reflected also in the `VarianceDissipationComputation`",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-13T13:10:09Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-02-14T12:58:01Z",
+    "number": 5298,
+    "title": "Use the correct velocities in `VarianceDissipationComputations`"
+  }
+]

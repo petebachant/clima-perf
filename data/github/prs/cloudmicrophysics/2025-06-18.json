@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR updates our non-buildkite CI (gihub-CI, docs and code-coverage) to Julia v.1.11. \r\n\r\nAlso fixes: https://github.com/CliMA/CloudMicrophysics.jl/issues/572\r\n\r\nI have no idea why - but what fixed the segfault locally for me was to replace \r\n\r\n```\r\n    return ifelse(\r\n        cond_rate > FT(0),\r\n        min(cond_rate, limit(q\u1d65, dt, 1)),\r\n        -min(abs(cond_rate), limit(q\u2097, dt, 1)),\r\n    )\r\n```\r\nby\r\n\r\n```\r\n    cond_limit = min(cond_rate, limit(q\u1d65, dt, 1))\r\n    evap_limit = min(abs(cond_rate), limit(q\u2097, dt, 1))\r\n    ret = ifelse(cond_rate > FT(0), cond_limit, -1 * evap_limit)\r\n    return ret\r\n```\r\n\r\nLets see if that also works in the cloud",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM64qvuO",
+        "number": 572,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/572"
+      }
+    ],
+    "createdAt": "2025-06-12T21:06:05Z",
+    "deletions": 93,
+    "labels": [],
+    "mergedAt": "2025-06-18T00:18:27Z",
+    "number": 589,
+    "title": "Add Julia v1.11 to CI"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis is a tiny step towards creating a consistent API for all parameterizations that make use of an assumed size distribution. Here, I create a `size_distribution` function stub in `DistributionTools.jl`, which throws an informative error by default. Then, in `Microphysics2M.jl` and `P3_size_distribution`, the methods `DT.size_distribution(psd, ...)` dispatches over the `psd` type.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-17T22:59:14Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2025-06-18T02:17:49Z",
+    "number": 592,
+    "title": "rft: Move `size_distribution` to `DistributionTools`"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjUwOTk2OTI1",
+      "is_bot": false,
+      "login": "oalcabes",
+      "name": "Olivia Alcabes"
+    },
+    "body": "Remove nonequilibirum phase partition dependency\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-05T00:20:24Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "2213f4",
+        "description": "Non equilibrium microphysics",
+        "id": "LA_kwDOFzm_uM8AAAACDB8CEQ",
+        "name": "NonEq \ud83d\udca7\ud83e\uddca"
+      }
+    ],
+    "mergedAt": "2025-06-18T04:43:40Z",
+    "number": 581,
+    "title": "Remove nonequilibrium phase partition dependency"
+  }
+]

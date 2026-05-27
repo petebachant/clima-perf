@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-11T15:49:09Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "c5def5",
+        "description": "Add this label to built the docs in a PR",
+        "id": "LA_kwDOIOi2Ys8AAAABr9hy2w",
+        "name": "build docs"
+      }
+    ],
+    "mergedAt": "2024-11-12T00:10:32Z",
+    "number": 238,
+    "title": "More examples"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "I don't like the prefilled PR template...",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-12T03:54:17Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-11-12T04:54:39Z",
+    "number": 242,
+    "title": "Add empty PR template"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #233\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys6d1LEx",
+        "number": 233,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/233"
+      }
+    ],
+    "createdAt": "2024-11-12T03:10:38Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-11-12T06:00:27Z",
+    "number": 240,
+    "title": "Avoid intermediate allocation"
+  },
+  {
+    "additions": 284,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is a proposal to partially solve #206 (in particular the redundant download part)\r\n\r\nIt introduces a couple of distributed macros:\r\n```julia\r\n@root exp... # only rank 0 executes the expression\r\n\r\n@distribute for iter in iterable # the for loop is distributed among ranks\r\n        body \r\nend\r\n\r\n@onrank rank, exp... # performs the expression on rank $rank, the expression is run anyways if MPI is not initialized (discarding the rank info) \r\n\r\n@handshake exp... # performs the expression sequentially in each rank following a handshake procedure (rank `r2 > r1` waits for rank `r1` to finish)\r\n```\r\n\r\nWe would have to find a way to test this since distributed tests are not in place yet.\r\nA cleaner PR that substitutes #207 \r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-31T11:20:21Z",
+    "deletions": 75,
+    "labels": [],
+    "mergedAt": "2024-11-12T13:21:24Z",
+    "number": 208,
+    "title": "Distributed Datawrangling macros"
+  }
+]

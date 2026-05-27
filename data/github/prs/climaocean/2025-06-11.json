@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The flux computation is failing because of type conversion which leads to `u\u2605` having a different type than `u` in `InterfaceStates`. In particular, the error is \r\n```julia\r\nERROR: LoadError: MethodError: no method matching InterfaceState(::Float64, ::Float64, ::Float64, ::Float32, ::Float32, ::Float32, ::Float32, ::Float64, ::Bool)\r\n\r\nClosest candidates are:\r\n  InterfaceState(::Any, ::Any, ::Any, ::Any, ::Any, ::Any, ::Any, ::Any)\r\n   @ ClimaOcean ~/development/ClimaOcean.jl/src/OceanSeaIceModels/InterfaceComputations/interface_states.jl:374\r\n  InterfaceState(::FT1, ::FT1, ::FT1, ::FT2, ::FT2, ::FT2, ::FT2, ::FT2, ::Bool) where {FT1, FT2}\r\n   @ ClimaOcean ~/development/ClimaOcean.jl/src/OceanSeaIceModels/InterfaceComputations/interface_states.jl:363\r\n```\r\nbecause in this case, the atmosphere, the ocean, and the interface have different float types. \r\nI think we are missing the possibility of changing float types in some constructors, so I'll take a look at that later.\r\nIn the meantime, this PR ensures the code does not error when the types are different for the different components. ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-06T08:43:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-06-11T14:07:16Z",
+    "number": 558,
+    "title": "Convert type in `InterfaceState`"
+  }
+]

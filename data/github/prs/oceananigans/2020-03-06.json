@@ -1,0 +1,152 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Don't use `topology` for trivial first example.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-03-06T01:23:00Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-03-06T01:46:57Z",
+    "number": 681,
+    "title": "Update README.md"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR reorganizes the functionality for `BoundaryFunction` so that it is entirely contained within `src/BoundaryConditions/boundary_function.jl`. This requires defining placeholders for `xnode`, `ynode`, and `znode` in `Oceananigans.jl`.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-03-06T01:13:50Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2020-03-06T02:04:55Z",
+    "number": 680,
+    "title": "Reorganize boundary function functionality"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "My fault, must have messed up and forgot to skip `_apply_*_bcs!` for `NotFluxBC` in PR #631. \r\n\r\nFixes #675 and should fix failing tests on PR #671.\r\n\r\nBefore:\r\n```\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n        Static ocean benchmarks                Time                   Allocations      \r\n                                       \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n           Tot / % measured:                24.3s / 2.17%           1.83GiB / 18.1%    \r\n\r\n Section                       ncalls     time   %tot     avg     alloc   %tot      avg\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n  32\u00d7 32\u00d7 32  [CPU, Float32]       10    256ms  48.6%  25.6ms    170MiB  50.0%  17.0MiB\r\n  32\u00d7 32\u00d7 32  [CPU, Float64]       10    270ms  51.4%  27.0ms    170MiB  50.0%  17.0MiB\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n ```\r\n\r\n After:\r\n ```\r\n  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n        Static ocean benchmarks                Time                   Allocations      \r\n                                       \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n           Tot / % measured:                 126s / 62.8%           1.46GiB / 0.13%    \r\n\r\n Section                       ncalls     time   %tot     avg     alloc   %tot      avg\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n  32\u00d7 32\u00d7 32  [CPU, Float32]       10    39.4s  49.9%   3.94s   1.00MiB  50.0%   102KiB\r\n  32\u00d7 32\u00d7 32  [CPU, Float64]       10    39.5s  50.1%   3.95s   1.00MiB  50.0%   102KiB\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n ```\r\n\r\nUnfortunately still a bit higher than v0.22.0 (~50 KiB allocations) but much better and more acceptable than 17 MiB!\r\n\r\nRemaining memory allocations seem to be occuring in `fill_halo_regions.jl` but tried inlining some functions and didn't help so I'll revisit the problem in the future.\r\n\r\n```\r\njulia> analyze_malloc(\".\")\r\n323-element Array{CoverageTools.MallocInfo,1}:        \r\n \u22ee                                                                                                    \r\n CoverageTools.MallocInfo(5008, \"./benchmark/benchmark_static_ocean.jl.32885.mem\", 36)                \r\n CoverageTools.MallocInfo(5952, \"./benchmark/benchmark_utils.jl.32885.mem\", 35)                       \r\n CoverageTools.MallocInfo(6080, \"./src/TimeSteppers/time_stepping_kernels.jl.32885.mem\", 139)         \r\n CoverageTools.MallocInfo(7136, \"./src/Architectures.jl.32885.mem\", 39)                               \r\n CoverageTools.MallocInfo(12160, \"./src/Utils/tuple_utils.jl.32885.mem\", 14)                          \r\n CoverageTools.MallocInfo(12480, \"./src/BoundaryConditions/apply_no_penetration_bcs.jl.32885.mem\", 20)\r\n CoverageTools.MallocInfo(12480, \"./src/BoundaryConditions/apply_no_penetration_bcs.jl.32885.mem\", 38)\r\n CoverageTools.MallocInfo(12800, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 45)       \r\n CoverageTools.MallocInfo(12800, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 49)       \r\n CoverageTools.MallocInfo(16640, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 52)       \r\n CoverageTools.MallocInfo(16640, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 53)       \r\n CoverageTools.MallocInfo(16640, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 56)       \r\n CoverageTools.MallocInfo(16640, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 57)       \r\n CoverageTools.MallocInfo(44000, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 26)       \r\n CoverageTools.MallocInfo(44000, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 27)       \r\n CoverageTools.MallocInfo(44000, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 28)       \r\n CoverageTools.MallocInfo(44000, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 29)       \r\n CoverageTools.MallocInfo(44000, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 30)       \r\n CoverageTools.MallocInfo(46400, \"./src/BoundaryConditions/apply_flux_bcs.jl.32885.mem\", 17)          \r\n CoverageTools.MallocInfo(46400, \"./src/BoundaryConditions/apply_flux_bcs.jl.32885.mem\", 30)          \r\n CoverageTools.MallocInfo(56320, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 20)       \r\n CoverageTools.MallocInfo(95040, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 25)       \r\n CoverageTools.MallocInfo(235751, \"./benchmark/benchmark_static_ocean.jl.32885.mem\", 55)              \r\n CoverageTools.MallocInfo(249600, \"./src/BoundaryConditions/fill_halo_regions.jl.32885.mem\", 70)      \r\n CoverageTools.MallocInfo(739712, \"./benchmark/benchmark_utils.jl.32885.mem\", 20)                     \r\n CoverageTools.MallocInfo(1686022, \"./benchmark/benchmark_static_ocean.jl.32885.mem\", 50) \r\n ```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NzY0NTk3MTc=",
+        "number": 675,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/675"
+      }
+    ],
+    "createdAt": "2020-03-06T03:06:58Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2020-03-06T11:45:09Z",
+    "number": 685,
+    "title": "Fix memory allocations on CPU"
+  },
+  {
+    "additions": 55,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Fixes #686",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NzY2ODE3Mjg=",
+        "number": 686,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/686"
+      }
+    ],
+    "createdAt": "2020-03-05T17:17:11Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2020-03-06T11:45:47Z",
+    "number": 671,
+    "title": "Update examples and test them again"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "For more information, see: https://github.com/bcbi/CompatHelper.jl",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-03-06T13:04:51Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2020-03-06T16:11:08Z",
+    "number": 687,
+    "title": "Add CompatHelper as a GitHub action"
+  },
+  {
+    "additions": 297,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR modifies the time-stepping algorithm so that the tendencies for wall-normal velocity components are calculated on boundaries in `Bounded` directions.\r\n\r\nIn other words, when `x` is `Bounded`, the algorithm now calculates `Gu` on east boundaries, where `i=Nx+1`. Previously `Gu` was only calculated on west boundaries where `i=1`. The same applies to `y` and `z`.\r\n\r\nThis change is necessary because, in general, the values of `Gu`, `Gv`, and `Gw` on `x`, `y`, or `z` boundaries are needed to impose predictor velocity and pressure boundary conditions when `x`, `y`, or `z` are `Bounded` --- respectively.\r\n\r\nThe changes in this PR also motivated a slight refactoring of the way \"equations\" are specified. There is now a file dedicated to equation / tendency specification, called `velocity_and_tracer_tendencies.jl` in `src/TimeStepping`.\r\n\r\nResolves #259 (since it implements a simple / minimal abstraction for equations).",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0NTA3NzQxMzk=",
+        "number": 259,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/259"
+      }
+    ],
+    "createdAt": "2020-03-06T00:07:15Z",
+    "deletions": 37,
+    "labels": [],
+    "mergedAt": "2020-03-06T23:40:31Z",
+    "number": 677,
+    "title": "Calculate tendencies on boundaries"
+  }
+]

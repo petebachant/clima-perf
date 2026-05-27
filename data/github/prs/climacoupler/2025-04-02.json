@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 485,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nCloses #1242 \r\n\r\nExtract most of the code out of the `partitioned_turbulent_fluxes!` function and move it into a function that dispatches on the component model type. For atmosphere models, the function does nothing, and for surface models it performs the flux calculation that was previously in `partitioned_turbulent_fluxes!`.\r\n\r\nThis design allows us to dispatch on model type instead of checking the type with an `if` statement, and, more importantly, it allows us to extend `compute_surface_fluxes!` for surface models where we want to perform different calculations (e.g. the integrated land model). \r\n\r\n\r\n## Content\r\n- [x] Add `compute_surface_fluxes!` function, write methods for atmosphere and surface models\r\n- [x] Write method for integrated land model - requires #1199 and https://github.com/CliMA/ClimaLand.jl/pull/1062\r\n- [x] Make `import_atmos_fields` depend on surface model type, since exchange variables depend on surface model type\r\n- [x] Add a test to compute surface fluxes between integrated land and ClimaAtmos, and check that fluxes stored in the coupler are changed and non-zero\r\n\r\n### Dependency updates\r\nThis PR requires ClimaLand v0.15.13, so it updates the dependencies. The changes include:\r\n```\r\n    Updating `~/clima/ClimaCoupler.jl/experiments/ClimaEarth/Project.toml`\r\n  [d414da3d] \u2191 ClimaCore v0.14.28 \u21d2 v0.14.29\r\n  [08f4d4ce] \u2191 ClimaLand v0.15.12 \u21d2 v0.15.13\r\n  [0bca4576] \u2191 SciMLBase v2.79.0 \u21d2 v2.81.0\r\n```\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **New Features**\n  - Enhanced simulation integration with improved handling of atmospheric composition and moisture fluxes.\n  - Introduced new functionality for updating simulation fields and computing surface fluxes.\n  - Added a new configuration file to streamline test setups and parameter tuning.\n\n- **Chores**\n  - Updated runtime and dependency versions to boost performance and compatibility.\n\n- **Tests**\n  - Expanded test coverage with new scenarios verifying simulation flux calculations.\n  - Introduced a new test set for \"ClimaLandSimulation flux calculations\".\n\n- **Refactor**\n  - Streamlined code for simulation field exchanges and flux computations, enhancing overall reliability.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6wDuYN",
+        "number": 1242,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1242"
+      }
+    ],
+    "createdAt": "2025-03-11T20:17:51Z",
+    "deletions": 221,
+    "labels": [],
+    "mergedAt": "2025-04-02T19:01:08Z",
+    "number": 1220,
+    "title": "add compute_surface_fluxes function for component models; test land fluxes"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nDocument the default coupler fields, so it's more clear for users whether they need to add extra coupler exchange fields or not.\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **Documentation**\n  - Revised descriptions and measurement units for energy and water coupler fields to better express a vertically integrated per surface area perspective.\n  - Added a list of default coupler exchange fields, including their names, descriptions, and units.\n  \n- **New Features**\n  - Introduced functionality to initialize default coupler exchange fields with the flexibility to extend them for various simulation components.\n  - Added a method to update the fields of the component model simulation influenced by the coupler.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-01T17:35:54Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2025-04-02T19:03:29Z",
+    "number": 1252,
+    "title": "document coupler fields"
+  },
+  {
+    "additions": 150,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1241\r\n\r\nA lot of files are modified in this PR but I kept each change as a separate commit so they might be easier to review.\r\n\r\n## Content\r\n- [x] remove `domain_type` argument to land constructors\r\n- [x] remove `CoupledSimulation.dates.date` - can replace with `current_date(t)`\r\n  - how do we do this in `checkpoint_sims`? We don't have access to `t`\r\n  - to get around this, I added `t` to the `CoupledSimulation` struct. This is quite similar to storing `dates.date` in the `CoupledSimulation`, but to me it seems more logical to store `t` since that's what we use to step the simulation. It also prevents us from having to pass `cs, t` to some functions\r\n- [x] remove `domain` from SurfaceModelSimulations (never used)\r\n- [x] remove `TimeManager.strdate_to_datetime` (never used)\r\n- [x] simplify FT access in tests\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **Refactor**\n  - Consolidated time management by replacing multiple date parameters with a single, unified start date.\n  - Removed redundant simulation configuration parameters to streamline initialization and callback triggers.\n\n- **Documentation**\n  - Updated user documentation to reflect the simplified interfaces and removal of outdated functions.\n\n- **Tests**\n  - Revised test setups for enhanced consistency with the updated simulation components.\n  - Updated test cases to reflect changes in constructor signatures and parameter handling.\n  - Removed tests associated with the TimeManager functionality.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 29,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6wDqT5",
+        "number": 1241,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1241"
+      }
+    ],
+    "createdAt": "2025-03-28T18:39:37Z",
+    "deletions": 273,
+    "labels": [],
+    "mergedAt": "2025-04-02T20:14:00Z",
+    "number": 1244,
+    "title": "misc cleanup"
+  }
+]

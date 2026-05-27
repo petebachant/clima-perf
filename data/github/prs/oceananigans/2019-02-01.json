@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 491,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Coded some difference and averaging operators using the `@views` macro. Just a proof of concept right now as the model goes run on a GPU when creating a `Problem` with `arch=:gpu`, but because the kernels are very small (and there are many of them) it's very slow. At least we have something that runs, now we can worry about how to optimize for performance.\r\n\r\nSome hacks were used to get this to work but the operators and time stepping is completely shared. The only bit that is different is the quasi-spectral solver as cuFFT does not perform R2R or DCT transforms (`FFTW.REDFT01` and `FFTW.REDFT10`) in particular. A GPU-compatible DCT/IDCT transform was coded that calculates the DCT/IDCT in terms of  `fft!` and `ifft!`.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-02-01T14:02:35Z",
+    "deletions": 138,
+    "labels": [],
+    "mergedAt": "2019-02-01T14:18:39Z",
+    "number": 15,
+    "title": "Proof of concept: CPU+GPU shared kernels."
+  }
+]

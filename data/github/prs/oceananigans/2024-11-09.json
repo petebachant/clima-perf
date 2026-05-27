@@ -1,0 +1,155 @@
+[
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Trying to support particle vectors of length 0, see #3884",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-31T23:16:27Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2024-11-09T00:52:04Z",
+    "number": 3891,
+    "title": "Use launch! for particle advection"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3889",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6cnxhp",
+        "number": 3889,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3889"
+      }
+    ],
+    "createdAt": "2024-10-31T22:29:45Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-11-09T05:24:19Z",
+    "number": 3890,
+    "title": "Fix fft_poisson_solver constructor"
+  },
+  {
+    "additions": 141,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR modifies the configuration of the distributed pipeline that runs on the Caltech cluster to allow using CUDA-aware MPI.\r\n\r\ncloses #3897 ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6c8AV7",
+        "number": 3897,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3897"
+      }
+    ],
+    "createdAt": "2024-10-29T07:53:48Z",
+    "deletions": 70,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2024-11-09T05:32:34Z",
+    "number": 3880,
+    "title": "Bugfix in distributed GPU tests and Distributed `set!`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc1ODEyMTAz",
+      "is_bot": false,
+      "login": "jbisits",
+      "name": "Josef Bisits"
+    },
+    "body": "Closes #3905 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6dUkpt",
+        "number": 3905,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3905"
+      }
+    ],
+    "createdAt": "2024-11-06T22:45:46Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2024-11-09T06:30:03Z",
+    "number": 3906,
+    "title": "Fix equation rendering in `boundary_conditions.md`"
+  },
+  {
+    "additions": 158,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR introduces an interface for `static_column_depth ` that returns the height of the water column (not including the free surface). \r\nThis is simply `grid.Lz` in regular grids.\r\n\r\nFor `AbstractGridFittedBottom` immersed grids, the column height is readily read from the immersed boundary, provided that the immersed boundary represents the _numerical_ bottom rather than the _physical_ bottom. \r\n\r\nTherefore, this PR changes the constructor of the  `ImmersedBoundaryGrid` to store the z-coordinate of the last immersed cell. In this way, the bottom height is also uniquely defined for `GridFittedBottom`, removing the necessity of having a`CenterImmersedCondition` and a `InterfaceImmersedCondition`. \r\n\r\nAn immediate application of this interface is in the `SplitExplicitFreeSurface` where the bottom_height was previously stored.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-09T08:30:10Z",
+    "deletions": 143,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-11-09T11:04:42Z",
+    "number": 3841,
+    "title": "`static_column_depth` interface and numerical bottom height in `AbstractGridFittedBottom`"
+  }
+]

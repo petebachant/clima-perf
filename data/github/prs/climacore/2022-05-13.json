@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 203,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This is the first part of  #686.\r\n\r\nNote that the `ghost_neighboring_elements` may seem a bit odd (it's the local indices which neighbor a ghost element): the rationale here is that it is probably more efficient to use a different iteration pattern. Currently we do\r\n```\r\nfor e in elements\r\n  # compute min/max in element e\r\n  for n in neighbors\r\n    # compute min/max in neighbors e\r\n  end\r\n  out_min[e] = min(min_e, minimum(nbrs_min_e))\r\nend\r\n```\r\nwhich requires multiple passes over all the nodes\r\n\r\nInstead, it is probably better to do\r\n```\r\nfor e in elements\r\n   # compute extrema in e\r\n   out_min[e] = min(out_min[e], min_e)\r\n   for n in neighbors\r\n         out_min[n] = min(out_min[n], min_e)\r\n   end\r\nend\r\n```\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-30T06:56:15Z",
+    "deletions": 148,
+    "labels": [],
+    "mergedAt": "2022-05-13T02:34:19Z",
+    "number": 697,
+    "title": "define neighbor iterator"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "@OsKnoth suggested that we use the velocity interpolated at faces (both horizontal and vertical velocity components) in the third-order upwinding operator. \r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-06T17:09:04Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "2C72D6",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7Nw9iG",
+        "name": "examples"
+      },
+      {
+        "color": "B918AA",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7SrcWo",
+        "name": "in-review"
+      },
+      {
+        "color": "bfd4f2",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7r-qfB",
+        "name": "Review-requested"
+      },
+      {
+        "color": "1E484D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7v6GpH",
+        "name": "limiters"
+      }
+    ],
+    "mergedAt": "2022-05-13T03:26:28Z",
+    "number": 710,
+    "title": "3D Box limiters example: small edit in velocity for 3rd-order upwinding"
+  },
+  {
+    "additions": 668,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Adds a limiter object which stores the necessary buffers. Applying the limiter is now\r\nsplit across two operations: one to compute the bounds, another to apply the limiter.\r\n\r\nBuilds on #697.\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-12T23:40:19Z",
+    "deletions": 379,
+    "labels": [],
+    "mergedAt": "2022-05-13T23:23:15Z",
+    "number": 719,
+    "title": "Reformulate limiters"
+  }
+]

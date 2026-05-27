@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "## Purpose \r\n\r\nThis PR updates Insolation.jl to use the latest version v0.6.0.\r\n\r\nThis will supersede #207  \r\n\r\n\r\n\r\n## Content\r\nSolution implemented:\r\n- Updated the `compat` entries in the Project.toml files\r\n- Updated the `experiments` Manifest.toml file as well\r\n\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-22T16:33:43Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2023-05-22T17:55:14Z",
+    "number": 208,
+    "title": "Update Insolation to v0.6.0 and bump ClimaLSM"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpdate dependencies using `] up`\r\n\r\n## Content\r\nSolution implemeneted:\r\n- Updated dependencies using `] up`\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-22T18:16:30Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2023-05-22T19:22:46Z",
+    "number": 210,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 330,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nReduce allocations in canopy update aux and the rhs function\r\nUpdate plant hydraulics aux state in canopy update aux instead of in plant hydraulics RHS - this simplifies the plant hydraulics RHS, in an effort to debug: #180 \r\nFix a bug in p.canopy.conductance.transpiration that reduces it by a factor of LAI \r\nFix a bug in the flux into the roots which multiplied it by an extra factor of RAI\r\nRenamed some functions to be more clear what we are computing (per ground area vs per emitting area)\r\n\r\n## Content\r\nUsing Julia1.8, with the model in test/Vegetation/canopy_model.jl\r\non main:\r\njulia> @ btime exp_tendency!(dY,Y,p,t0) # updates aux + rhs\r\n  89.083 \u03bcs (1456 allocations: 44.78 KiB)\r\njulia>  @ btime update_aux!(p,Y,t0)\r\n  9.958 \u03bcs (91 allocations: 3.45 KiB)\r\njulia> @ btime exp_rhs!(dY,Y,p,t0)\r\n  77.208 \u03bcs (1366 allocations: 41.36 KiB)\r\n\r\non this branch:\r\n  8.208 \u03bcs (130 allocations: 7.31 KiB)\r\n  4.613 \u03bcs (14 allocations: 1.30 KiB)\r\n  3.531 \u03bcs (117 allocations: 6.08 KiB)\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-20T00:09:33Z",
+    "deletions": 249,
+    "labels": [],
+    "mergedAt": "2023-05-22T20:30:45Z",
+    "number": 206,
+    "title": "Making canopy rhs and update aux more efficent and fix bugs!"
+  },
+  {
+    "additions": 181,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nUpgrade to Julia1.9. Code is compatible with Julia1.8 except for experiments. The user must delete the pulled Manifest.toml if they use Julia1.8 and re-instantiate. This is noted in the README for experiments.\r\nCloses #196 \r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5luddE",
+        "number": 196,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/196"
+      }
+    ],
+    "createdAt": "2023-05-17T22:04:25Z",
+    "deletions": 69,
+    "labels": [],
+    "mergedAt": "2023-05-22T23:10:55Z",
+    "number": 204,
+    "title": "upgrade to julia1.9"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "In this PR I'm exploring the possibility of adding methods for `diffusive_flux_x`, and `viscous_flux_ux` (along with other directions) for tuples. This is needed when reconstructing tracer variance and kinetic energy dissipation rates for tuples in a conservative formulation and, specifically, it's used in Oceanostics for that end (see https://github.com/tomchor/Oceanostics.jl/pull/112).\r\n\r\nAt the moment these are [defined in Oceanostics](https://github.com/tomchor/Oceanostics.jl/blob/1264b4d61e00ab2fb2fd648d489e5fcd329a135c/src/FlowDiagnostics.jl#L347-L355), but as @glwagner mentioned [here](https://github.com/tomchor/Oceanostics.jl/pull/112#issuecomment-1479761310), this isn't ideal since in the future the behavior of the relevant functions may change in Oceananigans and subsequently this calculation will break in Oceanostics.\r\n\r\nThe downside of defining these methods here is that it adds to the testing infrastructure, but I think the way I currently implemented the tests it doesn't contribute too negatively to this.\r\n\r\nI'm also proposing removing the fallback method here: https://github.com/CliMA/Oceananigans.jl/blob/200f0622278fcfa583da0119e9696048b334146f/src/TurbulenceClosures/abstract_scalar_diffusivity_closure.jl#L154-L169\r\n\r\nThe reason is that I think these general fallback methods cause for hassle than they solve for less experienced Oceananigans developers (myself very much included) by silently returning something physically reasonable (zero in this case) for virtually any combination of arguments, which can be misleading in a debugging process. But I'm curious to get other people's opinion on this.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-10T15:22:42Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2023-04-18T20:57:51Z",
+    "number": 3057,
+    "title": "Add diffusive and viscous flux methods for tuples"
+  },
+  {
+    "additions": 521,
+    "author": {
+      "id": "MDQ6VXNlcjE0NTI1OA==",
+      "is_bot": false,
+      "login": "vchuravy",
+      "name": "Valentin Churavy"
+    },
+    "body": "This likely removes some of the single device parallelism,\nbut decreases the risk for user mistake (everything is stream-ordered)\n\nThis will cause severe merge conflicts with open PRs and depends on currently unreleased\nversions of CUDA & KernelAbstractions. So I might regret doing it now, but I was curious\nto see what the damage would be.\n\n",
+    "changedFiles": 96,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-13T17:03:42Z",
+    "deletions": 1009,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2023-04-18T21:52:24Z",
+    "number": 2924,
+    "title": "Remove event system from KA and update to CUDA v4.1"
+  }
+]

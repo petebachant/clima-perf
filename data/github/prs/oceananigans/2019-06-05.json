@@ -1,0 +1,117 @@
+[
+  {
+    "additions": 165,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Builds off @vchuravy's work in #261.\r\n\r\nPreliminary design of user API for concrete models. Probably most of the time the user will have to specify boundary conditions prior to building the model. We'll have to come up with good syntax for that. What we have is ok, but can be improved.\r\n\r\nThe checkpointing tests currently fail, I think because they attempt to change the types of the some of the model fields.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-03T09:11:48Z",
+    "deletions": 92,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-06-05T14:03:36Z",
+    "number": 263,
+    "title": "Be more concrete"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjM4MzA2OA==",
+      "is_bot": false,
+      "login": "maleadt",
+      "name": "Tim Besard"
+    },
+    "body": "Requires https://github.com/JuliaGPU/CUDAdrv.jl/pull/144 and https://github.com/JuliaGPU/CUDAnative.jl/pull/416 (i.e. master of both packages).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-05T13:03:42Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2019-06-05T14:24:59Z",
+    "number": 270,
+    "title": "Dynamic launch config."
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjM4MzA2OA==",
+      "is_bot": false,
+      "login": "maleadt",
+      "name": "Tim Besard"
+    },
+    "body": "`launch_config` could probably be generalized with an `arch` argument to work on both GPUs and CPUs, but I'll leave that to you guys.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-05T18:06:00Z",
+    "deletions": 74,
+    "labels": [],
+    "mergedAt": "2019-06-05T18:34:58Z",
+    "number": 271,
+    "title": "Use a dynamic launch config for more kernels"
+  },
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts climate-machine/Oceananigans.jl#263 because boundary conditions API broke. Seems that the tests did not catch this maybe?\r\n\r\n```\r\n(base) alir_mit_edu@oceananigans-debug:~/Oceananigans.jl$ julia --project newscript.jl \r\nWARNING: Method definition overdub(Cassette.Context{N, M, T, P, B, H} where H<:Union{Cassette.DisableHooks, Nothing} where B<:Union{Nothing, Base.IdDict{Module, Base.Dict{Symbol, Cassette.BindingMeta}}} where P<:Cassette.AbstractPass where T<:Union{Nothing, Cassette.Tag{N, X, E} where E where X where N<:Cassette.AbstractContextName} where M where N<:Cassette.AbstractContextName, Any...) in module Cassette at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:508 overwritten in module GPUifyLoops at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:508.\r\nWARNING: Method definition recurse(Cassette.Context{N, M, T, P, B, H} where H<:Union{Cassette.DisableHooks, Nothing} where B<:Union{Nothing, Base.IdDict{Module, Base.Dict{Symbol, Cassette.BindingMeta}}} where P<:Cassette.AbstractPass where T<:Union{Nothing, Cassette.Tag{N, X, E} where E where X where N<:Cassette.AbstractContextName} where M where N<:Cassette.AbstractContextName, Any...) in module Cassette at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:521 overwritten in module GPUifyLoops at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:521.\r\nCUDA-enabled GPU(s) detected:\r\nCuDevice(0): Tesla V100-SXM2-16GB\r\nERROR: LoadError: TypeError: in setfield!, expected BoundaryCondition{Default,Nothing}, got BoundaryCondition{Flux,Float64}\r\nStacktrace:\r\n [1] setbc!(::Oceananigans.CoordinateBoundaryConditions{BoundaryCondition{Default,Nothing},BoundaryCondition{Default,Nothing}}, ::Val{:left}, ::BoundaryCondition{Flux,Float64}) at /home/alir_mit_edu/Oceananigans.jl/src/boundary_conditions.jl:85\r\n [2] setproperty!(::Oceananigans.CoordinateBoundaryConditions{BoundaryCondition{Default,Nothing},BoundaryCondition{Default,Nothing}}, ::Symbol, ::BoundaryCondition{Flux,Float64}) at /home/alir_mit_edu/Oceananigans.jl/src/boundary_conditions.jl:84\r\n [3] top-level scope at none:0\r\n [4] include at ./boot.jl:326 [inlined]\r\n [5] include_relative(::Module, ::String) at ./loading.jl:1038\r\n [6] include(::Module, ::String) at ./sysimg.jl:29\r\n [7] exec_options(::Base.JLOptions) at ./client.jl:267\r\n [8] _start() at ./client.jl:436\r\nin expression starting at /home/alir_mit_edu/Oceananigans.jl/newscript.jl:53\r\n```",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-05T18:42:39Z",
+    "deletions": 165,
+    "labels": [],
+    "mergedAt": "2019-06-05T19:11:48Z",
+    "number": 272,
+    "title": "Revert \"Be more concrete\""
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "cc @sandreza \r\n\r\nModel is back to normal speed. NaN checker and NetCDF output writer were the issues.\r\n\r\n```\r\n(base) alir_mit_edu@oceananigans-debug:~/Oceananigans.jl$ julia --project newscript.jl \r\nWARNING: Method definition overdub(Cassette.Context{N, M, T, P, B, H} where H<:Union{Cassette.DisableHooks, Nothing} where B<:Union{Nothing, Base.IdDict{Module, Base.Dict{Symbol, Cassette.BindingMeta}}} where P<:Cassette.AbstractPass where T<:Union{Nothing, Cassette.Tag{N, X, E} where E where X where N<:Cassette.AbstractContextName} where M where N<:Cassette.AbstractContextName, Any...) in module Cassette at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:508 overwritten in module GPUifyLoops at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:508.\r\nWARNING: Method definition recurse(Cassette.Context{N, M, T, P, B, H} where H<:Union{Cassette.DisableHooks, Nothing} where B<:Union{Nothing, Base.IdDict{Module, Base.Dict{Symbol, Cassette.BindingMeta}}} where P<:Cassette.AbstractPass where T<:Union{Nothing, Cassette.Tag{N, X, E} where E where X where N<:Cassette.AbstractContextName} where M where N<:Cassette.AbstractContextName, Any...) in module Cassette at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:521 overwritten in module GPUifyLoops at /home/alir_mit_edu/.julia/packages/Cassette/xggAf/src/overdub.jl:521.\r\nCUDA-enabled GPU(s) detected:\r\nCuDevice(0): Tesla V100-SXM2-16GB\r\n[000.00%] Time: 0.0 / 604800.0...   average wall clock time per iteration: 283.890 ms\r\n[000.05%] Time: 300.0 / 604800.0...   average wall clock time per iteration: 39.199 ms\r\n[000.10%] Time: 600.0 / 604800.0...   average wall clock time per iteration: 39.270 ms\r\n[000.15%] Time: 900.0 / 604800.0...   average wall clock time per iteration: 39.172 ms\r\n[000.20%] Time: 1200.0 / 604800.0...   average wall clock time per iteration: 39.167 ms\r\n[000.25%] Time: 1500.0 / 604800.0...   average wall clock time per iteration: 39.245 ms\r\n[000.30%] Time: 1800.0 / 604800.0...   average wall clock time per iteration: 39.119 ms\r\n[000.35%] Time: 2100.0 / 604800.0...   average wall clock time per iteration: 39.181 ms\r\n[000.40%] Time: 2400.0 / 604800.0...   average wall clock time per iteration: 39.246 ms\r\n[000.45%] Time: 2700.0 / 604800.0...   average wall clock time per iteration: 45.696 ms\r\n[000.50%] Time: 3000.0 / 604800.0...   average wall clock time per iteration: 40.170 ms\r\n[000.55%] Time: 3300.0 / 604800.0...   average wall clock time per iteration: 39.193 ms\r\n[000.60%] Time: 3600.0 / 604800.0...   average wall clock time per iteration: 39.091 ms\r\n[000.64%] Time: 3900.0 / 604800.0...   average wall clock time per iteration: 39.124 ms\r\n[000.69%] Time: 4200.0 / 604800.0...   average wall clock time per iteration: 39.230 ms\r\n[000.74%] Time: 4500.0 / 604800.0...   average wall clock time per iteration: 39.090 ms\r\n[000.79%] Time: 4800.0 / 604800.0...   average wall clock time per iteration: 39.110 ms\r\n[000.84%] Time: 5100.0 / 604800.0...   average wall clock time per iteration: 39.208 ms\r\n[000.89%] Time: 5400.0 / 604800.0...   average wall clock time per iteration: 39.086 ms\r\n[000.94%] Time: 5700.0 / 604800.0...   average wall clock time per iteration: 45.165 ms\r\n[000.99%] Time: 6000.0 / 604800.0...   average wall clock time per iteration: 40.586 ms\r\n[001.04%] Time: 6300.0 / 604800.0...   average wall clock time per iteration: 39.119 ms\r\n[001.09%] Time: 6600.0 / 604800.0...   average wall clock time per iteration: 39.115 ms\r\n[001.14%] Time: 6900.0 / 604800.0...   average wall clock time per iteration: 39.198 ms\r\n[001.19%] Time: 7200.0 / 604800.0...   average wall clock time per iteration: 39.083 ms\r\n[001.24%] Time: 7500.0 / 604800.0...   average wall clock time per iteration: 39.110 ms\r\n[001.29%] Time: 7800.0 / 604800.0...   average wall clock time per iteration: 39.205 ms\r\n[001.34%] Time: 8100.0 / 604800.0...   average wall clock time per iteration: 39.099 ms\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-05T19:17:46Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2019-06-05T19:42:43Z",
+    "number": 273,
+    "title": "No more scalar ops in NaN checker and NetCDF output writer"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjM4MzA2OA==",
+      "is_bot": false,
+      "login": "maleadt",
+      "name": "Tim Besard"
+    },
+    "body": "Cube blocks should facilitate shared memory reuse.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-05T20:08:28Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2019-06-05T20:12:46Z",
+    "number": 275,
+    "title": "Generalize indices in the z dimension"
+  }
+]

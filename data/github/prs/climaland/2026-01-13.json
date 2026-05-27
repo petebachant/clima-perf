@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 381,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR looks at reducing the number of cache variable updates that we carry out each step. Currently, we update the cache like:\r\n- update the entire auxiliary state for each component model\r\n- update all fluxes for each component model (which depend on Y and the auxiliary state as well)\r\n\r\nThis occurs in the explicit tendency, the implicit tendency, and the jacobian update (prior to evaluating these functions, the cache is updated, and then these functions use only precomputed quantities). \r\n\r\nHowever, much of these variables and fluxes do not need to be updated during the implicit solve. \r\n\r\nThis PR looks at one way of creating an implicit cache update which only updates a subset of the entire cache variables. The explicit tendency still updates the entire cache, but the implicit tendency and jacobian only update a smaller subset in the implicit cache update.\r\n\r\nIf this approach works (i.e. no loss of stability), we could do a few things:\r\n- try and use the cache! and cache_imp! of ClimaTimesteppers rather than reinventing it here (is it doing anything different?)\r\n- return to the conservation problem (where different fluxes were implicitly updated vs explicitly, making it hard to track conservation)\r\n- rebenchmark without soil co2 and see where time is spent\r\n\r\n## Results\r\n- for soil alone (global), SYPD increases by 2x (to 200)\r\n- for snowy land pmodel, SYPD increased to ~86 (about 2x also)\r\n\r\nI ran the 20 year run to assess stability changes:\r\nhttps://buildkite.com/clima/climaland-long-runs/builds/4446\r\nIt looks good.\r\n\r\n## To do\r\n\r\n## Content\r\n- Define implicit cache = update implicit aux state + update implicit fluxes\r\n- the default is to call the full update aux and update fluxes\r\n- the default land model options is to call update implicit aux for each component, followed by update fluxes for each component.\r\n- full cache = what we called update cache does not update drivers anymore\r\n- update initial cache does so explicitly since those are updated by a callback\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-26T23:42:55Z",
+    "deletions": 67,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2026-01-13T17:40:06Z",
+    "number": 1559,
+    "title": "Implicit cache update"
+  }
+]

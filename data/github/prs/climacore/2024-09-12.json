@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "It turns out that what was missing here is that `column` on broadcasted objects passes `nothing` to the axes. So, even though we call `instantiate` on the broadcasted objects in the Fields broadcasting:\r\n\r\n```julia\r\n@inline function Base.copyto!(\r\n    dest::Field,\r\n    bc::Base.Broadcast.Broadcasted{<:AbstractFieldStyle},\r\n)\r\n    copyto!(field_values(dest), Base.Broadcast.instantiate(todata(bc)))\r\n    return dest\r\nend\r\n```\r\n\r\nWe later call `column` inside the datalayouts loop:\r\n\r\n```julia\r\nfunction Base.copyto!(\r\n    dest::VIJFH{S, Nv, Nij, Nh},\r\n    bc::BroadcastedUnionVIJFH{S, Nv, Nij, Nh},\r\n    ::ToCPU,\r\n) where {S, Nv, Nij, Nh}\r\n    # copy contiguous columns\r\n    @inbounds for h in 1:Nh, j in 1:Nij, i in 1:Nij\r\n        col_dest = column(dest, i, j, h)\r\n        col_bc = column(bc, i, j, h)\r\n        copyto!(col_dest, col_bc)\r\n    end\r\n    return dest\r\nend\r\n```\r\nWhich then drops the axes and passes in `nothing`. This results in looking up the `axes` inside `getindex` rather than `column`.\r\n\r\nI'm kind of surprised that this wasn't a more wide spread issue. Also, it oddly didn't seem to have a performance benefit, but at least it fixes inference and conceptually makes more sense this way.\r\n\r\nCloses #1981.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6WMmfI",
+        "number": 1981,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1981"
+      }
+    ],
+    "createdAt": "2024-09-12T13:09:12Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "3D507D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7bQU0h",
+        "name": "Inference"
+      }
+    ],
+    "mergedAt": "2024-09-12T14:24:11Z",
+    "number": 1984,
+    "title": "Fix inference for column broadcasting"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I suspect that this method is needed to catch the case when `arg` has a single element.\r\n\r\nI'm hoping that this fixes the wide yellow platform in https://github.com/CliMA/ClimaAtmos.jl/issues/3295.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-12T17:32:56Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "3D507D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7bQU0h",
+        "name": "Inference"
+      }
+    ],
+    "mergedAt": "2024-09-12T18:46:27Z",
+    "number": 1986,
+    "title": "Improve inference in `dss_transform`"
+  }
+]

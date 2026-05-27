@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\nPreviously, there was a special case for ClimaTimeSteppers, where\r\nthe environment decsribed by test/Project.toml was used. This caused\r\nerrors because the test/Project.toml file was removed. So, the temporary test\r\nenvironment generated wth Pkg.test() must be used. This does not work,\r\nbecause it requires dev-ing ClimaCore from the ClimaTimeSteppers project,\r\nwhich causes an Aqua test to fail.\r\n\r\nClimaUtilities was not passing because dev-ing ClimaCore\r\ncaused aqua tests to fail. A possible solution to this is\r\nmaking a special case, similar to what was done for ClimaTimeSteppers.\r\n\r\nI attempted to dev ClimaCore in the temporary test env generated\r\nby Pkg.Test() by passing in `-e using Pkg; Pkg.dev(...)` as a julia\r\narg to Pkg.test, but that did not work.\r\n\r\nJulia 1.11 adds a kwarg to Pkg.add, which specifies the field\r\ninside the Project.toml file that a package should be added to.\r\nIf we only used 1.11, we could add the path to ClimaCore and specify\r\nthe target as extra or weakdeps, which would allow aqua tests to pass.\r\n\r\nInstead, this commit makes the downstream test install TestEnv\r\ninto the base julia env, then activate the test env for the downstream\r\npackage, then devs ClimaCore, and then run the test suite.\r\n\r\nThe ClimaTimeSteppers downstream tests still fail. This is an issue with ClimaTimeSteppers because the same test errors when run through the ClimaTimeSteppers CI. See [issue](https://github.com/CliMA/ClimaTimeSteppers.jl/issues/341) and example [here](https://github.com/CliMA/ClimaTimeSteppers.jl/pull/340/checks)\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-17T00:59:42Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2024-12-17T21:03:51Z",
+    "number": 2105,
+    "title": "Tr/fix ci downstream tests"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 376,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is created to solve the boundary condition race condition that occurs when trying to fill in the halo corner nodes.\r\n\r\nIt is basically just an integration of PR #1985 that runs the halo filling sequentially to avoid unsynchronized execution and PR #1923 to fill left and right halos together which should increase performance.\r\n\r\nIMPORTANT NOTE:\r\n\r\nThis PR will fail the ocean large eddy simulation regression tests when lines (50-53) in BoundaryConditions/fill_halo_regions.jl are uncommented.\r\n\r\nThe only thing that these lines do is a reordering of halo filling order such that the periodic boundary conditions are calculated after all the \"Bounded type\" boundary conditions.\r\n\r\nThis is needed since periodic boundary conditions require previous evaluation of boundary conditions in other directions to fill the corner nodes (see PR #1985).\r\n\r\nIt is possible that the ocean-large-eddy-simulation-regression-data has been generated with periodic boundary conditions (west-east, north-south) which are evaluated before the bounded ones (top-bottom) (see the fill_halo_regions! function in main). As such the issue with the test failing when uncommenting lines (50-53) would not be a bug in the code but a bug in the previous generated regression data. This error is quite small (as the corners would be updated based on the previous step \"bounded type\" boundary conditions) but still enough to make the test fail. (I leave this to you to confirm :))\r\n\r\nResolves #1179 ",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NDI2Mzk1MzE=",
+        "number": 1179,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1179"
+      }
+    ],
+    "createdAt": "2021-11-02T18:39:05Z",
+    "deletions": 92,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2021-11-04T17:39:48Z",
+    "number": 2035,
+    "title": "Halo optimization and solving the race condition on corner nodes"
+  }
+]

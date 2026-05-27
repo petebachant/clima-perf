@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR moves the DSS operation from the middle of each implicit stage (between the partial stage assembly and the start of Newton's method) to the end of each implicit stage. The change is applied consistently to all algorithms, and it ensures that stage values passed to our explicit and limited tendencies are always continuous across element boundaries.\r\n\r\nThe minor version number is also incremented so that we can immediately test this out in ClimaAtmos.\r\n\r\n### Motivation\r\n\r\nFor all simulations on a sphere, our metric terms (`J` and `g`) are discontinuous across element boundaries. Since the implicit tendency uses these metric terms, it introduces discontinuities to the Runge-Kutta stages. To avoid these discontinuities when evaluating explicit and limited tendencies, we must apply DSS after the last iteration of Newton's method (or after the linear solve in the case of Rosenbrock methods). We were previously applying DSS before Newton's method (and before the linear solve for Rosenbrock) because we incorrectly assumed that our metric terms were continuous. However, this intermediate application of DSS is unnecessary, since the implicit tendency does not involve any horizontal derivatives and can therefore handle discontinuous arguments. So, we can simply move DSS to the end of each stage in order to fix this issue.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-16T00:40:14Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2025-01-17T00:41:44Z",
+    "number": 348,
+    "title": "Move DSS to the end of each implicit stage"
+  }
+]

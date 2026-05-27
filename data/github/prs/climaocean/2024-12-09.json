@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 306,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR implements two types: \r\n- `BulkTemperature`\r\n- `SkinTemperature`\r\n\r\nThe first type is supposed to represent the default option we have know: the surface temperature is provided and equal to  the temperature of \"surface\" model (either sea ice or ocean). This temperature is fixed and not iterated over.\r\n\r\nThe second type represents a diagnostic temperature that is diagnosed by a flux balance between the \r\n- top turbulent surfaces (dependent on the surface temperature and iterated by the solver)\r\n- top radiative fluxes (prescribed)\r\n- outgoing longwave (calculated from the surface temperature in the previous iteration)\r\n- internal fluxes: provided from the `SkinTemperature`, for the moment only a simple diffusive flux with prescribed diffusivity leading to an explicit expression for temperature, but they can become more complicated.\r\n\r\nIn this second case the temperature is solved for in the `flux_balance_temperature(::SkinTemperature, T_ocean, net_external_flux)` function\r\n\r\nThese types are provided to the `similarity_theory` as a new field named `surface_temperature_type`. The surface temperature is then stored in a `T_surface` field which is added to `similarity_theory.fields`\r\n\r\nThere is a bit of a pitfall in this implementation: it is difficult to implement temperature-dependent radiative properties, because radiative properties (that depend on i and j and the grid) are passed already computed to the solver. \r\nI would be against passing i, j and the grid to the surface flux solver (it would entangle the solver with oceananigans so it would be difficult to swap it out with a `SurfaceFluxes.jl` solver), so we could rethink albedo and emissivity computation.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-26T10:33:57Z",
+    "deletions": 102,
+    "labels": [],
+    "mergedAt": "2024-12-09T17:37:53Z",
+    "number": 278,
+    "title": "A first stab at a diagnostic surface temperature implementation"
+  }
+]

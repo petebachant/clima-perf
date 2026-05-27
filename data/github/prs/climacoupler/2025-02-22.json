@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe've had some functions defined to exchange air density between components, presumably for turbulent flux calculations. Going through the code, I realized that the only surface model we retrieved air density from was the bucket surface models. This value is set via a call to `extrapolate_\\rho_to_sfc`, so I just called that function directly and removed the bucket `get_field(bucket_sim, :air_density)` function.\r\n\r\nWe also had a function `get_field(atmos_sim, :air_density)`, but never used this either. Instead we use the function `calculate_surface_air_density` to compute the air density given the surface temperature, and use this to update coupler fields and surface models.\r\n\r\nWe keep the functions `update_field!(sim, :air_density, field)` for surface models since some (but not all) of them need this for RHS calculations.\r\n\r\nBuildkite outputs visually look the same between this PR and main.\r\n\r\n## Content\r\n- remove surface models `get_field(sim, :air_density)` function\r\n  - only the BucketModel function was used\r\n  - compute it as needed using `FluxCalculator.extrapolate_\u03c1_to_sfc` instead\r\n- remove atmosphere `get_field(sim, :air_density)` function\r\n  - this was unused\r\n  - `FluxCalculator.calculate_surface_air_density` extended for ClimaAtmos is used instead\r\n- remove atmosphere `get_field(sim, :air_temperature)` function\r\n  - this was unused",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-21T01:30:42Z",
+    "deletions": 27,
+    "labels": [],
+    "mergedAt": "2025-02-22T00:02:14Z",
+    "number": 1203,
+    "title": "remove extraneous field exchanges"
+  }
+]

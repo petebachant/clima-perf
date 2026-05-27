@@ -1,0 +1,132 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR fixes a bug in the `Model` constructor that swapped the user-specified viscous and diffusive coefficients when constructing the `ModelConfiguration` object.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-27T13:39:33Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2019-05-27T14:04:52Z",
+    "number": 241,
+    "title": "Bugfix in Model constructor"
+  },
+  {
+    "additions": 373,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR introduces a new regression test (and renames \"golden master tests\" to \"regression tests\") based on Rayleigh-Benard convection that adds regression tests for `Value` boundary conditions, the forcing implementation and the salinity equation, by using salinity as a passive tracer in the test.\r\n\r\nThe test avoids setting random initial conditions by loading both the initial model state and the comparison state from file.\r\n\r\nNote that loading the model state from file required writing a new `OutputWriter` that outputs and loads the \"source terms\", `G`. This implementation is included in `test_regression.jl`, but it may be worthwhile to integrate it into `output_writers.jl` at some point.\r\n\r\nThe test runs on the CPU and GPU. However, similar to the thermal bubble tests, this test fails on the GPU.\r\n\r\nThis PR also adds a file to `sandbox` to aid running and exploring solutions to Rayleigh-Benard and also demonstrates the user-specification of a forcing term.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-27T02:15:00Z",
+    "deletions": 96,
+    "labels": [],
+    "mergedAt": "2019-05-27T15:26:48Z",
+    "number": 239,
+    "title": "Rayleigh-Benard regression test with forcing and passive tracer"
+  },
+  {
+    "additions": 54,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Thermal bubble regression test now works again. Dumb leftover mistake from #228. Inb4 we should have unified the poisson solvers.\r\n\r\nLove it when you're off by 10^50:\r\n\r\nBefore:\r\n```\r\n[ Info: \u0394u: min=-3.55764e+54, max=3.55764e+54, mean=-2.0648e+35, absmean=6.04154e+52, std=2.66887e+53\r\n[ Info: \u0394v: min=-3.55764e+54, max=3.55764e+54, mean=2.57926e+35, absmean=6.04154e+52, std=2.66887e+53\r\n[ Info: \u0394w: min=-8.03359e+54, max=5.86492e+54, mean=-8.09207e+35, absmean=7.70596e+52, std=3.93725e+53\r\n[ Info: \u0394T: min=-9.12137e+52, max=3.63655e+52, mean=1.50945e+34, absmean=3.54008e+50, std=3.58814e+51\r\n[ Info: \u0394S: min=-3.2411e+53, max=1.29218e+53, mean=2.84495e+34, absmean=1.2579e+51, std=1.27498e+52\r\n```\r\n\r\nAfter:\r\n```\r\n[ Info: \u0394u: min=-1.20346e-17, max=1.11131e-17, mean=-3.21903e-22, absmean=6.46707e-19, std=1.21175e-18\r\n[ Info: \u0394v: min=-1.8052e-17, max=1.07099e-17, mean=-3.80102e-22, absmean=6.51696e-19, std=1.25463e-18\r\n[ Info: \u0394w: min=-3.97428e-17, max=3.5345e-17, mean=4.25729e-21, absmean=3.64351e-18, std=5.66798e-18\r\n[ Info: \u0394T: min=-1.77636e-15, max=1.77636e-15, mean=-4.77049e-18, absmean=1.95156e-17, std=1.86152e-16\r\n[ Info: \u0394S: min=0, max=0, mean=0, absmean=0, std=0\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-27T15:19:06Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2019-05-27T15:53:31Z",
+    "number": 243,
+    "title": "Properly calculate RHS for pressure equation on GPU."
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Right now GitLab CI fails on nightly/dev builds because CUDAapi isn't a package anymore. This PR updates the dependencies/packages in Project.toml to the latest version which should also fix this. There was some mix-up about a month ago that forced us to switch to the master branch of a lot of GPU packages, but things seem fine now.\r\n\r\nSticking with GPUifyLoops v0.2.3 because of https://github.com/vchuravy/GPUifyLoops.jl/issues/66\r\n\r\nAlso removes CUDAapi which isn't a package anymore, and NNlib which was never supposed to be a direct dependency.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-27T16:19:56Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2019-05-27T18:13:09Z",
+    "number": 244,
+    "title": "Update packages"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Until the CPU and GPU Poisson solvers are unified this should give us confidence that the GPU Poisson solver is doing its job.\r\n\r\nFound it easier to write the test independently so this supersedes PR #238 \r\n\r\nResolves #200",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MzU5NzI3ODA=",
+        "number": 200,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/200"
+      }
+    ],
+    "createdAt": "2019-05-27T19:50:26Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-05-27T21:38:16Z",
+    "number": 246,
+    "title": "Test that the GPU Poisson solver solution is numerically divergence-free"
+  }
+]

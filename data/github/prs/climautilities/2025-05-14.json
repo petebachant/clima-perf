@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 23,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds `deferopen = false` when constructing a multifile dataset. According to this issue (https://github.com/JuliaGeo/NCDatasets.jl/issues/277), files are not kept open because of the limitation of 1024 open files on Linux. However, for our use case, this will not matter. \r\n\r\nSee this [buildkite](https://buildkite.com/clima/climaland-long-runs/builds/3971#0196b1a7-1aae-4a0c-9df4-6ce556fdc33b) for a ClimaLand run for a single year with ~40 years of ERA5 forcing data without this change.\r\nSee this [buildkite](https://buildkite.com/clima/climaland-long-runs/builds/3987#0196cad7-4762-452d-b592-899dc75cc2f0) for a ClimaLand run for a single year with ~40 years of ERa5 forcing data with this change.\r\nAlso, see this [buildkite](https://buildkite.com/clima/climaland-long-runs/builds/3977#0196b251-76f1-4d94-95db-2e9aa179c48c) for a ClimaLand run for a single year with a single year of ERA5 forcing data.\r\n\r\nThe wall time per step for the three runs are\r\n\r\n1. 35 milliseconds, 834 microseconds (forty years of ERA5 forcing data)\r\n2. 25 milliseconds, 126 microseconds (forty years of ERA5 forcing data with this branch)\r\n3. 22 milliseconds, 240 microseconds (single year of ERA5 forcing data)",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-13T21:21:28Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2025-05-14T16:58:43Z",
+    "number": 165,
+    "title": "Add deferopen = false when constructing multifile dataset"
+  }
+]

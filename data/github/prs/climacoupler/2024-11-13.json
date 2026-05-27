@@ -1,0 +1,166 @@
+[
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nGeoMakie v0.7.6, 0.7.7 have bugs; specify to use 0.7.8 for fixes\r\n\r\ncloses #1079\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6d-SKw",
+        "number": 1079,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1079"
+      }
+    ],
+    "createdAt": "2024-11-12T19:55:06Z",
+    "deletions": 157,
+    "labels": [],
+    "mergedAt": "2024-11-13T00:08:30Z",
+    "number": 1083,
+    "title": "use GeoMakie v0.7.8"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe benchmark runs failed this weekend because `dt` was not specified correctly (see error [here](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/203#01931517-49b3-4eae-8db2-d86031ce1725)).\r\n\r\nThe benchmark AMIP config files (e.g. `config/benchmark_configs/amip_diagedmf.yml`) were previously relying on `dt` being specified in the atmos config files they use (e.g. `config/benchmark_configs/climaatmos_diagedmf.yml`), rather than specifying `dt` explicitly in the AMIP configs. When the configs were merged in `get_atmos_config_dict`, the atmos config's `dt` was inherited by the coupled config file ([here](https://github.com/CliMA/ClimaCoupler.jl/pull/1059/files#diff-f45f364a1336ac9f09399589b402d600f85f73e2080d2203523268229d7874aaL353)). After https://github.com/CliMA/ClimaCoupler.jl/pull/1059, we overwrite the `dt` entry in the atmos config with the entry in the coupler config ([here](https://github.com/CliMA/ClimaCoupler.jl/pull/1059/files#diff-f45f364a1336ac9f09399589b402d600f85f73e2080d2203523268229d7874aaR356)). This requires that the coupler config does have an entry for `dt` (or all component dts), so we can no longer rely on the atmos dt.\r\n\r\nThis is a change in behavior, but the previous behavior was not necessarily desired. It seems reasonable to me that the config file requires that `dt` is specified there, rather than inherited from an atmosphere config, so I think we can keep the current setup and just add `dt` entries to the coupled configs that didn't have it before.\r\n\r\n## To Do\r\n- [x] Add a `dt` entry to AMIP benchmark configs\r\n- [x] Verify that all configs specify `dt` or component model dts",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-11T18:32:30Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-11-13T00:57:23Z",
+    "number": 1076,
+    "title": "specify dt in benchmark configs"
+  },
+  {
+    "additions": 149,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd a README in the .buildkite/ folder which explains each of the pipelines, including where they run, how long they run for, where to find configs, what type of runs are in them, what the goal of each is, and other similar notes.\r\n\r\nAlso does some misc. cleanup I noticed along the way.\r\n\r\nCloses #1077 ",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6d9Oum",
+        "number": 1077,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1077"
+      }
+    ],
+    "createdAt": "2024-11-11T22:45:47Z",
+    "deletions": 97,
+    "labels": [],
+    "mergedAt": "2024-11-13T01:11:36Z",
+    "number": 1081,
+    "title": "add buildkite README"
+  },
+  {
+    "additions": 230,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR does a few cleanup tasks in the experiments/ClimaEarth/ directory:\r\n- Update the ClimaEarth README\r\n- Delete the `viz_explorer.jl`, which was previously used to create animations of simulation fields, but is not currently being used. \r\n- Move functions in the `io_helpers.jl` file to the Utilities module and delete this file. This should not change any behavior.\r\n- Move `checkpoint_sims` function to the Checkpointer module and delete the `user_logging.jl` file. This should not change any behavior.\r\n\r\ncloses #1067\r\n\r\n## To-do\r\n- [x] verify only change in behavior/outputs is animation removal\r\n\r\n## Content\r\n- [x] move exp/ClimaEarth/AMIP_log.md into exp/ClimaEarth/README.md and delete AMIP_log\r\n  - also add more details for slabplanet\r\n- [x] viz_explorer.jl\r\n  - delete (unused; link in NEWS.md in case we want to add back later)\r\n- [x] io_helpers.jl\r\n  - move to src/ (general helpers)\r\n- [x] user_logging.jl\r\n  -  delete show method (unused)\r\n  - checkpoint_sims --> move to Checkpointer module\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6deDVw",
+        "number": 1067,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1067"
+      }
+    ],
+    "createdAt": "2024-11-07T22:52:26Z",
+    "deletions": 348,
+    "labels": [],
+    "mergedAt": "2024-11-13T01:16:31Z",
+    "number": 1070,
+    "title": "clean up ClimaEarth environment"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nChanges the amip top to 60km. I have to increase vertical levels to make the coarse amip stable, and as a result I reduce t_end so that it can finish in 12 hours. It runs for a year here: https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/143#0192fd7b-fa55-4a47-97c9-2016c06180f1. We'll see how the nightly amip goes:)\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-11T19:32:02Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2024-11-13T01:39:21Z",
+    "number": 1078,
+    "title": "change amip to 60km"
+  },
+  {
+    "additions": 113,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR does a few things:\r\n- remove unused config files\r\n- remove outdated jobs from CI\r\n- remove redundant/unnecessary jobs from CI\r\n- unify config file naming\r\n- organize CI pipeline into clear slabplanet/AMIP sections; move hierarchy experiments to end\r\n\r\nThe regular pipeline now includes:\r\n- MPI and GPU unit tests\r\n- 14 slabplanet experiments (10 on CPU, 4 on GPU)\r\n- 11 AMIP experiments(6 on CPU, 5 on GPU)\r\n- hierarchy test cases\r\n\r\n\r\ncloses #1080\r\n\r\n## Content\r\n- [x] remove unused configs\r\n- [x] remove unnecessary simulations from regular CI pipeline\r\n- [x] organize CI pipeline: clear slabplanet and AMIP experiment sections\r\n- [x] update README to use example of config we still have\r\n- [x] remove \"gpu_\" prefix, \"single\"/\"mpi\" from config names (architecture/hardware is separate from simulation setup)\r\n- [x] remove \"target_\" prefix from config names (targets have changed)\r\n\r\n## Jobs removed from CI pipeline\r\n- Slabplanet: albedo from static map\r\n  - static map albedo is already used in default case\r\n- Moist earth with slab surface - default: monin gray no_sponge idealinsol freq_dt_cpl\r\n  - uses \"default_mono\" config: very similar to default slabplanet but naming is more confusing\r\n  - only difference is diagnostics\r\n- Moist earth with slab surface - notmono: monin gray no_sponge idealinsol freq_dt_cpl notion\r\n  - uses \"default_notmono\" config: very similar to default slabplanet nonmono but naming is more confusing\r\n  - only difference is diagnostics\r\n- Moist earth with slab surface - test: bulk allsky sponge realinsol infreq_dt_cpl\r\n  - target_params_in_slab_test2 config is identical to target_params_in_slab_test3\r\n- AMIP - Float64 test\r\n  - Float64 already tested as default\r\n  - very similar to more complex setups, e.g. \"AMIP - Float64 + hourly checkpoint\"\r\n- \"gpu_amip_albedo_function.yml\" config\r\n  - lower-resolution version of \"target_amip_albedo_function.yml\", which is now run on both CPU on GPU and renamed to \"amip_albedo_function.yml\"\r\n\r\n## Naming changes\r\n- run \"Moist earth with slab surface - test: bulk allsky sponge realinsol infreq_dt_cpl\" renamed to \"Slabplantet: timevarying insolation + rayleigh sponge\"\r\n- config renamed: \"coarse_mpi_n4.yml\" -> \"amip_coarse_mpi.yml\"\r\n- config renamed: \"coarse_single_ft32\" -> \"amip_coarse_ft32.yml\"\r\n- config renamed: \"coarse_single_ft64_hourly_checkpoints\" -> \"amip_coarse_ft64_hourly_checkpoints\"\r\n- config renamed: \"coarse_single_ft64_hourly_checkpoints_restart\" -> \"amip_coarse_ft64_hourly_checkpoints_restart\"\r\n- all \"target_amip_...\" configs renamed to \"amip_...\"\r\n- all \"gpu_amip_...\" configs renamed to \"amip_...\"\r\n- config renamed: \"gpu_amip_albedo_static_map\" -> \"amip_default\" (static map is default albedo type)",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6d_BQF",
+        "number": 1080,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1080"
+      }
+    ],
+    "createdAt": "2024-11-12T00:16:39Z",
+    "deletions": 269,
+    "labels": [],
+    "mergedAt": "2024-11-13T17:06:55Z",
+    "number": 1082,
+    "title": "remove unused configs; clean up CI pipeline"
+  }
+]

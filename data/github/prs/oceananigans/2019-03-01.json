@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 460,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The main contribution of this pull request is a refactor of the function `time_step!` and related functions to reduce code duplication and improve readability. There is now a function called `time_step_kernel!` that dispatches on the value of its first argument (provided by `model.metadata`) to execute on the CPU or GPU.\r\n\r\nA `Model` constructor is now provided in which all important information can be input via keyword arguments. I favor this kind of design for fluids codes because I believe it improves the understand-ability of scripts, as it encourages explicit naming of parameters passed into the `Model` constructor.\r\n\r\nThe output writing functionality has also been refactored slightly. However, many more changes will be made in the future so this is not consequential.\r\n\r\nI also reduced the computational burden of a few of the tests, and changed to factor of 2 resolutions since this makes sense for FFTs (though relatively unimportant for testing, I think should encourage users to use powers of 2 and make a habit of using them ourselves).\r\n\r\nA few more notes:\r\n\r\n* We need tests for output writers, and the output writing functionality needs to be revamped\r\n* The model constructor needs work\r\n* The examples are outdated. We should probably reduce the number of examples until the code becomes more stable, and commit to maintaining the few that remain\r\n* We should get rid of model metadata and simply include the 'architecture' as a type parameter of `Model`\r\n* and so much more...\r\n\r\nLots of work to do!",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-01T00:47:12Z",
+    "deletions": 294,
+    "labels": [],
+    "mergedAt": "2019-03-01T20:59:56Z",
+    "number": 97,
+    "title": "Time_step refactor and new Model constructor"
+  }
+]

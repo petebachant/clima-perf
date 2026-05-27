@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 205,
+    "author": {
+      "id": "MDQ6VXNlcjY3NTkzODYx",
+      "is_bot": false,
+      "login": "whitleyv",
+      "name": "Victoria Whitley Clark"
+    },
+    "body": "This PR is to add the basic implementation of immersed boundaries with grid-conforming coordinates #1036.  This is still a work in progress, but so far it can handle forcing the velocity components to create an immersed boundary. It does not work with the tracer equations, yet, and it assumes a Dirichlet-zero boundary condition. The user must give a boolean function to the model, which returns `false` if the point is in the fluid. \r\n\r\nThis also includes a basic example for steady-state flow around a cylinder in 2D `flow_around_cylinder_lowRe.jl`, such as this:\r\n![velocity_Re40_dx04_small_paper](https://user-images.githubusercontent.com/67593861/108130156-2f329880-707d-11eb-87db-6d519e2513be.gif)\r\n \r\nThe barebones of this implementation is rather old at this point. Even though it has been updated to work with the current set up, I imagine there are things that might still need more updating or have become superfluous. All suggestions are appreciated!\r\n\r\n\r\n### Description:\r\nInstead of conforming the mesh to the fluid domain, a cartesian grid is generated over the whole area. Then, an added forcing term incorporates the boundary conditions into the equations. In practice, when your boundary conforms to the grids, creating a stair-step like boundary, this becomes much simpler to handle. Here, we replace the tendency terms in `correct_immersed_tendencies.jl` so that when you take the next Runge-Kutta step, you end up with U = 0. \r\n\r\nSince this process occurs before the pressure correction, there is a small amount of error that seems to fit with the correction as seen here for various places within the cylinder where it should be zero:\r\n![Pcorrect_vs_velocity_inside_dx04](https://user-images.githubusercontent.com/67593861/108130321-7ae54200-707d-11eb-9101-273350597d8c.png)\r\n \r\nIt would need more testing to truly verify that this is the case, but seems to fit the data so far.\r\n\r\n### To Do/ Upcoming:\r\n- Currently working on an arbitrary grid implementation, that can intersect the boundary however it wants. This involves a good amount of interpolation, but it well on the way. This implementation will easily handle Neumann and Dirichlet boundary conditions. It makes more sense for normal and tangential boundary conditions rather than specific (u,v,w) conditions, so we will also project the velocities along with interpolating.\r\n- Need to add a way for the user to specify boundary conditions\r\n- Add tracer capabilities. The implementation is slightly different for arbitrary grids, since tracers will be a scalar that is not rotated into normal and tangential components for implementation. \r\n\r\n\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-16T22:50:31Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-02-24T13:38:01Z",
+    "number": 1368,
+    "title": "Add basic immersed boundary implementation"
+  },
+  {
+    "additions": 181,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes a number of bug fixes needed to time step `HydrostaticFreeSurfaceModel` with a `RegularLatitudeLongitudeGrid`, and adds an experimental \"spherical splash\" example that uses Makie to visualize the solution on the surface of a the sphere:\r\n\r\nhttps://user-images.githubusercontent.com/15271942/109041650-4553e080-769d-11eb-8c05-b169cba87153.mp4\r\n\r\nEverything is still experimental, but we need these tools (and bug fixes) to set about validating our curvilinear finite volume numerics implementation.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-24T17:39:44Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2021-02-24T18:49:42Z",
+    "number": 1399,
+    "title": "Fixes for RegularLatitudeLongitudeGrid plus a spherical splash example"
+  }
+]

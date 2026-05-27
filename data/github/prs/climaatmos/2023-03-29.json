@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 310,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR is split off from #1482. Its purpose is to ensure that all computations of velocity, kinetic energy, and thermodynamic state are done consistently, and to clean up some of the diagnostics code. Since the kinetic energy was previously computed incorrectly in `thermo_state!` (using `norm_sqr` instead of `compute_kinetic!`), this PR is expected to slightly change simulation results.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Rename `precomputed_quanitites!` to `set_precomputed_quantities!`, and rewrite `set_precomputed_quantities!` so that merging in #1482 requires as few changes as possible.\r\n- Rename the precomputed quantity `\u1d9cu_bar` to `\u1d9cu`, per Tapio's request.\r\n- Delete `thermo_state.jl`. Remove `thermo_dispatcher` from `p` and delete the definition of `ThermoDispatcher`. Replace all computations of `\u1d9cu`, `\u1d9cK`, and `\u1d9cts` outside of `precomputed_quantities.jl` with calls to `set_precomputed_quantities!`. In particular, make `horizontal_limiter_tendency!`, `remaining_tendency!`, and `implicit_tendency!` all begin by zeroing out the tendency and calling `set_precomputed_quantities!`. Simplify the definition of `thermo_state_type` and move it from the deleted `thermo_state.jl` to `type_getters.jl`. Define the (broadcastable) functions `ts` and `thermo_state` in `precomputed_quantities.jl`; these functions replace all of the other code that was in `thermo_state.jl` (the `thermo_state` function internally does what `ThermoDispatcher` used to do).\r\n- Isolate `precomputed_quantities` from the rest of the `default_cache`, initialize the `precomputed_quantities` using `set_precomputed_quantities!` when the `default_cache` is constructed, and pass the `default_cache` wherever these quantities are needed in `additional_cache` (i.e., `radiation_model_cache`).\r\n- Rename `water_vapor`, `cloud_liquid`, and `cloud_ice` in the `hdf5` diagnostics files to `q_vap`, `q_liq`, and `q_ice`.\r\n- Replace `dry_diagnostic` and `moist_diagnostic` in `save_to_disk_func` with `dycore_diagnostic` and `precip_diagnostic`. Define `common_diagnostics` (dry and moist) that should be generated for both GS and SGS quantities, and include them in `dycore_diagnostic`. Replace the duplicated computation of the zero-moment microphysics diagnostics with a call to the function that computes those diagnostics in `precipitation.jl` (`precipitation_tendency!`). Generate the `q_rai` and `q_sno` diagnostics for one-moment microphysics, and generate the grid-mean `cloud_fraction` diagnostic for EDMF. Change the condition for generating EDMF diagnostics to `p.atmos.turbconv_model isa TC.EDMFModel`.\r\n- Move the `include` call for `callbacks.jl` after the `include` calls for the tendency files, so that the duplicate computation of the zero-moment microphysics diagnostics can be removed.\r\n- Remove all unused variables from `horizontal_limiter_tendency!`, `horizontal_advection_tendency!`, `explicit_vertical_advection_tendency!`, `implicit_vertical_advection_tendency`, `Wfact!`, `default_cache`, `radiation_model_cache`, `save_to_disk_func`, `rrtmgp_model_callback`, `turb_conv_affect_filter!`, and all of the plotting functions in `post_processing_funcs.jl`; some of these variables are no longer used because the calls to `compute_kinetic!` and `thermo_state!` were removed, but many of them were not being used to begin with.\r\n- Increment the `ref_counter` and reset the MSE tables to 0.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5f2kCP",
+        "number": 1416,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1416"
+      }
+    ],
+    "createdAt": "2023-03-29T00:54:43Z",
+    "deletions": 568,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-03-29T21:28:15Z",
+    "number": 1499,
+    "title": "Unify precomputed quantities, clean up diagnostics"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "This PR changes longrun ssp test to limiter off.\r\n\r\nSSP with limiter on will be added back once it is fully tested",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-29T20:48:53Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2023-03-29T22:33:19Z",
+    "number": 1502,
+    "title": "change longrun ssp tests default to limiter off"
+  }
+]

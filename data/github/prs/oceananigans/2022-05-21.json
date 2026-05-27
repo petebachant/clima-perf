@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 166,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Following https://royalsocietypublishing.org/doi/epdf/10.1098/rspa.2011.0153 (section 5)\r\n\r\nAt the moment this is just a scheme check, so I have implemented it in 1D (and only in the horizontal direction) \r\n\r\nFor the moment this script\r\n```\r\nusing Oceananigans\r\n\r\narch = CPU()\r\ngrid = RectilinearGrid(arch, size = (100, 100, 1), x = (0, 2\u03c0), y = (0, 2\u03c0), z=(0, 1), topology = (Periodic, Periodic, Bounded))\r\n\r\nfree_surface = ImplicitFreeSurface()\r\n\r\nmodel = HydrostaticFreeSurfaceModel(; grid, free_surface,\r\n                                    momentum_advection = WENO5(),\r\n                                    tracer_advection = WENO5(bounds = (0, 1)),\r\n                                    buoyancy = nothing,\r\n                                    tracers = :c)\r\n\r\n@inline function linear_u_profile(x, y, z) \r\n    if x < \u03c0/2 || x > 3 * \u03c0/2\r\n        return 0.0\r\n    else\r\n        if y > 7/4*\u03c0 || y < \u03c0/4\r\n            return 0.0\r\n        elseif y < 5/4 * \u03c0 && y > 3/4 * \u03c0\r\n            return \u03c0/2\r\n        elseif y >= \u03c0/4 && y <= 3/4 * \u03c0\r\n            return y - \u03c0/4\r\n        else\r\n            return \u03c0/2 - (y - 5/4 * \u03c0)\r\n        end\r\n    end\r\nend\r\n\r\n@inline function rectangle_c(x, y, z)\r\n    if x > 2/3 * \u03c0 && x < 4/3 * \u03c0\r\n        if x > 2/3 * \u03c0 && x < 4/3 * \u03c0\r\n            return 1.0\r\n        else\r\n            return 0.0\r\n        end\r\n    else\r\n        return 0.0\r\n    end\r\nend\r\n\r\nset!(model, u = linear_u_profile, c = rectangle_c)\r\n\r\n\u0394t = grid.Lx / grid.Nx / maximum(abs, model.velocities.u) * 0.2\r\n\r\nfor step in 1:10000\r\n    time_step!(model, \u0394t)\r\n    @info \"step $step, time $(model.clock.time)\"\r\nend\r\n```\r\nreturns \r\n```\r\njulia> model.tracers.c\r\n100\u00d7100\u00d71 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 100\u00d7100\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 106\u00d7106\u00d77 OffsetArray(::Array{Float64, 3}, -2:103, -2:103, -2:4) with eltype Float64 with indices -2:103\u00d7-2:103\u00d7-2:4\r\n    \u2514\u2500\u2500 max=1.03919, min=-0.0214752, mean=0.351983\r\n```\r\nfor usual `WENO5` \r\nand \r\n```\r\njulia> model.tracers.c\r\n100\u00d7100\u00d71 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 100\u00d7100\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 106\u00d7106\u00d77 OffsetArray(::Array{Float64, 3}, -2:103, -2:103, -2:4) with eltype Float64 with indices -2:103\u00d7-2:103\u00d7-2:4\r\n    \u2514\u2500\u2500 max=0.999906, min=1.09505e-5, mean=0.352073\r\n```\r\nfor `WENO5(bounds = (0, 1))`\r\n\r\nSo it seems like this scheme, even in its 1D formulation, might  help with our tracer bound issues.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-16T21:57:39Z",
+    "deletions": 74,
+    "labels": [],
+    "mergedAt": "2022-05-21T02:11:35Z",
+    "number": 2557,
+    "title": "Maximum-principle-satisfying WENO scheme"
+  }
+]

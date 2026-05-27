@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 234,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR adds a flag for upwinding, which is used in the implicit tendency and the Jacobian computation for the vertical advection of energy and tracer variables. The flag is set just like the energy variable flag (through a command-line argument and a function that returns a symbol). The possible values for this flag are\r\n\r\n- `:none`, which uses central differencing for vertical advection; i.e., `\u1d9cvariable\u209c = -\u1d9cdiv\u1d65(\u1da0interp(\u1d9cvariable) * \u1da0w)`\r\n- `:first_order`, which uses first-order upwinding; i.e., `\u1d9cvariable\u209c = -\u1d9cdiv\u1d65(\u1da0interp(\u1d9c\u03c1) * \u1da0upwind_product(\u1da0w, \u1d9cvariable / \u1d9c\u03c1))`, where `\u1da0upwind_product = Operators.UpwindBiasedProductC2F()`\r\n- `:third_order`, which is the same as `:first_order`, but with `\u1da0upwind_product = Operators.Upwind3rdOrderBiasedProductC2F(bottom = Operators.FirstOrderOneSided(), top = Operators.FirstOrderOneSided())`\r\n\r\nNote that we could also use `Operators.ThirdOrderOneSided()` instead of `Operators.FirstOrderOneSided()` for `:third_order`. I don't think this makes too much of a difference, so I've just hardcoded `Operators.FirstOrderOneSided()` as the default.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5H-6aQ",
+        "number": 328,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/328"
+      }
+    ],
+    "createdAt": "2022-05-04T18:51:55Z",
+    "deletions": 105,
+    "labels": [],
+    "mergedAt": "2022-05-06T01:46:15Z",
+    "number": 398,
+    "title": "Add upwinding to Jacobian"
+  },
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Adds the `hyperdiff` cli arg\r\n - unifies `additional_tendency!`\r\n - Fixes the `turbconv` flag for `const_diff`\r\n - Deletes several files:\r\n```\r\nexamples/hybrid/sphere/baroclinic_wave_rhoe.jl\r\nexamples/hybrid/sphere/baroclinic_wave_rhoe_equilmoist.jl\r\nexamples/hybrid/sphere/baroclinic_wave_rhoe_equilmoist_radiation.jl\r\nexamples/hybrid/sphere/baroclinic_wave_rhotheta.jl\r\nexamples/hybrid/sphere/held_suarez_rhoe.jl\r\nexamples/hybrid/sphere/held_suarez_rhoe_equilmoist.jl\r\nexamples/hybrid/sphere/held_suarez_rhoe_int.jl\r\nexamples/hybrid/sphere/held_suarez_rhoe_int_equilmoist.jl\r\nexamples/hybrid/sphere/held_suarez_rhotheta.jl\r\n```",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-05T02:14:06Z",
+    "deletions": 73,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-05-06T20:30:10Z",
+    "number": 403,
+    "title": "Prep for removing TEST_NAME"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Removes `pipeline_examples_generator.jl`, which I think is no longer necessary due to the introduced `job_id`.\r\n - Removes `examples/hybrid/sphere/solid_body_rotation_3d.jl`, which was missed in #406. This example (solid body rotation), is not even being run in our CI, so I'm not sure if it still works anymore anyway. The version in ClimaCore is part of ClimaCore's CI, so better to keep that one maintained there.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-06T20:54:50Z",
+    "deletions": 376,
+    "labels": [
+      {
+        "color": "89D76B",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7wjPCy",
+        "name": "House cleaning :broom:"
+      }
+    ],
+    "mergedAt": "2022-05-06T21:31:16Z",
+    "number": 411,
+    "title": "Remove duplicate example and unused example generator"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Tries to fix the long runs (#409) by not upwinding\r\n - Removes the low frequency output, since the output is visually difficult to follow\r\n - Adds `fps` CL arg and sets `fps = 30` for long run animations because they're slow and take time to review",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-06T21:32:00Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2022-05-06T22:14:11Z",
+    "number": 413,
+    "title": "Try to fix long runs by not upwinding"
+  }
+]

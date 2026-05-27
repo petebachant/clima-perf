@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 1181,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR splits up `test_output_writers.jl` into three files since it was getting pretty long and unwieldy and adds tests for `NetCDFOutputWriter` with `VerticallyStretchedRectilinearGrid` and `RegularLatitudeLongitudeGrid` which pass thanks to @tomchor's PR #1487!\r\n\r\ncc @mukund-gupta ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-18T00:20:48Z",
+    "deletions": 1055,
+    "labels": [],
+    "mergedAt": "2021-03-18T01:10:15Z",
+    "number": 1490,
+    "title": "Test NetCDF output for all grids"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This changes the behavior of `show()` for VerticallyStretchedGrids to\r\n\r\n```julia\r\nVerticallyStretchedRectilinearGrid{Float64, Periodic, Periodic, Bounded}\r\n                   domain: x \u2208 [0.0, 500.0], y \u2208 [0.0, 23.4375], z \u2208 [0.0, 100.0]\r\n                 topology: (Periodic, Periodic, Bounded)\r\n  resolution (Nx, Ny, Nz): (128, 1, 32)\r\n   halo size (Hx, Hy, Hz): (1, 1, 1)\r\ngrid spacing (\u0394x, \u0394y, \u0394z): (3.90625, 23.4375, [min=0.97654576571653, max=5.174919985099578])\r\n```\r\n\r\nThis is very clear but also a bit on the verbose side. Another option would be\r\n\r\n```julia\r\nVerticallyStretchedRectilinearGrid{Float64, Periodic, Periodic, Bounded}\r\n                   domain: x \u2208 [0.0, 500.0], y \u2208 [0.0, 23.4375], z \u2208 [0.0, 100.0]\r\n                 topology: (Periodic, Periodic, Bounded)\r\n  resolution (Nx, Ny, Nz): (128, 1, 32)\r\n   halo size (Hx, Hy, Hz): (1, 1, 1)\r\ngrid spacing (\u0394x, \u0394y, \u0394z): (3.90625, 23.4375, [0.97654576571653, 5.174919985099578])\r\n```\r\n\r\nand then the `min` and `max` are implicit. I'm happy to change to whatever is preferred.\r\n\r\nCC @ali-ramadhan ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-18T02:44:05Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-03-18T14:17:20Z",
+    "number": 1494,
+    "title": "Adds information about \u0394z on show function for VerticallyStretchedGrid"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 341,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "After tracking allocations in TurbulenceConvection.jl, I was able to track down that most are coming from ClimaCore's FD operators. This PR adds several tests that highlight where we are doing well (0 allocations) and where we incur allocations. Tests (and `@test_broken`s) were added to indicate the allocations.\r\n\r\nFor the simple examples (but not all), I added tests for closures and when `getproperty` calls are inside the broadcasted expression, which occurs allocations but can be removed by hoisting the `getproperty` calls outside.\r\n\r\nAs @jakebolewski suggested, the next step is to analyze these cases with JET to find out what's going wrong.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-08T21:28:56Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2021-12-09T16:07:19Z",
+    "number": 336,
+    "title": "Add FD operator allocation tests"
+  }
+]

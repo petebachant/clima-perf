@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 598,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n\r\n - Fixes some logical bugs in the FD shmem implementation: the windows where shmem was filled was not generally correct, and that should now be fixes (as the newly added tests were failing on the main branch and are now passing)\r\n - Simplified the if-else block used to call (the now unified) `fd_operator_fill_shmem!` method. The if-else block is still needed for type-stability / inference, I tried doing this dynamically and it was resulting in inference failures / PTX errors.\r\n - Generalized the handling of boundary conditions, which is now performed in both `fd_operator_fill_shmem!` and `fd_operator_evaluate`, which I think is needed for composition to work correctly (also exercised in the newly added tests that were failing on the main branch and are now passing).\r\n - Adds unit tests for the helper functions, in particular the ones that ensure that all cases are caught for manually dispatching over interior, left and right boundary windows.\r\n - Added a `Operators.use_fd_shmem()` overloadable method so that we can easily disable shmem in the test suite (or generally).\r\n - Closes #2250.\r\n\r\nI left a couple of todos that I _think_ should be possible, for example, simplifying the `in_interior(idx::Integer, ...)` logic so that it uses `in_right_boundary_window_range` and `in_left_boundary_window_range`, which are simply based on indices (and not boundary condition information).\r\n\r\nUnfortunately, it seems like this caused a performance regression, but being that this pattern is more generally correct and extensible to the other operators, we should move forward with this and see why it's not performing as well. Perhaps it's due to high register pressure? We can take a look with nsight compute and diagnose.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6vBA7T",
+        "number": 2250,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2250"
+      }
+    ],
+    "createdAt": "2025-04-10T11:25:17Z",
+    "deletions": 329,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2025-04-10T12:49:28Z",
+    "number": 2282,
+    "title": "Fix, simplify and generalize shmem for FD stencils"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-10T14:28:25Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-04-10T14:28:33Z",
+    "number": 2283,
+    "title": "Bump patch, update news"
+  }
+]

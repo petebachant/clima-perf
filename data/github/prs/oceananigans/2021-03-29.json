@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 104,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "I have made a first attempt to add tracers into `ShallowWaterModel`, but unfortunately, have a problem with the new function I have created, `div_ucvc` to compute the divergence of the tracer, `c`, times the velocity `(u,v)`.    \r\n\r\nWhen I try running a simulation I get the following output, which is a TaskFailedexcetion, and seems to be having problems with convert.\r\n\r\n```\r\njulia> run!(simulation)\r\nERROR: TaskFailedException:\r\nMethodError: Cannot `convert` an object of type Oceananigans.AbstractOperations.BinaryOperation{Center,Center,Center,typeof(+),Oceananigans.AbstractOperations.BinaryOperation{Center,Center,Center,typeof(+),Float64,Oceananigans.AbstractOperations.BinaryOperation{Center,Center,Center,typeof(*),Field{Center,Center,Center,OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}},RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}},NamedTuple{(:x, :y, :z),Tuple{CoordinateBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing},BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing}},CoordinateBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing},BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing}},CoordinateBoundaryConditions{Nothing,Nothing}}}},Float64,typeof(identity),typeof(identity),typeof(identity),RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}},typeof(identity),typeof(identity),typeof(identity),RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}},Oceananigans.AbstractOperations.BinaryOperation{Center,Center,Center,typeof(*),Field{Center,Center,Center,OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}},RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}},NamedTuple{(:x, :y, :z),Tuple{CoordinateBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing},BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing}},CoordinateBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing},BoundaryCondition{Oceananigans.BoundaryConditions.Periodic,Nothing}},CoordinateBoundaryConditions{Nothing,Nothing}}}},Float64,typeof(identity),typeof(identity),typeof(identity),RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}},typeof(identity),typeof(identity),typeof(identity),RegularRectilinearGrid{Float64,Periodic,Periodic,Flat,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}} to an object of type Float64\r\nClosest candidates are:\r\n  convert(::Type{T}, ::Static.StaticInt{N}) where {T<:Number, N} at /home/fpoulin/.julia/packages/Static/BGJW6/src/static_implementation.jl:22\r\n  convert(::Type{T}, ::Static.StaticFloat64{N}) where {N, T<:AbstractFloat} at /home/fpoulin/.julia/packages/Static/BGJW6/src/float.jl:26\r\n  convert(::Type{T}, ::T) where T<:Number at number.jl:6\r\n\r\n```",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-26T18:38:49Z",
+    "deletions": 39,
+    "labels": [],
+    "mergedAt": "2021-03-29T14:40:31Z",
+    "number": 1510,
+    "title": "First attempt to add tracers"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR just updates and cleans up the lid-driven cavity script. At some point I'd like to add all the validation experiments into CI and into the docs as advanced examples, but this will have to wait for now.\r\n\r\nThe issue is that the script was using `Flat` back when it did nothing but now when using `Flat` you need to pass a 2-tuple for the grid size. I switched the script from `Flat` to `Bounded` until `Flat` is fully working.\r\n\r\ncc @maeckha\r\n\r\nResolves #1507",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NDA5NjExNzA=",
+        "number": 1507,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1507"
+      }
+    ],
+    "createdAt": "2021-03-29T13:59:29Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2021-03-29T16:39:24Z",
+    "number": 1516,
+    "title": "Update lid-driven cavity validation experiment"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #1140\r\n\r\nThis is a breaking change unfortunately.\r\n\r\ncc @drozzy",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MzYzNjIwMTE=",
+        "number": 1140,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1140"
+      }
+    ],
+    "createdAt": "2021-03-17T15:27:39Z",
+    "deletions": 37,
+    "labels": [],
+    "mergedAt": "2021-03-29T18:28:15Z",
+    "number": 1489,
+    "title": "Long-form boundary condition constructors"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "Closes #5593.\n\nOne-line fix to `BatchedTridiagonalSolver`: size scratch by `worksize(grid)` rather than `(grid.Nx, grid.Ny, grid.Nz)`. For non-RFTRG grids `worksize(grid) == size(grid)`, so this is a strict no-op everywhere except `RightFaceFolded` tripolar grids \u2014 where the existing `worksize` override returns `(Nx, Ny+1, Nz)` and the kernel was writing `t[i, Ny+1, k]` out of bounds.\n\nSee #5593 for the full root-cause walkthrough, a 30-line `--check-bounds=yes` reproducer that throws `BoundsError: attempt to access 8\u00d78\u00d74 Array{Float64, 3} at index [1, 9, 2]`, and the two-option fix discussion. This PR implements Option 1 (the surgical one).\n\nVerified locally with `--check-bounds=yes`:\n- main: `BoundsError` at `[1, 9, 2]` in scratch sized `(8, 8, 4)`, thrown from `solve_batched_tridiagonal_system_z!`\n- this branch: runs clean, no error\n\nNo regression test in this PR \u2014 see the \"Recommended added test\" section of #5593 for the suggested follow-up (add an implicit-V-diffusion closure to existing tripolar fixtures like `test_zstar_conservation_tripolar.jl` so `Pkg.test()`'s default `--check-bounds=yes` would have caught this).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABCX-5ow",
+        "number": 5593,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5593"
+      }
+    ],
+    "createdAt": "2026-05-15T13:51:55Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "8B0000",
+        "description": "",
+        "id": "MDU6TGFiZWwyMzkyMDY1ODU1",
+        "name": "\ud83d\udea8 high priority \ud83d\udea8"
+      }
+    ],
+    "mergedAt": "2026-05-16T07:58:46Z",
+    "number": 5594,
+    "title": "Size BatchedTridiagonalSolver scratch by worksize, fixing OOB on RightFaceFolded tripolar grids"
+  }
+]

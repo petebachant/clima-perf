@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 335,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\nWe wish to be able to use MPI to parallelize matrix multiplication for remapping. This is an initial implementation which allows for remapping from a serial source space to a distributed target space.\r\n\r\nNote: This implementation only works for remappings where the partitions of the source and target spaces are collocated. For non-aligned meshes, we'll need to implement the super-halo exchange for source data to get correct results.\r\n\r\nThis PR is a part of Coupler SDI [#188](https://github.com/CliMA/ClimaCoupler.jl/issues/188).\r\n\r\n## Main changes introduced by this PR\r\n* `remap!` supports remapping from serial to distributed spaces, whereas before it only allowed serial to serial remapping.\r\n* The `LinearMap` struct is extended to include a field `target_global_elem_lidx`, a mapping from global to local indices on the distributed target space.\r\n* When constructing a `LinearMap` object in `generate_map`, the weight data is computed only on the root process (using TempestRemap), then is broadcast to all processes.\r\n* The source data is generated on the serial space and broadcast to all processes.\r\n\r\n## Main changes needed for the next implementation\r\n* `LinearMap` will need a `source_global_elem_lidx` field, which will map global to local indices on the distributed source space. `remap!` will need to change its indexing of `source_array` to use this distributed indexing, similar to the changes we've already made to `target_array` indexing.\r\n* `generate_map` will need to remove its dependence on serial spaces. This change will include:\r\n  * Update calls to `write_exodus` to use distributed spaces (see related PR #1117).\r\n  * Calculate `unique_nodes` for a distributed space so that we can look up the `source_unique_idxs` and `target_unique_idxs`, which are needed to construct the `LinearMap`. We expect this and the super-halo implementation described below to be the most involved components of the next implementation.\r\n* Once the above changes are made, we can use only distributed spaces and make efficient use of MPI, which is ideal.\r\n* Generate the source data on a distributed field, and exchange information between processes using the super-halo exchange rather than broadcasting. At first, we can send the entire source data to all processes, then implement and compare the super-halo approach.\r\n\r\n\r\n## Quality assurance\r\nDistribued remapping is compared against serial remapping (i.e. the previous implementation), as well as the analytical solution. The solutions are quantitatively found to have error of less than 10^-20, and are also compared visually in the following plots:\r\n\r\n<img width=\"360\" alt=\"regrid_source_data\" src=\"https://user-images.githubusercontent.com/51397186/225764996-d0877a2a-d90e-467d-b138-7d2a4e96e5f7.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_mpi\" src=\"https://user-images.githubusercontent.com/51397186/225765002-9b1ef1af-969a-4bdb-a502-b29241a6b6ee.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_serial\" src=\"https://user-images.githubusercontent.com/51397186/225765006-91c908ae-4b1c-478b-bf13-cd53a5f35b0e.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_analytical\" src=\"https://user-images.githubusercontent.com/51397186/225765008-80cbe40a-4cc8-419b-b627-29e3dd1bdeac.png\">\r\n\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-01-19T19:22:32Z",
+    "deletions": 86,
+    "labels": [
+      {
+        "color": "05DE9D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7X_S9e",
+        "name": "distributed"
+      }
+    ],
+    "mergedAt": "2023-04-07T19:45:11Z",
+    "number": 1107,
+    "title": "Distributed regridding v1"
+  }
+]

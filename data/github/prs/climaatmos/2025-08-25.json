@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nThis pull request updates the parameter creation logic in `src/parameters/create_parameters.jl` to optimize how microphysics parameters are loaded based on configuration arguments. The main improvement is that only the relevant microphysics parameter set is instantiated, reducing memory usage and improving efficiency.\r\n\r\nParameter loading optimization:\r\n\r\n* The `ClimaAtmosParameters` function now accepts an optional `parsed_args` argument, allowing it to determine which microphysics model is in use and instantiate only the corresponding parameter set. (`src/parameters/create_parameters.jl`, [src/parameters/create_parameters.jlL18-R26](diffhunk://#diff-a9dec5e0780f17cbff9d5838bf3ef2feefae3ac2951e658359ce3581b8f00c54L18-R26))\r\n* If `parsed_args` is provided, the function checks which microphysics model is selected and sets unused parameter sets (`microphysics_0m_params`, `microphysics_1m_params`, `microphysics_2m_params`) to `nothing`, ensuring only necessary parameters are loaded. (`src/parameters/create_parameters.jl`, [src/parameters/create_parameters.jlR57-R65](diffhunk://#diff-a9dec5e0780f17cbff9d5838bf3ef2feefae3ac2951e658359ce3581b8f00c54R57-R65))\r\n\r\n\r\nThis pull request is an attempt to resolve GPU kernel parameter memory issues, ref slack discussion [here](https://climate-machine.slack.com/archives/C0102PWRSGJ/p1755712606324659)\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n* tests\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-21T01:17:05Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-08-25T22:48:44Z",
+    "number": 3963,
+    "title": "rft: conditionally load microphysics parameters"
+  }
+]

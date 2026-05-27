@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 142,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is moving the computation of the boundary conditions just before the time-stepping of the prognostic variables, rather than at the end of the time-stepping procedure.\r\n\r\nThis is because, in Oceananigans, we add the flux bcs to the tendencies, which are computed at the end of a time step. However, if we need to couple a model, the exchange between components is typically computed at the end of the stepping of all the components, meaning that, if we do this, we do not add the updated fluxes to the tendency in an Oceananigans model; rather, the fluxes corresponding to the previous time-step. \r\n\r\nThis might become an issue when coupling on large time steps, where the fluxes lag behind and the model can overshoot. \r\nThis change will not affect oceananigans-only models, but will affect coupled models like the `OceanSeaIceModel` in ClimaOcean.jl.",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-06T09:35:32Z",
+    "deletions": 143,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2025-08-07T08:32:01Z",
+    "number": 4696,
+    "title": "(0.97.6) Move the computation of flux BC before the time-stepping"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request introduces improved error handling and model differentiation in the `update_jacobian!` function within the `manual_sparse_jacobian.jl` file. The changes ensure that unsupported or unknown vertical diffusion types are caught early and provide clearer handling for different turbulence convection models.\r\n\r\nKey changes:\r\n\r\n**Model differentiation and error handling:**\r\n* Added an explicit check for `AbstractEDMF` turbulence convection models in the conditional logic, making the code more robust and maintainable.\r\n* Introduced an error message for unknown `vertical_diffusion` types, preventing silent failures and aiding debugging.\r\n\r\n----\r\n\r\nAnna and I ran into this `else` block while working with Smagorinsky diffusion for her simulation setup (i.e. yaml has `vert_diff: false`, and no EDMF). \r\n\r\nIt is likely due to incorrectly configured yaml file: i.e. `implicit_diffusion: true` is only compatible with `DecayWithHeightDiffusion`, `VerticalDiffusion`, or (I presume) EDMF-type closures. For convenience, this PR proposes to explicitly check this both during model construction, and make it clearer within the jacobian that the last block pertains to EDMF.\r\n\r\nCloses #3360 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6Y5Ifa",
+        "number": 3360,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3360"
+      }
+    ],
+    "createdAt": "2025-10-10T18:17:30Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2025-10-18T01:11:45Z",
+    "number": 4051,
+    "title": "fix: error on inconsistent diffusion option"
+  }
+]

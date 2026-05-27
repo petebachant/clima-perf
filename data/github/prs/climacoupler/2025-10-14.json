@@ -1,0 +1,97 @@
+[
+  {
+    "additions": 348,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1493 - see issue for more information\r\ncloses #1272\r\n\r\n## To-do\r\n- [x] add 2 new temp fields to coupler fields (now there are 4)\r\n- [x] add two coupler fields: `z_int` and `z_sfc` - we get these both from the atmosphere, so it'll be faster to retrieve them once per timestep and store in the coupler rather than regrid them once per surface model in each timestep\r\n- [x] use these new coupler fields in `compute_surface_fluxes`\r\n- [x] remove some coupler fields: `z0m_sfc`, `z0b_sfc`, `beta` (these were unused), and `q_sfc` (this is now computed as needed)\r\n- [x] compare performance of flux calculation between main and this branch (see below)\r\n- [x] update docs\r\n- [x] CMIP fix: add a function `resolve_ocean_ice_fractions!` to make sure the ocean area fraction doesn't extend past its domain limits when using capped lat/lon grid\r\n- [x] CMIP fix: call `update_surface_fractions` during initialization to ensure the above fix is applied before the first step\r\n\r\n## Performance comparison\r\nThe flux calculation in this branch is 7-8% faster than the current main, though it also confusingly shows more space is allocated in fewer allocations. This is a small change, so I think we should choose whichever we find to be more readable/logical.\r\n```julia\r\n## on js/t-turbfluxes, 7% faster\r\njulia> @btime FluxCalculator.compute_surface_fluxes!(cs.fields, cs.model_sims.land_sim, cs.model_sims.atmos_sim, cs.thermo_params)\r\n3.179 ms (85 allocations: 725.53 KiB)\r\n\r\n## on main\r\njulia> @btime FluxCalculator.compute_surface_fluxes!(cs.fields, cs.model_sims.land_sim, cs.model_sims.atmos_sim, cs.thermo_params)\r\n3.445 ms (179 allocations: 673.42 KiB)\r\n```\r\n\r\n## Polar mask effect on ocean area fraction\r\nSince the capped latitude longitude grid is defined only on [-80, 80] degrees latitude, we introduce here a \"polar cap\" that ensures the polar areas are entirely ice. This changes the ocean area fraction as follows. Note the slight differences above northwestern and northeastern Asia.\r\n\r\n### Ocean area fraction without polar mask\r\n<img width=\"600\" height=\"450\" alt=\"image\" src=\"https://github.com/user-attachments/assets/d10673fc-0fc2-43ee-8861-29bbe1bcb048\" />\r\n\r\n### Ocean area fraction with polar mask\r\n<img width=\"600\" height=\"450\" alt=\"image\" src=\"https://github.com/user-attachments/assets/fee72521-e6d8-424c-a64e-f0acf4f9fa10\" />\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6ybBFJ",
+        "number": 1272,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1272"
+      },
+      {
+        "id": "I_kwDOEn8xDc7PJrCm",
+        "number": 1493,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1493"
+      }
+    ],
+    "createdAt": "2025-10-04T00:11:51Z",
+    "deletions": 236,
+    "labels": [],
+    "mergedAt": "2025-10-14T18:03:09Z",
+    "number": 1498,
+    "title": "use individual surface model temps for turbulent fluxes"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRemoves the \"GPU ClimaEarth runtests\" from our CI pipeline. This is the slowest part of our CI pipeline (typically by 10-30 minutes), so removing it will speed up development time.\r\n\r\nThese tests include individual component model tests, and a coarse AMIP test designed to be use in downstream tests of upstream packages. Each of these is already tested as part of GPU simulations in this pipeline, and we keep the\r\n\"CPU ClimaEarth runtests\" run, so we don't really lose any coverage by removing the GPU version.\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-14T18:07:08Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2025-10-14T19:13:04Z",
+    "number": 1505,
+    "title": "rm GPU ClimaEarth runtests"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nfor improved correctness\r\n\r\nPhaseEquil is still used for the integrated land model fluxes because it requires changes in ClimaLand.jl - see https://github.com/CliMA/ClimaLand.jl/issues/1492\r\n\r\ncloses #1502\r\n\r\nCI runs look unchanged, surprisingly.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7QqPd-",
+        "number": 1502,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1502"
+      }
+    ],
+    "createdAt": "2025-10-14T18:11:39Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2025-10-14T23:23:23Z",
+    "number": 1506,
+    "title": "use PhaseNonEquil instead of PhaseEquil"
+  }
+]

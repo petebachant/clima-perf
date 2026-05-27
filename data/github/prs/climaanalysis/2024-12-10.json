@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 59,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #15 - This PR adds error hints for functions in the package extensions.\r\n\r\nFor example, if you run this\r\n```julia\r\nimport ClimaAnalysis.Visualize as viz\r\nimport ClimaAnalysis\r\nimport Makie\r\nusing OrderedCollections\r\nlong = 0.0:180.0 |> collect\r\nlat = 0.0:90.0 |> collect\r\ndata2D = reshape(1.0:(91 * 181), (181, 91))\r\ndims2D = OrderedDict([\"lon\" => long, \"lat\" => lat])\r\nattribs = Dict([\r\n    \"short_name\" => \"name\",\r\n    \"units\" => \"units\"\r\n])\r\ndim_attributes2D = OrderedDict([\r\n    \"lon\" => Dict([\"units\" => \"degrees\"]),\r\n    \"lat\" => Dict([\"units\" => \"degrees\"]),\r\n])\r\nvar2D = ClimaAnalysis.OutputVar(attribs, dims2D, dim_attributes2D, data2D)\r\nfig = Makie.Figure()\r\n\r\nviz.heatmap2D_on_globe!(fig, var2D)\r\n```\r\nThen, you get the error\r\n```julia\r\nERROR: MethodError: no method matching heatmap2D_on_globe!(::Makie.Figure, ::ClimaAnalysis.Var.OutputVar{Vector{\u2026}, Base.ReshapedArray{\u2026}, String, Dict{\u2026}})\r\nThe function `heatmap2D_on_globe!` exists, but no method is defined for this combination of argument types.\r\nImport GeoMakie to enable `heatmap2D_on_globe!`. You might also need to import Makie and its backends (CairoMakie, GLMake, etc.) as well.\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc6FcPFa",
+        "number": 15,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/15"
+      }
+    ],
+    "createdAt": "2024-12-05T21:56:20Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-12-10T18:13:31Z",
+    "number": 184,
+    "title": "Add error hints for package extensions"
+  }
+]

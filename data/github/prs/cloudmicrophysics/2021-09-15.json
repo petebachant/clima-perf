@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Before, the `c_p` and `R` in computation of maximum supersaturation in the `AerosolActivation` module were taken for the dry air. I think it's better to take them for moist air. The [original paper](https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/97JD03735) was a little ambiguous with regards to that for me. I think they might have been also using the moist air constants somewhere. To double check, I found [this derivation](https://www.tandfonline.com/doi/abs/10.1080/00046973.1975.9648397).\r\n\r\nThis PR replaces eqs 11 and 12 from the [original paper](https://agupubs.onlinelibrary.wiley.com/doi/abs/10.1029/97JD03735) and dry air `R` and `c_p` with eq 10 from [here](https://www.tandfonline.com/doi/abs/10.1080/00046973.1975.9648397) using moist air `R` and `c_p`.\r\n\r\nThe results are basically unchanged. If you compare the example plot form the `AerosolActivation` documentation, the plot line shifts no more than its width. I still think that this is a more consistent approach.\r\n\r\nThis PR solves https://github.com/CliMA/CloudMicrophysics.jl/issues/28",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-09-15T00:21:56Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2021-09-15T18:03:40Z",
+    "number": 42,
+    "title": "Use moist air R and cp in aerosol activation"
+  }
+]

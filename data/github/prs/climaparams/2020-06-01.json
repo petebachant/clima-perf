@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjU1MTU0OTc4",
+      "is_bot": false,
+      "login": "sriharshakandala",
+      "name": "Sriharsha Kandala"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-06-01T17:27:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-06-01T18:36:55Z",
+    "number": 26,
+    "title": "Avogadro's number added to UniversalConstants.jl"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "@jkozdon discovered a performance hit, in [ClimateMachine.jl's 1176](https://github.com/CliMA/ClimateMachine.jl/issues/1176), from not using `const` for aliases in CLIMAParameters.jl. This PR adds `const` to the module aliases.\r\n\r\nBefore this PR:\r\n```julia\r\njulia> using InteractiveUtils;\r\njulia> using CLIMAParameters;\r\njulia> using CLIMAParameters.Atmos.Microphysics;\r\njulia> struct RainParameterSet   <: AbstractRainParameterSet end;\r\njulia> ps = RainParameterSet();\r\njulia> @code_warntype CLIMAParameters.Microphysics.a0(ps)\r\nVariables\r\n  #self#::Core.Compiler.Const(CLIMAParameters.Atmos.Microphysics.a0, false)\r\n  ps_rain::Core.Compiler.Const(RainParameterSet(), false)\r\n\r\nBody::Any\r\n1 \u2500 %1 = Base.getproperty(CLIMAParameters.Microphysics, :r0)::Any\r\n\u2502   %2 = (%1)(ps_rain)::Any\r\n\u2502   %3 = Base.getproperty(CLIMAParameters.Microphysics, :ae)::Any\r\n\u2502   %4 = (%3)(ps_rain)::Any\r\n\u2502   %5 = (%2 ^ %4)::Any\r\n\u2502   %6 = (CLIMAParameters.\u03c0 * %5)::Any\r\n\u2514\u2500\u2500      return %6\r\n```\r\n\r\nAfter this PR:\r\n```julia\r\njulia> using InteractiveUtils;\r\njulia> using CLIMAParameters;\r\njulia> using CLIMAParameters.Atmos.Microphysics;\r\njulia> struct RainParameterSet   <: AbstractRainParameterSet end;\r\njulia> ps = RainParameterSet();\r\njulia> @code_warntype CLIMAParameters.Microphysics.a0(ps)\r\nVariables\r\n  #self#::Core.Compiler.Const(CLIMAParameters.Atmos.Microphysics.a0, false)\r\n  ps_rain::Core.Compiler.Const(RainParameterSet(), false)\r\n\r\nBody::Float64\r\n1 \u2500 %1 = CLIMAParameters.Atmos.Microphysics.r0::Core.Compiler.Const(CLIMAParameters.Atmos.Microphysics.r0, false)\r\n\u2502   %2 = (%1)(ps_rain)::Core.Compiler.Const(0.001, false)\r\n\u2502   %3 = CLIMAParameters.Atmos.Microphysics.ae::Core.Compiler.Const(CLIMAParameters.Atmos.Microphysics.ae, false)\r\n\u2502   %4 = (%3)(ps_rain)::Core.Compiler.Const(2.0, false)\r\n\u2502   %5 = (%2 ^ %4)::Float64\r\n\u2502   %6 = (CLIMAParameters.\u03c0 * %5)::Float64\r\n\u2514\u2500\u2500      return %6\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-06-01T18:18:14Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2020-06-01T18:58:56Z",
+    "number": 27,
+    "title": "Make aliases constant"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-06-01T19:13:45Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-06-01T19:25:56Z",
+    "number": 28,
+    "title": "Bump version"
+  }
+]

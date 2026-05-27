@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 146,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the limiters for the box example in a few ways:\r\n - Removes some global constants, and instead defines a struct and some helper methods. This makes it easier to try out different timesteps without re-defining global constants\r\n - Applies fixes needed for running on a gpu (`z_topology = Topologies.IntervalTopology(context, z_mesh)` is needed)\r\n - Converts the example to use ClimaTimeSteppers, and removes the use of OrdinaryDiffEq\r\n\r\nCloses #1535, and a step towards #1536.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms52QX35",
+        "number": 1535,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1535"
+      }
+    ],
+    "createdAt": "2023-11-08T18:26:07Z",
+    "deletions": 124,
+    "labels": [],
+    "mergedAt": "2023-11-29T18:29:23Z",
+    "number": 1537,
+    "title": "Refactor limiters advection in a box test"
+  },
+  {
+    "additions": 1844,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR is peeled off from #1506, and it contains all of the changes we need to set up the implicit solver for diffusion (and diagnostic EDMF) in ClimaAtmos.\r\n\r\nThis does not include any changes related to improving compilation time, but it looks like some of those changes may not be needed anymore because upgrading Julia from 1.9.3 to 1.9.4 has reduced the compilation time of `test/MatrixFields/field_matrix_solvers.jl` by around an order of magnitude.\r\n\r\n## Content\r\n- Rename the `SchurComplementSolve` algorithm to `BlockArrowheadSolve`, since other algorithms can also make use of the Schur complement.\r\n- Add the `SchurComplementReductionSolve` algorithm, which generalizes `BlockArrowheadSolve` to arbitrary block matrices by removing the restriction that the `A\u2081\u2081` block of `A` must be a diagonal matrix. In order to avoid computing the dense matrix `inv(A\u2081\u2081)`, this algorithm replaces the Schur complement matrix used in `BlockArrowheadSolve` with a `LazySchurComplement` object. The only operation this object supports is computing matrix-vector products by calling `lazy_mul(schur_complement, vector)`, so its corresponding linear system must be solved using a matrix-free algorithm.\r\n- Add the `StationaryIterativeSolve` algorithm, along with a collection of `PreconditionerAlgorithm`s. These are implemented using \"lazy\" (i.e., matrix-free) operations, which means that they minimize the number of materialized broadcast expressions by using `FieldMatrixBroadcasted` and `FieldVectorViewBroadcasted` instead of `FieldMatrix` and `FieldVectorView` wherever possible. Currently, it looks like the best (in terms of both convergence rate and overall speed) preconditioner for ClimaAtmos will be a `BlockArrowheadSchurComplementPreconditioner` that wraps either a `MainDiagonalPreconditioner` (a Jacobi preconditioner) or a `MainDiagonalPreconditioner` wrapped in a `WeightedPreconditioner` (a damped Jacobi preconditioner). The `BlockDiagonalPreconditioner` and `BlockArrowheadPreconditioner` have also been added to facilitate further testing, as well as the catch-all `CustomPreconditioner`.\r\n- Add the `ApproximateBlockArrowheadIterativeSolve` function, which is a shorthand for constructing a `SchurComplementReductionSolve` that wraps a `StationaryIterativeSolve` with a `BlockArrowheadSchurComplementPreconditioner`. This is sometimes called a \"SIMPLE\" solver in the context of computational fluid dynamics.\r\n- Remove the `ApproximateFactorizationSolve` algorithm, since testing in ClimaAtmos has shown that it is not helpful.\r\n- Add unit tests for `StationaryIterativeSolve` and `ApproximateBlockArrowheadIterativeSolve` with different preconditioners. Modify the ClimaAtmos-based unit tests to use `ApproximateBlockArrowheadIterativeSolve` instead of `ApproximateFactorizationSolve`.\r\n- Add KrylovKit.jl to the Project.toml file so that we have access to its matrix-free `eigsolve` function. This is used to approximate the convergence rate of `StationaryIterativeSolve`, which will be helpful for performance tuning in ClimaAtmos. Update all the Manifest.toml files by calling `dev .`.\r\n- Add support for `zero.(matrix_or_vector)` to `FieldNameDict`.\r\n- Fix how `FieldNameTree`s get propagated through the solver to ensure that `eigsolve` can be evaluated for non-trivial preconditioners.\r\n- Fix the `intersect`, `union`, `setdiff`, and `set_complement` methods for `FieldNameSet` to ensure that overlapping matrix keys are handled correctly. This allows the previously broken unit test for implicit prognostic EDMF to run, though it still fails the allocations test. Getting rid of the allocations will require a few other changes from #1506, which I'll add in a separate PR.\r\n- Fix and expand the unit tests for `FieldNameSet`, and add some unit tests for `FieldNameDict`.\r\n- Fix some minor bugs in the `==` and `summand_names_for_matrix_product` that were caught by the new tests.\r\n- Improve the `show` methods for `FieldNameSet` and `FieldNameDict`.\r\n\r\n---\r\n\r\nThe increase in invalidations is caused by adding KrylovKit.jl to the Project.toml file. This package has ChainRulesCore.jl as a dependency, and it adds the following line to the invalidations table:\r\n```\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 <file name>:<line number>                          \u2502 Function Name \u2502 Invalidations \u2502 Invalidations % \u2502\r\n\u2502                                                    \u2502               \u2502               \u2502     (x\u1d62/\u2211x)     \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 ChainRulesCore/7MWx2/src/tangent_arithmetic.jl:102 \u2502       -       \u2502       2       \u2502        0        \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-16T20:56:50Z",
+    "deletions": 710,
+    "labels": [],
+    "mergedAt": "2023-11-29T20:03:48Z",
+    "number": 1551,
+    "title": "Add matrix-free iterative solver and fix bugs in FieldNameSet"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This is a patch release for ClimaCore that adds support for implicit diffusion/EDMF in ClimaAtmos.jl (i.e., the changes from #1551).",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-29T21:12:11Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2023-11-29T22:11:49Z",
+    "number": 1562,
+    "title": "Bump ClimaCore to 0.11.1"
+  }
+]

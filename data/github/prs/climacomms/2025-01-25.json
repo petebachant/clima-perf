@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 378,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This is a followup to #100.\r\n\r\nContents\r\n- Added logging documentation found [here](https://clima.github.io/ClimaComms.jl/previews/PR104/logging/), this is a comprehensive page about Julia's logging basics, ClimaComms logging functionality, and some tips on using LoggingExtras directly.\r\n- `default_logger(ctx)`, which just creates a logger that silences non-root processes. This will be useful for exchanging singleton/MPI runs without needing to change the logger. Similar [functionality](https://github.com/CliMA/ClimaAtmos.jl/blob/7bf913f3417114e33131b9632b6ee3030a489f04/src/solver/type_getters.jl#L630) exists in ClimaAtmos already and can now be removed.\r\n- Call `default_logger` during MPI initialization\r\n- `MPIFileLogger` has been replaced with `FileLogger(context, log_dir)`, which writes to stdout and to a file log_dir/output.log simultaneously. If using MPI, the FileLogger separates logs by MPI process into different files, so that process i will write to the logs/rank_$i.log file in the log_dir directory. In this case, log_dir/output.log is a symlink to the root process logs in log_dir/logs/rank_1.log. Logging to stdout can be disabled by setting the keyword argument log_stdout = false.\r\n- Improved testing",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-13T23:30:53Z",
+    "deletions": 27,
+    "labels": [],
+    "mergedAt": "2025-01-25T06:11:09Z",
+    "number": 104,
+    "title": "Add logging documentation, `default_logger` function"
+  }
+]

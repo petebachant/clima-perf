@@ -1,0 +1,122 @@
+[
+  {
+    "additions": 184,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Partly an eyeball test for the channel, partly a source of new movies!\r\n\r\n![channel_plot_300000_cropped](https://user-images.githubusercontent.com/20099589/60388805-7b822c80-9a84-11e9-9fb6-05aca5a268b8.png)\r\n\r\nDoesn't look horrible but probably needs higher more grid points, lower grid cell aspect ratio, better advection scheme, and/or LES closure.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-29T19:45:37Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2019-06-30T10:40:58Z",
+    "number": 301,
+    "title": "Eddying channel script"
+  },
+  {
+    "additions": 139,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR integrates Tim's changes from the GPU hackathon. By using dynamic launch configurations and splitting up the interior source term calculation kernel (+ https://github.com/JuliaGPU/CUDAnative.jl/pull/417) we get a pretty sweet ~25% overall speedup (so the most expensive kernel which was a bottleneck is sped up by ~40%).\r\n\r\nNeeds https://github.com/vchuravy/GPUifyLoops.jl/pull/90 to work for now.\r\n\r\ncc @maleadt Sorry it took so long for me to merge these improvements.\r\n\r\nActually resolves #64 \r\n\r\n```\r\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n Oceananigans.jl static ocean bench...        Time                   Allocations      \r\n                                      \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n           Tot / % measured:                409s / 28.8%           15.0GiB / 0.50%    \r\n\r\n Section                      ncalls     time   %tot     avg     alloc   %tot      avg\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n 256\u00d7256\u00d7256 (CPU, Float64)       10    56.0s  47.7%   5.60s    292KiB  0.37%  29.2KiB\r\n 256\u00d7256\u00d7256 (CPU, Float32)       10    47.2s  40.2%   4.72s    227KiB  0.29%  22.7KiB\r\n 128\u00d7128\u00d7128 (CPU, Float32)       10    5.91s  5.03%   591ms    227KiB  0.29%  22.7KiB\r\n 128\u00d7128\u00d7128 (CPU, Float64)       10    5.87s  5.00%   587ms    292KiB  0.37%  29.2KiB\r\n  64\u00d7 64\u00d7 64 (CPU, Float64)       10    803ms  0.68%  80.3ms    292KiB  0.37%  29.2KiB\r\n  64\u00d7 64\u00d7 64 (CPU, Float32)       10    724ms  0.62%  72.4ms    227KiB  0.29%  22.7KiB\r\n 256\u00d7256\u00d7256 (GPU, Float64)       10    309ms  0.26%  30.9ms   9.83MiB  12.9%  0.98MiB\r\n 256\u00d7256\u00d7256 (GPU, Float32)       10    239ms  0.20%  23.9ms   8.70MiB  11.4%   891KiB\r\n  32\u00d7 32\u00d7 32 (CPU, Float64)       10   86.6ms  0.07%  8.66ms    292KiB  0.37%  29.2KiB\r\n  32\u00d7 32\u00d7 32 (CPU, Float32)       10   61.0ms  0.05%  6.10ms    227KiB  0.29%  22.7KiB\r\n  32\u00d7 32\u00d7 32 (GPU, Float64)       10   50.7ms  0.04%  5.07ms   9.83MiB  12.9%  0.98MiB\r\n  64\u00d7 64\u00d7 64 (GPU, Float64)       10   49.7ms  0.04%  4.97ms   9.83MiB  12.9%  0.98MiB\r\n 128\u00d7128\u00d7128 (GPU, Float64)       10   46.9ms  0.04%  4.69ms   9.83MiB  12.9%  0.98MiB\r\n  32\u00d7 32\u00d7 32 (GPU, Float32)       10   44.8ms  0.04%  4.48ms   8.70MiB  11.4%   891KiB\r\n 128\u00d7128\u00d7128 (GPU, Float32)       10   40.6ms  0.03%  4.06ms   8.70MiB  11.4%   891KiB\r\n  64\u00d7 64\u00d7 64 (GPU, Float32)       10   32.6ms  0.03%  3.26ms   8.70MiB  11.4%   891KiB\r\n \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\r\n\r\nCPU Float64 -> Float32 speedup:\r\n 32\u00d7 32\u00d7 32: 1.419\r\n 64\u00d7 64\u00d7 64: 1.110\r\n128\u00d7128\u00d7128: 0.993\r\n256\u00d7256\u00d7256: 1.186\r\n\r\nGPU Float64 -> Float32 speedup:\r\n 32\u00d7 32\u00d7 32: 1.132\r\n 64\u00d7 64\u00d7 64: 1.524\r\n128\u00d7128\u00d7128: 1.155\r\n256\u00d7256\u00d7256: 1.294\r\n\r\nCPU -> GPU speedup:\r\n 32\u00d7 32\u00d7 32 (Float32): 1.363\r\n 32\u00d7 32\u00d7 32 (Float64): 1.710\r\n 64\u00d7 64\u00d7 64 (Float32): 22.178\r\n 64\u00d7 64\u00d7 64 (Float64): 16.151\r\n128\u00d7128\u00d7128 (Float32): 145.438\r\n128\u00d7128\u00d7128 (Float64): 125.088\r\n256\u00d7256\u00d7256 (Float32): 197.674\r\n256\u00d7256\u00d7256 (Float64): 181.197\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTI0MTA5NDU=",
+        "number": 64,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/64"
+      }
+    ],
+    "createdAt": "2019-06-29T20:13:20Z",
+    "deletions": 85,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2019-06-30T10:41:18Z",
+    "number": 302,
+    "title": "Faster model with dynamic launch configuration by @maleadt"
+  },
+  {
+    "additions": 182,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "A new PR combining #291 and #292.\r\n\r\ncc @sandreza ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-29T22:06:25Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2019-06-30T10:41:37Z",
+    "number": 303,
+    "title": "Idealized seasonal cycle simulation v2"
+  },
+  {
+    "additions": 168,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Cherry-picked and revised version of PR #209.\r\n\r\ncc @suyashbire1",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-06-29T23:03:18Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2019-06-30T10:41:51Z",
+    "number": 304,
+    "title": "Hydrothermal plumes simulation v2"
+  }
+]

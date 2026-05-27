@@ -1,0 +1,100 @@
+[
+  {
+    "additions": 216,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "@glwagner this fixes the minimum issue we saw on enzymanigans",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-04T20:17:45Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2025-05-07T06:59:31Z",
+    "number": 4472,
+    "title": "ReactantExt: Fix conditional operator ordering"
+  },
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the default behavior of `set!` so that user input for `(u, v)` is interpreted as the \"extrinsic vector\". For example, this means that when using `TripolarGrid`, the velocity input is interpreted as giving the zonal and meridional velocity components. Prior to this PR, no interpretation was performed, so that `u, v` in `set!` had to be provided in grid-intrinsic coordinates. Effectively this means that the only way to set a velocity field was to form a streamfunction and differentiate it.\r\n\r\nNow, the user has the option to provide the zonal and meridional velocity components for `set!` on `TripolarGrid`. On the other hand, if using a streamfunction, the user can also write\r\n\r\n```julia\r\nui = + \u2202y(\u03c8)\r\nvi = - \u2202x(\u03c8)\r\nset!(model, u=ui, v=vi, intrinsic_velocities=true)\r\n```\r\n\r\nA subsequent PR will be needed (which will be a bit more involved) to also interpret the boundary conditions on u, v in a similar manner. Until then, idealized boundary conditions that explicitly specify the zonal and meridional momentum flux components have to also form a \"flux streamfunction\" and differentiate it to obtain the intrinsic u, v components.\r\n\r\nNote that ClimaOcean handles the rotation of the momentum flux vector under the hood when coupling to an atmosphere, so the boundary condition issue is a concern only for manually-supplied boundary conditions on TripolarGrid and friends.\r\n\r\ncc @NoraLoose @StevePny",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-06T13:17:55Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2025-05-07T14:04:50Z",
+    "number": 4479,
+    "title": "Interpret `u, v` within `set!` on OrthogonalSphericalShellGrid as an extrinsic vector by default"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-07T04:46:36Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-05-07T15:43:25Z",
+    "number": 4482,
+    "title": "Reactant: fix catke type conversions"
+  },
+  {
+    "additions": 263,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This pull request enhances `OrthogonalSphericalShellGrid` by enabling the storage of computational coordinates used in the conformal mapping that generates a conformal cubed sphere panel.\r\n\r\nBy default, each panel is constructed from a uniform computational grid on the reference square $[-1, 1] \\times [-1, 1]$, which maps to a non-uniform grid covering one-sixth of the spherical surface. This results in very small corner cells, which impose strict CFL constraints and become a computational bottleneck, particularly in GPU-based simulations with explicit time-stepping methods.\r\n\r\nThis update allows users to define and store irregularly spaced computational coordinates---for example, via exponential or geometric spacing---on the reference square and subsequently optimize grid quality using the data-driven Ensemble Kalman Inversion (EKI) technique. These approaches generate a more uniform distribution of grid cells on each cubed sphere panel, effectively enlarging the smallest corner cells.\r\n\r\nThe primary motivation is to alleviate CFL constraints by increasing the size of the smallest cells by more than a factor of 2.22, allowing for larger time steps and improved computational performance.\r\n\r\nNote: This PR depends on https://github.com/CliMA/CubedSphere.jl/pull/41",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-27T18:31:31Z",
+    "deletions": 144,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2025-05-07T16:37:08Z",
+    "number": 4295,
+    "title": "Store computational coordinates in OrthogonalSphericalShellGrid for non-uniform conformal mappings"
+  }
+]

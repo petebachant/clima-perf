@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 933,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Refractors the `IsotropicDiffusivity`, `AnisotropicDiffusivity` and `HorizontallyCurvilinearAnisotropicDiffusivity` so that only one `ScalarDiffusivity` is defined.\r\n\r\nwith this PR, the following API changes are implemented\r\n- `closure = IsotropicDiffusivity(\u03bd = 1, \u03ba = 1) -> closure = ScalarDiffusivity(\u03bd = 1, \u03ba = 1, direction=ThreeDimensional()) (default)`\r\n- `closure = HorizontallyCurvilinearAnistropicDiffusivity(\u03bdh = 2, \u03bah = 2, \u03bdh = 1, \u03bah = 1) -> \r\nhorizontal_closure = ScalarDiffusivity(\u03bd = 2, \u03ba = 2, direction=Horizontal()); \r\nvertical_closure = ScalarDiffusivity(\u03bd = 1, \u03ba = 1, direction=Vertical())`\r\n\r\nFor biharmonic diffusivity\r\n- Bug fixes in `HorizontallyCurvilinearAnisotropicBiharmonicDiffusivity` which is kept as the standard method for biharmonic diffusivity and renamed `ScalarBiharmonicDiffusivity` so now\r\n`closure =HorizontallyCurvilinearAnisotropicBiharmonicDiffusivity(\u03bd = 1, \u03ba = 1) -> closure = ScalarBiharmonicDiffusivity(\u03bd = 1, \u03ba = 1, direction=Horizontal()) (default)`\r\n- Also for biharmonic we have a `ThreeDimensional`, `Horizontal` and `Vertical` mode\r\n- Nuking of `AnisotropicBiharmonicDiffusivity`\r\n\r\nAdditionally\r\n- Implementation of a `discrete` mode for viscosity and diffusivity functions (with `discrete_diffusivity = true`) to be able to have viscosity and diffusivity depend on grid metrics so that we can have\r\n ```\r\nusing Oceananigans.Operators: \u0394x\r\n\r\n\u03bdh(lx, ly, lz, i, j, k, grid, clock) =  \u0394x(i, j, k, grid, lx, ly, lz)^4  / (3600*24)\r\nclosure = ScalarDiffusivity(\u03bd = \u03bdh, discrete_diffusivity = true)\r\n```\r\n- Implementation of `solid_node` and `solid_interface` for Bounded grids. Used in `Biharmonic` operators to enforce zero flux and zero laplacian boundary conditions\r\n\r\ncloses #2239\r\ncloses #2113",
+    "changedFiles": 101,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5AS2mQ",
+        "number": 2113,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2113"
+      },
+      {
+        "id": "I_kwDOCRy_aM5DUKTa",
+        "number": 2239,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2239"
+      }
+    ],
+    "createdAt": "2022-02-14T21:16:26Z",
+    "deletions": 1090,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2022-02-17T15:48:24Z",
+    "number": 2247,
+    "title": "Diffusivity refactor"
+  }
+]

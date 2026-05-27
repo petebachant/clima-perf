@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 77,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a new schedule called `AllSchedule` that allows scheduling based on multiple criterion.\r\n\r\nIt also adds a `hasnan(model::AbstractModel)` that checks for a NaN in a model's first field.\r\n\r\nTogether this allows schedules that avoid actuating if NaNs are detected via\r\n\r\n```julia\r\nschedule = AllSchedule(TimeInterval(100), !hasnan)\r\n```\r\n\r\nfor example. Note that `all` is short-circuiting, so order matters. Putting `!hasnan` second means that `hasnan` will not be called unless `TimeInterval(100)(model)` returns `true` first (this matters for avoiding `hasnan` calls on every time-step).\r\n\r\nTODO:\r\n\r\n- [x] better name than `MultiSchedule` perhaps `AllSchedules`?\r\n- [x] Also have `AnySchedule` that actuates if _any_ schedules actuate?\r\n- [x] Tests\r\n\r\nThis feature was discussed on #2086 .",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-30T19:35:37Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2021-12-13T21:34:13Z",
+    "number": 2088,
+    "title": "AllSchedule for combining scheduling criteria and avoiding checkpointing with NaNs"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Related to #2064.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-13T19:33:25Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2021-12-13T23:22:50Z",
+    "number": 2114,
+    "title": "Even clearer `show(io, ::AbstractGrid)`"
+  }
+]

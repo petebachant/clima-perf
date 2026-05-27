@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 353,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nOur default sets roughness lengths for the canopy as parameters using the toml. In almost all our example, though, we override these by using a constant times the canopy height. This PR updates the default so that it does what we want\r\n\r\nThis also creates a roughness parameterization struct which we can dispatch off of when computing surface fluxes. Since the shared canopy parameter struct then only has the earth param set, we can remove that from our code; this also enables us to change roughness paramterizations in the future\r\n\r\nCloses #1351 \r\n\r\nThe science content is in src/standalone/Vegetation/canopy_boundary_fluxes.jl and src/standalone/Vegetation/canopy_surface_fluxes.jl; other files are mostly software changes only\r\n## To-do\r\nrun long runs before merging\r\n\r\n\r\n## Content\r\n- Creates a MonionObukhovCanopyFluxes object which specifies how we compute the turbulent fluxes. This contains the roughness lengths, displacement height, and another constant which had been hardcoded in our SF parameterization.\r\n- Creates a constructor for this type which sets roughness lengths and displacement height using the canopy height. Sets this to be the default, which simplifies our model setup.\r\n- Gets rid of the SharedCanopyParameters struct which only contained roughness lengths and the earth_param_set\r\n- Updates tests, experiments, docs\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 41,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7G1oRX",
+        "number": 1351,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1351"
+      }
+    ],
+    "createdAt": "2025-10-22T23:54:30Z",
+    "deletions": 469,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-11-25T00:55:49Z",
+    "number": 1505,
+    "title": "Canopy roughness parameterization modular"
+  },
+  {
+    "additions": 293,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #1544 \r\n\r\nThis PR adds functionality to clear out old runs from the ILAMB leaderboard while still preserving the caching functionality when running the ILAMB leaderboard with the same models as before.\r\n\r\nSince ENSEMBLE CMIP model is always include, there can be at most 4 runs produced by the ClimaLand simulation at once on the leaderboard. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7YNwAR",
+        "number": 1544,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1544"
+      }
+    ],
+    "createdAt": "2025-11-19T00:04:44Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2025-11-25T22:08:32Z",
+    "number": 1550,
+    "title": "Keep a fixed number of models on the ILAMB leaderboard"
+  }
+]

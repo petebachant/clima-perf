@@ -1,0 +1,174 @@
+[
+  {
+    "additions": 1067,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds the \"EDMFX\" model to ClimaAtmos, but without any tendencies. This includes adding prognostic variables, precomputed quantities, and diagnostics, as described in  ClimaAtmos's new [documentation for EDMF](https://clima.github.io/ClimaAtmos.jl/dev/edmf_equations/), along with adding the post-processing that we will need in order to debug this new model's tendencies.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Add the total draft area to the initial condition's `EDMFState`, and set it to 0 by default. Clean up `getproperty` for `EDMFState` and `NoTurbconvState`, since it was not updated when the second moments were removed.\r\n- Define the `EDMFX` struct and the `n_mass_flux_subdomains` function (which was called `n_updrafts` in the original EDMF model) in `types.jl`. Also define the `times_a` function in `utilities.jl`, which takes in a `NamedTuple` of variables and returns a new `NamedTuple` with every variable of the form `\u03c1` or `\u03c1\u03c7` transformed to `\u03c1a` or `\u03c1a\u03c7`, respectively. Construct the EDMFX model in `model_getters.jl`.\r\n- Separate the initial condition's `atmos_center_variables` into `grid_scale_center_variables` and `turbconv_center_variables`. Leave the original EDMF model's `turbconv_center_variables` unchanged, but have the EDMFX model's `turbconv_center_variables` return a copy of `grid_scale_center_variables` with every variable multiplied by `a` (the total draft area divided by the number of mass flux subdomains). Also add a new method for `turbconv_face_variables` for the EDMFX model that sets all of the draft vertical velocities to 0. Modify `is_turbconv_var` to recognize the new groups of EDMFX variables.\r\n- Add `\u1d9c\u03c1a\u2070`, `\u1da0w\u2070`, `\u1d9cu\u2070`, `\u1da0u\u00b3\u2070`, `\u1d9cK\u2070`, `\u1d9cts\u2070`, `\u1d9c\u03c1a`, `\u1d9cu\u02b2s`, `\u1da0u\u00b3\u02b2s`, `\u1d9cK\u02b2s`, `\u1d9cts\u02b2s`, and `\u1d9c\u03c1\u02b2s` to `precomputed_quantities` for the EDMFX model, and set these values in `set_precomputed_quantities!`. Make `set_precomputed_quantities` add the SGS kinetic energy to the grid-scale `\u1d9cK`, and make `set_boundary_velocity!` set the draft vertical velocities equal to the grid-scale vertical velocity at the surface. Compute all specific SGS quantities from the prognostic state using the new `divide_by_\u03c1a` function, which regularizes divisions by returning quantities closer to the grid-scale values when `a` is small.\r\n- Define a `diagnostic_edmfx_quantities` function, which allocates and sets `\u1d9csgs\u2070`, `\u1d9csgs\u1d30`, `\u1d9cu\u1d30`, and `\u1d9cts\u1d30` in a manner that is consistent with `set_precomputed_quantities!`. Call this function from `save_to_disk_func`, and use it to define the actual EDMFX diagnostics that are saved to hdf5 files.\r\n- Make the implicit solver set the Jacobian blocks for the EDMFX model to 0 by modifying the `ldiv!` method for `SchurComplementW`. More generally, this modification causes the implicit solver to automatically zero out all Jacobian blocks that are not set in `_ldiv_serial!`.\r\n- Ensure that none of the original EDMF code is run for the EDMFX model. This includes removing the `::Nothing` type restrictions from `turbconv_cache`, `implicit_sgs_flux_tendency!`, `explicit_sgs_flux_tendency!`, and `compute_precipitation_cache!`. It also includes replacing `!isnothing(atmos.turbconv_model)` with `p.atmos.turbconv_model isa TC.EDMFModel` in `get_callbacks`, replacing `any(is_turbconv_var, propertynames(Y.c))` with `:turbconv in propertynames(Y.c)` in `SchurComplementW`, and replacing `any(is_turbconv_var, propertynames(xc))` with `:turbconv in propertynames(xc)` in `_ldiv_serial!`.\r\n- Rename the CLI option `quicklook_reference_job_id` to `reference_job_id`, since it will now be used by the new post-processing as well as the original \"quicklook profiles\".\r\n- Define the new post processing in `contours_and_profiles.jl`, which is the bulk of this PR. This post-processing generates contour and profile plots using Makie, with the column data extracted from 0\u00b0N 0\u00b0E, 30\u00b0N 0\u00b0E, 60\u00b0N 0\u00b0E, and 90\u00b0N 0\u00b0E on a sphere or from the first column in a box (it does not currently support extracting data from a plane but that can be easily changed). In the future, we may also want to add averaging over multiple columns. When running on Buildkite, the reference data is read in from the latest commit on the main branch that contains hdf5 files (either zipped or unzipped) for the specified `reference_job_id` (which is just the `job_id` by default). The reference files do not need to have the same timestamps or contain data on the same spaces as the simulation's files. The reference files also do not need to contain all of the same diagnostic variables as the simulation; any reference diagnostics that are missing do not get plotted. Values that should never be negative (e.g., specific quantities or temperatures) but are still negative get highlighted in red on the contour plots.\r\n- Call `contours_and_profiles` from the driver when the `post_process` CLI option is `true` and the EDMFX model is being used. Ensure that the other post-processing is not run for the EDMFX model by adding checks for `!is_edmfx` to the relevant `if`-blocks. After calling `contours_and_profiles`, also call `zip_and_cleanup_output` in order to make the various plot files easier to find among the Buildkite artifacts. Move the `include` call for `define_tc_quicklook_profiles.jl` to an earlier line so that `zip_and_cleanup_output` can be used without needing to be redefined.\r\n- Add `env_q_vap` and `draft_q_vap` to the old EDMF model's diagnostics, so that they can be compared to the values obtained with the new model.\r\n- Add a `MoistBaroclinicWaveWithEDMF` initial condition, which is exactly like the `MoistBaroclinicWave` initial condition, except that it also has an initial draft area of 0.5 and an initial TKE of 1.\r\n- Add three new jobs to CI that test the EDMFX model. The first is a copy of `sphere_baroclinic_wave_rhoe_equilmoist` with the initial condition changed to `MoistBaroclinicWaveWithEDMF` and `t_end` reduced to 4 days. The second is a copy of `edmf_bomex` that uses the default `sphere` configuration, `Float32` type, and active hyperdiffusion, with `dt` increased to 60 seconds and `t_end` reduced to 1 hour. Both jobs use the original versions as references for plotting. The third job is a performance test for the first job, which checks that the amount of memory allocated per timestep is reasonable (it is currently around 4 kB, whereas the amount allocated per timestep for the old EDMF model is around 8 GB).\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5f2kCP",
+        "number": 1416,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1416"
+      },
+      {
+        "id": "I_kwDOFoZ0Vs5hDrbB",
+        "number": 1463,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1463"
+      }
+    ],
+    "createdAt": "2023-03-22T21:16:17Z",
+    "deletions": 111,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-03-31T06:16:14Z",
+    "number": 1482,
+    "title": "Add EDMFX model without tendencies and add new post-processing"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR lowers the number of allowable jet failures",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-31T17:22:34Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2023-03-31T19:02:58Z",
+    "number": 1515,
+    "title": "Lower limit of n-jet failures"
+  },
+  {
+    "additions": 417,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies / manifest files",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-31T17:46:11Z",
+    "deletions": 290,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-03-31T20:19:14Z",
+    "number": 1517,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 99,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes some `real_center_indices` loops. A step towards #887.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-31T19:06:35Z",
+    "deletions": 62,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2023-03-31T22:07:16Z",
+    "number": 1518,
+    "title": "Remove some loops over vertical column"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "## Purpose \r\nThe purpose of this PR is to add support for different density upwinding modes, similar to the modes we have for energy and tracers. \r\n\r\nThis will close #1519  \r\n\r\n## Content\r\n\r\n- [x] Added CLI option: `--density_upwinding` with the different upwinding modes (similar to `--energy_upwinding` and `--tracer_upwinding`)\r\n- [x] Modified `vertical_transport!` function call for density in `implicit_vertical_advection_tendency!`\r\n- [x] added two regular CI pipeline jobs that use `first_order` upwinding for density (These should NOT give any different results from what we have now, i.e.,  `:none`. We can remove them once CI passes. We don't need to keep them in the pipeline).\r\n- [x] modified MSE tables and ref counter for the new jobs\r\n\r\n\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5iWa4R",
+        "number": 1519,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1519"
+      }
+    ],
+    "createdAt": "2023-03-31T21:22:12Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA3",
+        "name": "enhancement"
+      },
+      {
+        "color": "0052cc",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABLyr7KQ",
+        "name": "Dycore equations"
+      }
+    ],
+    "mergedAt": "2023-03-31T23:41:15Z",
+    "number": 1520,
+    "title": "Add support to upwind density"
+  }
+]

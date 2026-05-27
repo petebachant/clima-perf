@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 799,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nIntroduce a ground heat flux between the soil and snow. This is important as it is the major heat flux the soil feels when it is covered by snow.\r\n\r\nIntroduce the same type of handing of boundary conditions for snow as for soil when multiple components are present\r\n\r\n## To-do\r\nmaybe @AlexisRenchon could review the ground heat flux term, and @juliasloan25 could review the prognostic_land_components and dispatch side of things (similar to the PR you reviewed where we implemented it for soil)?\r\n\r\n\r\n## Content\r\n- Introduce Snow.AtmosDrivenSnowBC, which is a direct analog of Soil.AtmosDrivenFluxBC for snow. (Future PR is to change the name of AtmosDrivenFluxBC to AtmosDrivenSoilBC)\r\n- Introduce `snow_boundary_fluxes!` function, a direct analog of `soil_boundary_fluxes!`. What these functions do depends on the values of the `prognostic_land_components` field of the bc.\r\n- When snow is run by itself `prognostic_land_components = (;snow,)`, and the `snow_boundary_fluxes!` function treats the ground heat flux as zero [future PR could be to add in a prescribed soil component, but this can definitely wait until we have a use case]\r\n- When the snow is run with a soil model, `prognostic_land_components = (;snow, :soil)`, and the `snow_boundary_fluxes!` function compute a ground heat flux. I had to add some extra aux fields to the cache for this computation in order to avoid allocations.\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-25T21:33:31Z",
+    "deletions": 363,
+    "labels": [],
+    "mergedAt": "2024-10-01T21:14:51Z",
+    "number": 796,
+    "title": "Add a ground heat flux between snow and soil"
+  }
+]

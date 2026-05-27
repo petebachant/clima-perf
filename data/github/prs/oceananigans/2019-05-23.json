@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "It will fail right now but should start passing once #161 is fixed (this test will tell us whether we actually fixed it).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-22T14:17:56Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-05-23T00:41:30Z",
+    "number": 226,
+    "title": "Incompressibility test."
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR changes the pressure correction step to take into account the intermediate velocity field. So instead of\r\n```\r\nRHS[i, j, k] = div_f2c(grid, Gu, Gv, Gw, i, j, k)\r\n```\r\nwe are using\r\n```\r\nRHS[i, j, k] = div_f2c(grid, u, v, w, i, j, k) / \u0394t + div_f2c(grid, Gu, Gv, Gw, i, j, k)\r\n```\r\n\r\nResolves #161\r\n\r\nThe velocity is now actually divergence-free and does not accumulate over time:\r\n\r\nBefore:\r\n```\r\n[ Info: Velocity divergence after   1 time steps (CPU(), Float64): min=-1.702112707507516e-18, max=-1.702112707507516e-18, sum=8.88871484143291e-21, abs_sum=5.841423607171149e-15\r\n[ Info: Velocity divergence after  10 time steps (CPU(), Float64): min=-6.152847328855238e-18, max=-6.152847328855238e-18, sum=3.48154736354434e-19, abs_sum=2.262474954705568e-14\r\n[ Info: Velocity divergence after 100 time steps (CPU(), Float64): min=-4.038653092508504e-17, max=-4.038653092508504e-17, sum=3.04905391231946e-19, abs_sum=1.305988573180850e-13\r\n```\r\n\r\nAfter:\r\n```\r\n[ Info: Velocity divergence after   1 time steps (CPU(), Float64): min=-1.7021127075075165e-18, max=-1.7021127075075165e-18, sum=8.88871484143291e-21, abs_sum=5.841423607171149e-15\r\n[ Info: Velocity divergence after  10 time steps (CPU(), Float64): min=-1.8295911660692887e-18, max=-1.8295911660692887e-18, sum=6.90496254158999e-20, abs_sum=6.221726243321258e-15\r\n[ Info: Velocity divergence after 100 time steps (CPU(), Float64): min=-2.0599841277224584e-18, max=-2.0599841277224584e-18, sum=1.22291705248819e-18, abs_sum=6.683978689921446e-15\r\n```\r\n\r\nWell actually it seems that it still accumulates a tiny bit (much less than before though):\r\n```\r\n[ Info: Velocity divergence after    1 time steps (CPU(), Float64): min=-1.7021127075075165e-18, max=-1.7021127075075165e-18, sum=8.88871484143291e-21, abs_sum=5.841423607171149e-15\r\n[ Info: Velocity divergence after   10 time steps (CPU(), Float64): min=-1.8295911660692887e-18, max=-1.8295911660692887e-18, sum=6.904962541589997e-20, abs_sum=6.221726243321258e-15\r\n[ Info: Velocity divergence after  100 time steps (CPU(), Float64): min=-2.0599841277224584e-18, max=-2.0599841277224584e-18, sum=1.222917052488197e-18, abs_sum=6.6839786899214464e-15\r\n[ Info: Velocity divergence after 1000 time steps (CPU(), Float64): min=-2.7755575615628914e-17, max=-2.7755575615628914e-17, sum=1.1918336233891488e-16, abs_sum=2.2196799400441293e-14\r\n```\r\n\r\nso maybe we also need to compute the vertical velocity _w_ from the continuity equation instead of time stepping it forward.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0Mjg0NzIxMTY=",
+        "number": 161,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/161"
+      }
+    ],
+    "createdAt": "2019-05-23T00:43:41Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-05-23T17:05:38Z",
+    "number": 228,
+    "title": "Reduce velocity divergence during time-stepping"
+  },
+  {
+    "additions": 409,
+    "author": {
+      "id": "MDQ6VXNlcjUxNjU5NDY=",
+      "is_bot": false,
+      "login": "jm-c",
+      "name": "Jean-Michel Campin"
+    },
+    "body": "Fix Coriolis term (horizontal averaging was previous incorrect)\r\n- remove single operator previously used for both U & V momentum Coriolis term\r\n  since was not right\r\n- add 2 new operators (for each horizontal momentum component) to evaluate Coriolis\r\n  term for each horizontal momentum component.\r\nNote: now Coriolis parameter is inside the 2 operators which should facilitate\r\n  beta-plane version of it.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-08T23:40:52Z",
+    "deletions": 174,
+    "labels": [],
+    "mergedAt": "2019-05-23T17:56:30Z",
+    "number": 215,
+    "title": "Fix coriolis term"
+  }
+]

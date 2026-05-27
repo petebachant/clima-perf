@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes a zero `q_tot` edge case:\r\n\r\n```julia\r\nusing Revise\r\nimport Thermodynamics as TD\r\nusing CLIMAParameters # load convenience constructors\r\n\r\nthermo_params = TD.Parameters.ThermodynamicsParameters(Float32)\r\n\r\ne_int=Float32(-3.687397e7);\r\n\u03c1=Float32(0.0027615533);\r\nq_tot=Float32(0.0);\r\nmaxiter=100\r\ntol=Float32(0.003)\r\nts = TD.PhaseEquil_\u03c1eq(\r\n    thermo_params,\r\n    \u03c1,\r\n    e_int,\r\n    q_tot,\r\n    maxiter,\r\n    eltype(thermo_params)(tol),\r\n)\r\n```\r\nfails on main, and passes in this PR.\r\n\r\nThis was found in the log here: https://buildkite.com/clima/climaatmos-ci/builds/16548. This could be a fix for at least one job breaking in https://github.com/CliMA/ClimaAtmos.jl/issues/2635.\r\n\r\nBy the way, being able to create parameters in this way is just so nice! (cc @nefrathenrici)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-09T16:50:12Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "B39C72",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjk0Mjk2MTU0",
+        "name": "bugfix :bug:"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Add label to launch Buildkite",
+        "id": "LA_kwDODuejNs8AAAABRtDTgg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2024-02-09T18:12:21Z",
+    "number": 192,
+    "title": "Fix zero `q_tot` edge case"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 551,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDgzMzM0",
+      "is_bot": false,
+      "login": "LenkaNovak",
+      "name": ""
+    },
+    "body": "Co-authored-by: jiahe23 <jiahe23@users.noreply.github.com>\r\n\r\nAdds a thermal slab (loosely representing a crude land model) to the 2d_baroclinic_wave ClimaAtmos example, as a stepping stone towards the AMIP simulation.\r\n\r\nDemonstrates\r\n- Coupler requirements to link with ClimaAtmos and ClimaSimulations\r\n- model parameter and field exchange\r\n- spherical regridding (though this will need updating with `weighted_dss!`)\r\n- externally specifiable boundary conditions\r\n- prototype of the coupler interface  \r\n- simple conservation checks\r\n- documentation for the BW test case coupled to a slab\r\n\r\nTODO in this PR:\r\n- [x] conservation checks\r\n\r\nFollow-up in next PRs:\r\n- [ ] clean up code (e.g., \"the same `Space` type but not the same instance\" error) #45 \r\n- [ ] merge CA PRs for BCs [#CA257](https://github.com/CliMA/ClimaAtmos.jl/pull/257)\r\n- [ ] merge CC PR for spatially varying BC specification \r\n- [ ] merge CC PR for TempestRemap online application #CC604\r\n- [ ] include the new (`ClimaSimulations`-excluding) ClimaAtmos interface\r\n- [ ] introduce coupler-specific interface abstractions #44 \r\n- [ ] update regridding with `weighted_dss!`\r\n\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc5GlEQS",
+        "number": 38,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/38"
+      }
+    ],
+    "createdAt": "2022-03-28T23:26:06Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-05-05T00:41:14Z",
+    "number": 37,
+    "title": "Diffusive baroclinic wave with thermal slab"
+  },
+  {
+    "additions": 432,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDgzMzM0",
+      "is_bot": false,
+      "login": "LenkaNovak",
+      "name": ""
+    },
+    "body": "- addresses the first stage of #42 \r\n\r\n## Steps\r\n- [x] [design](https://github.com/CliMA/ClimaCoupler.jl/blob/6f8704e925c0ba0fc5bd20f0e094deeb246b2f38/experiments/ClimaCore/sea-ice/README.md)\r\n- [x] implement the Semster 1976 model\r\n- [x] test using a single column\r\n- [x] conservation test\r\n<img width=\"378\" alt=\"Screen Shot 2022-04-27 at 5 50 59 PM\" src=\"https://user-images.githubusercontent.com/38083334/165654721-d21ff3f3-280c-448d-bfcd-bff81c37314c.png\">\r\n\r\n- [x] clean up\r\n\r\n## Proposed assignees\r\n- Lenka, Akshay, Ben\r\n\r\n## Proposed Reviewers\r\n- Zhaoyi, Kat\r\n\r\n## TODO in following PRs\r\n- add file reader if want to replace sea-ice concentration and depth with prescribed values, e.g. like in CESM AMIP (https://www.cesm.ucar.edu/models/ccsm4.0/cice/doc/node23.html)\r\n- spherical application with land-sea mask\r\n- add ocean Q flux\r\n- add an existing Newton iterator for more iters (?) \r\n- apply with SurfaceFluxes.jl and compare with [Semtner 1976](https://www.atmosp.physics.utoronto.ca/people/guido/PHY2502/articles/seaice-landice/AJSemtner_1976.pdf)'s quantitative results\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-18T17:16:32Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-05-05T19:19:20Z",
+    "number": 46,
+    "title": "0-layer sea-ice model in SCM"
+  }
+]

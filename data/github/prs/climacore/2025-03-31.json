@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a unit test that reproduces the bug found in the FD shmem implementation, and applies the bugfix.\r\n\r\nThe bug was due to us grabbing the nodal points using `(Nq, _, _, Nv, Nh) = DataLayouts.universal_size(us)`, and this is wrong for 1D spectral element cases, which is exactly the subset of jobs that were failing.\r\n\r\nThis was a bit tricky to chase down because most kernels were unaffected, but kernels of the form `@. x += div(f)` broke for 1D SEM cases with sufficiently high horizontal resolution, because there is a race condition on reading and writing `x` between multiple threadblocks.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-31T13:13:53Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2025-03-31T14:33:29Z",
+    "number": 2264,
+    "title": "Add FD shmem bug reproducer"
+  },
+  {
+    "additions": 203,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I tried using the DebugOnly module for an example in ClimaAtmos, and I found NaNs when evaluating `A\u2082\u2082\u2032 = @. A\u2082\u2082 - A\u2082\u2081 * inv(A\u2081\u2081) * A\u2081\u2082` because the RHS is not yet initialized (this function's responsibility is to allocate cache variables).\r\n\r\nThis is another similar fix to #2253.\r\n\r\nOriginally, I tried using `A\u2082\u2082\u2032 = similar(A\u2082\u2082)`, but the right-hand-side could be promoted from `BidiagonalMatrixRow` eltype to `QuaddiagonalMatrixRow` eltype, so we need to include the whole expression. Rather than writing this as `A\u2082\u2082\u2032 = similar(Base.Broadcast.broadcasted(-, A\u2082\u2082, Base.Broadcast.broadcasted(*\r\nA\u2082\u2081, Base.Broadcast.broadcasted(*, inv(A\u2081\u2081), A\u2081\u2082))))`, which should work, I thought that it would be cleaner to simply add `LazyBroadcast` as a dependency and write this as: `A\u2082\u2082\u2032 = similar(@. lazy(A\u2082\u2082 - A\u2082\u2081 * inv(A\u2081\u2081) * A\u2081\u2082))`.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-28T14:51:27Z",
+    "deletions": 173,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2025-03-31T20:17:29Z",
+    "number": 2257,
+    "title": "Dont materialize bc expr with uninitialized data"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Makes the \"Vectors and Matrices of Fields\" API display correctly. \r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-31T21:47:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-03-31T22:21:44Z",
+    "number": 2267,
+    "title": "Fix missing char in matrix_fields docs"
+  }
+]

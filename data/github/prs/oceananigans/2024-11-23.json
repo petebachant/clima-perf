@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 95,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The problem here stems from the fact that `fractional_indices` used for interpolation are 0-based indices to which, in the `interpolate` function, is summed 1. \r\n\r\nThe particle advection module uses `fractional_indices` directly outside the interpolate function, so the indices are inconsistent (there is a mix of 0-based and 1-based conventions).\r\n\r\nThere might be two solutions here:\r\n1. add one to the fractional_indices in the particle module (the solution proposed in this PR)\r\n2. return a 1-based index from `fractional_indices.` This might be cleaner from a user and developer perspective (mixing index basis is dangerous). However, as it stands now, we probably support extrapolation (because `fractional_index` can be negative), so we would lose that behavior.\r\n\r\nI also have a straightforward, simple unit test. We probably need some more.\r\n\r\nThere were also a couple more bugs in the bounce method\r\n\r\ncloses #3917 ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6d_lkD",
+        "number": 3917,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3917"
+      }
+    ],
+    "createdAt": "2024-11-13T14:13:46Z",
+    "deletions": 56,
+    "labels": [],
+    "mergedAt": "2024-11-23T03:45:59Z",
+    "number": 3923,
+    "title": "Fix bug in `advect_particle`"
+  },
+  {
+    "additions": 544,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is a cleaner working remake of PR #3874\r\n\r\nI copy here the description of that PR:\r\n\r\nRK3 paired with a splitting of the barotropic- baroclinic mode described in \r\nhttps://www.sciencedirect.com/science/article/abs/pii/S0021999122001127?fr=RR-2&ref=pdf_download&rr=8d81dd3bab0dba9a which seems to ensure consistency in the forcing of the barotropic and baroclinic mode. \r\n\r\nThe algorithm follows:\r\n\r\n***substep 1***\r\n- $u^{*, n+1/2} = u^{n} + \\Delta t G(u^{n})$\r\n- $U^{n+1/2} = \\text{barotropic-step}\\left( u^n, \\eta^n, G(u^{n}) \\right)$\r\n- $u^{n+1/2} = \\text{barotropic-correction}\\left(u^{*, n+1/2}, U^{n+1/2}  \\right)$\r\n\r\n***substep 2***\r\n- $u^{*, n+1/3} = \\frac{3}{4}u^{n} + \\frac{1}{4}\\left(u^{n+1/2} + \\Delta t G(u^{n+1/2}) \\right)$\r\n- $U^{*, n+1/3} = \\text{barotropic-step}\\left(u^{n+1/2}, \\eta^{n+1/2}, G(u^{n+1/2})  \\right)$\r\n- $U^{n+1/3} = \\frac{3}{4}U^{n} + \\frac{1}{4}U^{*, n+1/3}$\r\n- $u^{n+1/3} = \\text{barotropic-correction}\\left(u^{*, n+1/3}, U^{n+1/3} \\right)$\r\n\r\n***substep 3***\r\n- $u^{*, n+1} = \\frac{1}{3}u^{n} + \\frac{2}{3}\\left(u^{n+1/3} + \\Delta t G(u^{n+1/3})\\right)$\r\n- $\\overline{G}^{n+1} = \\frac{1}{6}G(u^{n}) + \\frac{1}{6}G(u^{n+1/2}) + \\frac{2}{3}G(u^{n+1/3})$\r\n- $U^{n+1} = \\text{barotropic-step}\\left(u^{n}, \\eta^{n}, \\overline{G}^{n+1} \\right)$ \r\n- $u^{n+1} = \\text{barotropic-correction}\\left(u^{*, n+1}, U^{n+1} \\right)$\r\n\r\nThe proof of concept in this PR is working and allowing a much larger CFL than the AB2 code we use (with the added benefit of reducing the implicit diffusion of the AB2 scheme and being self-starting from time-step `n`).\r\n\r\nThe cost of RK3 vs AB2 is slightly more than 3 times because the barotropic solve is done 3 times on the entire \r\nbaroclinic time step. So in general, speed-wise RK3 \u2248 AB2.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-15T09:52:27Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2024-11-23T11:28:46Z",
+    "number": 3930,
+    "title": "RK3 for the HydrostaticFreeSurfaceModel version 2"
+  }
+]

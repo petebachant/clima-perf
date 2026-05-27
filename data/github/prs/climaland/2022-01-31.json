@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "Testing adding aux variables to the soil model.\r\n\r\nWorks well out of the box! using default initialize_auxiliary, just had to define\r\n`aux_variables(model::RichardsModel)` and `make_update_aux(model::RichardsModel)`.\r\n\r\nThe only hitch is that `solve!` only returns `integrator.sol`, which has only the prognostic state and time. if we use the `integrator` interface, we do have access to `integrator.p` at each step. otherwise we need to use a callback to get aux variables back - that is what this currently does in the test file. \r\n\r\nNote that `p` is updated in place, so what we pass into `prob` originally, after `solve` finishes, is the final `p`.\r\n\r\nhttps://diffeq.sciml.ai/stable/basics/integrator/#Handing-Integrators\r\nhttps://github.com/SciML/OrdinaryDiffEq.jl/blob/4bf1d8e8a6b99f104e3abc0f51eaae2fae8ce64b/src/solve.jl#L496",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-26T23:27:54Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2022-01-31T18:31:05Z",
+    "number": 11,
+    "title": "added aux variables"
+  }
+]

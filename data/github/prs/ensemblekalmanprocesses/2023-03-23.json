@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 175,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #254\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- For the wide variety of possible distributions, the easiest general solution is to plot marginal histograms of distributions, so this is the approach we take.\r\n- Adds recipe for `plot(pd::ParameterDistribution)` \r\n- Adds recipe for `plot(pd <: ParameterDistributionType)` \r\n- Adds unit test which plots marginals (set `ENV[\"CES_TEST_PLOT_OUTPUT\"] = true` prior to `] test`)\r\n- Adds example into the priors docs page.\r\n\r\n### In future\r\nI expect these can be improved upon in various ways, using other plot-types, or only plotting unique distributions where they are repeated etc. but for this PR I just wanted something simple to work on any case.\r\n\r\n## Example from `test/`\r\n\r\nA complicated distribution: \r\n```julia\r\nd1 = Parameterized(MvNormal(zeros(4), 0.1 * I))\r\nc1 = [no_constraint(), bounded_below(-1.0), bounded_above(0.4), bounded(-0.1, 0.2)]\r\nname1 = \"constrained_mvnormal\"\r\nu1 = ParameterDistribution(d1, c1, name1)\r\n\r\nd2 = Samples([1 2 3 4])\r\nc2 = [bounded(10, 15)]\r\nname2 = \"constrained_sampled\"\r\nu2 = ParameterDistribution(d2, c2, name2)\r\n            \r\nd3 = VectorOfParameterized(repeat([Beta(2, 2)], 3))\r\nc3 = repeat([no_constraint()], 3)\r\nname3 = \"vector_beta\"\r\nu3 = ParameterDistribution(d3, c3, name3)\r\n            \r\nu = combine_distributions([u1, u2, u3])\r\n```\r\n\r\n```julia\r\nplot(u)\r\n```\r\n<img src=\"https://user-images.githubusercontent.com/47412152/227068258-4b11e29c-4977-45a3-ad9e-f36a8bb1102f.png\" width=\"600\">\r\n\r\n```julia\r\nplot(u, constrained=false)\r\n```\r\n<img src=\"https://user-images.githubusercontent.com/47412152/227068257-68bb1e51-9ebe-4526-860d-a1aeb7ff8259.png\" width=\"600\">\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585ffW_3",
+        "number": 254,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/254"
+      }
+    ],
+    "createdAt": "2023-03-21T22:07:40Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2023-03-23T00:43:20Z",
+    "number": 264,
+    "title": "Quickly plot marginals for parameter distribution"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- Closes #265 \r\n- Addresses #261 (1/2)\r\nLeads to a more robust test pipeline and constructor `constrained_gaussian`\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- fixes bugs within #265 ,\r\n- resolves an eks object bug where it would mix prior and final ensemble, and now puts plots in the EKP test subdirectory\r\n- adds warning for when users prescribe values in `constrained_gaussian` which will be slow to solve. In these cases a large amount of mass will be concentrated on the boundary.\r\n- tightens error of termination to `mu + sig < upper_bound`  (before was `mu + 0.7*sig > 1` etc.) likewise for lower bound\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585hjZOa",
+        "number": 265,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/265"
+      }
+    ],
+    "createdAt": "2023-03-23T01:46:30Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2023-03-23T02:19:56Z",
+    "number": 266,
+    "title": "Small bug fixes in tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-23T17:46:00Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-03-23T18:06:08Z",
+    "number": 267,
+    "title": "Update to v0.14.3"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-23T19:28:24Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-03-23T19:42:55Z",
+    "number": 268,
+    "title": "Update Project.toml"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #269 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- `cov(u,u) -> cov(u)`\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585hqLP_",
+        "number": 269,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/269"
+      }
+    ],
+    "createdAt": "2023-03-23T23:10:21Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2023-03-23T23:38:54Z",
+    "number": 270,
+    "title": "more robust empirical covariances"
+  }
+]

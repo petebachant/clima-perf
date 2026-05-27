@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 174,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWhile working on the conservative regridder, we noticed some aspects of remap that aren't ideal. This PR fixes a few of them.\r\n\r\nNote that all the changes outside of `src/Interfacer.jl` and `experiments/ClimaEarth/components/ocean/climaocean_helpers.jl` come from the argument reordering change.\r\n\r\nThis PR has little to no effect on performance (varies by config), but it does make the `remap!` function correctly non-allocating. So even though it doesn't necessarily improve SYPD I still think it's worth merging.\r\n\r\n## Content\r\n- [x] call `remap!` from `remap`, not the other way around, so that `remap!` is actually non-allocating\r\n- [x] reduce allocations in `remap!` by setting the field's values using `field2array` , instead of allocating a new field via `array2field`\r\n- [x] unify ordering of target/source in `remap` and `remap!` so that target consistently comes first\r\n- [x] check CI - AMIP is identical to main, but CMIP is slightly changed (e.g. in MO length, precipitation, atmosphere density and humidity). The changes are relatively small so I think this is okay\r\n\r\n## Performance changes\r\n### Benchmarks\r\nNo change in performance. See [main](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/288#_) vs [this PR](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/287#_)\r\n\r\n### No shared surface space\r\nMost of our runs use `share_surface_space: true` so they exit early in the remapping functions. Runs that have this option set to false (including CMIP runs) are likely to experience the largest change in SYPD from this PR.\r\n- CMIP with prescribed sea ice became slightly slower as of this PR ([4.943 SYPD](https://buildkite.com/clima/climacoupler-ci/builds/7327#019af0ab-5f42-4b97-a151-d580c13ba8b3) on main, [4.845 SYPD](https://buildkite.com/clima/climacoupler-ci/builds/7334#019af179-63f9-4b58-af38-8c5368aefdec) on this PR)\r\n- CMIP with ClimaSeaIce doesn't have a good comparison because it ran on an H100 on main, and P100 in this PR, but I would expect to see similar results as the other CMIP run.\r\n\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-05T00:54:21Z",
+    "deletions": 126,
+    "labels": [],
+    "mergedAt": "2025-12-09T23:14:24Z",
+    "number": 1594,
+    "title": "Clean up remap functions; use `remap!` in `combine_surfaces!`"
+  }
+]

@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 190,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request refactors the computation of strain rate tensors throughout the codebase to clarify the distinction between vertical-only and full (vertical + horizontal) strain rate calculations. It introduces new, more explicit utility functions for these computations, updates all relevant usages to call the appropriate function, and adds improved documentation to guide future development.\r\n\r\nKey changes include:\r\n\r\n**Refactoring and API Improvements:**\r\n\r\n* Introduced `compute_strain_rate_center_vertical` and `compute_strain_rate_face_vertical` functions to explicitly compute strain rate tensors using only vertical gradients, replacing the more generic `compute_strain_rate_center` and `compute_strain_rate_face` in all relevant locations. [[1]](diffhunk://#diff-a10d64c3d8b32e25ab8ccf092795daf458729f66806dea4194ed1587ce1e0bbaL85-R210) [[2]](diffhunk://#diff-c40362df68b4fff9a33bde60b63f84cdb1c323bb7e94236d6af305dae6d8e827L1379-R1379) [[3]](diffhunk://#diff-43813dbcf4657b2bc39334da18fb7f4df140e1bc0cff776af167a6ce029d9a33L454-R454) [[4]](diffhunk://#diff-2a4cb71f47cc00b2b728d951d7dc3da0061b2952d3d2e5291a150f02562efa8eL87-R87) [[5]](diffhunk://#diff-6211880f7b3bcc4739f6e2525b27f3fc9b4aa208fecf78e004f63c94669a29dfL502-R502) [[6]](diffhunk://#diff-6211880f7b3bcc4739f6e2525b27f3fc9b4aa208fecf78e004f63c94669a29dfL628-R627) [[7]](diffhunk://#diff-e3561a9af3ea9efb1a9df157311a7989580811ed8569202132564cef68e2ec30L107-R107)\r\n\r\n* Added new functions `compute_strain_rate_center_full!` and `compute_strain_rate_face_full!` to compute the full strain rate tensor (including both vertical and horizontal gradients) at cell centers and faces, respectively, with detailed documentation and guidance for use.\r\n\r\n**Documentation and Usability:**\r\n\r\n* Expanded and clarified docstrings for all strain rate computation functions, making it clear which functions use only vertical gradients and which compute the full tensor, and providing usage notes and references for future developers.\r\n\r\n* Added a new `strain_rate_norm` utility function to compute the norm of the strain rate tensor, with optional projection onto specific axes.\r\n\r\nThese changes improve code clarity, ensure correct usage of strain rate computations, and provide a stronger foundation for future development and maintenance.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T17:24:14Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2025-10-28T00:39:44Z",
+    "number": 4073,
+    "title": "rft: separate vertical and full strain"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake grid mean and updraft diffusion consistent.\r\nThis resolves the negative clw observed in SCM with prognostic edmf and 1M microphysics\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-21T22:18:27Z",
+    "deletions": 50,
+    "labels": [],
+    "mergedAt": "2025-10-28T03:31:43Z",
+    "number": 4065,
+    "title": "Consistent diffusion eq for pedmf"
+  },
+  {
+    "additions": 233,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request refactors and extends the Smagorinsky-Lilly subgrid turbulence model implementation, making it more flexible and adding diagnostics and configuration options. The model can now be applied in specific directions (currently only `UVW`, i.e., all directions), and new diagnostics for horizontal and vertical diffusivities and strain rates are available. The changes affect configuration files, model initialization, diagnostics, and the main turbulence model code.\r\n\r\n**Key changes:**\r\n\r\n### Smagorinsky-Lilly Model Refactor and Extension\r\n- Refactored the `SmagorinskyLilly` type to a parametric struct (`SmagorinskyLilly{DIR}`), allowing specification of which directions the model applies to (currently only `:UVW` is supported). Added utility functions to check model directionality, enabling more flexible and explicit control over turbulence modeling.\r\n- Updated the Smagorinsky-Lilly turbulence implementation to separately compute and store horizontal and vertical strain rates, eddy viscosities, and diffusivities. The main tendency routines now use these directional quantities, and the precomputation logic has been modularized for clarity and extensibility. [[1]](diffhunk://#diff-d9e896295cbf4da40373db0b150598e2218d3eb16138ae32b09a449517f5da85L10-R178) [[2]](diffhunk://#diff-471fb2001bc0d6f84924896fd8c99bd3d4edcc84bd5d79da9e9f35afef17f9cdL252-R257) [[3]](diffhunk://#diff-471fb2001bc0d6f84924896fd8c99bd3d4edcc84bd5d79da9e9f35afef17f9cdL611-R613)\r\n\r\n### Diagnostics and Postprocessing\r\n- Added new diagnostic variables for horizontal and vertical Smagorinsky diffusivities (`Dh_smag`, `Dv_smag`) and strain rate magnitudes (`strainh_smag`, `strainv_smag`). These are now available for output and analysis.\r\n- Updated the CI plotting script to include the new Smagorinsky diagnostics and vertical diffusivity in the list of variables plotted, improving postprocessing capabilities.\r\n\r\n### Configuration and Model Selection\r\n- Changed the configuration options for the Smagorinsky-Lilly model in YAML files: the parameter now accepts `\"UVW\"` (all directions) or `nothing` (disabled), replacing the previous boolean flag. Updated model getter logic to parse and instantiate the correct model variant. [[1]](diffhunk://#diff-a507a5b1b0f8375040a7694778c1ce9ad5ec72a4465b76b7ba5d2aa693dcb574L173-R174) [[2]](diffhunk://#diff-298a231afce868235eb2f3cb7f06b730e6500e262c043010829a022a479d87c0L4-R4) [[3]](diffhunk://#diff-18538808923a79596d3dfdd32b144c0cd1f8c6ee9b1cb8bdfb27d1bd0a726792L17-R17) [[4]](diffhunk://#diff-ab240b0d863b064ad1bd28f7844952c3809af57b3424ed31794a4835f6349e47R172-R185)\r\n\r\n### Integration with Other Model Components\r\n- Modified the Jacobian assembly for implicit vertical diffusion to support vertical Smagorinsky-Lilly diffusivity, ensuring correct treatment when the model is active in the vertical direction.\r\n\r\n### Minor Improvements\r\n- Various code cleanups, improved documentation, and more consistent use of variable names and lazy evaluation for performance and clarity.\r\n\r\nThese changes collectively make the turbulence modeling more flexible, improve diagnostics, and streamline configuration and code structure.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T17:24:19Z",
+    "deletions": 150,
+    "labels": [],
+    "mergedAt": "2025-10-28T03:52:43Z",
+    "number": 4074,
+    "title": "rft: smagorinsky-lilly for future h-v splitting"
+  },
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "`vanleer_limiter` upwinding option does not compile on GPUs for microphysics tracers in EDMF. See https://github.com/CliMA/ClimaAtmos.jl/issues/4046\r\n\r\nThis PR tries to cleanup the logic of upwinding flags and give us different configuration options untill we solve the underlying GPU compiler issue.\r\n\r\nFor the atmos runs without EDMF we will now have `energy_q_tot_upwinding` and `tracer_upwinding`. They should both be set to `vanleer_limiter` unless there is a good reason not to.\r\n\r\nFor atmos runs with EDMF ideally we would do the same. But because right now we can't I have:\r\n- `energy_q_tot_upwinding` set to `vanleer_limiter` but `tracer_upwinding` set to `first_order`\r\n- `edmfx_mse_q_tot_upwinding` and `edmfx_tracer_upwinding` set to `first_order`.\r\n\r\n\r\nOne \"behavioral change\" is that `tracer_upwinding` was affecting `q_tot` and microphysics tracers on the grid mean. But from all our discussions it seems like we want to group energy and total water together. I don't think it should make any changes in behavior because those two flags are usually set to the same value anyway. ",
+    "changedFiles": 60,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-17T20:21:38Z",
+    "deletions": 109,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-10-28T07:05:46Z",
+    "number": 4062,
+    "title": "ADD emdfx_tracer_upwinding flag, set it to first_order"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 345,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR puts some code into the `IncompressibleModel` constructor that adjusts the halos in `grid` so that they're valid for the specified `advection` scheme and turbulence `closure`.\r\n\r\nThe changes went a little deep because of the fact that we allow fields to be passed directly to `IncompressibleModel`. We now check whether such fields have the correct grid and throw an error if they don't.\r\n\r\nI decided not to validate the `pressure_solver` input. This isn't commonly provided by users (and wasn't previously checked). There's a new function in `Solvers` that could be modified if such a check becomes desirable.\r\n\r\nHere's what happens if you use a high-order advection scheme now:\r\n\r\n```julia\r\nusing Oceananigans, Oceanaingans.Advection\r\n\r\ngrid = RegularCartesianGrid(size=(1, 1, 1), extent=(1, 2, 3))\r\n\r\n# output --- note that halos are (1, 1, 1)\r\nRegularCartesianGrid{Float64, Periodic, Periodic, Bounded}\r\n                   domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 2.0], z \u2208 [-3.0, 0.0]\r\n                 topology: (Periodic, Periodic, Bounded)\r\n  resolution (Nx, Ny, Nz): (1, 1, 1)\r\n   halo size (Hx, Hy, Hz): (1, 1, 1)\r\ngrid spacing (\u0394x, \u0394y, \u0394z): (1.0, 2.0, 3.0)\r\n```\r\n\r\nbut,\r\n\r\n```julia\r\nmodel = IncompressibleModel(advection=WENO5(), grid=grid)\r\n\r\nmodel.grid\r\n\r\n# output --- halos are (3, 3, 3)\r\nRegularCartesianGrid{Float64, Periodic, Periodic, Bounded}\r\n                   domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 2.0], z \u2208 [-3.0, 0.0]\r\n                 topology: (Periodic, Periodic, Bounded)\r\n  resolution (Nx, Ny, Nz): (1, 1, 1)\r\n   halo size (Hx, Hy, Hz): (3, 3, 3)\r\ngrid spacing (\u0394x, \u0394y, \u0394z): (1.0, 2.0, 3.0)\r\n```\r\n\r\nThis PR relies on #1003 .\r\n\r\nResolves #941 ",
+    "changedFiles": 22,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDAyOTE3NDY=",
+        "number": 941,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/941"
+      }
+    ],
+    "createdAt": "2020-09-30T18:25:26Z",
+    "deletions": 118,
+    "labels": [],
+    "mergedAt": "2020-10-01T02:47:51Z",
+    "number": 1012,
+    "title": "Adjust halos according to advection scheme and turbulence closure"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-01T00:31:32Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2020-10-01T11:45:56Z",
+    "number": 1017,
+    "title": "Add Dev in Docs versions menu"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Should at least help with detecting doctest failures and we want to build+deploy docs on Buildkite anyways.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-01T14:27:29Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2020-10-01T14:50:57Z",
+    "number": 1018,
+    "title": "Build and test but do not deploy docs on Buildkite"
+  },
+  {
+    "additions": 189,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #1010\r\n\r\nThis PR also adds an annotation to `DiscreteForcing` that may help with GPU compilation (its not 100% clear now however).",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTIwMTg0NzU=",
+        "number": 1010,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1010"
+      }
+    ],
+    "createdAt": "2020-09-30T23:42:59Z",
+    "deletions": 80,
+    "labels": [],
+    "mergedAt": "2020-10-01T18:23:40Z",
+    "number": 1016,
+    "title": "Adds adapt_structure for ContinuousForcing"
+  }
+]

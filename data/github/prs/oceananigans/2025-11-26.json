@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 636,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR contains: \r\n\r\n- A few improvements that will make https://github.com/CliMA/Oceananigans.jl/pull/4848 easier.\r\n- A couple of fixes for edge cases.\r\n- Include `dimension_type` to `NetCDFWriter` which controls the precision type for dimensions, with a default value of `Float64`.\r\n- Perhaps most importantly, it brings the treatment of arrays by the `NetCDFWriter` closer to what Oceananigans does. In particular singleton dimensions are kept if the location has a well-defined value (i.e. the value is not `nothing`, which NetCDF can't handle). This means will remove singleton dimensions _only_ when:\r\n  - the location on that dimension is nothing (e.g. a reduced field)\r\n  - the topology in that dimension is `Flat`\r\n\r\n To- do list:\r\n\r\n- [x] Should we enforce that spatial dimension is always Float64 to avoid alignment issues? We already do this with time for the same reason (see https://github.com/CliMA/Oceananigans.jl/issues/3056).\r\n- [x] Special treatment for free surfaces\r\n- [x] Do not squeeze singleton dimensions in slices\r\n- [x] Add test for when the grid passed to `NetCDFWriter` is different from `model.grid`\r\n- [x] Add test to make sure that singleton dimensions aren't improperly squeezed/removed",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-29T22:16:08Z",
+    "deletions": 416,
+    "labels": [],
+    "mergedAt": "2025-11-26T02:26:09Z",
+    "number": 4890,
+    "title": "Improvements and fixes to `NetCDFWriter`"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-26T03:03:24Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      }
+    ],
+    "mergedAt": "2025-11-26T03:03:42Z",
+    "number": 4988,
+    "title": "Add Brenner et al. (2025) paper to documentation"
+  },
+  {
+    "additions": 153,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This isn't complete, but like #4979 this is a beginning for more extensive linting checks.  The tests introduced here should pass locally for me (so in principle this PR is good to go as is), but I haven't checked I haven't broken anything in the process, I guess CI will tell us \ud83d\ude42\r\n\r\nI know the PR looks a bit intrusive, but there's really lots of cruft in the code, these checks (together with #4979 and future related PRs) are aimed at making Oceananigans more maintainable in the long run.",
+    "changedFiles": 68,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-25T23:00:38Z",
+    "deletions": 165,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2025-11-26T22:44:26Z",
+    "number": 4985,
+    "title": "Start running ExplicitImports checks"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "We never registered 0.102.0, so this is appropriate.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-26T23:30:06Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-11-26T23:31:09Z",
+    "number": 4991,
+    "title": "Downgrade version from 0.102.1 to 0.102.0"
+  }
+]

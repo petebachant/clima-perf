@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 1685,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR aims to do three things:\r\n\r\n- [x] Make sure common coriolis models use the same schemes (i.e. BetaPlane, FPlane and SphericalCoriolis are all on a c-grid and can use the same schemes\r\n- [x] Use the MITgcm active weigthing procedure for the `EnstrophyConserving` and `EnergyConserving` scheme\r\n- [x] Implement the EEN Nemo scheme, a tad more complicated but not too much, it uses triads and it is proven to [reduce the noise](https://www.sciencedirect.com/science/article/pii/S1463500308001753?ref=pdf_download&fr=RR-2&rr=9d9bf15999f1f30f) in the vertical velocity, which is what the active scheme should do, without any active masking\r\n- [ ] <s>introduce Coriolis force in the split-explicit solver</s> (not beneficial at the moment, to be tested thoroughly in another PR)\r\n\r\nPoint two is necessary since there are some problems in how we do active weighted interpolations. I suspect it is the averaging with the spacing. The motivation for this refactor is described [here](https://github.com/NumericalEarth/NumericalEarth.jl/issues/75#issuecomment-4025685138). The other two points are quality of life improvements and feature additions.\r\nThis PR might also help with https://github.com/CliMA/Oceananigans.jl/issues/4912",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-09T19:26:25Z",
+    "deletions": 123,
+    "labels": [],
+    "mergedAt": "2026-03-25T10:44:56Z",
+    "number": 5383,
+    "title": "(0.106.2) Refactor coriolis and add Triad scheme"
+  },
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Given the difficulties of #5381 which probably require one extra MPI pass we want to avoid, we have decided to revisit the definition of a `RightFaceFolded` tripolar grid by shifting upwards by one row the tripolar fold. This has a couple of consequences:\r\n- fields `Center`ed in y have a nice and well-behaved prognostic domain that goes from `1:Ny` where all the halos are filled by the fold BC\r\n- fields on y-`Face`s are a bit more problematic since the prognostic domain extends up to `Ny+1`, where the `Ny+1` row mirrors the `Center` `Ny` row for a `RightCenterFolded` tripolar grid, where half is prognostic and half is repeated. With this fold location we can leverage the symmetry with the `UPivot` boundary condition. The main downside is the need to extend all the kernels to `Ny + 1` given that the prognostic domain extends one-row up. For all other purposes, the `RightFaceFolded` topology switches from behaving as a `Periodic`/`FullyConnected`/`RightConnected`/`RightCenterFolded` topology to behaving as a `Bounded`/`LeftConnected` topology, where the `Face` fields have one extra point than the `Center` fields.\r\n\r\nFor this reason this PR introduces a `grid_worksize`, which is the size of the grid used for kernel launching (I am up to changing the name). This defaults to `size(grid)` for all grids except for a right-face-folder tripolar grids where it returns Ny+1 at the second spot.\r\n\r\ncc @briochemc \r\n\r\n---\r\n\r\nAdding these `TripolarGrid` visualisations from `validation/`, made with the code in this PR:\r\n\r\n<img width=\"3200\" height=\"1600\" alt=\"image\" src=\"https://github.com/user-attachments/assets/7dad56a3-85ef-4da6-a681-c6b526edcb28\" />\r\n\r\n---\r\n\r\nAlso adding this visualisation taken from PR #5405 below (not merged yet so I copied the julia code, updated it, and ran it). If anything was off the half circles would not be centred around the pivot points, so LGTM!\r\n\r\n<img width=\"2000\" height=\"2400\" alt=\"image\" src=\"https://github.com/user-attachments/assets/56120af8-9f08-4136-92f1-05e7c3336179\" />\r\n\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-17T12:26:18Z",
+    "deletions": 115,
+    "labels": [],
+    "mergedAt": "2026-03-25T12:20:20Z",
+    "number": 5408,
+    "title": "Shift the `RightFaceFolded` fold upwards by one row"
+  },
+  {
+    "additions": 187,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Adds a validation example that can use both a `NonhydrostaticModel` and `HydrostaticFreeSurfaceModel` with an implicit surface. ~The solution of the hydrostatic model here isn't very good since the physics are inherently non-hydrostatic, but the main purpose here is to test that the model works in the sense that it produces what we would expect it to produce.~ After this is merged I intend to add a SplitExplicit hydrostatic model to the same script in https://github.com/CliMA/Oceananigans.jl/pull/5351.\r\n\r\ncc @simone-silvestri ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-03T21:12:20Z",
+    "deletions": 183,
+    "labels": [],
+    "mergedAt": "2026-03-25T17:58:01Z",
+    "number": 5359,
+    "title": "Add flow over hill validation using open boundaries and a hydrostatic model with implicit surface"
+  }
+]

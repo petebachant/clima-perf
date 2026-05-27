@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 328,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR was updated to only define and use `auto_launch!` with suggested threads and blocks. This will allow us to easily and experimentally optimize the number of threads and blocks kernel.\r\n\r\nThis PR is a no-op.\r\n\r\nNext, we can leverages CUDA.jl's [`launch_configuration`](https://cuda.juliagpu.org/dev/lib/driver/#CUDA.launch_configuration) function, to auto-tune the number of blocks and threads, for most kernel launches. I've excluded those where we specify shmem (spectral element kernels), because it's not yet clear to me how we can use it there.\r\n\r\nThis will allow us to remove the hard-coded `_max_threads_cuda() = 256`.\r\n\r\nI'm going to try this out in ClimaAtmos, and run the target pipeline with this.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-05T19:20:26Z",
+    "deletions": 78,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-04-25T15:14:49Z",
+    "number": 1663,
+    "title": "Define and use `auto_launch!`"
+  },
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the inference failure reproducer. Perhaps fortunately, this kernel doesn't even compile on the cpu (and it never has). So I'll aim to fix that first.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-19T15:01:53Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "3D507D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7bQU0h",
+        "name": "Inference"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-04-25T15:15:36Z",
+    "number": 1685,
+    "title": "Update gpu prog edmf repro"
+  }
+]

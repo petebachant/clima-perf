@@ -1,0 +1,154 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/4080",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6o6R4x",
+        "number": 4080,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4080"
+      }
+    ],
+    "createdAt": "2025-02-06T19:12:32Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-02-07T01:42:32Z",
+    "number": 4083,
+    "title": "Make checkpointing work when prefix contains non-ascii characters"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #4036 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6lrULj",
+        "number": 4036,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4036"
+      }
+    ],
+    "createdAt": "2025-02-06T16:29:42Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-02-07T16:36:00Z",
+    "number": 4081,
+    "title": "Bump the compat on GPUArrays to 11.2.2"
+  },
+  {
+    "additions": 77,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR enables interpolating between `LatitudeLongitudeGrid`s with different longitude references provided the covered longitude is the same\r\n\r\nexample:\r\n```julia\r\njulia> grid1 = LatitudeLongitudeGrid(size=(10, 1, 1), longitude=(   0, 360), latitude=(-90, 90), z=(0, 1));\r\n\r\njulia> grid2 = LatitudeLongitudeGrid(size=(10, 1, 1), longitude=(-180, 180), latitude=(-90, 90), z=(0, 1));\r\n\r\njulia> f1 = CenterField(grid1);\r\n\r\njulia> f2 = CenterField(grid2);\r\n\r\njulia> set!(f1, (\u03bb, y, z) -> \u03bb);\r\n\r\njulia> fill_halo_regions!(f1);\r\n\r\njulia> interpolate!(f2, f1);\r\n\r\njulia> interior(f2)\r\n10\u00d71\u00d71 view(::Array{Float64, 3}, 4:13, 2:2, 2:2) with eltype Float64:\r\n[:, :, 1] =\r\n 198.0\r\n 234.0\r\n 270.0\r\n 306.0\r\n 342.0\r\n  18.0\r\n  54.0\r\n  90.0\r\n 126.0\r\n 162.0\r\n\r\njulia> fill_halo_regions!(f2);\r\n\r\njulia> interpolate!(f1, f2);\r\n\r\njulia> interior(f1)\r\n10\u00d71\u00d71 view(::Array{Float64, 3}, 4:13, 2:2, 2:2) with eltype Float64:\r\n[:, :, 1] =\r\n  18.0\r\n  54.0\r\n  90.0\r\n 126.0\r\n 162.0\r\n 198.0\r\n 234.0\r\n 270.0\r\n 306.0\r\n 342.0\r\n```\r\n\r\nNeeded, for example, to perform Atlantic and Mediterranean sea simulations in ClimaOcean.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-30T12:59:43Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2025-02-07T19:27:47Z",
+    "number": 4074,
+    "title": "Correct interpolation on longitude lines"
+  },
+  {
+    "additions": 318,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a new `Defaults` struct with value `Oceananigans.defaults`.\r\n\r\nThe design is that `defaults` are used in constructors, so changing the content of `Oceananigans.defaults` at the top of a setup script or in a REPL session can change constructed objects afterwards that use the default. For example:\r\n\r\n```julia\r\nusing Oceananigans\r\nOceananigans.defaults.float_type = Float32\r\n```\r\n\r\nthen\r\n\r\n```julia\r\njulia> grid = RectilinearGrid(size=(3, 3, 3), extent=(1, 1, 1))\r\n3\u00d73\u00d73 RectilinearGrid{Float32, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)  regularly spaced with \u0394x=0.333333\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)  regularly spaced with \u0394y=0.333333\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-1.0, 0.0] regularly spaced with \u0394z=0.333333\r\n```\r\n\r\nBut of course the default can still be overridden as usual\r\n\r\n```julia\r\njulia> grid = RectilinearGrid(Float64, size=(3, 3, 3), extent=(1, 1, 1))\r\n3\u00d73\u00d73 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)  regularly spaced with \u0394x=0.333333\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)  regularly spaced with \u0394y=0.333333\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-1.0, 0.0] regularly spaced with \u0394z=0.333333\r\n```\r\n\r\nCloses #3800 \r\n\r\nNote, I did not add a constructor of the form `set_default_number_type!`. Still, users cannot write anything since the design is based on a mutable `Defaults` struct, so\r\n\r\n```julia\r\njulia> Oceananigans.defaults = \"Float64\"\r\nERROR: invalid redefinition of constant Oceananigans.defaults\r\nStacktrace:\r\n [1] setproperty!\r\n   @ ./Base.jl:51 [inlined]\r\n [2] setproperty!(x::Module, f::Symbol, v::String)\r\n   @ Base ./Base.jl:49\r\n [3] top-level scope\r\n   @ REPL[12]:1\r\n```\r\n\r\nfails. We could possibly catch these settings and throw errors like \"it has to be a DataType\". I don't want to retstrict the datatype that migth be used because there are experimental datatypes, for example BFloat16, and who knows what in the future.\r\n\r\nTODO:\r\n\r\n- [ ] tests",
+    "changedFiles": 46,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6YTCUV",
+        "number": 3800,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3800"
+      }
+    ],
+    "createdAt": "2025-01-30T09:38:30Z",
+    "deletions": 89,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-02-07T22:50:04Z",
+    "number": 4073,
+    "title": "Implement a default float type"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "Apparently this is required for package deps to declare all their deps.\r\n\r\nHopefully resolves the extension loading issue, but irrespective thereof this should have been done anyways",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-07T22:48:58Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-02-07T23:12:06Z",
+    "number": 4085,
+    "title": "Reactant: try to fix extension loading"
+  }
+]

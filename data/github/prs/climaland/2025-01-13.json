@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 450,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit reduces allocations by changing turbulent_fluxes and net_radiation to be in place. In addition to this, the workaround introduced to enable GPU-compatibility in energy_hydrology resulted in lots of additional allocations, so I modified that too. \r\n\r\nThese allocations are due to the fact that there are broadcasted expression hidden in simple function calls, so that Julia cannot properly do operations in place.\r\n\r\nThere are still allocations. One of the easy ones to tackle is in surface_specificy_humidity for snow, which accounts for a large fraction of the total allocations for the snowy_land benchmark.\r\n\r\nCloses #966 \r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-24T19:55:16Z",
+    "deletions": 369,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2025-01-13T19:42:13Z",
+    "number": 967,
+    "title": "Reduce allocations"
+  }
+]

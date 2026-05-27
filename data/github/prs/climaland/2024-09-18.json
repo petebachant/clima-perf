@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 233,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n- Update snow flux convention so that negative implies towards land, positive implies towards atmosphere.\r\n- Update snowmip_simulation script to include a conservation check + use CairoMakie instead of Plots. Conservation plot shown below\r\n- Update prognostic variables to be snow water volume/energy per unit ground area, rather than per unit snow area. E.g. previously we had dS/dt = P_snow + (Evap - Melt)*Heaviside(S), All terms were per unit snow area. The total snow water in the cell would then be snow_cover_fraction * S. This led to poor conservation, since the actual thing we want to conserve is total water in the cell but the fluxes were changing water per snow area.\r\n\r\n- Now we have dSdt = P_snow + snow_cover_fraction * (Evap - Melt). Every term on each side is per unit ground area. In this case, S reflects the conserved quantity. \r\n![conservation_cdp](https://github.com/user-attachments/assets/e6df2938-35d9-4ebf-80ec-7042b48b3cd2)\r\n\r\nCLM:\r\n<img width=\"880\" alt=\"image\" src=\"https://github.com/user-attachments/assets/1a0310a6-9fea-47cd-b643-d61a7fe29431\">\r\n<img width=\"857\" alt=\"image\" src=\"https://github.com/user-attachments/assets/55c5b8d3-526b-4f7e-bcd5-50f3c00a1b4d\">\r\n\r\n\r\nWhat is confusing to me is that they seem to also multiple q_ice [P_snow] by the snow cover fraction in one place (8.4,8.5), but not the other (8.12, 8.14). P_liq does get multiplied by the snow cover fraction; this makes sense. We currently do not let P_liq affect the snow since we dont model the energy in the liquid precip. That is a future fix. \r\n## To-do\r\nReview\r\n\r\n\r\n## Content\r\nAs noted above.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6KEBm_",
+        "number": 630,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/630"
+      }
+    ],
+    "createdAt": "2024-09-16T22:03:59Z",
+    "deletions": 136,
+    "labels": [],
+    "mergedAt": "2024-09-18T17:45:02Z",
+    "number": 773,
+    "title": "Change of snow prognostic variables"
+  }
+]

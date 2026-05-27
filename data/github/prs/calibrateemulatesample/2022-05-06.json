@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1217,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This PR re-implements the Sample step of CES to use the [AbstractMCMC](https://github.com/TuringLang/MCMCChains.jl) interface used by [Turing.jl](https://turing.ml/dev/). It may be considered a sibling of PR #120.\r\n\r\n**Motivation**\r\n\r\nThe rationale for doing this is as follows (most relevant reasons first):\r\n\r\n1. We shouldn't reinvent the wheel here, as CES doesn't claim to innovate in the area of MCMC sampling (taken on its own).\r\n  a. It's reasonable to assume a user of our package who has done MCMC in Julia is familiar with Turing and its interface: Turing.jl is a major part of the Julia ecosystem, playing the role [stan](https://mc-stan.org/) does for R. \r\n  b. Extensibility via this interface is a design goal of Turing, so one may assume its developers have thought more about how to best design an appropriate API (e.g. [thread](https://github.com/TuringLang/AbstractMCMC.jl/discussions/72)). The separation of concerns used by AbstractMCMC (bullet list below) is the logical way to split up the problem.\r\n2. In practice (the examples), it streamlines code: `MCMCWrapper` objects can be reused, and constructor arguments are taken from the `Emulator` to avoid potential bugs from inconsistencies. \r\n2. MCMCChains implements several diagnostics for MCMC convergence, in the form of [statistics](https://turinglang.github.io/MCMCChains.jl/dev/diagnostics/) and [plots](https://turinglang.github.io/MCMCChains.jl/dev/statsplots/).\r\n3. AbstractMCMC implements thread- and process-parallel sampling of multiple chains. MCMC folklore is that one obtains the most robust estimates by running \"a few\" \"medium-length\" chains from different initial conditions, e.g. [Gilks et. al. 1996](https://books.google.com/books/about/Markov_Chain_Monte_Carlo_in_Practice.html?id=ATimDAEACAAJ).\r\n4. Interoperability with all of Turing.jl; this may be useful in the future if the package adds samplers or other features we'd like to use off-the-shelf.\r\n\r\n**Implementation**\r\n\r\nAbstractMCMC is described in the Turing docs [here](https://turing.ml/dev/docs/for-developers/interface) and [here](https://turing.ml/dev/docs/for-developers/how_turing_implements_abstractmcmc), although this is brief, and reading the [AdvancedMH](https://github.com/TuringLang/AdvancedMH.jl) source was more enlightening. \r\n\r\nIn addition to AbstractMCMC, the PR uses the [AdvancedMH](https://github.com/TuringLang/AdvancedMH.jl) extensible implementation of Metropolis-Hastings, and [MCMCChains](https://github.com/TuringLang/MCMCChains.jl) for storing sampling runs and sampling from the posterior. Turing.jl itself isn't brought in as a dependency.\r\n\r\nThis PR splits up the functionality in the existing `MCMC` class into three classes:\r\n\r\n- A `AdvancedMH.DensityModel` child class which computes log-likelihood. This simply wraps the Emulator instance.\r\n- A `AdvancedMH.Proposal` child class  which generates proposal moves for Metropolis-Hastings. This allows us to plug in different sampling algorithms, such as preconditioned Crank-Nicholson (PR #124; not done here).\r\n- `MCMCChains.Chain`, a struct returned as the sampler output. By not storing the sampling results in the `MCMCWrapper` object, it can be reused to configure multiple MCMC runs.\r\n\r\nThe new `MCMCWrapper` class simply wraps the first two objects, performing the same standardization that was performed by the Emulator (to ensure consistency, this information is taken from the Emulator instance itself). `sample_posterior!` is replaced by new methods for `sample`, which return instances of `MCMCChains.Chain`.\r\n\r\n\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-25T19:14:06Z",
+    "deletions": 845,
+    "labels": [],
+    "mergedAt": "2022-05-06T19:55:24Z",
+    "number": 130,
+    "title": "[WIP] Modular Sampler interface"
+  }
+]

@@ -1,0 +1,158 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves https://github.com/CliMA/Oceananigans.jl/issues/4369\r\n\r\nI am curious what others think. The reason why 86400.0 is valid is because it can be converted to `Int` (which happens under the hood). So if users do math on their iteration interval they will have to manually convert it to `Int`.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6xsmy0",
+        "number": 4369,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4369"
+      }
+    ],
+    "createdAt": "2025-04-09T02:12:02Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-04-09T04:22:44Z",
+    "number": 4370,
+    "title": "Require `interval::Int` in IterationInterval?"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors `Oceananigans.fields(::HydrostaticFreeSurfaceModel)` so that it only contains non-nothing fields. To do this we add a function `constructor_field_names` which basically returns the same thing as `keys(fields(model))`, but before the model is constructed.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-08T18:45:41Z",
+    "deletions": 68,
+    "labels": [],
+    "mergedAt": "2025-04-09T12:07:18Z",
+    "number": 4366,
+    "title": "Refactor hydrostatic free surface names"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR avoids storing the offset in a field to be passed to a kernel and reuses the `OffsetStaticSize` type (as done for `StaticSize` in KA) so that the offsets are inferrable by the compiler and this seems to reduce the register usage.\r\n\r\nThis seems to remove the performance hit for the nonhydrostatic model that we see in #4365\r\nFor reference, here are the two different profiles:\r\nOceananigans main: \r\nhttps://www.dropbox.com/scl/fi/jy2wbs7wrgqar5d62ysn5/oceananigans_96.nsys-rep?rlkey=scx32srmj6peymz1g00y9t6kf&st=2tgral26&dl=0\r\nThis PR\r\nhttps://www.dropbox.com/scl/fi/qgf1ydrcm9i5ppr5z2tcq/oceananigans_ss-correct-kernel.nsys-rep?rlkey=3qye1njd56ec2fy17sznznek9&st=uq8gxj95&dl=0\r\n\r\nIn theory this should close #4365 because it recovers the previous performance of kernels launched without `exclude_periphery` but I would prefer to keep #4365 open until we have a test to benchmark performance",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6xlY_-",
+        "number": 4365,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4365"
+      }
+    ],
+    "createdAt": "2025-04-09T11:16:09Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2025-04-09T13:03:30Z",
+    "number": 4372,
+    "title": "Remove the performance hit from using `KernelOffsets`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-09T13:58:24Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-04-09T13:58:33Z",
+    "number": 4374,
+    "title": "Bump to 0.96.19"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This fixes a bug in the `summary` method for `ConjugateGradientPoissonSolver`. It also adds a docstring. @xkykai I believe you coded this, right? Can you take a look at the docstring to make sure it's okay?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-09T13:49:13Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-04-09T16:06:39Z",
+    "number": 4373,
+    "title": "Fix `summary()` for `ConjugateGradientPoissonSolver`"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-07T16:52:05Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-04-09T21:20:29Z",
+    "number": 4360,
+    "title": "Test zstar on a tripolar grid"
+  }
+]

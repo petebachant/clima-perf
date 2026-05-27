@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "See this comment on this PR and its related issue:\r\nhttps://github.com/JuliaGPU/CUDA.jl/pull/2907#issuecomment-3361599935\r\n\r\nIn summary, there are bugs in `sum(...; dims=1)` in `CUDA@5.9.0`, which will be fixed when a new tagged version of `CUDA@5.9.1` is released. That is not done yet. In the meantime, there is a backport `CUDA@5.8.5` which fixes the bug.\r\n\r\nWe should open up CUDA compat for `5.8.5` as well right now since I wouldn't be comfortable using `CUDA@5.9.0` given this known issue.\r\n\r\nOnce `CUDA@5.9.1` is released I will bump compat up.\r\n\r\n@navidcy @simone-silvestri @ali-ramadhan @tomchor @glwagner ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-14T16:08:13Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-10-15T00:52:05Z",
+    "number": 4856,
+    "title": "Accomodate `CUDA@5.8.5` in Project.toml temporarily"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "to capture #4856\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-15T00:53:48Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-10-15T00:53:59Z",
+    "number": 4858,
+    "title": "Bump version from 0.100.3 to 0.100.4"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This part of the code was not updated to work with #4383.\r\nThis PR fixes it.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-15T11:57:36Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2025-10-15T14:06:27Z",
+    "number": 4859,
+    "title": "Add fields to `implicit_step!` in `tke_timestep!`"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #4384\r\n\r\nI believe the changes in this PR do fix the main issue of NetCDF output for the free surface height not working. But I'm not quite happy with this solution so I've opened a draft PR for now.\r\n\r\nWhile there should be better support for windowed field output, I ended up having to explicitly check for the free surface =/ Been also wondering if it's almost easier and cleaner to just special case the free surface just like how we do for `LagrangianParticles`.\r\n\r\nNetCDF tests passed locally but I will revisit this PR soon with a fresh mind.\r\n\r\nSome potential immediate changes/improvements:\r\n* https://github.com/CliMA/Oceananigans.jl/issues/4384#issuecomment-2815787495",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6yD1bA",
+        "number": 4384,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4384"
+      }
+    ],
+    "createdAt": "2025-05-30T15:27:21Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2025-10-15T14:18:20Z",
+    "number": 4567,
+    "title": "(0.100.5) Fix outputting index-reduced fields like the free surface height"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a macro that should allow us to write, for example:\r\n\r\n```julia\r\nfunction byslab(fn, space::Spaces.AbstractSpace)\r\n    byslab(fn, ClimaComms.device(space), space)\r\nend\r\n\r\nfunction byslab(fn, device::ClimaComms.AbstractCPUDevice, space::Spaces.AbstractSpectralElementSpace)\r\n    Nh = Topologies.nlocalelems(space.topology)::Int\r\n    @inbounds begin\r\n        ClimaComms.@threaded device for h in 1:Nh\r\n            fn(SlabIndex(nothing, h))\r\n        end\r\n    end\r\nend\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-22T19:51:32Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-06-22T23:46:16Z",
+    "number": 54,
+    "title": "Add threaded macro"
+  }
+]

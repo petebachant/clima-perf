@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1184,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Addresses #251  \r\nThis PR will enable users to learn parameters that are discretizations of functions. \r\n\r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Currently allows: ND -> 1D functions with zero-mean allowed, stored flat. \r\n- hierarchy: `GaussianRandomField <: FunctionParameterDistributionType <: ParameterDistributionType`\r\n- We use the package `GaussianRandomFields.jl` as the back-end\r\n- We provide a default for the prior coefficients distribution under-the-hood, when given a GRF. Otherwise we allow a user-defined coefficient parameter distribution\r\n- When built as a `ParameterDistribution`, the user provides a single constraint and this constraint is applied to all discretization points when the function is constructed and constrained.\r\n- Compatible with the transform mappings: for parameter distributions. E.g the default is now, given coefficients vector `x` in unconstrained space. `u->c ` will transform the unconstrained to constrained coefficients, then builds the unconstrained function, then constrains this function\r\n- Docstrings\r\n- Darcy Flow Example in `example/Darcy` Note: We generate truth and solve problem with efunction expansion.\r\n\r\n### Plots from Tests\r\n1D Samples of the default prior distribution based on `GRF(Matern(smooth. 1.0,corr. len. 0.1))`\r\n![GRF_samples](https://user-images.githubusercontent.com/47412152/226429501-7c747e3a-3a99-431e-9e5b-25883913dda7.png)\r\n\r\n\r\nA 2D sample with `bounded(-5,-3)` constraint\r\n![GRF_samples_constrained](https://user-images.githubusercontent.com/47412152/225775099-a2368aba-061c-492b-bcd9-25545607a3b0.png)\r\nThe unconstrained 2D sample\r\n![GRF_samples_unconstrained](https://user-images.githubusercontent.com/47412152/225775102-76411524-3b49-4e2b-bdcd-3d31c2e0481d.png)\r\n\r\n### Results from Darcy Flow:\r\n**Prior Mean**\r\n![output_it_0](https://user-images.githubusercontent.com/47412152/226073056-1e356aee-06df-42e7-bec1-6c3a77febb3e.png)\r\n**Final Ensemble Mean**\r\n![output_it_10](https://user-images.githubusercontent.com/47412152/226073057-9b7cf60f-43f6-4701-b41a-550ecdb7bce7.png)\r\n**Truth**\r\n![output_true](https://user-images.githubusercontent.com/47412152/226073058-721ccbe1-83ec-4a61-a0f2-bb8c48c108ca.png)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-15T01:16:46Z",
+    "deletions": 89,
+    "labels": [],
+    "mergedAt": "2023-04-19T00:30:19Z",
+    "number": 252,
+    "title": "Add GaussianRandomFields to ParameterDistributions"
+  }
+]

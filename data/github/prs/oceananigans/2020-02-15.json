@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 436,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR aims to create a single `FieldBoundaryConditions` function to replace `HorizontallyPeriodicBCs` and `ChannelBCs`. This paves the way for boundary conditions to become a `Field` property (#606).\r\n\r\nIt's a pretty big breaking change so would be good to agree on the design and API before refactoring.\r\n\r\nSide note: Ideally we would set `default_bc(::Flat) = nothing` but until we elide operations and halo filling along `Flat` dimensions, I think we should use `default_bc(::Flat) = PeriodicBC()`.\r\n\r\n@glwagner Let me know if this looks like what we discussed. If so, I'll go ahead and change all the tests and examples to use it instead of `HorizontallyPeriodicBCs` and `ChannelBCs`.\r\n\r\nReminder to self: Documentation, especially model setup, will have to be revised as part of this PR.",
+    "changedFiles": 36,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-02-11T01:51:13Z",
+    "deletions": 340,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2020-02-15T15:27:56Z",
+    "number": 620,
+    "title": "Create field boundary conditions using information from grid topology"
+  }
+]

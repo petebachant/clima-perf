@@ -1,0 +1,239 @@
+[
+  {
+    "additions": 272,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR picks up from where PR #479 left off. From #479:\r\n\r\n> This PR adds two regression tests for models that use the ConstantSmagorinsky closure and the AnisotropicMinimumDissipation closure. It also organizes the regression tests into a separate directory.\r\n\r\nResolves #473",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MDYzMTU5NDQ=",
+        "number": 473,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/473"
+      }
+    ],
+    "createdAt": "2019-10-16T23:27:15Z",
+    "deletions": 193,
+    "labels": [],
+    "mergedAt": "2019-10-17T03:57:03Z",
+    "number": 484,
+    "title": "Regression tests for models with LES closures (round 2)"
+  },
+  {
+    "additions": 1296,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR introduces 'arbitrary tracer' functionality to Oceananigans.\r\n\r\nWith this PR, the user is now able to specify which tracers they would like to include in their simulation via the `Model` constructor:\r\n\r\n```julia\r\nmodel = Model(..., tracers=(:b, :c1, :c2), ...)\r\n```\r\n\r\n## User-facing considerations\r\n\r\n1. The specified tracers must be consistent with the specified buoyancy model. This consistency is ensured by `validate_buoyancy` in the `Model` constructor. For `BuoyancyTracer`, the user must specify a tracer named `:b`. For `SeawaterBuoyancy`, the user must specify tracers named `:T` and `:S`. (In the future, we could also allow the names of these buoyancy, temperature, and salinity tracers to be specified in the constructor for the respective buoyancy models, eg `SeawaterBuoyancy(temperature=:T, salinity=:S)`.)\r\n\r\n2. The constructor for `ModelForcing` (which will have to be merged with #444 when it is approved) now allows the user to specify forcing for any of the tracer fields. If the user specifies a forcing for a tracer field that does not exist, an error is thrown. If a user does not specify a forcing for some tracer field, a default zero forcing is applied.\r\n\r\n3. The same logic for `ModelForcing` applies to `BoundaryConditions` / `SolutionBoundaryConditions`. When boundary conditions for a tracer field are unspecified, a default tracer boundary condition is inferred from the x-velocity field: tracers either inherit `Periodic` boundary conditions, or are given a `Flux, Nothing` boundary condition for all other cases.\r\n\r\n4. For closures, all tracer-diffusivity-related fields permit users to specify either:\r\n\r\n* a constant (applied to all tracers), or \r\n* a `NamedTuple` with fields for *every* tracer. \r\n\r\nIn the future, we could possibly implement some mixed behavior where the user specifies both a default *and* particular values for tracer diffusivity. This would be useful in the (possibly rare) use-case of a large number of tracers with the same diffusivity, but where one or two of them require a special, different diffusivity. I am not sure this API is necessary so I left it for future work.\r\n\r\nDiffusivity-like fields include:\r\n\r\n* `\u03ba` (constant component of tracer diffusivity) for `ConstantIsotropicDiffusivity`, `AnisotropicMinimumDissipation`, and `ConstantSmagorinsky`\r\n* `Pr` (turbulent Prandtl number) for `ConstantSmagorinsky`\r\n* `\u03bah` and `\u03bav` for `ConstantAnisotropicDiffusivity`.\r\n\r\n## Internal algorithmic considerations\r\n\r\nThis implementation includes a major refactor of the time-stepping algorithm. In particular, kernels are launched for *each* tracer for all operations that involve tracers. This differs from the previous pattern, in which a single kernel was called in some cases (for example, to update the velocity and tracer fields, or to store previous source terms). The reason for this change is because I ran into some issues (dynamic function invocations) using `ntuple` to unroll a loop over tracers inside the kernel. In addition, I think that with a large number of tracers the kernels may become too large and their performance could degrade (but I'm not sure).\r\n\r\nThis refactoring of the algorithm means we need to \r\n\r\n- [ ] benchmark the changes in this PR to see if there are any significant changes in model performance. \r\n\r\n@ali-ramadhan, can you help with this?\r\n\r\nIf there are changes in model performance, we can work on unrolling loops over the tracer fields *inside* our kernels. This is probably possible; it just requires some debugging. We would probably also want to make sure that this doesn't lead to poor performance for up to O(10) tracers.\r\n\r\nIf any of this PR is not satisfactory, I'm happy to work on it and iterate until the PR is in mergeable shape.\r\n\r\nResolves #25 \r\nResolves #430 \r\nPartially addresses #448 ",
+    "changedFiles": 34,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MDg0NDAwNjA=",
+        "number": 25,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/25"
+      },
+      {
+        "id": "MDU6SXNzdWU0OTkxODA5MTM=",
+        "number": 430,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/430"
+      }
+    ],
+    "createdAt": "2019-10-09T12:44:30Z",
+    "deletions": 937,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-10-17T19:07:30Z",
+    "number": 452,
+    "title": "Arbitrary tracers"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-10-17T20:28:34Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2019-10-17T20:29:00Z",
+    "number": 486,
+    "title": "Bump v0.12.0"
+  },
+  {
+    "additions": 1329,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This will be one big PR that merges in\r\n1. code/interface documentation from docstrings,\r\n2. high-level documentation about the continuous equations and numerical methods employed,\r\n3. documentation about the verification experiments, and\r\n4. generated Markdown tutorials from the Literate.jl examples.\r\n\r\nOnce we're happy with the documentation, we'll be ready to submit an entry to the *Journal of Open Source Software*.\r\n\r\nHigh-level documentation can be found at: https://www.overleaf.com/project/5d73051a46be42000164d1ef\r\n\r\n## Documentation contents\r\n1. Documentation home page (+ package description)\r\n2. Continuous equations\r\n3. Numerical methods\r\n\t1. Overview of time-stepping algorithm\r\n\t2. Finite volume method\r\n\t3. Staggered grid\r\n\t4. Fractional step method\r\n    5. Time stepping\r\n    6. Spatial operators\r\n    7. Poisson solvers\r\n    8. Boundary conditions\r\n    9. Turbulence closures\r\n    10. Large eddy simulation\r\n4. Model setup (description of all the options)\r\n5. Examples\r\n\t1. Simple diffusion\r\n    2. Two-dimensional turbulence\r\n    3. Ocean wind mixing and convection\r\n    4. Ocean convection with plankton\r\n    5. Internal wave\r\n    6. Thermal rising bubble?\r\n    7. Lid-driven cavity?\r\n    8. Eddying channel?\r\n6. Verification experiments\r\n    1. Taylor-Green vortex\r\n    2. Lid-driven cavity?\r\n    3. Stratified Couette flow\r\n    4. Free convection (Split into ocean and Kato & Phillips?)\r\n7. Gallery (movies!)\r\n8. Performance benchmarks\r\n9. Documentation of public (+ private?) user interface\r\n10. References section (if we want to store them all on one page)\r\n\r\n## References in the docs\r\nUnfortunately there is no support for bibtex citations/references in Documenter.jl and we have a lot of them =/ This has been brought up by @simonbyrne and @charleskawczynski: https://github.com/climate-machine/CLIMA/issues/152\r\n\r\nFor now I've just copy pasted stuff from the LaTeX document and left in the `\\citet` and `\\citep` commands. But we have a few options:\r\n1. Painstakingly format all the citations and references by hand using Markdown footnotes.\r\n2. Cite judiciously so we don't have to manually format as many references.\r\n3. Work on a general solution that integrates with Documenter.\r\n\r\nI'm leaning towards option 2.\r\n\r\nEDIT: @johncmarshall54 argues in favor of option 1, which I'm now leaning towards as well.\r\n\r\n## Examples\r\n\r\nThanks @glwagner for writing all the examples, they generate beautiful tutorials that we can directly embed in the documentation!\r\n\r\n1. I had to modify the examples slightly as Documenter.jl will only show plots returned using `gcf()`.\r\n2. We should define a `show` function for `Model` as the current output pollutes all the examples.\r\n3. The two ocean convection examples take forever to compile to docs because they generate movies and Documenter might be trying to embed each frame as a separate image or something. It might be worth discussing whether we should just make all the examples Documenter/tutorial friendly, which means switching from movies to plotting a few frames.\r\n\r\n## Some comments\r\n0. Unfortunately if we want to look at the docs, we have to build it locally for now =/\r\n1. Documenter uses KaTeX to render math, which is quite nice, but you have to modify the original LaTeX and avoid using fancy packages. But it has `\\bm` which is awesome!\r\n2. I'm depending on `Documenter#master` as the upcoming v0.24 has an awesome new layout and dark mode.\r\n3. Documentation building on Travis is failing so gotta figure this out as well.\r\n\r\nResolves #102\r\nResolves #222\r\nResolves #240\r\nResolves #327\r\nResolves #332\r\nResolves #353\r\nResolves #354",
+    "changedFiles": 45,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTY0MjQ0NjQ=",
+        "number": 102,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/102"
+      },
+      {
+        "id": "MDU6SXNzdWU0NDY3Njk3MDM=",
+        "number": 222,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/222"
+      },
+      {
+        "id": "MDU6SXNzdWU0NDg2NDE1MDg=",
+        "number": 240,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/240"
+      },
+      {
+        "id": "MDU6SXNzdWU0NzYxNDUxMzU=",
+        "number": 327,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/327"
+      },
+      {
+        "id": "MDU6SXNzdWU0NzY5MjUyOTU=",
+        "number": 332,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/332"
+      },
+      {
+        "id": "MDU6SXNzdWU0Nzk0MzI1NzY=",
+        "number": 353,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/353"
+      },
+      {
+        "id": "MDU6SXNzdWU0Nzk4ODI1MDQ=",
+        "number": 354,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/354"
+      }
+    ],
+    "createdAt": "2019-10-14T13:01:36Z",
+    "deletions": 762,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2019-10-17T22:22:27Z",
+    "number": 474,
+    "title": "All the documentation!"
+  }
+]

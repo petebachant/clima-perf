@@ -1,0 +1,142 @@
+[
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "This reverts commit 4088ffb694321a5cd5c3a3d07b2d259fedfb101c which was not tested in CI and breaks CI.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-07T17:48:41Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2024-10-07T18:50:11Z",
+    "number": 824,
+    "title": "Revert \"remove some allocations in csf, params broadcast\""
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Fixes some of the rendering in the docs.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-07T06:24:41Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-10-07T19:34:21Z",
+    "number": 822,
+    "title": "Fix docs rendering"
+  },
+  {
+    "additions": 106,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "When root_distribution was removed, it was replaced with rooting_depth, which can be a field. The Plant hydraulics model integration tests was changed to test rooting_depth as both a scalar and a field. In order to make the broadcast work, a wrapper function was used around NLsolve. This works fine with cpu, but errors on gpu because NLSolve does not return a bitstype. \r\n\r\nPlant hydraulics model integration tests now tests rooting_depth\r\nas a field and as a float. The issue with this test and fields on the GPU\r\nwas the usage of NLSolve. This test first solves for the steady state of the hydraulics\r\nsystem using NLSolve. Then, the solution is used to check that evaluating the\r\ntendecy of the model also results in a steady state. Because the rooting_depth\r\nfield is constant, this commit uses NLsolve with a scalar of that constant.\r\nThen, when the model's tendency is evaluated, the field is used.\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake tests pass when ran on gpu\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n- make test_plant_hydraulics.jl solve for equilibrium using scalar rooting_depth\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-03T23:55:41Z",
+    "deletions": 132,
+    "labels": [],
+    "mergedAt": "2024-10-07T20:31:11Z",
+    "number": 813,
+    "title": "Fix plant_hydraulics_test to work on GPU"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n#675 requires ClimaCore v0.14.18, but didn't update the compat. This PR corrects that",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-07T17:55:15Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-10-07T20:33:12Z",
+    "number": 825,
+    "title": "ClimaCore compat at 0.14.18"
+  },
+  {
+    "additions": 134,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nSince evaporation is no longer included in the SH computation in [SF.jl](https://github.com/CliMA/SurfaceFluxes.jl/pull/176/files#diff-6059b3ed786f8df9a4697af825ca0c680479fec22c617e328302dc4e2aaece66R687-R688), we now use the output of `sensible_heat_flux` provided directly by SF.jl's call to `surface_conditions`. This will make fluxes calculated in atmos and in land more similar, which is a good to prepare for coupled runs.\r\n\r\nOur fluxes differ from those calculated in SurfaceFluxes still in these ways:\r\n- land components usually require `r_sfc`, an additional resistance term, in the evaporation calculation.\r\n- for the bucket and snow models, this is the only change\r\n- for the soil model, we do not allow for condensation or frost. Again we modify the evaporation using a surface resistance. We also compute SF twice, once for liquid water, and once for ice. This requires us to combine the SH_ice and SH_water into a single number also.\r\n- for the canopy, the surface resistance affects SH and E\r\n\r\n\r\n\r\n## To-do\r\n\r\n## Content\r\nNote that this change required an increase in the threshold for passing in one of our tests (for the canopy temperature jacobian contribution from SHF). Previously, we used only cp_m of the atmos in the SH flux, which is indep of T_canopy. now, the coefficient in the Jacobian depends on cp_m_sfc. This does depend on T_canopy, because it depends on q_canopy, which we approximate as q_sat(T_canopy).  We hypothesize that this is why the error in the SH approximation grew with this PR. @trontrytel \r\n\r\nPrevious: SHF = -rho_sfc cp_m_atmos (T_atmos - T_canopy)/resistances\r\nNow: SHF = -rho_sfc/resistances *  [stuff indep of T_canopy ..... - cp_m_sfc(T_canopy)*T_canopy ....]\r\n\r\nSince we already have an issue open to improve the jacobian approximation, we are accepting this for now. @juliasloan25 \r\n\r\nFor good measure, though, I added the derivative of rho_sfc with respect to T_sfc\r\n\r\n## Comparisons\r\nThis PR followed by implicit canopy PR long run:\r\nLong Runs at 1/2 year:\r\nCanopy Temp: \r\n![image](https://github.com/user-attachments/assets/bac34e86-e7c9-4861-8ee3-61dfff5f46ed)\r\n![image](https://github.com/user-attachments/assets/04f62614-8a19-413a-a2d6-5039a74f87fb)\r\nET:\r\n![image](https://github.com/user-attachments/assets/5bd779ad-6a31-4fec-bb6f-aa445d02254f)\r\n![image](https://github.com/user-attachments/assets/0197941c-64ac-4186-b638-b2651cc9cf6e)\r\nSWC:\r\n![image](https://github.com/user-attachments/assets/85bc78fc-ee04-491b-95d0-30a8ceee72d8)\r\n![image](https://github.com/user-attachments/assets/d555d2c8-af33-4592-952b-998e6e044d61)\r\n\r\nCanopy Alone Convergence:\r\nthis PR vs current main\r\n![image](https://github.com/user-attachments/assets/e0f8fc38-e90f-4e74-bf2d-30c7a080b5d0)\r\n![image](https://github.com/user-attachments/assets/0ccc9f98-0a8e-4521-8946-36dbdf0728f8)\r\nErrors:\r\n![image](https://github.com/user-attachments/assets/47e118de-207c-43ef-8c47-7cc380421bdd)\r\n![image](https://github.com/user-attachments/assets/c8179d2b-3ae5-4e67-afc5-266e6e12c43f)\r\n\r\nSoilCanopy Convergence:\r\nthis PR vs current main\r\n![image](https://github.com/user-attachments/assets/7dd6835f-83b4-425a-8635-421fd188f683)\r\n![image](https://github.com/user-attachments/assets/aebfb0b9-a24b-40c6-bb8f-fa57e2e1bbfa)\r\nErrors:\r\n![image](https://github.com/user-attachments/assets/375810bc-9bbf-47e4-9e71-39e7f4b31c82)\r\n![image](https://github.com/user-attachments/assets/fe4cffa6-4c2f-430f-9333-aa674ddb9285)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-27T23:18:56Z",
+    "deletions": 77,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-10-07T20:54:20Z",
+    "number": 802,
+    "title": "Compute SHF using SF, do not re-compute offline"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe integrated_timestep_test.jl experiment takes the longest of everything in our CI. Specifically, it takes about 5 minutes longer than the GPU tests. Ideally it would take roughly the same amount of time as the GPU tests\r\n\r\nThis PR decreases the length of the experiment to decrease its runtime and speed up the overall CI\r\n\r\nIn the [buildkite run for this PR](https://buildkite.com/clima/climaland-ci/builds/5495#_), `integrated_timestep_test.jl` takes 13 mins and GPU tests take 15 mins",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-07T20:28:27Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-10-07T22:02:59Z",
+    "number": 826,
+    "title": "run integrated timestep test for 8hr"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Both cesm2_albedo_dataset_path and bareground_albedo_dataset_path now use the new ClimaArtifact cesm2_albedo. This commit also deletes src/standalone/Bucket/artifacts, which was in an include, but never used.\r\n\r\nPreviously, the there were to functions in Artifacts.jl, bareground_albedo_dataset_path and cesm2_albedo_dataset_path. These now call a  single function cesm2_albedo_dataset_folder and join path with the correct file name.  To completely conform to the way other ClimaArtifacts are used, the two functions that return the specific file path should be removed. However, this would make the places the files are used messy, so I left the functions.   \r\n\r\nNote that esw_albedo_Amon_CESM2_historical_r1i1p1f1_gn_185001-201412_v2.nc is replaced with sw_albedo_Amon_CESM2_historical_r1i1p1f1_gn_185001-201412_v2_no-nans.nc, which is exactly the same. \r\n\r\nFor more details see related ClimaArtifacts PR [here](https://github.com/CliMA/ClimaArtifacts/pull/48)\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR progressed towards #580 \r\nIt gets rid of ArtifactWrappers for land albedo and average bareground albedo. \r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-04T23:06:48Z",
+    "deletions": 76,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2024-10-07T22:09:16Z",
+    "number": 820,
+    "title": "Change albedo artifacts to use ClimaArtifacts"
+  }
+]

@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Moves some code loading, to make sure that we're overloading some OrdinaryDiffEq methods (`SplitFunction`). It turns out that it was, but moving this code up is also good because it confirms that there's no closures in these functions.\r\n - Hacks `OrdinaryDiffEq.calc_tderivative!` to skip calling `f` (this presumably is not needed when no explicit time derivatives exist).\r\n\r\nIt looks like:\r\n - All of our regression tests are passing, which is great\r\n - One additional RHS eval is eliminated (so we get a ~30% speedup)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-10T22:58:52Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2022-08-11T00:36:21Z",
+    "number": 738,
+    "title": "Make sure overloading, hack `calc_tderivative!`"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a flame graph for internal energy, in attempts to understand why the internal energy long run is significantly faster than the total energy one.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-10T23:21:29Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      }
+    ],
+    "mergedAt": "2022-08-11T01:08:20Z",
+    "number": 739,
+    "title": "Add internal energy flame graph"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "In #739, I forgot that the parsed args has all entries, so merging resulted in exactly the default configuration, what I want there is actually just non-defaults, so that overrides can be done on an existing config.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-11T14:29:14Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "0F15CE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7xE0vB",
+        "name": "Performance monitoring :rocket: :mag:"
+      },
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      }
+    ],
+    "mergedAt": "2022-08-11T18:01:33Z",
+    "number": 740,
+    "title": "Fix flame graphs"
+  }
+]

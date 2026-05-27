@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 253,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR makes it possible for users to enforce both open and closed boundaries for `AdvectiveForcing` for both immersed and domain boundaries. This is done by removing methods that enforced zero-flux through immersed boundaries. I'm also adding a test for this and a validation script which produces the following animations for open and closed boundaries, respectively:\r\n\r\nhttps://github.com/user-attachments/assets/457feb2e-f5d6-4f69-a02c-bf6ee2970b7c\r\n\r\nhttps://github.com/user-attachments/assets/8dc8844c-6627-484f-9c28-95db7653102e\r\n\r\nI also fixed a few errors/typos in other validation scripts.\r\n\r\n~Importantly, even after this PR, if a user passes a `Number` to `AdvectiveForcing` the behavior at domain and immersed boundaries remains different. Therefore this does *not* close https://github.com/CliMA/Oceananigans.jl/issues/4812, since a `Field` with proper boundary conditions is required to unify behavior across different boundaries.~",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7NmSc9",
+        "number": 4812,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4812"
+      }
+    ],
+    "createdAt": "2025-11-25T23:31:35Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2025-12-08T16:02:22Z",
+    "number": 4987,
+    "title": "Allow arbitrary fluxes across immersed boundaries and test this with `AdvectiveForcing`"
+  },
+  {
+    "additions": 421,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "I have created a first attempt at this PR to create the SphericalCoriolis as discussed in #4683 with @glwagner.  \r\n\r\nNote that none of the tests will work because I have not done a global search and replace for `HydrostaticSphericalCoriolis` for `SphericalCoriolis`, but I'm happy to do that after we have this set up the way we want.   We hope this will not be a breaking change, if done correctly.\r\n\r\nIn the new script, [spherical_coriolis.jl](https://github.com/CliMA/Oceananigans.jl/blob/fjp/SphericalCoriolis/src/Coriolis/spherical_coriolis.jl), I currently have an if statement that lets me switch from nonhydrostatic to hydrostatic model.  This is not of course what we want but was the easiest thing for me to set up.  \r\n\r\nBelow I have what I think are the two most pressing questions.\r\n\r\nQuestion 1:\r\nWhat can we use (or create) so that this script can determine whether we are using a nonhydrostatic or hydrostatic model?  I am happy to try whatever ideas people think are best. \r\n\r\nQuestion 2:\r\nCan somone look at the nonhydrostatic terms to see if these are completed correctdly?  Maybe @simone-silvestri ? \r\n\r\nCloses #4683 ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-02T20:30:04Z",
+    "deletions": 121,
+    "labels": [],
+    "mergedAt": "2025-12-08T16:13:12Z",
+    "number": 4695,
+    "title": "SphericalCoriolis which supports nonhydrostatic and hydrostatic formulations"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR updates the slack link in the README.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-08T16:01:03Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-12-08T20:04:17Z",
+    "number": 5022,
+    "title": "Update community resource links in README"
+  },
+  {
+    "additions": 62,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #4779",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7LGeWV",
+        "number": 4779,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4779"
+      }
+    ],
+    "createdAt": "2025-09-11T17:33:48Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2025-12-08T22:26:08Z",
+    "number": 4780,
+    "title": "Fix `clock` argument in `TriadIsopycnalSkewSymmetricDiffusivity`'s `explicit_R\u2083\u2083_\u2202z_c` function"
+  }
+]

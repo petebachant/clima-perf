@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "On main:\r\n\r\n```julia\r\njulia> PartialCellBottom(bottom)\r\nError showing value of type PartialCellBottom{typeof(bottom), Float64}:\r\nERROR: MethodError: no method matching Float64(::String)\r\n\r\nClosest candidates are:\r\n  Float64(::Int16)\r\n   @ Base float.jl:159\r\n  Float64(::Float16)\r\n   @ Base float.jl:262\r\n  Float64(::UInt128)\r\n   @ Base float.jl:180\r\n  ...\r\n\r\nStacktrace:\r\n  [1] tofloat(x::String)\r\n    @ Printf ~/bin/julia-1.10.8/share/julia/stdlib/v1.10/Printf/src/Printf.jl:482\r\n  [2] fmt\r\n    @ ~/bin/julia-1.10.8/share/julia/stdlib/v1.10/Printf/src/Printf.jl:499 [inlined]\r\n  [3] fmt\r\n    @ ~/bin/julia-1.10.8/share/julia/stdlib/v1.10/Printf/src/Printf.jl:311 [inlined]\r\n  [4] format\r\n    @ ~/bin/julia-1.10.8/share/julia/stdlib/v1.10/Printf/src/Printf.jl:832 [inlined]\r\n  [5] format(::Printf.Format{Base.CodeUnits{UInt8, String}, Tuple{Printf.Spec{Val{'s'}}, Printf.Spec{Val{'f'}}}}, ::String, ::String)\r\n    @ Printf ~/bin/julia-1.10.8/share/julia/stdlib/v1.10/Printf/src/Printf.jl:941\r\n  [6] summary(ib::PartialCellBottom{typeof(bottom), Float64})\r\n    @ Oceananigans.ImmersedBoundaries ~/repos/Oceananigans.jl/src/ImmersedBoundaries/partial_cell_bottom.jl:35\r\n  [7] show(io::IOContext{Base.TTY}, ib::PartialCellBottom{typeof(bottom), Float64})\r\n    @ Oceananigans.ImmersedBoundaries ~/repos/Oceananigans.jl/src/ImmersedBoundaries/partial_cell_bottom.jl:40\r\n  [8] show(io::IOContext{Base.TTY}, ::MIME{Symbol(\"text/plain\")}, x::PartialCellBottom{typeof(bottom), Float64})\r\n    @ Base.Multimedia ./multimedia.jl:47\r\n```\r\n\r\nThis PR fixes this error.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-20T13:58:49Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-04-21T01:12:25Z",
+    "number": 4425,
+    "title": "Fix summary for `PartialCellBottom`"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjIzNjE3Mzk1",
+      "is_bot": false,
+      "login": "NoraLoose",
+      "name": "Nora Loose"
+    },
+    "body": "This PR implements the improvements discussed in [#4395](https://github.com/CliMA/Oceananigans.jl/issues/4395):\r\n\r\n- Tracer conservation is now tested at every time step, rather than only at the end of the simulation.\r\n- Early stopping is triggered if any conservation test fails, reducing unnecessary computation.\r\n- In the tripolar test, the simulation now starts from randomly initialized velocities instead of rest, helping detect conservation issues earlier.\r\n- The tripolar grid has been reduced in size to improve computational efficiency.\r\n- Tests using a uniform vertical coordinate have been removed to reduce overall test runtime.\r\n\r\nCloses [#4395](https://github.com/CliMA/Oceananigans.jl/issues/4395).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6ydJ9W",
+        "number": 4395,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4395"
+      }
+    ],
+    "createdAt": "2025-04-15T19:04:03Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2025-04-21T18:51:16Z",
+    "number": 4403,
+    "title": "Improve z-star tracer conservation tests"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-21T21:07:39Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-04-21T22:52:22Z",
+    "number": 4426,
+    "title": "Add CATKE and GPU dycore paper references"
+  }
+]

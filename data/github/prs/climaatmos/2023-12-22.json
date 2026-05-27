@@ -1,0 +1,74 @@
+[
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nFixes a bug in the entrainment production and detrainment loss in the TKE equation. This is now consistent with the design doc. Also limits entrainment and detrainment by both w/dz and 1/dt to be safe. We can remove unnecessary limiters later.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-21T22:23:46Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2023-12-22T01:39:42Z",
+    "number": 2453,
+    "title": "fix entrainment and detrainment in TKE equation"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a conversion for the CAM-SE hyperviscosity. I plan to use this in the parameter sweeps.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-20T22:00:07Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-12-22T03:21:41Z",
+    "number": 2452,
+    "title": "Add hyperviscosity conversion for CAM-SE model"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "When only one MPI rank crashes, saving to file might lead to all MPI rank stalling. As a result, we can't (easily) dump the state for simulations that crash on distributed runs.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-22T20:07:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-12-22T21:53:41Z",
+    "number": 2455,
+    "title": "Don't save state for crashing MPI simulations"
+  },
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR:\r\n\r\n- ensures that Github action workflows are killed when a new commit is pushed to the same branch/PR (following\r\nhttps://stackoverflow.com/a/67939898)\r\n\r\n- removes the need for the test environment from builkite jobs. The test environment is used only for one job. When the depot is cold, instantiating the test environment takes several minutes (when we have a good depot it takes 1-2 minutes). Given that instantiating the environment has to run before all the tests, this leads to unnecessary latency.\r\n\r\n- adds a new GitHub workflow 'lookahead'. The lookahead workflow is non-required to merge PRs and runs tests and one simulation (the one removed from the buildkite run) with julia 1.9 and julia 1.10 and the latest dependencies.\r\n\r\n- update checkout action to v4 (should remove warnings about deprecated version of node)\r\n\r\n- removed a codecov action (we run codecov as part of ci.yml)",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-28T23:31:54Z",
+    "deletions": 75,
+    "labels": [],
+    "mergedAt": "2023-12-22T23:27:22Z",
+    "number": 2393,
+    "title": "Clean up Github Actions/buildkite"
+  }
+]

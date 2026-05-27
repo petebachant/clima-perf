@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe nightly AMIP runs are failing because diagnostics are saved with multiple periods, and in the recent diagnostics PR we removed the period selection in the case of having multiple. This is the error produced ([build](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/102#0192930e-b7df-4e8c-825c-9ae70f37ac8b)):\r\n```\r\nERROR: LoadError: Found multiple periods for ta: Set(Any[\"30d\", \"1M\"]). You have to specify it.\r\n...\r\n```\r\n\r\nPreviously, for simulations running longer than 90 days, we specified the monthly mean for diagnostics from ClimaCoupler using a period of `30days`. I'm not sure where the `1M` diagnostics came from - maybe atmos? Here I exchange the period of `30days` for `1months` to produce only one diagnostic output period.\r\n\r\n[passing build](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/108#_) - ran one tiny AMIP for 91 days to recreate issue with shorter turnaround time",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-16T20:27:25Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2024-10-17T01:17:18Z",
+    "number": 1023,
+    "title": "fix nightly AMIP diagnostics"
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "I believe the CG solver is always valid (at least, we will find out when it is not). This addresses the issue discussed in #4719",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-21T17:02:49Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-08-29T06:17:40Z",
+    "number": 4720,
+    "title": "Use CG as fallback solver for all cases"
+  },
+  {
+    "additions": 478,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Needed to complete https://github.com/CliMA/Oceananigans.jl/issues/3935\r\n\r\nThis PR allows us to dump grid data (and metadata) into a NetCDF and reconstruct the same grid from it later on:\r\n\r\n```julia\r\nds = NCDataset(filename, \"c\")\r\nwrite_grid_reconstruction_data!(ds, original_grid)\r\nclose(ds)\r\n\r\nreconstructed_grid = reconstruct_grid_from_netcdf(filename)\r\noriginal_grid == grid # true\r\n```\r\n\r\nIt also adds tests for the grid reconstruction utilities that already existed, but which do not use NetCDF. (Namely, `constructor_arguments()`.)",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-21T20:20:36Z",
+    "deletions": 58,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-08-29T06:18:44Z",
+    "number": 4660,
+    "title": "Add grid reconstruction utilities to reconstruct Grids from NetCDF outputs"
+  }
+]

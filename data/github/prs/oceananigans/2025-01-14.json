@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "There is a problem at the moment with the `mask_immersed_field_xy!` function. The implementation leverages a `scalar_mask` which receives a `mask` optional argument that seems to create problems with inference on the CPU.\r\nthis PR removes the scalar mask function and restructures the masking function such that we remove all the extra allocation (that causes GC time).\r\nFor example within the following MWE\r\n```julia\r\nRandom.seed!(1234)\r\ngrid = RectilinearGrid(size=(50, 50, 50), extent=(1, 1, 1))\r\ngrid = ImmersedBoundaryGrid(grid, GridFittedBottom((x, y)->-rand()))\r\nc = CenterField(grid)\r\ncx = sum(c, dims=1)\r\ncy = sum(c, dims=2)\r\ncz = sum(c, dims=3)\r\n```\r\non main we get\r\n```julia\r\njulia> @time mask_immersed_field!(c)\r\n  0.000286 seconds (20 allocations: 10.234 KiB)\r\n\r\njulia> @time mask_immersed_field!(cx)\r\n  0.000266 seconds (19 allocations: 10.141 KiB)\r\n\r\njulia> @time mask_immersed_field!(cy)\r\n  0.000257 seconds (19 allocations: 10.141 KiB)\r\n\r\njulia> @time mask_immersed_field!(cz)\r\n  0.001513 seconds (12.52 k allocations: 6.190 MiB)\r\n\r\n```\r\nIn this PR we get\r\n```julia\r\njulia> @time mask_immersed_field!(c)\r\n  0.000299 seconds (20 allocations: 10.234 KiB)\r\n\r\njulia> @time mask_immersed_field!(cx)\r\n  0.000249 seconds (19 allocations: 10.141 KiB)\r\n\r\njulia> @time mask_immersed_field!(cy)\r\n  0.000269 seconds (19 allocations: 10.141 KiB)\r\n\r\njulia> @time mask_immersed_field!(cz)\r\n  0.000063 seconds (20 allocations: 10.234 KiB)\r\n\r\n```\r\n\r\nThis PR also unifies the interface for `mask_immersed_field_xy!` with the one for `mask_immersed_field!` by providing a `mask` keyword argument also for the `mask_immersed_field!` function",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-12T20:23:23Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2025-01-14T16:43:23Z",
+    "number": 4040,
+    "title": "Optimize masking xy planes"
+  }
+]

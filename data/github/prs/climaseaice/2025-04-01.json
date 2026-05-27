@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Sea ice dynamics are two-dimensional, if the grid is also `Flat` in the vertical there is no problem.\r\nIf the grid is not `Flat`, we need to evaluate tendencies either at `k=1` or `k=grid.Nz`.\r\n\r\nTo allow running the sea ice on the ocean grid (where it is more logical it should live and also the convention of ClimaOcean...), this PR switches the evaluation of tendencies at `k=grid.Nz` rather than `k=1`. \r\n\r\nNote that this affects only immersed boundary grids where we need to evaluate immersed terms. \r\nFor all other grids there is no influence of the k index as all fields involved in dynamics computations are `Nothing` in the vertical",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-31T15:17:34Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2025-04-01T06:21:45Z",
+    "number": 68,
+    "title": "Last index for `SeaIceMomentumEquations`"
+  }
+]

@@ -1,0 +1,233 @@
+[
+  {
+    "additions": 2611,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR felt so good!\r\n\r\nThe internal code base had to be massively refactored thus the size of this PR but I think it's taking the code base in the right direction with submodules for everything, and will make implementing big new features (like vertically stretched grid and MPI) much easier and cleaner.\r\n\r\nThere were a few breaking changes, e.g. `Face` and `Cell` moving to `Oceananigans.Fields`. In particular, Oceananigans does not export `day`, `minute`, `second`, and `hour` anymore as they conflict with the `Dates` module used by the logger. And it might also confuse users as to why Oceananigans is exporting these common names. They are now exported by `Oceananigans.Utils`.\r\n\r\nBut otherwise, the impact to user scripts is pretty minimal (the examples barely changed).\r\n\r\nThis should be merged as the next PR ASAP as merging anything else in will probably create some form of merge conflict hell.\r\n\r\nResolves #456\r\nResolves #495\r\nResolves #497\r\nResolves #563",
+    "changedFiles": 104,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MDUyMjU1MDA=",
+        "number": 456,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/456"
+      },
+      {
+        "id": "MDU6SXNzdWU1MTEzNDMxNjQ=",
+        "number": 495,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/495"
+      },
+      {
+        "id": "MDU6SXNzdWU1MTE0OTYxNjY=",
+        "number": 497,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/497"
+      },
+      {
+        "id": "MDU6SXNzdWU1MzYzMzc3ODI=",
+        "number": 563,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/563"
+      }
+    ],
+    "createdAt": "2020-01-11T14:28:32Z",
+    "deletions": 2382,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2020-01-14T11:07:57Z",
+    "number": 591,
+    "title": "Submodules for everything!"
+  },
+  {
+    "additions": 1322,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is a stab at implementing the pressure solvers plan/overhaul outlined in #586. So far it implements pressure solvers for all types of domains (triply/doubly periodic, channels, and boxes) on regular grids (except boxes on GPUs for now).\r\n\r\nEqually important, it refactors and cleans up the pressure solvers so that we can now easily add in pressure solvers for vertically stretched grids and distributed models.\r\n\r\nA lot of cleanup was done in the process as well. Pressure solver code and kernels have been fully moved from the `TimeSteppers` submodule to the `Solvers` submodule. Different parts have been reorganized into multiple files and the index permutation business has been abstracted away a bit so we have fewer ugly kernels (and fewer kernels!).\r\n\r\nI could have gone much further in condensing the code base and number of pressure solvers. You'll notice quite a bit of code repetition, but I think for now and the forseeable future this is actually a good thing. The pressure solver code is nontrivial and keeping it as simple as possible will improve the readability and longevity of the code base.\r\n\r\nIt's also easier to add and modify pressure solvers now. For example, if @sandreza wants to implement a fast pressure solve that only works for horizontally periodic domains (Kleiser-Schumann?), it's now much easier to do that.\r\n\r\nI should probably add some benchmarks.",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-01-06T20:01:18Z",
+    "deletions": 899,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2020-01-14T13:21:47Z",
+    "number": 589,
+    "title": "Pressure solvers for everything!"
+  },
+  {
+    "additions": 253,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a vertically stretched grid.\r\n\r\nResolves #47\r\nWorks towards #471 \r\nResolves #531\r\nResolves #544 ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MDk0MDM2MzU=",
+        "number": 47,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/47"
+      },
+      {
+        "id": "MDU6SXNzdWU1MjIzODI0NTA=",
+        "number": 531,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/531"
+      },
+      {
+        "id": "MDU6SXNzdWU1MzEzOTIyNDY=",
+        "number": 544,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/544"
+      }
+    ],
+    "createdAt": "2019-12-02T15:00:03Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2020-01-14T13:23:11Z",
+    "number": 543,
+    "title": "Vertically stretched Cartesian grid"
+  },
+  {
+    "additions": 175,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR aims to introduce and integrate Poisson solvers for vertically stretched grids developed by @christophernhill and @maleadt. Once this is merged alongside with PR #283 we should be able to support vertically stretched grid.\r\n\r\nFor PPN boundary conditions, the system is solved for by eigenvalue-eigenvector factorization via FFTs in the horizontal and we end up with `Nx*Ny` tridiagonal systems, one for each column so they can be solved in parallel. We might be able to speed up the already fast tridiagonal solve via cyclic reduction. For PNN boundary conditions, it should work if we use an FFT in the x and a DCT in the y.\r\n\r\nSo far I have a working 1D solver. The two tricks that had to be made were:\r\n1. @christophernhill figured out that we need to stop the algorithm once a zero eigenvalue is reached. This should only occur at the last element for our tridiagonal systems.\r\n2. There are `Nz+1` faces in the vertical but we only keep track of the first `Nz`. The tridiagonal system needs to explicitly account for all `Nz+1` faces. Thus we impose the staggered Neumann boundary conditions at `k=Nz+1` and the (Nz+1)th entry of right-hand-side is zero. (Chris probably told me this but I forgot...) Previously, the DCT did this for us as all the eigenfunctions satisfied the boundary condition anyways.\r\n\r\nI tested it against our existing solver but it doesn't work for variable dz yet. Not sure if it's because of my implementation of the Laplacian in PR #283 or because I discretized the vertical derivative incorrectly here. Just opening this PR early so everyone's in the loop.\r\n\r\nI'm not 100% sure whether we will be able to utilize cyclic reduction:\r\n* I think you need a symmetric tridiagonal system (or at least block-symmetric) which we don't have when the grid is vertically stretched. Maybe this is a sign that I discretized things wrong?\r\n* It can be modified for Neumann boundary conditions (which break the symmetry on the first and last rows) but in this case it seems cyclic reduction must be applied recursively `m+1` times for a system of size `Nz = 2^m + 1`. The optimal number of cyclic reductions is `log2(log2(Nz))` so it's possible that we don't gain much. There may also be numerical accuracy issues with taking too many cyclic reduction steps.\r\n\r\nSome thoughts:\r\n* The batched cyclic reduction solver @maleadt developed only works for systems sizes that are powers of 2. As we need to solve a system of `Nz+1` equations, this means models with `2^m - 1` vertical levels will be the most efficient. If we can use it here, then we might need a non-cyclic reduction solver for models without `2^m - 1` vertical levels.\r\n* Probably not within this scope of this PR, but this solver should work on CPUs and GPUs and will eliminate the need for two different solvers, so we can probably unify solvers. We may still want to use cyclic reduction wherever we can. We should be able to use it for uniform vertical spacing and `Nz = 2^m - 1`. @maleadt's implementation was ~3x faster than the cuSPARSE implementation and ~22x faster than the serial implementation, so it would be a huge speedup.\r\n\r\ncc @sandreza as I might ask you questions about this\r\n\r\nThis work is based off:\r\nhttps://gist.github.com/christophernhill/8952075d6e95df28adf36f5dff64115a\r\nhttps://gist.github.com/christophernhill/a43317694c6d65ecd27758c1bdcdf3f1\r\nhttps://gist.github.com/maleadt/1ec91b3b12ede9898958c95596cabe8b\r\n\r\nResolves #46\r\nHelps with #47\r\nHelps with #211",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MDk0MDIxMzA=",
+        "number": 46,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/46"
+      }
+    ],
+    "createdAt": "2019-07-01T12:12:48Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2020-01-14T14:18:17Z",
+    "number": 306,
+    "title": "Pressure solver for vertically stretched grids"
+  }
+]

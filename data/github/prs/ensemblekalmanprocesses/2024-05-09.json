@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 243,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nImplements the NICE sample-error correction (Morzfeld, Vishny, et al 2024)\r\n\r\n## Content\r\n- added the `Localizer`: `SECNice()` with a couple of constructors `SECNice()`, `SECNice(delta_ug, delta_gg)` and `SECNice(n_samples, delta_ug, delta_gg)` _n_samples are the number of samples to approximate the standard deviation through Fisher transformation and deltas are \"fudge factors\" on the discrepancy principle tolerance_\r\n- added this to the example `Localization/localization_example_lorenz96.jl`\r\n- docstrings and API for variable parameters\r\n- Added L96 example to docs page, prettified plots and add recommendation for SECNice [here](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR367/localization/)\r\n- unit tests\r\n- Improved implementation efficiency for calc correlations, based on creating an interpolant on first call. NB this requires adding `Interpolations` into the Project toml (though we could do without if necessary)\r\n- added a branch for `N_ens<=6` for a crude sampling scheme, (still performant on the lorenz example even with 5 particles)\r\n## Examples\r\nImplement Vishny, Morzfeld, 2024 localization. Using Fisher transformation to avoid lookup tables, \r\nInstead we create a linear interpolation of the std of correlation space on first call, which is reused in future calls.\r\n\r\nThere is a gentle decline in performance as the iteration is decreased down to ~20 samples\r\n\r\nExample: learning a 200dim state `x(t)` from a future time of `x(t+T)` where `T=1`, using 20 ensemble members.\r\n`SECNice(n_samples, delta_ug, delta_gg)`\r\n\r\n### Result - `SECNice(5000,1.0,1.0)` and `SECNice(5000,0.8,1.0)`\r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/00798fdf-c440-4b6d-bfb1-e43c19fa78b1\" width=\"300\"> <img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/0abc6a54-1f2a-4938-a8df-38e5cb0dfd80\" width=\"300\">\r\n\r\n### Result - `SECNice(1000,1.0,1.0)` and `SECNice(1000,0.8,1.0)` \r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/23911843-4c23-4a12-a155-c94cdd47b1a1\" width=\"300\"> <img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/dfe6a41e-c6d5-471a-8918-f35a3ef0b937\" width=\"300\">\r\n\r\n\r\n### Results for even smaller samples = `200,50,20` \r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/e86cde64-de17-416a-858b-28cc5b313e4c\" width=\"300\"> <img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/703dd6cc-004a-4a89-a56e-9413dd64237a\" width=\"300\"> <img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/5fee019e-468e-4230-b64b-5748f9328cae\" width=\"300\">\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-13T18:07:26Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2024-05-09T23:04:55Z",
+    "number": 367,
+    "title": "NICE sample-error correction"
+  }
+]

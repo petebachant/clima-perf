@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "\ud83e\udd16 Beep boop. I am GabrieleBOT. \ud83e\udd16 Please, check the [release notes](https://github.com/CliMA/ClimaModules/blob/main/NEWS.md) before merging this PR. Modifications might be required.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-30T22:48:58Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-05-02T16:48:34Z",
+    "number": 3571,
+    "title": "Update climacommon to 2024_04_30"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Before this PR we couldn't create a ConformalCubedSphereGrid on the GPU due to some scalar operations that occur when we fill the metrics. After this PR:\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = ConformalCubedSphereGrid(GPU(), panel_size = (3, 3, 1), z = (0, 1), radius = 1)\r\nConformalCubedSphereGrid{Float64, FullyConnected, FullyConnected, Bounded} partitioned on GPU(): \r\n\u251c\u2500\u2500 grids: 3\u00d73\u00d71 OrthogonalSphericalShellGrid{Float64, FullyConnected, FullyConnected, Bounded} on GPU with 3\u00d73\u00d73 halo and with precomputed metrics \r\n\u251c\u2500\u2500 partitioning: CubedSpherePartition with (1 region in each panel) \r\n\u251c\u2500\u2500 connectivity: CubedSphereConnectivity \r\n\u2514\u2500\u2500 devices: (CUDA.CuDevice(0), CUDA.CuDevice(0), CUDA.CuDevice(0), CUDA.CuDevice(0), CUDA.CuDevice(0), CUDA.CuDevice(0))\r\n\r\njulia> grid[3]\r\n3\u00d73\u00d71 OrthogonalSphericalShellGrid{Float64, FullyConnected, FullyConnected, Bounded} on GPU with 3\u00d73\u00d73 halo and with precomputed metrics\r\n\u251c\u2500\u2500 centered at: North Pole, (\u03bb, \u03c6) = (0.0, 90.0)\r\n\u251c\u2500\u2500 longitude: FullyConnected  extent 90.0 degrees    variably spaced with min(\u0394\u03bb)=16.8962, max(\u0394\u03bb)=29.6661\r\n\u251c\u2500\u2500 latitude:  FullyConnected  extent 86.9617 degrees variably spaced with min(\u0394\u03c6)=16.8962, max(\u0394\u03c6)=29.6661\r\n\u2514\u2500\u2500 z:         Bounded  z \u2208 [0.0, 1.0]                regularly spaced with \u0394z=1.0\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-02T15:43:14Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2024-05-02T19:07:25Z",
+    "number": 3575,
+    "title": "Allow creating a `ConformalCubedSphereGrid` on GPU"
+  }
+]

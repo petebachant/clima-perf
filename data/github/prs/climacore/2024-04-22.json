@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 806,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR increases the rank of some internal arrays of the remapper by 1. The new dimension is to allow the remapper to process multiple Fields at the same time.\r\n\r\nThe idea is the following: when creating a Remapper, one can specify a buffer_length. When the buffer_length is larger than one, the Remapper will preallocate space to be able to interpolate buffer_length at the same time. Then, when `interpolate` is called, the Remapper can work with any number of Fields and the work is divided in batches of buffer_length size.\r\n\r\nE.g, If buffer_length is 10 and 22 fields are to be interpolated, the work is processed in groups of 10+10+2. The only cost of choosing a large buffer_length is memory (there shouldn't be any runtime penalty in interpolating 1 field with a batch_length of 100).\r\n\r\nThe memory cost of a Remapper is order (B, H, V), where B is the buffer length, H is the number of horizontal points, and V the number of vertical points. For H = 180x90 and V = 50, this means that each buffer costs 51_840_000 bytes (50 MB) for double precision on the root process + 50 MB / N_tasks on each task + base cost that is independent of B.\r\n\r\nWhen it comes to functionalities, this implementation is strictly a superset of the previous one and it is almost fully backward compatible. \r\n\r\nTo make it work nicely with CUDA, I had to add a constraint in `interpolate!`: the destination array has to be a CuArray. Previously, the destination array could a normal Array and the code would copy it over automatically. This does not seem possible using views (without scalar indexing). As such, this PR is technically breaking. To make the interface uniform, `interpolate` will return an array of the same type as the field (eg, a CuArray for a Field defined on the GPU). It is up to the user to move it to the CPU. I actually think that this is a better behavior. \r\n\r\nThe new module has additional allocations that lead to a ~ 50 % slow down (resulting in a reduction of 1-2 % in SYPD). I haven't spent too much time trying to hyper optmize this, and I think that this PR is already in a good shape to be merged.  In the future, we can try to find ways to further reduce allocations and improve performance. At that point, we should also look at data locality a little better (I haven't put too much thought in the order of the for loops in the GPU kernels.)\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-11T04:49:38Z",
+    "deletions": 249,
+    "labels": [
+      {
+        "color": "A5181B",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABiMmfnw",
+        "name": "breaking :boom:"
+      }
+    ],
+    "mergedAt": "2024-04-22T20:20:42Z",
+    "number": 1669,
+    "title": "Allow remapper to take multiple Fields"
+  }
+]

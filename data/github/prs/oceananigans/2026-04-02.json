@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n- Moves `default_output_attributes`, `default_velocity_attributes`, and `default_tracer_attributes` method implementations from `OceananigansNCDatasetsExt` into `src/Models/output_attributes.jl`\n- Keeps only a generic fallback `default_output_attributes(model) = Dict()` in `OutputWriters`\n- Models defines specialized methods via dispatch on `NonhydrostaticModel`, `HydrostaticFreeSurfaceModel`, and `ShallowWaterModel`\n- `add_schedule_metadata!` methods remain in `OutputWriters` (no external type dependencies)\n\n## Motivation\nThese functions don't depend on NCDatasets but were defined entirely inside the extension. This prevented downstream package extensions (e.g. `ClimaSeaIceNCDatasetsExt`) from adding methods at compile time, forcing them to use `__init__` + `@eval` which breaks incremental compilation on Julia 1.12.\n\nMoving the methods to `Models` (following the existing pattern for `default_included_properties` and `checkpointer_address`) makes them available to downstream packages via standard `import`.\n\n**Companion PR:** CliMA/ClimaSeaIce.jl \u2014 `ss/fix-netcdf-extension`\n\n## Test plan\n- [ ] Existing NetCDF writer tests pass\n- [ ] ClimaSeaIce precompiles successfully with NumericalEarth on Julia 1.12",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-01T19:20:58Z",
+    "deletions": 86,
+    "labels": [],
+    "mergedAt": "2026-04-02T12:54:55Z",
+    "number": 5469,
+    "title": "(0.106.4) Move NetCDF output attribute methods from extension to Models module"
+  },
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n- Extend `_launch!` to handle `active_cells_map::NamedTuple` by iterating over all non-nothing sub-maps, supporting distributed grids with split active cell maps\n- Add `get_active_cells_map(grid, Val(:xyz))` returning the full `grid.interior_active_cells` (single array for serial, NamedTuple for distributed, `nothing` for regular grids)\n- Add `get_active_cells_map(grid, Val(:xy))` for active columns, replacing `get_active_column_map`\n- Use active cells maps in all CATKE kernel launches: closure field computation, TKE diffusivity, TKE time-stepping (AB2 and SplitRK3), and surface buoyancy flux\n- Migrate all existing `get_active_column_map` call sites (SplitExplicit, tests) to `get_active_cells_map(grid, Val(:xy))`\n- Add test for CATKE with `ImmersedBoundaryGrid` + `active_cells_map=true`\n\n## Test plan\n- [x] Package loads\n- [x] CATKE with ImmersedBoundaryGrid + active_cells_map time-steps correctly\n- [x] Existing CATKE tests pass (regular grids, closure tuples, substepping)\n- [x] SplitExplicit tests pass (uses migrated Val(:xy) API)\n- [x] Active cells map tests pass\n- [ ] Distributed simulations with split active cell maps",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-28T08:11:57Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-04-02T14:59:29Z",
+    "number": 5447,
+    "title": "Use active_cells_map for CATKE on ImmersedBoundaryGrids"
+  }
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR propagates the eltype of the \"3D grid\" into the horizontal grid that's used by the FFT-based implicit free surface solver.\r\n\r\nShould help down the line with one of the issues that cropped up on #3288.\r\n\r\n@jagoosw\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-26T11:08:00Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "7057ff",
+        "description": "Let us know if you're interested in working on this!",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjY2",
+        "name": "good first issue \ud83d\udc24"
+      }
+    ],
+    "mergedAt": "2023-09-27T17:26:01Z",
+    "number": 3293,
+    "title": "Propagate eltype through FFT-based implicit free surface solver"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes  #3295\r\n\r\nBefore this PR:\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = ConformalCubedSphereGrid(; panel_size = (3, 3, 3), z = (-1, 0));\r\n\r\njulia> model = HydrostaticFreeSurfaceModel(; grid, momentum_advection = VectorInvariant())\r\nERROR: UndefVarError: `rotation_from_panel_index` not defined\r\nStacktrace:\r\n [1] with_halo(new_halo::Tuple{Int64, Int64, Int64}, csg::ConformalCubedSphereGrid{Float64, FullyConnected, ....\r\n   @ Oceananigans.MultiRegion ~/Research/OC8.jl/src/MultiRegion/multi_region_cubed_sphere_grid.jl:431\r\n [2] Oceananigans.Models.HydrostaticFreeSurfaceModels.PCGImplicitFreeSurfaceSolver(grid::ConformalCubedSphereGrid{Float64, ...\r\n   @ Oceananigans.Models.HydrostaticFreeSurfaceModels ~/Research/OC8.jl/src/Models/HydrostaticFreeSurfaceModels/pcg_implicit_free_surface_solver.jl:47\r\n [3] build_implicit_step_solver(#unused#::Val{:Default}, grid::ConformalCubedSphereGrid{Float64, ...\r\n   @ Oceananigans.MultiRegion ~/Research/OC8.jl/src/MultiRegion/unified_implicit_free_surface_solver.jl:67\r\n [4] FreeSurface(free_surface::ImplicitFreeSurface{Nothing, Float64, Nothing, Nothing, Symbol, ...\r\n   @ Oceananigans.Models.HydrostaticFreeSurfaceModels ~/Research/OC8.jl/src/Models/HydrostaticFreeSurfaceModels/implicit_free_surface.jl:95\r\n [5] HydrostaticFreeSurfaceModel(; grid::ConformalCubedSphereGrid{Float64, ...\r\n   @ Oceananigans.Models.HydrostaticFreeSurfaceModels ~/Research/OC8.jl/src/Models/HydrostaticFreeSurfaceModels/hydrostatic_free_surface_model.jl:169\r\n [6] top-level scope\r\n   @ REPL[63]:1\r\n```\r\n\r\nWith this PR:\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = ConformalCubedSphereGrid(; panel_size = (3, 3, 3), z = (-1, 0));\r\n\r\njulia> model = HydrostaticFreeSurfaceModel(; grid, momentum_advection = VectorInvariant())\r\nHydrostaticFreeSurfaceModel{CPU, MultiRegionGrid}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 3\u00d73\u00d73 ConformalCubedSphereGrid{Float64, FullyConnected, FullyConnected, Bounded} on CPU with 6\u00d76\u00d76 halo\r\n\u251c\u2500\u2500 timestepper: QuasiAdamsBashforth2TimeStepper\r\n\u251c\u2500\u2500 tracers: (T, S)\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: SeawaterBuoyancy with g=9.80665 and LinearEquationOfState(thermal_expansion=0.000167, haline_contraction=0.00078) with \u011d = NegativeZDirection()\r\n\u251c\u2500\u2500 free surface: ImplicitFreeSurface with gravitational acceleration 9.80665 m s\u207b\u00b2\r\n\u2502   \u2514\u2500\u2500 solver: PCGImplicitFreeSurfaceSolver\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n```",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5yJUf4",
+        "number": 3295,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3295"
+      }
+    ],
+    "createdAt": "2023-09-27T09:13:15Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2023-09-27T22:05:52Z",
+    "number": 3296,
+    "title": "Fixes bug in free surface build for `HydrostaticFreeSurfaceModel`s on a `ConformalCubedSphereGrid`"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3286 .\r\n\r\n@simone-silvestri wouldn't this have affected your stuff with `FieldTimeSeries`? Confused about that.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5x1rNv",
+        "number": 3286,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3286"
+      }
+    ],
+    "createdAt": "2023-09-23T14:51:45Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2023-09-27T22:19:26Z",
+    "number": 3287,
+    "title": "Fix bug in `adapt_structure` for `Field` and `OffsetArray` boundary conditions"
+  }
+]

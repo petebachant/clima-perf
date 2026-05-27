@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The previous behavior is incorrect because in `update_state!` we have time-dependent updates (for example `update_boundary!` or `update_model_field_time_series!`) which require the knowledge of the new time to update the forcings consistently.\r\n\r\nThis is a bugfix, so I ll bump the minor version",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-07T10:25:48Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-04-07T12:32:01Z",
+    "number": 5477,
+    "title": "(0.106.5) Tick the clock before updating the state in `SplitRungeKutta`"
+  },
+  {
+    "additions": 127,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR is preparatory for #5351. It moves the `fill_halo_regions!` of the u and v velocities out of the `update_state!` and before the tracer update, interleaving them with the computation of the tracer tendency.\r\nThis allows us to correct the barotropic mode after the fill halo regions and moves the correction also **inside** the halo regions.\r\n\r\nWith this strategy, even in distributed computations, we get a correct `w` field also inside the halos at the end of the timestep. In addition, tracers which need the new u and v velocity component (like CATKE) for timestepping, have complete access to the velocity fields correct also in the halos, such that we can use ansynchronous computation - communication also for CATKE.\r\n\r\nThis PR additionally excludes the periphery from the velocity timestepping like we do in the non hydrostatic model\r\n\r\nIndepth description:\r\n\r\nRestructures the `HydrostaticFreeSurfaceModel` time-stepping algorithm by moving `fill_halo_regions!` for `u`, `v` from `update_state!` into the time-stepping kernels (`rk_substep!` / `ab2_step!`), interleaving it with tendency computation. Preparatory for #5351 (open boundaries).\r\n\r\n## Motivation\r\n\r\nIn the old algorithm, velocity halos were filled at the start of the *next* substep (inside `update_state!`). This had three consequences for distributed architectures:\r\n\r\n1. **Tracer tendencies used stale velocity halos** \u2014 closures like CATKE that need `u`, `v` during tracer time-stepping had no access to correctly filled halos, preventing asynchronous communication-computation overlap.\r\n2. **Barotropic mode correction happened before the halo fill** \u2014 the correction was only valid in the interior, so `w` (diagnosed from continuity) was incorrect in the halos at the end of the time step. This matters for distributed computations.\r\n3. The old code had an explicit `# TODO: fill halo regions for horizontal velocities should be here before the tracer update`.\r\n\r\n## Algorithm change\r\n\r\nShown for the Split Runge-Kutta timestepper; AB2 follows the same pattern.\r\n\r\n**Before (velocity halos filled in `update_state!`, at the start of the next stage):**\r\n\r\n```\r\nfor each RK stage:\r\n  rk_substep!:\r\n    1. compute_momentum_flux_bcs!\r\n    2. step_free_surface!\r\n    3. compute_transport_velocities!\r\n    \u250c\u2500 @apply_regionally \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n    \u2502 4. compute_tracer_tendencies!    \u2190 stale u,v halos \u2502\r\n    \u2502 5. rk_substep_velocities!        (full domain)     \u2502\r\n    \u2502 6. correct_barotropic_mode!      \u2190 interior only   \u2502\r\n    \u2502 7. rk_substep_tracers!                             \u2502\r\n    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n  update_state!:\r\n    fill_halo_regions!(u, v)          \u2190 halos filled here\r\n    fill_halo_regions!(tracers)\r\n    compute diagnostics + momentum tendencies\r\n```\r\n\r\n**After (velocity halos filled within the substep, before tracer tendencies):**\r\n\r\n```\r\nfor each RK stage:\r\n  rk_substep!:\r\n    1. compute_momentum_flux_bcs!\r\n    2. step_free_surface!\r\n    3. compute_transport_velocities!\r\n    4. rk_substep_velocities!          (exclude periphery)\r\n    5. fill_halo_regions!(u, v)       \u2190 halos filled here\r\n    \u250c\u2500 @apply_regionally \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n    \u2502 6. compute_tracer_tendencies!    \u2190 correct u,v halos (also synchronizes halo pass for velocities) \u2502\r\n    \u2502 7. correct_barotropic_mode!      \u2190 also in halos                                                  \u2502\r\n    \u2502 8. rk_substep_tracers!                                                                            \u2502\r\n    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n  update_state!:\r\n    fill_halo_regions!(tracers)       \u2190 only tracers\r\n    compute diagnostics + momentum tendencies\r\n```\r\n\r\n## Other changes\r\n\r\n- **Velocity stepping excludes the periphery** (`exclude_periphery=true`), consistent with the `NonhydrostaticModel`.\r\n- **Initialization fix:** since `update_state!` no longer fills velocity halos, the first call (iteration 0) would compute momentum tendencies from unfilled halos. Fixed by adding `fill_halo_regions!(prognostic_fields(model))` in `maybe_initialize_state!`.\r\n\r\n## Future work\r\n\r\nAfter this PR, momentum tendency computation can be detangled from `update_state!` and moved to the beginning of the time step, further simplifying the algorithm.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-02T08:36:33Z",
+    "deletions": 116,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-04-07T13:40:16Z",
+    "number": 5352,
+    "title": "Move velocity halo filling into `rk3_substep!` and `ab2_step!` for `HydrostaticFreeSurfaceModel`"
+  },
+  {
+    "additions": 686,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR switches to using r-based derivatives in diffusion and GM/Redi operators. Also, it makes sure that the operators for immersed boundaries correctly account for immersed boundaries (see issue #5386).\r\n\r\nThe other option would be to build `\u2202x\u1dbb` and `\u2202y\u1dbb` for use in abstract operations.\r\n\r\ncloses #5386",
+    "changedFiles": 23,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7xzzof",
+        "number": 5386,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5386"
+      }
+    ],
+    "createdAt": "2026-03-16T08:25:32Z",
+    "deletions": 416,
+    "labels": [],
+    "mergedAt": "2026-04-07T13:46:46Z",
+    "number": 5401,
+    "title": "Use r-based derivatives in diffusion operators"
+  }
+]

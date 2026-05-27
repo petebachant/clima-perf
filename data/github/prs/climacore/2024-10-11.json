@@ -1,0 +1,69 @@
+[
+  {
+    "additions": 569,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I've found myself churning a lot of code in the test suite, related to construction of datalayouts.\r\n\r\nThis PR adds new convenience constructors for datalayouts, meant to be used at the top-level (as they are not inferable).\r\n\r\nThey have a few advantages over the existing way we construct them. Concretely, they:\r\n - Require less code duplication\r\n - Infer `Nf`\r\n - Use keywords for clarity, and are therefore order-agnostic\r\n\r\nSo, instead of writing\r\n\r\n```julia\r\narray = rand(FT, Nv, Nij, Nij, 3, Nh)\r\ndata = VIJFH{S, Nv, Nij}(array)\r\n```\r\n\r\nWe can write:\r\n\r\n```julia\r\ndata = VIJFH{S}(ArrayType{FT}, rand; Nv, Nij, Nh)\r\narray = parent(data) # (if you still need `array`)\r\n```\r\n\r\nSo, this will hopefully reduce the surface area of these constructors if we use them consistently in the test suite.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-10T19:38:34Z",
+    "deletions": 340,
+    "labels": [],
+    "mergedAt": "2024-10-11T17:16:14Z",
+    "number": 2033,
+    "title": "Add DataLayouts convenience constructors"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Per https://github.com/JuliaLang/julia/issues/54780#issuecomment-2269928520, this PR attempts to remove `string(::Type)` inside a generated function.\r\n\r\nIt seems to me like this code could be type-unstable, unless things are constant-propagated.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-10T20:47:28Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2024-10-11T17:38:41Z",
+    "number": 2034,
+    "title": "Try to fix Undefined Behavior in DataLayouts"
+  },
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a broken CUDA test for #1989.\r\n\r\nI'm not sure if this is an issue or not, but one thing I noticed is that, calling `Base.Broadcast.instantiate` on the broadcasted object does give me an earlier error message (in the check axes). I'm not sure if this is supposed to be done lazily, but for now I thought it would be good to add this in as a broken test.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-11T18:53:10Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-10-11T19:34:48Z",
+    "number": 2036,
+    "title": "Add broken cuda test"
+  }
+]

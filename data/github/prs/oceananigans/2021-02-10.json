@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 999,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a new `AbstractModel` called `HydrostaticFreeSurfaceModel` to `IncompressibleModel` and `ShallowWaterModel` in the Oceananigans model suite.\r\n\r\n`HydrostaticFreeSurfaceModel` is intended to solve the hydrostatic Boussinesq equations beneath a free surface. This PR adds the basic infrastructure needed to time step models on a `RegularCartesianGrid` with explicit free surface dynamics.\r\n\r\nI think we should save dynamics tests and an example for a future PR, and just work on getting some of the basic ingredients into this model. The time-stepping tests are currently in place, but most of `time_step!(model::HydrostaticFreeSurface, dt)` needs to be fleshed out.\r\n\r\nTodo for this PR:\r\n\r\n- [x] correct tendency calculation and time-stepping for an Adams-Bashforth timestepping method\r\n- [x] calculation of vertical velocity from the continuity equation",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-09T22:19:47Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2021-02-10T21:37:06Z",
+    "number": 1349,
+    "title": "Begins the implementation of Oceananigans.HydrostaticFreeSurfaceModel for general circulation modeling"
+  },
+  {
+    "additions": 211,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This fleshes out the `ReducedField` implementation a bit more by adding `boundary_conditions`. The `DefaultBoundaryCondition` for a reduced dimension is `nothing`. \r\n\r\nThis PR also generalizes our `launch!` utility so that kernel layouts can be \"flattened\" along reduced dimensions.\r\n\r\nIt feels like there's a lot of boilerplate in our halo-filling functionality, but I'm not 100% sure how to mitigate (except with some hacky code generation which, we already have some of, and doesn't seem like the right solution).\r\n\r\nI also took the liberty to generalize halo filling for `Value` and `Gradient` halos while I was in the files (slight scope creep) so that simple `Value`/`Gradient` boundary conditions can be implemented that don't require the `clock, model_fields` keyword arguments.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-10T14:59:14Z",
+    "deletions": 120,
+    "labels": [],
+    "mergedAt": "2021-02-10T21:37:35Z",
+    "number": 1350,
+    "title": "Implements boundary_conditions for ReducedField"
+  }
+]

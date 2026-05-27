@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjYwNzEyMzE4",
+      "is_bot": false,
+      "login": "daverumph",
+      "name": "Dave Rumph"
+    },
+    "body": "Increment jet_test_nfailures by 2 to account for new kernels. Add two new scratch locations for subexpressions.\r\nMake one calculation eager so that it isn't continually redone within kernels.\r\n\r\n## Purpose \r\nSedimentation and the microphysics tracers loop were affected. Three new scratch variables were introduced.\r\n\r\n## To-do\r\nProfile the advection kernels from manual_sparse_jacobian.jl:1041 and 1051 to see\r\nwhat can be done to speed those up.\r\n\r\n\r\n## Content\r\nnsys profiling revealed that four kernels were taking up over 25% of the total time running\r\nprognostic 1M. With these changes, they account for a few percent of the changes, and overall\r\nstep times dropped about 33%.\r\nBecause this is just a performance rewrite, there is no new functionality, and no new tests\r\nare needed.\r\n\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-17T19:53:01Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2025-12-19T03:32:25Z",
+    "number": 4180,
+    "title": "Improve GPU performance by pulling out some common subexpressions"
+  }
+]

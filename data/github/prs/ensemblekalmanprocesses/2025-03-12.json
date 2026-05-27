@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 179,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #460 \r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- introduced nan preprocessing in line with issue #460\r\n- added unit tests\r\n- when ekp.verbose = true, produce details of NaNs found. false provides less information RE failed NaN rows, and # imputed values\r\n- Allow users to define their fixed vector of values `nan_row_values` as a sensible replacement if they prefer alternate behaviour\r\n\r\n## Example imputation from unit testing\r\nTake a matrix `g`\r\n```\r\ng \r\n7\u00d74 Matrix{Float64}:\r\n NaN           0.992373   NaN           -0.200025\r\n  -1.37133     0.0527899  NaN           -1.15243\r\n NaN         NaN          NaN          NaN\r\n NaN         NaN          NaN          NaN\r\n  -2.28799   NaN            0.614214     1.54217\r\n   0.582582    0.0744582   -1.37219      0.253971\r\n   0.620447    0.441834     0.0641471    0.490588\r\n\r\n\r\n```\r\nwith `nan_tolerance = 0.5`, `nan_row_vals = collect(1:7)`, and then the imputation looks like\r\n```\r\ng_new = impute_over_nans(g, nan_tolerance, nan_row_vals, verbose=true)\r\n\u250c Warning: In forward map ensemble g, detected 12 NaNs. \r\n\u2502 Given nan_tolerance = 0.5 to determine failed members: \r\n\u2502 - Ensemble members failed:       1 \r\n\u2502 - NaNs in successful members:    8 \r\n\u2502 - rows index set for imputation: [1, 3, 4, 5] \r\n\u2502 - rows index entirely NaN:       [3, 4]\r\n[ Info: Imputed 8 NaNs\r\n7\u00d74 Matrix{Float64}:\r\n  0.396174   0.992373   NaN          -0.200025     # `g[1, 1]`          -> `mean(g[1, [2, 4] ])`\r\n -1.37133    0.0527899  NaN          -1.15243\r\n  3.0        3.0        NaN           3.0          #  `g[3, [1, 2, 4]]` -> `3.0`\r\n  4.0        4.0        NaN           4.0          #  `g[4, [1, 2, 4]]` -> `4.0`\r\n -2.28799   -0.0438687    0.614214    1.54217      #  `g[5, 2]`         -> `mean(g[5, [1, 3, 4])`\r\n  0.582582   0.0744582   -1.37219     0.253971\r\n  0.620447   0.441834     0.0641471   0.490588\r\n\r\n```\r\n\r\nWithin EKP:\r\n-  `nan_tolerance` is a keyword given to `EnsembleKalmanProcess`\r\n-  `nan_row_values` is a keyword given to `EnsembleKalmanProcess` for a user defined value (overriding `get_obs(ekp)` default\r\n-  `verbose` is taken to be `ekp.verbose`\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586tW3js",
+        "number": 460,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/460"
+      }
+    ],
+    "createdAt": "2025-03-11T16:37:42Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2025-03-12T22:23:39Z",
+    "number": 463,
+    "title": "New Quantification of member failure, and more flexible NaN handling"
+  },
+  {
+    "additions": 451,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- Closes #452\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Add function `tsvd_mat(X, r,...)` to create SVD objects representing rank `r` approximation of `X` (and optionally its pseudoinverse)\r\n- Add `tsvd_cov_from_samples` function to aid in computing the SVD of `cov(X,dims=2)` from a sample matrix `X`. (rank and return of pseudoinverse can be specified too)\r\n- Add infrastructure for getting covariances via `build=false`, to ensure ETKI can work without disrupting scalability.\r\n- Add unit test to ensure scaling remains modest. And extend test to run 2 iterations up to dim 1_000_000\r\n- code infrastructure for algorithms that get covariances with `build = true` options (e.g. basic EKI) \r\n- new internal functions `lmul_obs_noise_cov_inv` and `lmul_obs_noise_cov_inv!` to wrap up the increasingly messy linear algebra.\r\n\r\n## Example\r\nCase 1: From a matrix `X` of (columnar) samples, build a low rank representation of `cov(X)`\r\n```\r\nCr = tsvd_cov_from_samples(X)\r\nCr, Cr_inv = tsvd_cov_from_samples(X, return_inverse=true)\r\n```\r\nCase 2: Given a matrix `Z` and desired rank `r`, generate the low rank representation of `Z`\r\n```\r\nCr = tsvd_mat(Z, r, return_inverse=true)\r\nCr, Cr_inv = tsvd_mat(Z, r)\r\n```\r\nThen pass this in as\r\n```\r\nobs = Observation(\r\n    Dict(\r\n        \"samples\" => y_obs, \r\n        \"covariances\" => Cr, \r\n        \"inv_covariances\" => Cr_inv,  # optional\r\n        \"name\" => \"y_with_low_rank_noise\"\r\n    ),\r\n)\r\n\r\nekpobj = EnsembleKalmanProcess( ..., obs, ...)\r\n```\r\n\r\n\r\n# From unit tests \r\nRepeating for `n=10^1,10^2,...10^6`\r\n- Using Diagonal inverse matrix `0.01I(n)`, \r\n- SVD of Covaraince of  `0.01*randn((n,5))` \r\n- SVD directly of  `0.01*randn((n,5))`\r\n\r\n```\r\n[ Info: 100 iterations of ETKI with 10 observations took 0.00037059 seconds. (avg update: 3.7059e-6)\r\n[ Info: 100 iterations of ETKI with 10 observations took 0.000405835 seconds. (avg update: 4.05835e-6)\r\n[ Info: 100 iterations of ETKI with 10 observations took 0.000317651 seconds. (avg update: 3.1765100000000003e-6)\r\n[ Info: 100 iterations of ETKI with 100 observations took 0.000448395 seconds. (avg update: 4.48395e-6)\r\n[ Info: 100 iterations of ETKI with 100 observations took 0.00045122 seconds. (avg update: 4.5122e-6)\r\n[ Info: 100 iterations of ETKI with 100 observations took 0.000390878 seconds. (avg update: 3.90878e-6)\r\n[ Info: 100 iterations of ETKI with 1000 observations took 0.001878866 seconds. (avg update: 1.8788660000000002e-5)\r\n[ Info: 100 iterations of ETKI with 1000 observations took 0.001865861 seconds. (avg update: 1.865861e-5)\r\n[ Info: 100 iterations of ETKI with 1000 observations took 0.013513966 seconds. (avg update: 0.00013513966000000001)\r\n\r\n[ Info: 2 iterations of ETKI with 10000 observations took 0.028718768 seconds. (avg update: 0.014359384)\r\n[ Info: 2 iterations of ETKI with 10000 observations took 0.024819403 seconds. (avg update: 0.0124097015)\r\n[ Info: 2 iterations of ETKI with 10000 observations took 0.022486632 seconds. (avg update: 0.011243316)\r\n[ Info: 2 iterations of ETKI with 100000 observations took 0.5008502 seconds. (avg update: 0.2504251)\r\n[ Info: 2 iterations of ETKI with 100000 observations took 0.373066618 seconds. (avg update: 0.186533309)\r\n[ Info: 2 iterations of ETKI with 100000 observations took 0.398727106 seconds. (avg update: 0.199363553)\r\n[ Info: 2 iterations of ETKI with 1000000 observations took 2.525645219 seconds. (avg update: 1.2628226095)\r\n[ Info: 2 iterations of ETKI with 1000000 observations took 2.07768027 seconds. (avg update: 1.038840135)\r\n[ Info: 2 iterations of ETKI with 1000000 observations took 1.82451017 seconds. (avg update: 0.912255085)\r\n```\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586stvDs",
+        "number": 452,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/452"
+      }
+    ],
+    "createdAt": "2025-03-05T15:36:22Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2025-03-12T23:21:35Z",
+    "number": 453,
+    "title": "Extend observations handle (T)SVD covariance objects efficiently"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-12T23:32:34Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-12T23:55:05Z",
+    "number": 465,
+    "title": "Update Project.toml v2.3.0"
+  }
+]

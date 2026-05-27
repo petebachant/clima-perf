@@ -1,0 +1,136 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "After this PR\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = RectilinearGrid(topology=(Periodic, Bounded, Bounded), size=(1, 1, 1), extent=(1, 2, 3))\r\n1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Bounded, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)  regularly spaced with \u0394x=1.0\r\n\u251c\u2500\u2500 Bounded  y \u2208 [0.0, 2.0]  regularly spaced with \u0394y=2.0\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-3.0, 0.0] regularly spaced with \u0394z=3.0\r\n\r\njulia> model = HydrostaticFreeSurfaceModel(grid=grid)\r\nHydrostaticFreeSurfaceModel{CPU, Float64}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Bounded, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 tracers: (:T, :S)\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: Buoyancy{SeawaterBuoyancy{Float64, LinearEquationOfState{Float64}, Nothing, Nothing}, Oceananigans.Grids.ZDirection}\r\n\u251c\u2500\u2500 free surface: ExplicitFreeSurface; gravitational acceleration 9.80665 m s\u207b\u00b2\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n\r\njulia> model = HydrostaticFreeSurfaceModel(grid=grid, free_surface = ImplicitFreeSurface(solver_method = :HeptadiagonalIterativeSolver))\r\nHydrostaticFreeSurfaceModel{CPU, Float64}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Bounded, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 tracers: (:T, :S)\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: Buoyancy{SeawaterBuoyancy{Float64, LinearEquationOfState{Float64}, Nothing, Nothing}, Oceananigans.Grids.ZDirection}\r\n\u251c\u2500\u2500 free surface: ImplicitFreeSurface; gravitational acceleration 9.80665 m s\u207b\u00b2\r\n\u2502   \u2514\u2500\u2500 solver: HeptadiagonalIterativeSolver\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n```\r\n\r\nCloses #2197.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5CgHS6",
+        "number": 2197,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2197"
+      }
+    ],
+    "createdAt": "2022-01-27T05:14:15Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2022-01-28T00:55:00Z",
+    "number": 2199,
+    "title": "Show free surface method/solver for `HydrostaticFreeSurfaceModel`s"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Defines and exports areas `Ax\u1d9c\u1da0\u1da0`, `Ax\u1da0\u1da0\u1da0`, `Ay\u1da0\u1d9c\u1da0` and `Ay\u1da0\u1da0\u1da0` and volumes `V\u1da0\u1da0\u1d9c`, `V\u1da0\u1d9c\u1da0`, `V\u1d9c\u1da0\u1da0`, `V\u1da0\u1da0\u1da0` in `Operations`.\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/2189",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5CeYbH",
+        "number": 2189,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2189"
+      }
+    ],
+    "createdAt": "2022-01-26T17:20:01Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2022-01-28T01:48:37Z",
+    "number": 2190,
+    "title": "Defines more area and volume calculations in `Operations`"
+  },
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In case we have reductions on a function (e.g `maximum(abs, f, condition = (i, j, k, f.grid, f) -> i < 3)`) we want to be able to apply the function to the field _first_ and mask the field where `condition = true`  _after_\r\n\r\n_to be more specific:_\r\nWhen a reduction is called with a function as an argument such as\r\n```\r\nsum(sin, a::AbstractField)\r\n```\r\nthe function will be evaluated element-wise with `mapreduce`. i.e., the function is applied _first_ and the reduction is applied _after_\r\n```\r\nmapreduce(x -> sin(x), +, a)\r\n```\r\nFor this reason the `neutral_element` of a \"functional\" reduction is not the `neutral_element` of its basic operation (as we implemented) but the neutral element of `basic_operation(f())`. The neutral element is found by inverting this operation `f\u207b\u00b9(neutral_element(basic_operation))` In the example above it would be\r\n```\r\nneutral_element = sin\u207b\u00b9(neutral_element(+)) = sin\u207b\u00b9(0)\r\n```\r\n\r\nIn principle, we should mask the field with `f\u207b\u00b9(neutral_element(reduction))` so that applying `f` and then the reduction would effectively exclude the masked areas\r\n\r\nUnfortunately, we do not know a-priori the inverse of the function. Therefore, this PR implements a workaround:\r\n\r\n- `ConditionalOperation` has now a property `func`,  which is a unary function applied to the elements of `operand` in `Base.getindex`\r\n- functional reductions are implemented as `sum(f, c; condition) = sum(identity, conditional_operand(f, c, condition))` \r\n\r\n\r\nthis PR also introduces a docstring and a `show` method for `ConditionalOperation` \r\ncloses #2188 ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5CeEST",
+        "number": 2188,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2188"
+      }
+    ],
+    "createdAt": "2022-01-27T16:06:01Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2022-01-28T21:31:05Z",
+    "number": 2200,
+    "title": "Changes to `ConditionalOperation` "
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Quick fixes as I recklessly merged a _non-test-passing_ PR",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-28T21:56:10Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-01-28T23:43:34Z",
+    "number": 2201,
+    "title": "quick fixes"
+  }
+]

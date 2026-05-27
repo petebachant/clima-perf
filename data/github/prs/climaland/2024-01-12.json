@@ -1,0 +1,86 @@
+[
+  {
+    "additions": 69,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `NCDatasets` package from `0.11, 0.12, 0.13` to `0.11, 0.12, 0.13, 0.14`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-21T14:06:17Z",
+    "deletions": 66,
+    "labels": [],
+    "mergedAt": "2024-01-12T02:14:08Z",
+    "number": 435,
+    "title": "CompatHelper: bump compat for NCDatasets to 0.14, (keep existing compat)"
+  },
+  {
+    "additions": 288,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nPrior to this PR, we computed the forcing variables on the fly wherever we needed them. This means they were computed at many points within the soil, canopy, etc tendency functions (in update_aux, or update_boundary_fluxes, etc). In previous PRs, we created a spot in the cache `p.drivers` for these variables, and wrote a callback which updates them in place. This PR now uses callbacks in our simulations (experiments and docs) and correctly updates the drivers prior to any tendency computation (change to `set_initial_cache`). It also adjusted the tendency functions (update aux, update boundary fluxes, the actual tendency) to pull the values needed from `p.drivers` instead of computing them, e.g.\r\n`P_liq = FT(atmos.P_liq(t)) -> P_liq = p.drivers.P_liq`\r\n\r\n## To-do\r\n[X] add callback to experiments and tutorials\r\n[X] verify results\r\n[X] go over changed tests\r\n[X] optimize the turbulent fluxes computation FUTURE PR\r\n## Content\r\n1. `src/integrated` and `src/standalone` files: remove all examples of computing the drivers at time `t` in any update_aux, update_boundary_fluxes, etc functions [anywhere in a function that is evaluated at each timestep] \r\n2. `src/shared_utilties/drivers`: similar changes to [1], since these functions are called at each step\r\n3. `src/shared_utilities/models.jl`: update `p.drivers` with `update_drivers!(p.drivers, t0)` correctly with `set_initial_cache` \r\n4. update tests to adjust for changes in `construct_atmos_ps`, etc, functions\r\n5. update docs and experiments to create a Driver update callback & use it in the simulations.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-04T23:07:34Z",
+    "deletions": 239,
+    "labels": [
+      {
+        "color": "5319E7",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfrouHA",
+        "name": "API"
+      }
+    ],
+    "mergedAt": "2024-01-12T18:29:58Z",
+    "number": 440,
+    "title": "Use callback to update drivers & store rather than doing on the fly in tendency"
+  },
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpdate TagBot.yml so the automatically generated release notes are more useful.\r\n\r\nWith these changes, developers should tag issues and/or PRs with the following labels so that their work appears in the release notes:\r\n- `API` or `breaking change` for API/breaking changes\r\n- `enhancement` for new features\r\n- `documentation` for doc updates\r\n- `bug` or `bugfix` for bug fixes\r\n\r\nThis will be really helpful for the coupler team to update for each new release :) \r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-12T01:19:17Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "LA_kwDOGiZe4s7ZTG-9",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2024-01-12T19:04:10Z",
+    "number": 447,
+    "title": "update TagBot release notes"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nRight now, the `make_update_drivers` update function defualt is not compatible with the `initialize_drivers` function default. The first case is a default for any AbstractDriver or a Nothing type, which the latter is a specific method for drivers of type Nothing.\r\n\r\n\r\n## To-do\r\n\r\n\r\n\r\n## Content\r\nAdjust type specification\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-12T22:49:54Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-01-12T23:22:09Z",
+    "number": 448,
+    "title": "default initialize_drivers"
+  }
+]

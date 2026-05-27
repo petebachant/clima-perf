@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Running\r\n\r\n```julia\r\nimport ClimaShallowWater as CSW\r\nimport OrdinaryDiffEq as ODE\r\nusing BenchmarkTools\r\nintegrator = CSW.setup_integrator([\"--output-nsteps\", \"0\"])\r\ntrial = BenchmarkTools.@benchmark ODE.step!($integrator)\r\nshow(stdout, MIME(\"text/plain\"), trial)\r\n```\r\n\r\nin ClimaShallowWater yields:\r\n\r\n\r\nClimaCore Main branch:\r\n```julia\r\njulia> include(\"perf/benchmark.jl\")\r\n[ Info: Precompiling ClimaShallowWater [77cbd926-740a-4734-9de9-4655503a1911]\r\n\u250c Info: Setting up experiment\r\n\u2502   device = ClimaComms.CPU()\r\n\u2502   context = ClimaComms.SingletonCommsContext{ClimaComms.CPU}(ClimaComms.CPU())\r\n\u2502   testcase = ClimaShallowWater.SteadyStateTest(ClimaShallowWater.SphericalParameters(6.37122e6, 7.292e-5, 9.80616, 0.0015, 0.0), 38.61068276698372, 2998.1154702758267)\r\n\u2502   float_type = Float64\r\n\u2502   panel_size = 8\r\n\u2502   poly_nodes = 4\r\n\u2502   time_step = 360.0\r\n\u2502   time_end = 172800.0\r\n\u2502   approx_resolution = 384185.2320888938\r\n\u2514   D\u2084 = 1.458434484260881e16\r\nBenchmarkTools.Trial: 524 samples with 1 evaluation.\r\n Range (min \u2026 max):  9.264 ms \u2026  11.551 ms  \u250a GC (min \u2026 max): 0.00% \u2026 0.00%\r\n Time  (median):     9.435 ms               \u250a GC (median):    0.00%\r\n Time  (mean \u00b1 \u03c3):   9.544 ms \u00b1 319.555 \u03bcs  \u250a GC (mean \u00b1 \u03c3):  0.00% \u00b1 0.00%\r\n\r\n  \u2583\u2583\u2586\u2588\u2588\u2587\u2586\u2585\u2585\u2585\u2584\u2582\u2582\u2582\u2582\u2582\u2581 \u2581                                          \r\n  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2587\u2587\u2587\u2587\u2586\u2586\u2586\u2586\u2586\u2586\u2584\u2587\u2584\u2584\u2586\u2586\u2581\u2584\u2581\u2584\u2584\u2584\u2586\u2584\u2584\u2586\u2581\u2581\u2584\u2584\u2587\u2586\u2581\u2586\u2581\u2584\u2584\u2586\u2581\u2584 \u2588\r\n  9.26 ms      Histogram: log(frequency) by time      10.8 ms <\r\n\r\n Memory estimate: 48 bytes, allocs estimate: 6.\r\n```\r\n\r\nThis PR:\r\n```julia\r\njulia> include(\"perf/benchmark.jl\")\r\n[ Info: Precompiling ClimaShallowWater [77cbd926-740a-4734-9de9-4655503a1911]\r\n\u250c Info: Setting up experiment\r\n\u2502   device = ClimaComms.CPU()\r\n\u2502   context = ClimaComms.SingletonCommsContext{ClimaComms.CPU}(ClimaComms.CPU())\r\n\u2502   testcase = ClimaShallowWater.SteadyStateTest(ClimaShallowWater.SphericalParameters(6.37122e6, 7.292e-5, 9.80616, 0.0015, 0.0), 38.61068276698372, 2998.1154702758267)\r\n\u2502   float_type = Float64\r\n\u2502   panel_size = 8\r\n\u2502   poly_nodes = 4\r\n\u2502   time_step = 360.0\r\n\u2502   time_end = 172800.0\r\n\u2502   approx_resolution = 384185.2320888938\r\n\u2514   D\u2084 = 1.458434484260881e16\r\nBenchmarkTools.Trial: 622 samples with 1 evaluation.\r\n Range (min \u2026 max):  7.839 ms \u2026   9.307 ms  \u250a GC (min \u2026 max): 0.00% \u2026 0.00%\r\n Time  (median):     7.933 ms               \u250a GC (median):    0.00%\r\n Time  (mean \u00b1 \u03c3):   8.043 ms \u00b1 288.004 \u03bcs  \u250a GC (mean \u00b1 \u03c3):  0.00% \u00b1 0.00%\r\n\r\n  \u2582\u2588\u2587 \u2581                                                        \r\n  \u2588\u2588\u2588\u2587\u2588\u2588\u2586\u2586\u2585\u2584\u2585\u2584\u2584\u2584\u2583\u2584\u2583\u2583\u2583\u2582\u2582\u2582\u2582\u2582\u2581\u2582\u2582\u2583\u2581\u2582\u2582\u2582\u2581\u2582\u2582\u2581\u2581\u2581\u2582\u2582\u2582\u2583\u2581\u2582\u2581\u2582\u2582\u2582\u2582\u2582\u2582\u2583\u2582\u2582\u2582\u2582\u2582\u2582\u2582 \u2583\r\n  7.84 ms         Histogram: frequency by time        9.11 ms <\r\n\r\n Memory estimate: 48 bytes, allocs estimate: 6.\r\n```\r\n\r\n\r\nThe difference is also apparent in the flame graph.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-10T21:16:36Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2023-04-11T00:26:13Z",
+    "number": 1179,
+    "title": "Inline copyto_slab"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "There is a limit of 65535 blocks in the y and z dimensions, which limited the number of elements we could use. Switching this to the x dimension should fix the problem: it has a limit of 2^31-1, and we are unlikely to have 65535 vertical levels.\r\n\r\nFixes https://github.com/CliMA/ClimaShallowWater.jl/issues/16\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOJKqLVM5i69Au",
+        "number": 16,
+        "repository": {
+          "id": "R_kgDOJKqLVA",
+          "name": "ClimaShallowWater.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaShallowWater.jl/issues/16"
+      }
+    ],
+    "createdAt": "2023-04-10T23:07:00Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2023-04-11T05:23:03Z",
+    "number": 1180,
+    "title": "switch block dimension"
+  }
+]

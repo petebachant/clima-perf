@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I think this proposed pattern is a bit of a balance:\r\n\r\n```\r\nadditional_cache(Y, params, dt; use_tempest_mode) = merge(\r\n    hyperdiffusion_cache(Y; \u03ba\u2084 = FT(2e17), use_tempest_mode),\r\n    sponge ? rayleigh_sponge_cache(Y, dt) : NamedTuple(),\r\n    isnothing(micro) ? NamedTuple() : zero_moment_microphysics_cache(Y),\r\n    isnothing(HSF) ? NamedTuple() : held_suarez_cache(Y),\r\n    isnothing(rad) ? NamedTuple() : rrtmgp_model_cache(Y, params; idealized_h2o),\r\n    isnothing(turbconv) ? NamedTuple() : vertical_diffusion_boundary_layer_cache(Y),\r\n)\r\n```\r\nWe still use a closure, but everything that's included is kind of directly visible at the top level. Thoughts, @dennisYatunin, @jiahe23 ?\r\n\r\nI haven't updated the cli options, yet, since they were being updated in #397.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-04T19:29:44Z",
+    "deletions": 69,
+    "labels": [],
+    "mergedAt": "2022-05-05T00:40:11Z",
+    "number": 399,
+    "title": "Add some cli args, unify additional_cache"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-04T17:27:13Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-05-05T00:40:11Z",
+    "number": 395,
+    "title": "add radiation to docs"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-03T20:21:10Z",
+    "deletions": 45,
+    "labels": [],
+    "mergedAt": "2022-05-05T19:04:12Z",
+    "number": 388,
+    "title": "switch to third-order upwinding"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I'm sure people are a bit tired of scrolling through gigantic stack traces. This PR adds a way to truncate stack traces by recursively searching through the type space and collecting all `NamedTuple`s. See this [build](https://buildkite.com/clima/climaatmos-ci/builds/784) for a demo.\r\n\r\nWith this, and putting the (incorrect) type restriction on `get_cache(::Int)` to throw the error, we get:\r\n\r\n```\r\nERROR: LoadError: MethodError: no method matching get_cache(::ClimaCore.Fields.FieldVector{Float64, NamedTuple{(:c, :f), Tuple{Field{(:\u03c1, :\u03c1e, :u\u2095)} (trunc disp), Field{(:w,)} (trunc disp)}}}, ::BaroclinicWaveParameterSet{NamedTuple{(:dt,), Tuple{Float64}}}, ::Float64)\r\n--\r\n\u00a0 | Closest candidates are:\r\n\u00a0 | get_cache(::Int64, ::Any, ::Any) at /central/scratch/esm/slurm-buildkite/climaatmos-ci/784/climaatmos-ci/examples/hybrid/staggered_nonhydrostatic_model.jl:101\r\n\u00a0 | Stacktrace:\r\n\u00a0 | [1] top-level scope\r\n\u00a0 | @ /central/scratch/esm/slurm-buildkite/climaatmos-ci/784/climaatmos-ci/examples/hybrid/driver.jl:171\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-04T23:56:34Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "965A87",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7yCRv-",
+        "name": "Logging :ledger:"
+      }
+    ],
+    "mergedAt": "2022-05-05T22:51:13Z",
+    "number": 400,
+    "title": "Truncate stack traces"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "The bubble MPI job is flakey due to not maintaining the example with upstream changes. This PR removes non-driver examples from CI, since they're already being maintained / used in ClimaCore for unit/integration testing.\r\n\r\nI've also removed the job `held suarez (\u03c1\u03b8) Float64`, since we already have a BW (\u03c1\u03b8) Float64 test. This should help us in reorganizing the examples folder, maintaining code, and reduce wasting CI resources.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-05T17:50:34Z",
+    "deletions": 2148,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2022-05-05T23:24:11Z",
+    "number": 406,
+    "title": "Remove non-driver examples"
+  }
+]

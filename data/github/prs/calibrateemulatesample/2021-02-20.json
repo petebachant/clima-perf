@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 772,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nFixes #90\r\nThis PR adds `DataStorage.jl` containing objects to store singleton, or paired, data samples. The idea is to help ensure dimensionally consistent data (as these **always store a 2D array where the samples are columns**, so if in doubt - the data are columns), which has lead to numerous issues in the past. They also ensure that your input-output pairs for the emulator are safeguarded (e.g it checks consistent dimensions of samples). \r\n\r\nUsers will need to specify orientation when they provide arrays (as to whether the data stored as a list of rows, or a list of columns), then internally they are arranged always as columns. Effectively therefore we are really just adding more rigid constructors for data arrays.\r\n\r\n## Contains:\r\n - The `DataContainer` object stores data as columns\r\n - The `PairedDataContainer` object stores 2 `DataContainer` objects, one for input data, one for output data. The number of samples is checked to be the same length in inputs and outputs, while the data dimensions can differ.\r\n - Unit tests for the object and related functions, also updated unit tests for the other objects to use these\r\n - Small changes to examples (Lorenz 96/Cloudy/LossMinimization/GaussianProcessEmulator) to work with new data storage \r\n - To obtain training points from the EKP: in `src/Utilities` there is a `get_training_points` function which returns a `PairedDataContainer`\r\n - The GaussianProcessEmulator only takes in `PairedDataContainer` now\r\n### Also...\r\n - I required some larger changes to the Cloudy example run (even without the new data storage))\r\n - I removed some confusing `vcat([X.first, X.last]...)` type lines in GP setup and replaced with interpretable loop\r\n - getters and setters for EKP, I really push for us to use getters/setters as an interface\r\n - MCMC stores posterior array with data-as-columns, and utilities work with this too.\r\n\r\n## Construction example\r\n\r\n### DataContainer\r\nTo create a Data container simply create an array, and specify whether you consider data within as a list of columns, or not. e.g for 2D data and 10 samples\r\n```julia\r\nx = rand(2,10)\r\ncolumn_store = DataContainer(x,data_are_columns=true)\r\n```\r\nor for 10D data and 2 samples\r\n```julia\r\ncolumn_store2 = DataContainer(x,data_are_columns=false)\r\n```\r\nRemember, the data is **always** stored as columns so\r\n```julia\r\n@assert(get_data(column_store) == get_data(column_store2))\r\n```\r\nreturns `true`\r\n### PairedDataContainer\r\nCan be constructed from 2 `DataContainer`s of the same sample size.\r\n```julia\r\ninput_output_pairs = PairedDataContainer(column_store,column_store)\r\n```\r\nOr from arrays themselves, (so long as they have the same \"samples\" dimension)\r\n```julia\r\ninput_output_pairs2 = PairedDataContainer(x,x,data_are_columns=true) \r\n```\r\nand, \r\n```julia\r\nPairedDataContainer(column_store,column_store2) \r\n```\r\nthrows a dimension mismatch error.",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NTk4NzAxNzY=",
+        "number": 90,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/90"
+      }
+    ],
+    "createdAt": "2021-02-05T19:57:16Z",
+    "deletions": 499,
+    "labels": [],
+    "mergedAt": "2021-02-20T18:08:08Z",
+    "number": 102,
+    "title": "Data storage objects"
+  }
+]

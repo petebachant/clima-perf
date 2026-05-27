@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE2Mjc3NzE=",
+      "is_bot": false,
+      "login": "MichaelRFairhurst",
+      "name": "Michael R Fairhurst"
+    },
+    "body": "While installing, it seemed like this test command was wrong:\r\n\r\n```\r\nmichaels-mbp:ClimaAtmos.jl mike$ julia --project test/runtests.jl\r\nERROR: LoadError: package `ClimaAtmos [b2c96348]` has the same name or UUID as the active project\r\nStacktrace:\r\n [1] pkgerror(msg::String)\r\n   @ Pkg.Types /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/Types.jl:68\r\n [2] develop(ctx::Pkg.Types.Context, pkgs::Vector{Pkg.Types.PackageSpec}; shared::Bool, preserve::Pkg.Types.PreserveLevel, platform::Base.BinaryPlatforms.Platform, kwargs::Base.Pairs{Symbol, Base.TTY, Tuple{Symbol}, NamedTuple{(:io,), Tuple{Base.TTY}}})\r\n   @ Pkg.API /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/API.jl:208\r\n [3] develop(pkgs::Vector{Pkg.Types.PackageSpec}; io::Base.TTY, kwargs::Base.Pairs{Symbol, Union{}, Tuple{}, NamedTuple{(), Tuple{}}})\r\n   @ Pkg.API /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/API.jl:149\r\n [4] develop(pkgs::Vector{Pkg.Types.PackageSpec})\r\n   @ Pkg.API /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/API.jl:144\r\n [5] #develop#14\r\n   @ /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/API.jl:141 [inlined]\r\n [6] develop(pkg::Pkg.Types.PackageSpec)\r\n   @ Pkg.API /usr/local/Cellar/julia/1.7.2/share/julia/stdlib/v1.7/Pkg/src/API.jl:141\r\n [7] top-level scope\r\n   @ ~/projects/ClimaAtmos.jl/test/runtests.jl:3\r\nin expression starting at /Users/mike/projects/ClimaAtmos.jl/test/runtests.jl:1\r\n```\r\n\r\nHowever, with the `--project=test` change (which I got by comparing to buildkite config), tests ran & passed.\r\n\r\n```\r\nmichaels-mbp:ClimaAtmos.jl mike$ julia --project=test test/runtests.jl\r\n   Resolving package versions...\r\n    Updating `~/projects/ClimaAtmos.jl/test/Project.toml`\r\n  [b2c96348] + ClimaAtmos v0.1.0 `~/projects/ClimaAtmos.jl`\r\n    Updating `~/projects/ClimaAtmos.jl/test/Manifest.toml`\r\n  [b2c96348] + ClimaAtmos v0.1.0 `~/projects/ClimaAtmos.jl`\r\n   Resolving package versions...\r\n  No Changes to `~/projects/ClimaAtmos.jl/test/Project.toml`\r\n  No Changes to `~/projects/ClimaAtmos.jl/test/Manifest.toml`\r\n   Resolving package versions...\r\n  No Changes to `~/projects/ClimaAtmos.jl/test/Project.toml`\r\n  No Changes to `~/projects/ClimaAtmos.jl/test/Manifest.toml`\r\nTest Summary: | Pass  Total\r\nClimaAtmos    |  333    333\r\n```\r\n\r\nNot sure that I didn't miss something, here, though.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-10T04:03:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-05-11T17:52:15Z",
+    "number": 431,
+    "title": "Fix test command in README."
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "add moist hs to long run\r\n- central differential set up; dt = 200",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-11T17:30:57Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-05-11T19:10:19Z",
+    "number": 441,
+    "title": "add moist hs to long run"
+  },
+  {
+    "additions": 42,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This will make the transition very easy when we go to move the RRTMGP interface into RRTMGP. This way, we'll be able to simply replace `RRTMGPI.` with `RRTMGP.`",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-11T21:59:44Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-05-11T23:33:14Z",
+    "number": 445,
+    "title": "Put RRTMGP interface into a module"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Alternative to #443 \r\n\r\nSet it smaller for initialization, and larger for actual running of jobs\r\nSee https://docs.julialang.org/en/v1.9-dev/manual/environment-variables/#JULIA_MAX_NUM_PRECOMPILE_FILES",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-11T21:46:29Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-05-11T23:33:14Z",
+    "number": 444,
+    "title": "Increase JULIA_MAX_NUM_PRECOMPILE_FILES"
+  }
+]

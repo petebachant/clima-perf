@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 334,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Adds a new abstract type `AbstractImexARKAlgorithm <: DistributedODEAlgorithm`\r\n - Adds user-facing types for all of the imex ark algorithms, all of which subtype `AbstractImexARKAlgorithm`\r\n - Defines `theoretical_convergence_order` for these new types\r\n - Adjusts the tests accordingly\r\n\r\nThis should all help with two things\r\n - Initializing algorithms. One issue we've had in ClimaAtmos is that initializing an algorithm requires first inspecting if an algorithm is a function, in which case assumptions are made about how that function is called. This is really clunky, and usage requires understanding ClimaTimeStepper internals.\r\n - Documentation. Several of these existing \"algorithms\", are just constants pointing to a generic tableau specific to that algorithm. Documenting these algorithms is part of our requirements, so this must be redesigned.\r\n\r\nThis should help us more easily peel off parts from the ClimaAtmos PR, and the revamp PR.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-12T19:36:25Z",
+    "deletions": 238,
+    "labels": [
+      {
+        "color": "AB5A56",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABJDt2zA",
+        "name": "breaking :boom:"
+      }
+    ],
+    "mergedAt": "2022-12-12T23:34:33Z",
+    "number": 100,
+    "title": "Make user-facing types"
+  }
+]

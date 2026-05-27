@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-23T13:15:43Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-07-23T13:15:51Z",
+    "number": 1896,
+    "title": "Small fix to benchmark script"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-23T14:05:45Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2024-07-23T14:05:52Z",
+    "number": 1897,
+    "title": "Small update to benchmark script"
+  },
+  {
+    "additions": 546,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds `Nh` to the type parameter space. This seems to be needed for GPU performance, as indicated by the recently added performance benchmark script results:\r\n\r\n```julia\r\nat_dot_call!($X_array, $Y_array):\r\n     6 milliseconds, 775 microseconds\r\nat_dot_call!($X_vector, $Y_vector):\r\n     2 milliseconds, 834 microseconds\r\ncustom_sol_kernel!($X_vector, $Y_vector, $(Val(N))):\r\n     2 milliseconds, 547 microseconds\r\ncustom_kernel_bc!($X_vector, $Y_vector, $us; printtb = false):\r\n     2 milliseconds, 561 microseconds\r\ncustom_kernel_bc!($X_array, $Y_array, $us; printtb = false, use_pw = false):\r\n     4 milliseconds, 160 microseconds\r\ncustom_kernel_bc!($X_array, $Y_array, $us; printtb = false, use_pw = true):\r\n     2 milliseconds, 584 microseconds\r\ncustom_kernel_bc!($X_vector, $Y_vector, $uss; printtb = false):\r\n     2 milliseconds, 540 microseconds\r\ncustom_kernel_bc!($X_array, $Y_array, $uss; printtb = false, use_pw = false):\r\n     2 milliseconds, 715 microseconds\r\ncustom_kernel_bc!($X_array, $Y_array, $uss; printtb = false, use_pw = true):\r\n     2 milliseconds, 547 microseconds\r\n```\r\n\r\nWhere `us` and `uss` are the \"universal sizes\" and \"static universal sizes\" respectively. The only difference is how `Nh` is stored (dynamically vs statically). It's clear from this benchmark that simply moving `Nh` into the type domain, (some) of our kernels can improve.\r\n\r\nNot all of them will because, for example, our `copyto!` kernel is using static ranges since it only accesses `size(dest, 4)`:\r\n\r\n```julia\r\nfunction knl_copyto!(dest, src)\r\n\r\n    i = CUDA.threadIdx().x\r\n    j = CUDA.threadIdx().y\r\n\r\n    h = CUDA.blockIdx().x\r\n    v = CUDA.blockDim().z * (CUDA.blockIdx().y - 1) + CUDA.threadIdx().z\r\n\r\n    if v <= size(dest, 4)\r\n        I = CartesianIndex((i, j, 1, v, h))\r\n        @inbounds dest[I] = src[I]\r\n    end\r\n    return nothing\r\nend\r\n```\r\n\r\nThis is likely why the \"flat\" implementation:\r\n\r\n```julia\r\nfunction knl_copyto_flat!(dest::AbstractData, bc)\r\n    @inbounds begin\r\n        n = size(dest)\r\n        tidx = thread_index()\r\n        if valid_range(tidx, prod(n))\r\n            I = kernel_indexes(tidx, n)\r\n            dest[I] = bc[I]\r\n        end\r\n    end\r\n    return nothing\r\nend\r\n```\r\nwas being outperformed.\r\n\r\nAlso, I noticed in our `single_field_solve_kernel!` can improve on this:\r\n\r\n```julia\r\nfunction single_field_solve_kernel!(device, cache, x, A, b)\r\n    idx = CUDA.threadIdx().x + (CUDA.blockIdx().x - 1) * CUDA.blockDim().x\r\n    Ni, Nj, _, _, Nh = size(Fields.field_values(A))\r\n    if idx <= Ni * Nj * Nh\r\n        (i, j, h) = CartesianIndices((1:Ni, 1:Nj, 1:Nh))[idx].I\r\n\r\n        _single_field_solve!(\r\n            device,\r\n            Spaces.column(cache, i, j, h),\r\n            Spaces.column(x, i, j, h),\r\n            Spaces.column(A, i, j, h),\r\n            Spaces.column(b, i, j, h),\r\n        )\r\n    end\r\n    return nothing\r\nend\r\n```\r\n\r\nRather than using `Val` everywhere (which will result in uglier interfaces and many creations of runtime types on the CPU), I think it's worth just moving this into the type space, so that we get this performance improvement by default.\r\n\r\nCloses #11 for good.",
+    "changedFiles": 29,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NjAxMTI5Njg=",
+        "number": 11,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/11"
+      }
+    ],
+    "createdAt": "2024-07-22T17:16:27Z",
+    "deletions": 487,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-07-23T20:30:42Z",
+    "number": 1894,
+    "title": "Add Nh to type parameter space"
+  }
+]

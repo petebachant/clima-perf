@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 1282,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In this PR some structures are refractored such that\r\n- all grids depend on the architecture\r\n- the models takes only the grid as an input\r\n\r\nTo do so, the architecture is now a positional argument of the grid constructor (so it can be extended by `MultiArch`) as @glwagner suggested. The flow of the script will be something like this now:\r\n```\r\narch = ...\r\ngrid = Grid(arch, FT; kwargs...)\r\nmodel = NonhydrostaticModel(grid = grid, kwargs...)\r\n```\r\nSome comments on the `MultiArch` architecture...\r\n- `MultiArch` has now a `child_architecture ` field specified on construction\r\n- `MultiArch` still depends on a topology, so, a way to go about it it is to first define a topology and then \r\n`arch = MultiArch(CPU(), ranks=ranks, topology=topology); grid = (arch, topology=topology, kwargs...)` or to define an architecture without topology and then pass it to the grid. Take care that in this second case it is not guaranteed that `arch == grid.architecture` as the architecture in the grid is constructed from `topology(grid)`\r\n- the grid constructed by `grid(arch::MultiArch; kwargs...)` will be a local grid. To reconstruct the global grid use `reconstruct_global_grid(grid)`\r\n\r\nTo do\r\n- as of now a field, given `grid(arch::MultiArch; kwargs...)` as an argument, is constructed locally, which is no problem if you `set!` a field from a function but will create problems if you want to `set!` from a global array\r\n- Explore new FFT options to allow more flexibility in the distributed NonhydrostaticModel\r\n- allow GPU halo_passing to support `MultiArch(GPU(); kwargs...)`\r\n\r\nCloses #2073 \r\nCloses #1825 ",
+    "changedFiles": 116,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MzczNzUwNDM=",
+        "number": 1825,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1825"
+      }
+    ],
+    "createdAt": "2021-11-22T14:51:34Z",
+    "deletions": 941,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2021-12-08T01:12:54Z",
+    "number": 2078,
+    "title": "from Architectures to Grids to Models"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #2102",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM4__c3N",
+        "number": 2102,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2102"
+      }
+    ],
+    "createdAt": "2021-12-07T21:55:43Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-12-08T05:22:18Z",
+    "number": 2104,
+    "title": "Remove duplicate `size` method redefinitions"
+  }
+]

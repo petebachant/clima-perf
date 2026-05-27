@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "So that `Simulation` can be called with the same arguments whether the Reactant extension is loaded or not. This will fix the ReactantExt tests that have been failing in ClimaOcean since https://github.com/CliMA/ClimaOcean.jl/pull/778\r\n\r\nTag patch release so this can be used downstream",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-24T21:36:55Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-04-25T00:38:36Z",
+    "number": 5541,
+    "title": "(0.107.4) unify Simulation interface in ReactantExt"
+  },
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "## Summary\n\nThis PR fixes `interpolate!` on flat-topology source grids when explicit coordinates are provided in flat directions.\n\n## What changed\n\n`src/Fields/interpolate.jl`\n- Added `_fractional_indices` overloads for 3-tuple nodes on flat topologies.\n- Flat directions now correctly return `nothing` in `FractionalIndices` instead of falling back to the generic 3D path.\n\n`test/test_field.jl`\n- Added a regression test for the reported `XYFlatGrid` case.\n- Added a compact regression test for a representative partially flat case.\n\n## Root cause\n\n`interpolate!` forms a full node tuple via `_node(...)`. For flat grids with explicit coordinates in flat directions, that tuple can be 3D even though the source field is lower-dimensional. Existing `_fractional_indices` dispatch only handled reduced-arity tuples like `(z,)`, so dispatch fell through to the generic 3D method and produced invalid interpolation indices in flat directions.\n\n## Impact\n\nThis preserves support for explicit coordinates on flat directions while ensuring those directions do not participate in interpolation.\n\n## Validation\n\n- `julia --project=. test/test_field.jl`\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7-_pjE",
+        "number": 5511,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5511"
+      }
+    ],
+    "createdAt": "2026-04-18T02:53:14Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-04-25T18:51:56Z",
+    "number": 5522,
+    "title": "Fix interpolate! on flat topologies with explicit coordinates"
+  }
+]

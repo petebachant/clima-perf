@@ -1,0 +1,123 @@
+[
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nInstead of having two types `PrognosticSoilConditions` and `PrognosticGroundConditions`, use `PrognosticGroundConditions` anytime the canopy is run as part of an integrated model. Dispatch on `prognostic_land_components` instead wherever necessary.\r\n\r\ncloses #1272\r\n\r\n## Content\r\n- [x] in ground albedo functions, dispatch on `prognostic_land_components` instead of `PrognosticXConditions` type\r\n- [x] use `PrognosticGroundConditions` instead of `PrognosticSoilConditions` for SoilCanopyModel\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7C-7_D",
+        "number": 1272,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1272"
+      }
+    ],
+    "createdAt": "2025-09-12T00:47:37Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2025-09-12T16:34:43Z",
+    "number": 1411,
+    "title": "remove PrognosticSoilConditions"
+  },
+  {
+    "additions": 224,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nGeneralize diagnostic reductions instead of only exposing averages to users, and remove hard-coded functions for averaging. Instead, dispatch on user-provided Symbols for `reduction_period` and `reduction_type` to create `ScheduledDiagnostic`s more generally and reduce code duplication.\r\n\r\n\r\n## To-do\r\n- [x] rename `average_period` -> `reduction_period`\r\n- [x] add an argument `reduction_type` to `default_diagnostics`\r\n- [x] instead of if/else branches in `default_diagnostics`, call `common_diagnostics(reduction_period, reduction_type, output_writer, start_date, short_names, ...)\r\n- [x] add a common_diagnostics method that uses helper functions to dispatch on Vals to parse the available periods (monthly, weekly, daily, hourly, halfhourly) and reductions (average, max, min, inst)\r\n  - `get_period(::Val{:monthly}) = Month(1)`, etc\r\n  - `get_reduction(::Val{:average}) = (+)` (and pass `average_pre_output_hook!`), etc\r\n- [x] remove hard-coded functions like `monthly_averages`, etc\r\n- [x] update docs\r\n- [x] verify that plots are unchanged\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-11T23:37:10Z",
+    "deletions": 345,
+    "labels": [],
+    "mergedAt": "2025-09-12T21:14:56Z",
+    "number": 1410,
+    "title": "generalize diagnostic reductions"
+  },
+  {
+    "additions": 399,
+    "author": {
+      "id": "MDQ6VXNlcjE1Njk4MDA4",
+      "is_bot": false,
+      "login": "ychnli",
+      "name": "Yuchen Li"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdd C4 photosynthesis support to the pmodel; closes #1329.\r\n\r\nthe LHF and GPP for the Ozark pmodel test look indistinguishable between main branch and here. (C3 photosynthesis)\r\n\r\n## To-do\r\nCalibrate quantum yield parameters. Different sets are reported in the literature, due to different definitions and possibly to different values also.\r\n \u03c6_0 (T)=-0.008+0.00375\u2219T-0.58\u2219e^(-4)\u2219T^2, for C4; supplement of https://agupubs.onlinelibrary.wiley.com/doi/epdf/10.1029/2024MS004599. they reference Scott and Smith\r\n\r\nwhat is ACTUALLY in Scott and Smith: \u03c6_0 (T)=-0.0805+0.022\u2219T-0.00034\u2219T^2\r\nThey say that this is the same as for C3. \r\n\r\nStocker et al 2020: for C3, \u03c6_0 (T)= 0.087*(0.352+0.022\u2219T-0.00034\u2219T^2) - Stocker 2020.\r\n\r\nCare must be taken to compare with Bonan's book! He uses different definitions, which are also what we use in the Farquhar model",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7GRefX",
+        "number": 1329,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1329"
+      }
+    ],
+    "createdAt": "2025-08-20T23:32:36Z",
+    "deletions": 319,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-09-12T22:20:56Z",
+    "number": 1356,
+    "title": "Add C4 plants for P-model"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis was previously not being tested in CI.\r\n\r\nCloses #1415\r\n\r\n## Content\r\n- [x] add test_pfts.jl to runtests.jl\r\n- [x] get the tests to pass (update PFT setups)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7LXnHS",
+        "number": 1415,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1415"
+      }
+    ],
+    "createdAt": "2025-09-12T21:23:22Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2025-09-12T22:48:11Z",
+    "number": 1416,
+    "title": "add test_pfts.jl to runtests.jl"
+  }
+]

@@ -4,6 +4,18 @@ title: CliMA performance
 description: Tracking CliMA performance over time.
 git_repo_url: https://github.com/petebachant/clima-perf
 
+dependencies:
+  - pixi
+  - kind: setup
+    name: Authenticate GitHub CLI
+    check_command: calkit xenv -n clima-data -- gh auth status
+    setup_command: calkit xenv -n clima-data -- gh auth login
+    description: >
+      The fetch-github stage uses the gh CLI to pull data from CliMA org
+      repos. Run this once locally to authenticate. On GitHub Actions the
+      run-pipeline workflow sets GH_TOKEN from the workflow's GITHUB_TOKEN,
+      so no interactive login is needed there.
+
 environments:
   main:
     path: envs/main.txt
@@ -20,6 +32,12 @@ environments:
     kind: uv-venv
     prefix: .calkit/venvs/bk/.venv
     python: "3.14"
+  clima-data:
+    # Pixi env (under .calkit/envs/) with gh + jq + python so both
+    # fetch-github.py (subprocess gh) and fetch-citations.py (requests +
+    # pyyaml) run in one environment.
+    kind: pixi
+    path: .calkit/envs/clima-data/pixi.toml
   clima:
     kind: slurm
     host: clima.gps.caltech.edu
@@ -81,21 +99,41 @@ pipeline:
           delete_before_run: false
           storage: git
     fetch-github:
-      description: Fetch GitHub releases, stars, issues, PRs, forks data on
-        a weekly basis.
-      kind: shell-script
-      script_path: scripts/fetch-github.sh
-      environment: gh-cli
+      description: >
+        Incrementally fetch CliMA-org GitHub data (PRs, issues, repo stats,
+        forks, releases, Project.toml commits, repo creation dates) up to
+        the start of the current UTC day. Resumes from the latest
+        previously-fetched timestamp on each run.
+      kind: python-script
+      script_path: scripts/fetch-github.py
+      environment: clima-data
       always_run: true
       outputs:
         - path: data/github
           storage: git
           delete_before_run: false
-    fetch-citations:
-      description: Fetch CliMA publication and citation data.
+    fetch-registry:
+      description: >
+        Shallow-clone JuliaRegistries/General and snapshot which registered
+        packages depend on each CliMA package. Keyed by UTC day; no-ops if
+        the snapshot for the current UTC day already exists.
       kind: python-script
-      environment: TODO
+      script_path: scripts/fetch-registry.py
+      environment: clima-data
+      always_run: true
+      outputs:
+        - path: data/julia-registry
+          storage: git
+          delete_before_run: false
+    fetch-citations:
+      description: >
+        Scrape https://clima.caltech.edu/publications/ for paper DOIs and
+        snapshot their OpenAlex citation data. Keyed by UTC day; no-ops if
+        the snapshot for the current UTC day already exists. Package
+        grouping is done in the analyze notebook.
+      kind: python-script
       script_path: scripts/fetch-citations.py
+      environment: clima-data
       always_run: true
       outputs:
         - path: data/openalex

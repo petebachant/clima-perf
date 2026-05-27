@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nuniformly use `cos_zenith` throughout ClimaCoupler\r\n\r\ncloses #1281",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6zKkEO",
+        "number": 1281,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1281"
+      }
+    ],
+    "createdAt": "2025-04-25T18:05:56Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2025-04-29T18:43:16Z",
+    "number": 1308,
+    "title": "rename cos_zenith_angle -> cos_zenith"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Switching to PartitionedStateFluxes introduced a bug where insolation was not updated. This is because the correct `update_sim!` method was not being called.\r\n\r\nThis commit fixes that. In parallel, I also fixed the update of insolation in ClimaAtmos so that it is automatically updated every time RRTGMP is called.\r\n\r\nhttps://github.com/CliMA/ClimaAtmos.jl/pull/3788\r\n\r\nAs I discuss in that issue, I think the only reason for updating the insolation tuple in ClimaCoupler is to do it more often that the radiation timestep. I think this is because the `cos_zenith_angle` is one of the exchanged field. So, if we remove `cos_zenith_angle` from the exchange fields, we can remove this specialized method in `climaatmos.jl` and use the default one in `FieldExchanger`.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-29T17:00:17Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-04-29T18:44:21Z",
+    "number": 1312,
+    "title": "Fix insolation update"
+  },
+  {
+    "additions": 84,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nInstead of storing `F_turb_energy` in the coupler fields, store `F_lhf` and `F_shf` individually. This allows us to provide a more accurate flux partition to the land models. No extra computation is required because SurfaceFluxes.jl already computes and returns LHF and SHF individually.\r\n\r\ncloses #600\r\n\r\n## Content\r\n- [x] replace `F_turb_energy` in CoupledSimulation fields with `F_shf`, `F_lhf`\r\n- [x] in land model `update_turbulent_fluxes!` methods, access `F_shf` and `F_lhf` individually and update the model with each\r\n- [x] in PrescribedSeaIce, SlabOcean `update_turbulent_fluxes!`, combine `F_shf + F_lhf` and use this sum to fill `sim.integrator.p.F_turb_energy`\r\n\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc5-T2iI",
+        "number": 600,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/600"
+      }
+    ],
+    "createdAt": "2025-04-25T18:23:56Z",
+    "deletions": 74,
+    "labels": [],
+    "mergedAt": "2025-04-29T22:36:23Z",
+    "number": 1309,
+    "title": "exchange LHF, SHF individually"
+  }
+]

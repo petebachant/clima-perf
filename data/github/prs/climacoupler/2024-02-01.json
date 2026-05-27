@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 122,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ngo through `coupler_driver_modular.jl`, update functions that won't run on GPU so that the slabplanet setup will run on GPU.\r\n\r\n### Status\r\nThis currently runs on `clima`, but not on `central` due to a too-large parameter getting passed to the gpu\r\nSee https://github.com/CliMA/ClimaCore.jl/issues/1597\r\n\r\ncloses #530\r\n\r\n## To-do\r\n- [x] find better binary_mask solution\r\n- [x] clean up\r\n- [x] add GPU slabplanet case to buildkite\r\n- [x] check AMIP paperplots change - why?\r\n- [x] remove Ref() in atmos_init\r\n\r\n\r\n## Content\r\n- [x] update `mpi_init`\r\n  - simplified, moved to driver\r\n- [x] update atmos_init 0-setting\r\n  - shouldn't use parent, but we can fix that later\r\n- [x] Regridder use CPU context for file reading/writing\r\n  - fixes `unique_nodes` error\r\n- [x] don't pass `FT` as a argument (try to get from e.g. space instead)\r\n  - ex. in slab_ocean_space_init, but probably more places too\r\n- [x] `pi` is of type `Irrational(:pi)`, which isn't isbits (should be wrapped in FT)\r\n  - in slab_ocean_space_init\r\n- [x] `binary_mask` is not `isbits`\r\n  - when `threshold = eps(FT)` or `0`, can replace with `clamp`, but need other solution for other thresholds\r\n- [x] bug: anom_ampl undefined in [this line](https://github.com/CliMA/ClimaCoupler.jl/blob/main/experiments/AMIP/components/ocean/slab_ocean_init.jl#L57) of slab_ocean_space_init, code never reaches this point because `anomaly = false` always\r\n  - function changed to remove unused code branches\r\n\r\n## Specific todos (later work - documented in SDI)\r\n- [ ] look for places where `FT` passed as argument\r\n- [ ] look for places where `pi` not wrapped in FT\r\n- [ ] remove use of parent\r\n- [ ] fix plotting (make sure on CPU not GPU)\r\n\r\n## Notes\r\n- Bucket model is not entirely GPU-compatible (esp. file reading - BulkAlbedoTemporal, BulkAlbedoStatic)\r\n  - need to fix in ClimaLSM before coupler can be GPU-compatible\r\n  - for now, can test with `BulkAlbedoFunction`, which is GPU-compatible\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc54YoYw",
+        "number": 530,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/530"
+      }
+    ],
+    "createdAt": "2023-11-30T23:53:03Z",
+    "deletions": 121,
+    "labels": [
+      {
+        "color": "76B900",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAABdk7Q4g",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-02-01T00:36:13Z",
+    "number": 529,
+    "title": "run slabplanet on gpu"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #587 \r\n\r\nremoves directories, updates reference to `output/` dir",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc599dlh",
+        "number": 587,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/587"
+      }
+    ],
+    "createdAt": "2024-02-01T19:33:42Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2024-02-01T21:26:15Z",
+    "number": 588,
+    "title": "remove output, plotting directories"
+  }
+]

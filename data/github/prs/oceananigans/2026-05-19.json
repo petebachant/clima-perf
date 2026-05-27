@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "This PR changes the default behaviour of picking up checkpoints. Instead of using the `\u2206t` obtained from the checkpoint, the model now defaults to the user-defined variables in the experiment file. \r\n\r\nPreviously, if the user changed the `\u2206t`, it would be overwritten by the checkpointer saved state on pickup. This would make workflows like when, for example, spin up has a smaller dt and then dt is bumped up, impossible.\r\n\r\nNow, the user-specified `\u2206t` will ALWAYS be used.\r\n\r\nI have modified the test file to test for this, and made minimal changes to account for this. \r\n\r\nThis is a breaking change; I will bump the version number when it is ready to merge. ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-15T02:45:51Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "0f7573",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTYyMDEw",
+        "name": "simulation \ud83c\udfae"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-05-19T11:20:59Z",
+    "number": 5588,
+    "title": "(v0.108.0) Always use user-defined `\u2206t` on `pickup`"
+  },
+  {
+    "additions": 306,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "## Summary\r\n\r\n- `Relaxation(rate=\u2026, target=fts)` now accepts a `FieldTimeSeries` as the relaxation target.\r\n- At materialize time, the FTS is wrapped in an internal `FieldTimeSeriesTarget{L,F}` carrying the simulation-side location (`instantiated_location(field)`) and the integer index of the forced field in `model_fields`. The `Relaxation` struct itself is unchanged (still `Relaxation{R,M,T}`); the target field's type just becomes `FieldTimeSeriesTarget` after materialization.\r\n- A new kernel callable on `Relaxation{R,M,<:FieldTimeSeriesTarget}` reads `\u03d5 = model_fields[index][i,j,k]` and obtains `\u03d5\u1d63` via `interpolate(X, Time(clock.time), fts, instantiated_location(fts), fts.grid)` (spatial + temporal interpolation), so the FTS may live on a different grid as long as its extent brackets the simulation grid in `x`, `y`, and `z`.\r\n- Mismatched extents throw `ArgumentError` at materialize time naming the offending axis and both intervals.\r\n\r\nThe existing `Relaxation(target=callable)` / `Relaxation(target=number)` path is untouched \u2014 multiple dispatch routes those cases through the original `ContinuousForcing` wrapping.\r\n\r\n## Why\r\n\r\nThis is the first slice of a small series that generalizes `Relaxation` for real-data use cases \u2014 driving an LES or regional run with prescribed large-scale state from a host model (ERA5, GFS, a parent simulation) through grid nudging and/or open boundaries with a fringe region. Scope of this PR is intentionally narrow: 3D mode only, FTS targets only. \"Profile mode\" (`mode=:profile` + column reference, see https://github.com/NumericalEarth/Breeze.jl/pull/562) and other target types are deferred to follow-up PRs.\r\n\r\n## Design notes\r\n\r\n- Mirrors the two existing patterns it composes: `Forcing(fts::FlavorOfFTS)` materializes into a discrete forcing (`forcing.jl:184-186`); `Relaxation` already mutates the user's recipe into a kernel-ready form at `materialize_forcing` (`relaxation.jl:75-78`). This PR keeps the `Relaxation` identity through materialization (`model.forcing.c isa Relaxation` stays `true`), only swapping the `target` field's type.\r\n- Field index stored as runtime `Int`, matching the precedent in `ContinuousForcing.field_dependencies_indices` (`user_function_arguments.jl:1-19`) rather than encoding as a `Val{N}` type param.\r\n- Existing `Forcing(fts)` doesn't enforce location matching (flagged latent constraint); this PR sidesteps that by using `interpolate`, so location/grid alignment between FTS and forced field is no longer required.\r\n\r\n## Test plan\r\n\r\n- [x] CPU unit tests pass locally (6/6: materialization wiring + analytical convergence + extent validation)\r\n- [x] Existing `Relaxation` smoke tests (`GaussianMask`, `PiecewiseLinearMask`) still pass\r\n- [x] Doctest output verified to match\r\n- [ ] CI green (CPU + GPU)\r\n- [ ] Reactant trace smoke test (deferred to follow-up unless CI catches a regression)\r\n\r\n## Out of scope (follow-ups)\r\n\r\n- Interpolation performance optimization by caching `FractionalIndices` arrays in `FieldTimeSeriesTarget` at materialize time.\r\n- Profile mode (`mode=:profile`, column-averaged relaxation toward 1\u00d71\u00d7Nz reference). Requires the new `update_forcing!` hook in each model's `update_state!`.\r\n- Plain `Field` (time-invariant) targets.\r\n- `column_field_time_series` utility for extracting a column reference from a 3D reanalysis FTS.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-12T04:34:20Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-19T17:17:25Z",
+    "number": 5575,
+    "title": "Support `FieldTimeSeries` targets in `Relaxation`"
+  },
+  {
+    "additions": 169,
+    "author": {
+      "id": "MDQ6VXNlcjY3NDY5ODA=",
+      "is_bot": false,
+      "login": "matt-graham",
+      "name": "Matt Graham"
+    },
+    "body": "Closes #5599 \r\n\r\nThis PR adds basic support for plotting scalar and one-dimensional time series recorded in a `FieldTimeSeries` object with Makie to complement existing support for plotting `Field` objects. \r\n\r\nThe envisaged use case is to allow easy plotting of scalar diagnostics such as MOC strength at a particular latitude or one-dimensional diagnostics such as fields spatially averaged across horizontal dimensions recorded during a simulation using output writers and subsequently read in to a `FieldTimeSeries` from file. This can be achieved for scalar fields currently by indexing in to the field time series with a colon and explicitly passing the times as coordinates as in [stratified Kelvin-Helmholtz instability example](https://clima.github.io/OceananigansDocumentation/stable/literated/kelvin_helmholtz_instability#Pretty-things), though this will not work if the field time series is not loaded with the `InMemory()` backend (which for scalar time series is unlikely to be a problem admittedly). For one-dimensional field time series plotting requires quite a lot of manual work to account for indexing, getting relevant coordinate arrays etc.\r\n\r\nSome notes on design:\r\n- I have assumed that time should always be plotted on horizontal axis by default.\r\n- The conversion of the `FieldTimeSeries` data to a plottable array explicitly iterates over all time indices and stacks the arrays corresponding to the fields for each time index computed using the existing `make_plottable_array` method. For `FieldTimeSeries` with an `InMemory()` backend this is a bit inefficient but it keeps things working for case where `OnDisk()` backend is used and also allows reusing `make_plottable_array` method to deal with making / dropping singleton dimensions / transferring from GPU to CPU if necessary.\r\n\r\n\r\nAs a simple example of how this can be used:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing CairoMakie\r\n\r\ngrid = RectilinearGrid(size = (1, 10, 1), extent = (1, 1kilometers, 1)) \r\noutput_times = 0:0.5hours:24hours\r\nfield_time_series = FieldTimeSeries{Center, Center, Center}(grid, output_times)\r\n\r\nfor (i, t) in enumerate(output_times)\r\n    field = CenterField(grid)\r\n    set!(field, (x, y, z) -> y * sinpi(t / 4hours))\r\n    set!(field_time_series, field, i)\r\nend\r\n\r\ncontourf(field_time_series)\r\n```\r\n\r\nproduces the following as output\r\n\r\n<img width=\"600\" height=\"450\" alt=\"example-usage-output\" src=\"https://github.com/user-attachments/assets/ddc31d52-ecac-451c-b3c9-2bcfeae256dd\" />\r\n\r\nFor more realistic examples, applying this to recorded outputs of MOC strength and horizontally spatially averaged temperature fields from some simulations I have been working on gives outputs like the following\r\n\r\n<img width=\"600\" height=\"450\" alt=\"moc_strength_time_plot\" src=\"https://github.com/user-attachments/assets/e4a01f1e-8b81-4af8-89ed-488b73d99a0c\" />\r\n\r\n<img width=\"600\" height=\"450\" alt=\"averaged_temperature_depth_time_plot\" src=\"https://github.com/user-attachments/assets/55b823a9-bbb6-4c58-8c5f-e685b0675a56\" />\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABCd2NUA",
+        "number": 5599,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5599"
+      }
+    ],
+    "createdAt": "2026-04-16T21:23:50Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-05-19T18:48:36Z",
+    "number": 5512,
+    "title": "Add support for plotting `FieldTimeSeries` in Makie extension"
+  }
+]

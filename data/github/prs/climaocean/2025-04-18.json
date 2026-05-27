@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjExNDEyMTg2",
+      "is_bot": false,
+      "login": "michel2323",
+      "name": "Michel Schanen"
+    },
+    "body": "Fixes https://github.com/CliMA/ClimaOcean.jl/issues/471",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys6y0t5w",
+        "number": 471,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/471"
+      }
+    ],
+    "createdAt": "2025-04-17T11:59:37Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-04-18T01:30:41Z",
+    "number": 474,
+    "title": "Fix first_date args"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #476\r\n\r\nAlso gives more informative message to the user regarding why the extra interpolation passes are skipped.\r\n\r\n```Julia\r\nusing ClimaOcean\r\nusing Oceananigans\r\n\r\nunderlying_grid = TripolarGrid(size = (360, 180, 50),\r\n                               z = (-5000, 0),\r\n                               halo = (5, 5, 4),\r\n                               first_pole_longitude = 70,\r\n                               north_poles_latitude = 55)\r\n```\r\n```Julia\r\nbottom_height = regrid_bathymetry(underlying_grid;\r\n                                  major_basins = 2)\r\n[ Info: Interpolating bathymetry of size (21600, 10800, 1) onto a TripolarGrid target grid of size (360, 180, 50)\r\n360\u00d7180\u00d71 Field{Center, Center, Nothing} reduced over dims = (3,) on OrthogonalSphericalShellGrid on CPU\r\n\u251c\u2500\u2500 grid: 360\u00d7180\u00d750 OrthogonalSphericalShellGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded} on CPU with 5\u00d75\u00d74 halo and with precomputed metrics\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: ZeroFlux, north: Zipper, bottom: Nothing, top: Nothing, immersed: Default\r\n\u2514\u2500\u2500 data: 370\u00d7190\u00d71 OffsetArray(::Array{Float64, 3}, -4:365, -4:185, 1:1) with eltype Float64 with indices -4:365\u00d7-4:185\u00d71:1\r\n    \u2514\u2500\u2500 max=6102.41, min=-9452.9, mean=-1960.54\r\n```\r\n```Julia\r\nbottom_height_with_extra_passes = regrid_bathymetry(underlying_grid;\r\n                                                    interpolation_passes = 6,\r\n                                                    major_basins = 2)\r\n[ Info: Interpolation passes of bathymetry size (21600, 10800, 1) onto a TripolarGrid target grid of size (360, 180, 50):\r\n[ Info:     pass 1 to size (18060, 9030, 1)\r\n[ Info:     pass 2 to size (14520, 7260, 1)\r\n[ Info:     pass 3 to size (10980, 5490, 1)\r\n[ Info:     pass 4 to size (7440, 3720, 1)\r\n[ Info:     pass 5 to size (3900, 1950, 1)\r\n[ Info:     pass 6 to size (360, 180, 1)\r\n360\u00d7180\u00d71 Field{Center, Center, Nothing} reduced over dims = (3,) on OrthogonalSphericalShellGrid on CPU\r\n\u251c\u2500\u2500 grid: 360\u00d7180\u00d750 OrthogonalSphericalShellGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded} on CPU with 5\u00d75\u00d74 halo and with precomputed metrics\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: ZeroFlux, north: Zipper, bottom: Nothing, top: Nothing, immersed: Default\r\n\u2514\u2500\u2500 data: 370\u00d7190\u00d71 OffsetArray(::Array{Float64, 3}, -4:365, -4:185, 1:1) with eltype Float64 with indices -4:365\u00d7-4:185\u00d71:1\r\n    \u2514\u2500\u2500 max=6005.79, min=-9210.06, mean=-1960.37\r\n```\r\n\r\ncc @taimoorsohail ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOIOi2Ys6zB9QZ",
+        "number": 476,
+        "repository": {
+          "id": "R_kgDOIOi2Yg",
+          "name": "ClimaOcean.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaOcean.jl/issues/476"
+      }
+    ],
+    "createdAt": "2025-04-17T23:47:16Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2025-04-18T06:05:59Z",
+    "number": 475,
+    "title": "Better interpolation info shown to user"
+  }
+]

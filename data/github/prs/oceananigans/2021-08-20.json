@@ -1,0 +1,124 @@
+[
+  {
+    "additions": 357,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MDU0NzM5",
+      "is_bot": false,
+      "login": "hennyg888",
+      "name": "Henry Hongnan Guo"
+    },
+    "body": "Co-authored-by: Francis J. Poulin <fpoulin@uwaterloo.ca>\r\n\r\nI've added back the threaded benchmark written by @francispoulin in an older branch. I also added plots to it.\r\nThere is actually already a threaded benchmark script:\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/master/benchmark/benchmark_multithreading.jl\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/master/benchmark/benchmark_multithreading_single.jl\r\nThey differ in that the one I'm adding is essentially weak scaling shallow water model, while the one that's already there is strong scaling nonhydrostatic model.\r\nIf everyone thinks that it's appropriate, then I'll likely change the name of the extant benchmarking scripts to more accurately reflect their content. \r\nI would likely also do some more minor changes such as changing the default grid size down from 512^3, adding in plots, and configuring the output tables a bit more.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-21T01:32:21Z",
+    "deletions": 350,
+    "labels": [],
+    "mergedAt": "2021-08-20T01:30:44Z",
+    "number": 1881,
+    "title": "New Threaded Benchmark Scripts"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjIyNjY4NjYy",
+      "is_bot": false,
+      "login": "sandreza",
+      "name": "Andre Nogueira Souza"
+    },
+    "body": "This changes the threading structure in a kernel launch to only launch over the i,j indices to avoid race conditions",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-19T23:33:11Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2021-08-20T02:57:16Z",
+    "number": 1944,
+    "title": "Adds a small bugfix to calculation in HydrostaticModel"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjI5NzUyNzE4",
+      "is_bot": false,
+      "login": "maeckha",
+      "name": "Markus Eckhardt"
+    },
+    "body": "Think this should be \r\n```\r\n`time::T` can be either a number or a `DateTime` object\" \r\n```\r\n?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-20T09:49:30Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-08-20T13:13:21Z",
+    "number": 1945,
+    "title": "time::T number OR DateTime object"
+  },
+  {
+    "additions": 728,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MDU0NzM5",
+      "is_bot": false,
+      "login": "hennyg888",
+      "name": "Henry Hongnan Guo"
+    },
+    "body": "This is the first draft of the updated benchmark docs. There are still many things to add in such as the weak and strong scaling benchmarks, but as of now it would be greatly appreciated if I can get some feedback on suggestions on the formatting and descriptions.\r\n\r\nA few questions and notes:\r\n1. I do not know what the static ocean benchmark results are. There is no longer a script for it in the benchmarks folder since all the results are quite old. I feel like I should replace it with the nonhydrostatic model benchmarks if that is what makes sense.\r\n2. I do not know what the channel benchmark results are either. Either the script was removed, or the form of it that produced these old results have been lost under a lot of renames and refactors. \r\n3. The tracers and turbulence closures benchmarks still have corresponding scripts in the benchmarks folder. They were simply replaced with newer results. The newer results also includes CPU to GPU speedup analysis, unlike the old results.\r\n4. The shallow water model benchmark results are the best looking ones with maximum 400 times speedup using WENO5. Graphs are also included with a quick one sentence analysis.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-10T01:22:23Z",
+    "deletions": 152,
+    "labels": [],
+    "mergedAt": "2021-08-20T13:21:20Z",
+    "number": 1930,
+    "title": "Updating Benchmark Docs"
+  },
+  {
+    "additions": 817,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR renames `TKEBasedVerticalDiffusivity` as `CATKEVerticalDiffusivity`, and implements the _triple max_ CATKE formulation that involves a \"convective mixing length\", in addition to the grid-proportional mixing length, and stably stratified mixing length.\r\n\r\nThis formulation is described here (missing some context):\r\n\r\n![image](https://user-images.githubusercontent.com/15271942/128558326-5ee9e1dd-9f0e-4c98-91ee-694b4e9d72c4.png)\r\n\r\nThis requires some minor modifications to the `HydrostaticFreeSurfaceModel` time-stepping algorithm and also refactoring of the `calculate_diffusivities!` interface.\r\n\r\ncc @adelinehillier",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-08-06T18:51:15Z",
+    "deletions": 739,
+    "labels": [],
+    "mergedAt": "2021-08-20T16:46:51Z",
+    "number": 1926,
+    "title": "Implements \"triple max\" CATKE formulation"
+  },
+  {
+    "additions": 152,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Reverts CliMA/Oceananigans.jl#1930\r\n\r\nResolves #1949 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5NzU3Mjc5NDI=",
+        "number": 1949,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1949"
+      }
+    ],
+    "createdAt": "2021-08-20T15:59:52Z",
+    "deletions": 728,
+    "labels": [],
+    "mergedAt": "2021-08-20T18:21:39Z",
+    "number": 1950,
+    "title": "Revert \"Updating Benchmark Docs\""
+  }
+]

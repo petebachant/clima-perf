@@ -1,0 +1,69 @@
+[
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjQzMTM5MDIz",
+      "is_bot": false,
+      "login": "loisbaker",
+      "name": "Lois Baker"
+    },
+    "body": "This PR addresses issue #5316 to ensure that Poisson eigenvalues are `Float32` on Metal GPUs - right now FFTs don't work on Metal but when they are supported this will be necessary. To do this we pass the grid to `poisson_eigenvalues` - this would allow potential specification of grid float type for eigenvalues in the future (currently always using `Float64`, see [#55](https://github.com/CliMA/Oceananigans.jl/issues/55)).\r\n\r\n- Updates `poisson_eigenvalues` to take the `grid` as an argument\r\n- Passes grid to `poisson_eigenvalues` wherever it's used\r\n- Extends `poisson_eigenvalues` in `OceananigansMetalExt` (dispatched on `grid`) to output `Float32`\r\n- Adds a test to `test_metal.jl`\r\n\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-05T02:41:42Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2026-04-03T04:23:20Z",
+    "number": 5373,
+    "title": "Pass grid to poisson_eigenvalues and set eigenvalues to be `eltype(grid)`"
+  },
+  {
+    "additions": 124,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Adds `test/test_reactant_single_column_models.jl` with tests for `(Flat, Flat, Bounded)` single column grids on `ReactantState`\n- Tests construction, compiled `time_step!`, `BuoyancyTracer`, `TKEDissipationVerticalDiffusivity`, and Enzyme reverse-mode gradients\n- Includes the new test file in the `reactant_2` test group\n\n## Motivation\nSingle column grids take a different code path through `update_state!` (via `single_column_model_mode.jl`) and `fill_halo_regions!` that is currently untested with Reactant. PR #5013 (single column state estimation example) uncovered that these code paths fail with `ReactantState` architecture. These tests will help identify and track the fixes needed.\n\n## Expected failures\nThese tests are expected to fail initially \u2014 they expose missing Reactant support for single column grids. Known issues:\n1. `ka_with_reactant` missing method for `fill_halo_regions!` on single column grids\n2. `convert(Float64, TracedRNumber{Float64})` in `hydrostatic_ab2_step!`\n\n## Test plan\n- [ ] CI runs the `reactant_2` test group and reports failures\n- [ ] Use failures to guide fixes for single column Reactant support\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-29T18:54:18Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-04-03T14:00:32Z",
+    "number": 5454,
+    "title": "Add Reactant tests for single column grids"
+  },
+  {
+    "additions": 112,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n- Fix method ambiguity error when using `ContinuousBoundaryFunction` (continuous-form `FluxBoundaryCondition`) on grids with Flat dimensions (e.g., `(Flat, Flat, Bounded)` for single-column models)\n- The root cause: Flat dimensions have location `Nothing`, which collides with the convention that the boundary-normal dimension also has location `Nothing`, causing Julia to see multiple equally-specific `getbc` methods\n- Add grid-type-constrained disambiguation methods for all combinations of two/three `Nothing` location parameters, for both domain boundary (2-index) and immersed boundary (3-index) `getbc` methods\n- Add tests for `ContinuousBoundaryFunction` on all single-bounded-dimension Flat topologies\n\nReported by @ewquon\n\n## Test plan\n\n- [x] Verified fix on `(Flat, Flat, Bounded)`, `(Flat, Bounded, Flat)`, and `(Bounded, Flat, Flat)` topologies\n- [ ] CI passes\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-02T16:49:10Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2026-04-03T20:32:23Z",
+    "number": 5472,
+    "title": "Fix ContinuousBoundaryFunction dispatch ambiguity on Flat grids"
+  }
+]

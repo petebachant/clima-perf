@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 814,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MDU0NzM5",
+      "is_bot": false,
+      "login": "hennyg888",
+      "name": "Henry Hongnan Guo"
+    },
+    "body": "Plots were added for the following benchmarking scripts, so as to present the most important data found in the original output tables in a visual format that is easier to analyze:\r\n```\r\nbenchmark_shallow_water_model.jl\r\nbenchmark_incompressible_model.jl\r\nstrong_scaling_shallow_water_model.jl\r\nweak_scaling_shallow_water_model.jl\r\nstrong_scaling_incompressible_model.jl\r\n```\r\nThe plotting requires the Plots and PyPlot packages.\r\n\r\nAdditional fixes were also made.\r\n\r\nThree manual calls to the garbage collection function, `GC()` was added in `src/Benchmarks.jl` which enabled `benchmark_shallow_water_model.jl` and `benchmark_incompressible_model.jl` to run multiple benchmarking cases with large grids without running out of memory. One such call is `GC( true)` which triggers a \"full\" garbage collection that is able to remove younger unreferenced objects.\r\n\r\nFor the _single files of the scaling benchmarking scripts, the `@benchmark` portion was adjusted to have `evals=1` on top of the original configuration of `samples=10`. This allowed larger ranks of CPUs to be benchmarked. Originally, without the configuration limiting evaluations to 1, as the number of CPUs increased and the time per evaluation decreased, the number of times the benchmarked bit of code was run became too great and caused deadlocks between the MPI processes.",
+    "changedFiles": 28,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-20T17:28:59Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2021-06-26T02:07:31Z",
+    "number": 1746,
+    "title": "Plots and fixes for benchmarks"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "I think we formally support Flat topologies now, so we should at least mention them in the page that teaches users about the  grids. So I added a couple of simple sentences. I don't think we need much more for now (especially since all the 2D examples now use `Flat`).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-26T16:33:11Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-06-26T22:00:36Z",
+    "number": 1774,
+    "title": "Include Flat topologies when talking about the grids in the docs"
+  }
+]

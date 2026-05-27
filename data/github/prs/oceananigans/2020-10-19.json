@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 922,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR provides a substantial rewrite to the user API for \"scheduling\" output and diagnostics.\r\n\r\nPreviously, output was scheduled by specifying one of two keyword arguments when constructing the `AbstractOutputWriter`: `time_interval`, and `iteration_interval`. An example from the documentation is\r\n\r\n```julia\r\nsimulation.output_writers[:field_writer] =\r\n    NetCDFOutputWriter(model, fields, filename=\"output_fields.nc\", time_interval=60)\r\n\r\n# output\r\nNetCDFOutputWriter (time_interval=60): output_fields.nc\r\n\u251c\u2500\u2500 dimensions: zC(16), zF(17), xC(16), yF(16), xF(16), yC(16), time(0)\r\n\u2514\u2500\u2500 2 outputs: [\"T\", \"u\"]\r\n```\r\n\r\nTime-averaging was specified by providing one or two additional keyword arguments: `time_average_interval` and (optionally) `time_average_stride`.\r\n\r\nThis PR eliminates these keyword arguments in favor of a single argument `schedule`. In general, the `schedule` is an object which returns `true` (when output should be written, or a diagnostic calculated) and `false` (otherwise).\r\n\r\nThis PR implements four `AbstractSchedule`s, and more are possible:\r\n\r\n* `TimeInterval`: periodic schedule that reoccurs on a interval of model time.\r\n* `IterationInterval`: periodic schedule that reoccurs on an iteration of model iterations\r\n* `WallClockInterval` periodic schedule that reoccurs on an interval of \"wall time\", as kept by the clock on your wall\r\n* `AveragedTimeInterval`: periodic schedule that reoccurs on an interval of model time, and specifies time-averaging of output over a `window` (and a default `window` equal to `interval` is now provided for friendliness)\r\n\r\nThe old syntax thus becomes\r\n\r\n```julia\r\nsimulation.output_writers[:field_writer] =\r\n    NetCDFOutputWriter(model, fields, filepath=\"fields.nc\", schedule=TimeInterval(60))\r\n```\r\n\r\nand averaging is specified (with a time window of 20 seconds) by writing\r\n\r\n```julia\r\nsimulation.output_writers[:field_writer] =\r\n    NetCDFOutputWriter(model, fields, filepath=\"fields.nc\", schedule=AveragedTimeInterval(60, window=20))\r\n```\r\n\r\nThis PR starts updating the examples and docs, though we still need to\r\n\r\n- [x] finish updating verification scripts\r\n- [x] finish updating docs\r\n\r\nSince we now have a fairly convincing test about the accuracy of `WindowedTimeAverage`, I think we should also\r\n\r\n- [x] add documentation for `WindowedTimeAverage`\r\n\r\nwhich is apropos to this PR since it changes the syntax through which averaging is specified.\r\n\r\nEventually, we should use the \"scheduling\" concept for both callafter function in `run!(simulation)` and the `TimeStepWizard` (separately), which will get rid of the `iteration_interval` argument in `run!(simulation)`.\r\n\r\nPS: should we use `WindowAveragedTimeInterval` rather than `AveragedTimeInterval`? I wasn't sure if the added verbosity added clarity here (the important part is the \"Averaging\") but I'm open to considering it.\r\n\r\nResolves #1019 \r\nResolves #853 \r\nResolves #845",
+    "changedFiles": 42,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2NzUxMDU4MDk=",
+        "number": 845,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/845"
+      },
+      {
+        "id": "MDU6SXNzdWU2Nzc5OTc2ODI=",
+        "number": 853,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/853"
+      },
+      {
+        "id": "MDU6SXNzdWU3MTI5OTkyOTI=",
+        "number": 1019,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1019"
+      }
+    ],
+    "createdAt": "2020-10-16T12:56:14Z",
+    "deletions": 677,
+    "labels": [],
+    "mergedAt": "2020-10-19T13:20:21Z",
+    "number": 1070,
+    "title": "AbstractSchedules for scheduling output and diagnostics"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The Leith closure uses the isotropic operators for viscosity, but defines special operators for tracer diffusivities (so that tracer fluxes lie in a local isopycnal).\r\n\r\nI re-enabled the time-stepping test for Leith. We'll see if it works.\r\n\r\nResolves #1034 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTgyMzUyNDk=",
+        "number": 1034,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1034"
+      }
+    ],
+    "createdAt": "2020-10-16T23:10:18Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2020-10-19T23:07:46Z",
+    "number": 1074,
+    "title": "Fix Leith closure"
+  }
+]

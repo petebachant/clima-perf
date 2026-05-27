@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 471,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nThis PR adds a `column_accumulate!` function that can `accumulate` values along each column of a `Field`, a pointwise `Broadcasted` object, or a columnwise `StencilBroadcasted` object. It also generalizes `column_mapreduce!`, which could only accept `Field`s, to `column_reduce!`, which can accept `Broadcasted` and `StencilBroadcasted` objects as well.\r\n\r\nIn addition, the `column_integral_definite!` and `column_integral_indefinite!` functions have been redefined in terms of `column_reduce!` and `column_accumulate!`, respectively. This API will generally allow us to define arbitrary \"vertical sweep\" operations without the need for custom kernel functions or external caches, which should allow us to simplify the non-orographic gravity wave parametrization in ClimaAtmos.\r\n\r\nThis PR also updates ClimaComms to 0.6.4 in all Manifest files to make use of the new device-flexible `assert` macro.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-25T01:19:12Z",
+    "deletions": 598,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyODk5ODQwNjIy",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2024-08-01T21:58:39Z",
+    "number": 1903,
+    "title": "Add column_accumulate and generalize column_reduce"
+  }
+]

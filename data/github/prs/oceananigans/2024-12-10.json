@@ -1,0 +1,141 @@
+[
+  {
+    "additions": 402,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Correct spacings on an `ImmersedBoundaryGrid`\r\ncloses #3954\r\ncloses #3701\r\n\r\n~~Should correct also partial cell bottom~~\r\n\r\nUnification of general grid metrics\r\ncloses #3957 ",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6S2C9C",
+        "number": 3701,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3701"
+      },
+      {
+        "id": "I_kwDOCRy_aM6gCizR",
+        "number": 3954,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3954"
+      },
+      {
+        "id": "I_kwDOCRy_aM6gXx4K",
+        "number": 3957,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3957"
+      }
+    ],
+    "createdAt": "2024-11-23T00:31:28Z",
+    "deletions": 343,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2024-12-10T12:15:15Z",
+    "number": 3955,
+    "title": "Refactor of spacings and correction of spacings-connected bugs"
+  },
+  {
+    "additions": 158,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR implements `PolarBoundaryConditions`. This was originally done in #3953 with `views` of abstract operations (allowing reductions on windowed fields). \r\nHowever, two problems arose:\r\n- allowing views of abstract operations might be more complicated than originally thought because we need to pass the topology in the intersect index function (requires a bit of refactoring).\r\n- the `BoundaryConditions` module is loaded before the `Fields` module, requiring quite a mess for a boundary condition which is, in the end, quite simple.\r\n\r\nFor this reason, I would like to close #3953 and just implement a simple `PolarBoundaryCondition` in this PR with a dedicated kernel to compute the mean of the first / last row.\r\n\r\nI can open an issue regarding `views` of `AbstractOperations` so we can tackle it in a new fresh PR.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-02T15:45:23Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2024-12-10T16:46:47Z",
+    "number": 3965,
+    "title": "Polar boundary conditions"
+  },
+  {
+    "additions": 177,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a test that automatically differentiates a hydrostatic turbulence simulation that uses `Centered` momentum advection and an `ExplicitFreeSurface`. \r\n\r\n@wsmoses @jlk9 \r\n\r\nPreviously we had deduced that this model was differentiable, but it looks like there are still some issues. Not sure what the other test was doing. I think we should consider this separately from #3822 since that PR is currently working on the `SplitExplicitFreeSurface`.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-24T21:50:57Z",
+    "deletions": 120,
+    "labels": [],
+    "mergedAt": "2024-12-10T16:47:29Z",
+    "number": 3867,
+    "title": "Add test for autodifferentiating hydrostatic turbulence simulation"
+  },
+  {
+    "additions": 444,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR implements a GM closure in the advective form. The scheme seems to work nicely\r\n\r\nThe output of the `test_gm_advection.jl`, which is basically the `coarse_baroclinic_adjustment.jl` validation case without Redi component and only with advective GM using WENO, running 300 days:\r\n\r\nhttps://github.com/user-attachments/assets/172463b0-1f16-451f-8dc4-8e4a6327214a\r\n\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-03T15:11:09Z",
+    "deletions": 77,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2024-12-10T20:15:26Z",
+    "number": 3971,
+    "title": "advective form of the GM skew diffusivity"
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-04-25T00:02:22Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-04-25T13:06:59Z",
+    "number": 736,
+    "title": "Use in-place division to normalize horizontal average"
+  },
+  {
+    "additions": 316,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a new nonlinear equation of state, @sandreza's favorite 55-term polynomial approximation to TEOS-10 suitable for Boussinesq models as described in Roquet et al. (2014).\r\n\r\nThe TEOS-10 polynomial approximation implemented in this PR has been translated into Julia from https://github.com/fabien-roquet/polyTEOS/blob/master/polyTEOS10.py (Thank you @fabien-roquet!)\r\n\r\nThe Roquet et al. (2014) paper has some test/check values so I added some basic tests based on those, which pass.\r\n\r\nThere are two things to figure out before merging:\r\n1. How to make `TEOS10` work with different float types. Right now the coefficients are defined as `const`s but then they're `Float64` by default. Perhaps it makes sense to define them as part of a `TEOS10` struct, but that will make the code a bit messier.\r\n2. Integrate `TEOS10` with `Oceananigans.Buoyancy` by defining `\u03c1\u2032`, `thermal_expansion`, and `haline_contraction` functions. We can readily do this, just gotta convert geopotential depth `D` (which Oceananigans uses) to dbar (which `TEOS10` expects).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-04-17T15:49:14Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2020-04-25T22:49:36Z",
+    "number": 731,
+    "title": "TEOS-10 nonlinear equation of state"
+  }
+]

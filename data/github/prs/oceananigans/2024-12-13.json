@@ -1,0 +1,110 @@
+[
+  {
+    "additions": 191,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "I also changed the API for `BuoyancyForce` so that the \"formulation\" is a positional argument. I think this is nicer esp because there is no sensible default and it is central to `BuoyancyForce` and required.\r\n\r\nI also changed the property of `BuoyancyForce.model` to `BuoyancyForce.formulation`. This avoids the name conflict with `NonhydrostaticModel` etc, which leads to very silly and confusing constructions like `model.buoyancy.model.gravity_unit_vector`. Now this will be `model.buoyancy.formulation.gravity_unit_vector`.\r\n\r\n@tomchor you may want to take a look.",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-03T17:16:08Z",
+    "deletions": 185,
+    "labels": [],
+    "mergedAt": "2024-12-13T00:42:45Z",
+    "number": 3973,
+    "title": "(0.95.0) `Buoyancy` -> `BuoyancyForce` and `BuoyancyModels` -> `BuoyancyFormulations`"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Opening this PR so we can continue tinkering with the DynamicSmagorinsky tests to see if we can get them to run.\r\n\r\ncc @tomchor ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-14T15:05:37Z",
+    "deletions": 73,
+    "labels": [],
+    "mergedAt": "2024-12-13T00:43:17Z",
+    "number": 3926,
+    "title": "Reinstate DynamicSmagorinsky tests"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I recently encountered a bounds error when trying `WENOVectorInvariant` on a horizontally flat grid. \r\n\r\nThe problem was two-fold\r\n- the `Flat` interpolators were not updated to the new syntax\r\n- we were using a wrong signature for interpolations in the WENO stencil that does not account for the grid topology\r\n- (bonus!) there are no tests for `WENOVectorInvariant`\r\n\r\nThis PR should resolve these issues\r\n\r\nedit, I will also remove the \"no-grid\" interpolation operators to not allow something like this.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-11T13:59:34Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2024-12-13T08:02:41Z",
+    "number": 3979,
+    "title": "Fix horizontally `Flat` WENO advection"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-13T04:19:00Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2024-12-13T16:58:59Z",
+    "number": 3984,
+    "title": "Fix exported names from BuoyancyFormulations module"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-13T17:00:38Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-12-13T17:00:46Z",
+    "number": 3987,
+    "title": "Bump to 0.95.1"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Which now are tested also for `Flat` grids in the meridional direction. \r\n\r\nRequired by https://github.com/CliMA/ClimaOcean.jl/pull/297\r\n(see https://buildkite.com/clima/climaocean-ci/builds/2146#0193bf37-560c-4923-83d0-3a891fb843e7)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-13T09:29:24Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-12-13T20:27:51Z",
+    "number": 3985,
+    "title": "(0.95.2) Bugfix in the Polar BC"
+  }
+]

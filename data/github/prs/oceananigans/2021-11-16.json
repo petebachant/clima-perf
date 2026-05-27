@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR converts `Simulation.stop_criteria` to `Callback`s. This change allows users to more easily add their own custom stop criteria as callbacks.\r\n\r\n### Example\r\n\r\nWe're interested in running a suite of turbulence simulations involving a transition to turbulence. For this purpose, we'd like to stop a simulation whenever the turbulent kinetic energy exceeds some multiple of its initial value (since I'm interested mainly in the _transition_ to turbulence, rather than the ensuing dynamics.\r\n\r\nAfter this PR, this can be implemented by writing\r\n\r\n```julia\r\n# Build a simulation\r\n\r\nfunction turbulent_kinetic_energy_threshold_exceeded(sim)\r\n\r\n    mean_tke = mean(tke_operation) # tke_operation is an `AbstractOperation` that computes turbulent kinetic energy\r\n\r\n    if mean_tke > 1e-6 # arbitrary threshold for this example!\r\n        @info \"Simulation is stopping because the turbulent kinetic energy threshold has been exceeded.\"\r\n        sim.running = false\r\n    end\r\n\r\n    return nothing\r\nend\r\n\r\n# Because this computation is relatively expensive, we perform it every 100 iterations\r\nsimulation.callbacks[:tke_threshold] = Callback(turbulent_kinetic_energy_threshold_exceeded, IterationInterval(100))\r\n```\r\n\r\nPreviously, it wasn't useful to modify `sim.running` because it would be overwritten immediately. So before this PR, the only way to stop a simulation is to throw an error.\r\n\r\nThis PR _could_ also convert the `NaNChecker` to a stop criterion. In fact we should probably do that. But feedback is welcome beforehand.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-10T14:44:51Z",
+    "deletions": 171,
+    "labels": [],
+    "mergedAt": "2021-11-16T16:10:32Z",
+    "number": 2048,
+    "title": "Convert stop criteria to callbacks"
+  },
+  {
+    "additions": 355,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes a few improvements to reductions of `AbstractField` and `AbstractOperation`. ~~One change is to perform in-place reductions of `AbstractDataField` (fields backed by data) using the parent arrays (this is much faster as those arrays are contiguous).~~ (This doesn't work, obviously in hindsight) We also try to support allocating reductions of `AbstractOperations` like `maximum(a * b)`.\r\n\r\nThese changes were inspired by the discussion on #2024 (though we don't resolve that issue here).\r\n\r\nTo do:\r\n\r\n- [x] Tests that allocating reductions of abstract operations work\r\n- [x] Test that allocating reductions are correct (eg they only reduce over the interior of an array)\r\n~~- [ ] Benchmark?~~",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-03T20:49:03Z",
+    "deletions": 107,
+    "labels": [],
+    "mergedAt": "2021-11-16T16:20:56Z",
+    "number": 2040,
+    "title": "Minor upgrades to reductions of fields and AbstractOperations"
+  }
+]

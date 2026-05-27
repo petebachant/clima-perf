@@ -1,0 +1,231 @@
+[
+  {
+    "additions": 137,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #4813 \r\nCloses #3752\r\n\r\nAt the moment, reductions of FieldTimeSeries work _if we don't provide `dims` kwarg_ but seem to be broken when we provide `dims`.\r\n\r\nI fixed a few obvious bugs. But I am a bit unsure how to proceed.\r\n\r\n```Julia\r\nusing Oceananigans\r\n\r\ngrid = RectilinearGrid(size=(2, 3, 4), extent=(1, 1, 1))\r\ntimes = 0:0.1:3\r\n\r\nsinf(t) = sin(2\u03c0 * t / 3)\r\n\r\nfts = FieldTimeSeries{Center, Center, Center}(grid, times; backend=OnDisk(), path=\"test.jld2\", name=\"f\")\r\n\r\nf = CenterField(grid)\r\nfor (i, time) in enumerate(fts.times)\r\n    set!(f, (x, y, z) -> sinf(time))\r\n    set!(fts, f, i)\r\nend\r\n\r\n@info \"mean(fts)\"\r\n@show mean(fts)\r\n\r\n@info \"mean(fts, dims=4)\"\r\n@show mean(fts, dims=4)\r\n```\r\n\r\n```Julia\r\njulia> include(\"mwe_fts.jl\")\r\n[ Info: mean(fts)\r\nmean(fts) = -1.2676099885359938e-17\r\n[ Info: mean(fts, dims=4)\r\nERROR: LoadError: MethodError: no method matching (FieldTimeSeries{\u2026})(::RectilinearGrid{\u2026}, ::StepRangeLen{\u2026}, ::Type{\u2026}; indices::Tuple{\u2026})\r\n\r\nClosest candidates are:\r\n  (FieldTimeSeries{LX, LY, LZ})(::D, ::G, ::K, ::B, ::I, ::Any, ::Any, ::Any, ::Any, ::Any) where {LX, LY, LZ, K, D, G, B, I} got unsupported keyword argument \"indices\"\r\n   @ Oceananigans ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series.jl:231\r\n  (FieldTimeSeries{LX, LY, LZ})(::Oceananigans.Grids.AbstractGrid, ::Any; kwargs...) where {LX, LY, LZ}\r\n   @ Oceananigans ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series.jl:438\r\n  (FieldTimeSeries{LX, LY, LZ})(::Oceananigans.Grids.AbstractGrid; ...) where {LX, LY, LZ}\r\n   @ Oceananigans ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series.jl:438\r\n\r\nStacktrace:\r\n [1] sum(f::Function, fts::FieldTimeSeries{\u2026}; dims::Int64, kw::@Kwargs{})\r\n   @ Oceananigans.OutputReaders ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series_reductions.jl:36\r\n [2] sum(fts::FieldTimeSeries{\u2026}; kw::@Kwargs{\u2026})\r\n   @ Oceananigans.OutputReaders ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series_reductions.jl:41\r\n [3] _mean(f::Function, c::FieldTimeSeries{\u2026}, dims::Int64; condition::Nothing)\r\n   @ Oceananigans.OutputReaders ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/OutputReaders/field_time_series_reductions.jl:66\r\n [4] mean(c::FieldTimeSeries{\u2026}; condition::Nothing, dims::Int64)\r\n   @ Oceananigans.Fields ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/src/Fields/field.jl:727\r\n [5] macro expansion\r\n   @ show.jl:1181 [inlined]\r\n [6] top-level scope\r\n   @ ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/mwe_fts.jl:21\r\n [7] include(fname::String)\r\n   @ Base.MainInclude ./client.jl:494\r\n [8] top-level scope\r\n   @ REPL[151]:1\r\nin expression starting at /Users/navid/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/Oceananigans.jl-v2/mwe_fts.jl:21\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```\r\n\r\nIt's a bit tricky, in the sense if the reduction is over `dims=4` then should it return a Field? or a FieldTimeSeries?",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6U5SUA",
+        "number": 3752,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3752"
+      },
+      {
+        "id": "I_kwDOCRy_aM7Nxqt7",
+        "number": 4813,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4813"
+      }
+    ],
+    "createdAt": "2025-04-11T03:43:50Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2025-12-31T02:49:07Z",
+    "number": 4385,
+    "title": "Allow reductions with dims kwarg work for `FieldTimeSeries`"
+  },
+  {
+    "additions": 230,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3432",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM58jes1",
+        "number": 3432,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3432"
+      }
+    ],
+    "createdAt": "2025-12-30T22:06:58Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-12-31T05:32:30Z",
+    "number": 5090,
+    "title": "Update the docs to show we can do 3D stokes drift"
+  },
+  {
+    "additions": 105,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #4354 \r\n\r\nThings to think about:\r\n\r\n* does this apply to all accumulations?\r\n* should we throw an error when you try to accumulate along an already-reduced dimension (eg the location is `Nothing`)\r\n* can we test this? maybe a simple unit test is enough but it would also be nice to know if this is \"correct\" somehow\r\n* other concerns I didn't think of\r\n\r\ncc @tomchor ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6xa5HJ",
+        "number": 4354,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4354"
+      }
+    ],
+    "createdAt": "2025-04-07T13:50:09Z",
+    "deletions": 92,
+    "labels": [],
+    "mergedAt": "2025-12-31T05:35:04Z",
+    "number": 4358,
+    "title": "Flip location along accumulating dimension for `Accumulating` scans"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR primarily adds a method to `FieldTimeSeries` to build them from operations on other FTS similar to what can be done with `Field`. For example:\r\n\r\n```julia\r\nu10 = FieldTimeSeries(\"atmosphere.jld2\", \"u10\")\r\nQ   = FieldTimeSeries(- \u03c1\u2090 / \u03c1\u2092 * c\u1d30 * u10 * abs(u10))\r\n```\r\n\r\nThis does work in a different way to e.g. `Field(- \u03c1\u2090 / \u03c1\u2092 * c\u1d30 * u10 * abs(u10))` where `u10` is instead a field, because FTS don't have `operand` properties so instead we're filling the data of the FTS when it is made (which is obviously *very* memory inefficient for big FTS).\r\n\r\nI have also added some methods for `getindex` on FTS with a flat dimension and `Time` indexing as they don't exist like they do for 4D FTS, and some methods for `@at` to work on flattened fields. \r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-30T10:33:13Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-12-31T14:38:58Z",
+    "number": 3644,
+    "title": "Creation of `FieldTimeSeries` from `BinaryOperation` of other FTS + some FTS bug fixes"
+  },
+  {
+    "additions": 469,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a new \"for developers\" section in the docs. Inside this docs section we have the contributors guide, as well as the new `AGENTS.md` file (which is copied over inside `make.jl`). I also added a new section on the `AbstractModel` interface which includes an example of implementing a simple model that integrates the Lorenz equations. cc @bgroenks96 . \r\n\r\nThis PR is a WIP but I hope to keep working on it. Agents wrote the model interface section so it probably needs to be improved. Feel free to jump in and commit anything.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-23T18:53:13Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-12-31T14:39:17Z",
+    "number": 4971,
+    "title": "\"For developers\" section in the documentation + document AbstractModel interface"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Pointed out by https://github.com/CliMA/Oceananigans.jl/issues/5076#issuecomment-3694109585",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-31T00:17:41Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-12-31T20:56:55Z",
+    "number": 5092,
+    "title": "Update author details for JOSS paper citation"
+  },
+  {
+    "additions": 1057,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3807 \r\nCloses #4102\r\n\r\nThis should be usable in ClimaOcean simulations when finished.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6YhZNJ",
+        "number": 3807,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3807"
+      },
+      {
+        "id": "I_kwDOCRy_aM6qI-CY",
+        "number": 4102,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4102"
+      }
+    ],
+    "createdAt": "2025-12-27T22:34:29Z",
+    "deletions": 108,
+    "labels": [],
+    "mergedAt": "2025-12-31T22:25:10Z",
+    "number": 5084,
+    "title": "Implement BulkDrag for linear and quadratic drag boundary conditions"
+  }
+]

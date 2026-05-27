@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 129,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR specializes on \"diagonal\" broadcast expressions with fieldvectors. Specifically, if a fieldvector broadcast expression (one with a `FieldVectorStyle`) has one and only one fieldvector type, then we don't check the broadcast axes (the combined axes is the same). The benefit of skipping this code path is that checking the axes is type-unstable (https://github.com/JuliaArrays/BlockArrays.jl/issues/310). From what I can tell, there is not a simple path to fixing https://github.com/JuliaArrays/BlockArrays.jl/issues/310 because:\r\n\r\n - We _want_ to use `Tuple`s, so that this is stack-allocated\r\n - Combining axes for `Tuple`s is type unstable because the result depends on the _values_ in the tuples.\r\n\r\nSo, I think that the simplest solution is to specialize when we know that the axes will not change.\r\n\r\nThis PR adds a test to show that `is_diagonal_bc` will return true/false when expected _at_ _compile_ _time_ (`@code_typed is_diagonal_bc(bc)` returns `true` or `false`), and tests that (what was breaking) fieldvector broadcast expressions with multiple fields does not allocate.\r\n\r\nCloses https://github.com/CliMA/ClimaCore.jl/issues/1465.\r\n\r\nOne other benefit of this solution is that we can at some point reuse `is_diagonal_bc` to specialize on these broadcast expressions in `copyto!`, so that we perform a single cuda kernel launch (as opposed to however many fields are in the fieldvector).\r\n\r\nThe only thing remaining is that I'd like to run ClimaAtmos CI on this branch to make sure that this doesn't blow up compile-times. Update: good news, it looks fine xref: https://github.com/CliMA/ClimaAtmos.jl/pull/2700#issuecomment-1954497852",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5xXaF9",
+        "number": 1465,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1465"
+      }
+    ],
+    "createdAt": "2024-02-20T14:30:54Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-02-21T00:18:36Z",
+    "number": 1615,
+    "title": "Specialize on diagonal fieldvector broadcasts"
+  },
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR wraps some `@debug` calls in `if get_debug(alg)`, so that we don't trigger compiler inference failures in code paths that we'll never reach.\r\n\r\nThis should fix a lot of the inference errors we're seeing, due to KrylovKit.jl.\r\n\r\nThe diff looks a bit odd, but I'm only indenting.\r\n\r\nThis should allow us to see what remaining inference failures that we have in ClimaAtmos.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-20T18:23:47Z",
+    "deletions": 58,
+    "labels": [
+      {
+        "color": "3D507D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7bQU0h",
+        "name": "Inference"
+      }
+    ],
+    "mergedAt": "2024-02-21T14:13:39Z",
+    "number": 1617,
+    "title": "Fix inference errors when not debugging"
+  }
+]

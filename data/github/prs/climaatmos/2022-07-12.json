@@ -1,0 +1,90 @@
+[
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\nThis PR separates rain and snow in the precipitation cache variable and disk-saving function. \r\n\r\nIt utilizes a simple strategy: rain if temperature above freezing and snow if below. \r\n\r\n## Benefits and Risks\r\n(State concisely the benefits to be derived from and the risks associated with this PR)\r\n\r\n## Linked Issues\r\n(Provide references to any link issues. Use closes #issuenum to automatically close an open issue)\r\n- Fixes #\r\n- Closes #\r\n\r\n## PR Checklist\r\n- [ ] This PR has a corresponding issue OR is linked to an SDI.\r\n- [ ] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [ ] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [ ] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [ ] I linted my code on my local machine prior to submission OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code used in an integration test OR N/A.\r\n- [ ] All tests ran successfully on my local machine OR N/A.\r\n- [ ] All classes, modules, and function contain docstrings OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-08T06:12:01Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2022-07-12T17:32:27Z",
+    "number": 596,
+    "title": "Separate precipitation into rain and snow in cache"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes #623: save to solution and save to disk callbacks should be orthogonal. I've also added a test to make sure that this doesn't show up again.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5Nnnky",
+        "number": 623,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/623"
+      }
+    ],
+    "createdAt": "2022-07-12T18:24:32Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2022-07-12T19:09:23Z",
+    "number": 625,
+    "title": "Fix 623"
+  },
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I'm feeling a bit bottlenecked by our CI times and, I'm not getting the impression that people are looking at all of the results on all runs (I typically only look at results if mse tables change). Can we shorten `t_end` on a bunch of jobs to bring CI time down to ~20 min? cc @szy21, @jiahe23.\r\n\r\nOne downside to this is that it kind of hides how fast/slow we are per job, which is useful for the performance team to understand where we are vs where we'd like to be per job. But this still may be an issue at the moment. I was thinking that we could add a sort of dummy parameter, `t_end_desired` so that we can see how long we wish each job would run for to see useful results. If we do this per buildkite job, we could write a summary afterwards so that we have a clear understanding of where, and how much, we're falling short.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-11T20:43:44Z",
+    "deletions": 73,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      },
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2022-07-12T22:25:25Z",
+    "number": 619,
+    "title": "Shorten t_end for multiple jobs to shorten CI times"
+  }
+]

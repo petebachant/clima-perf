@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "PR #79 adds most methods required for the LRUCache to behave like a dictionary. Now, we can just make it a subtype of `AbstractDict` so that it can be more integrated with the rest of julia's ecosystem.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-25T08:19:28Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-08-13T16:11:07Z",
+    "number": 78,
+    "title": "Make LRUCache an AbstractDict"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "The type for `reference_date` was hardcoded to be `Dates.DateTime`. `Dates.Date` is logically a subset of `Dates.DateTime`, so we can convert between `Dates.Date` to `Dates.DateTime` and allow both types. Internally, we always use `Dates.DateTime`\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-07T18:27:35Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2024-08-13T16:13:37Z",
+    "number": 89,
+    "title": "Allow DataHandler to take Date as reference_date"
+  },
+  {
+    "additions": 920,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR adds support for period-filling interpolation. From the docstring:\r\n\r\n> Perform a period-filling linear interpolation between the two neighboring points.\r\n> \r\n> This interpolation is period-filling because it ensures that there is no gap on input data\r\n> larger than the given period.\r\n> \r\n> This interpolation method is best explained with an example. Let us assume data is defined\r\n> on 03/01/1985, 05/01/1985, 11/02/1985, ... 17/12/1985, 07/01/1995, 11/01/1995, 14/02/1995,\r\n> ..., 19/12/1995. In this case, data is defined every 10 years (date format is DD/MM/YYYY).\r\n> You can think of `LinearPeriodFillingInterpolation` as first filling the years in between by\r\n> performing linear interpolation across years, then performs a second linear interpolation\r\n> for the specific day (in actuality, the order of operations is reversed). In this example,\r\n> suppose first we want to evaluate the input on 04/01/1985. Since we have data for 1985, we\r\n> simply perform linear interpolation between 03/01/1985 and 05/01/1985. Suppose now, we want\r\n> to evaluate on 08/01/1987. We do not have data for the year 1987, so, we perform three\r\n> linear interpolations, first to evaluate the data on 08/01/1985 and 08/01/1995 (using the\r\n> neighboring points), and then between the resulting two values.\r\n> \r\n> `extrapolation_bc` specifies how to deal with out of boundary values. The default value is\r\n> `Throw`, meaning that extrapolation is not allowed.\r\n> \r\n> When is this interpolation method useful?\r\n> ==========================================\r\n> \r\n> This interpolation method is useful when certain variations are more important than others.\r\n> For example, suppose you have hourly data defined once a month, on the 15th. A naive\r\n> interpolation method would interpolate use data from 15 Jan at 23.00 and 15 Feb at 00.00 to\r\n> interpolate on any day/hour of the days in between 15 Jan and 15 Feb. However, this would be\r\n> remove the diurnal cycle. `LinearPeriodFillingInterpolation` solves this problem.\r\n> \r\n> Implementation details\r\n> ======================\r\n> \r\n> How is `LinearPeriodFillingInterpolation` actually implemented?\r\n> \r\n> First, let get a high level perspective. Let us continue with the example above.\r\n> \r\n> There are two cases:\r\n> \r\n> First, the target date falls within other dates that are boundary dates for the two\r\n> neighboring years. An example is 08/01/1986 because both 08/01/1985 and 08/01/1995 have two\r\n> neighboring dates (05/01/1985, 11/02/1985 and 07/01/1995, 11/01/1995). This is the easy\r\n> case: we interpolate 05/01/1985 and 11/02/1985 to get 08/01/1985, and 07/01/1995 and\r\n> 11/01/1995 to get 08/01/1995, and interpolate the two results to get 08/01/1986.\r\n> \r\n> Second, the other cases, when the target date does not have two boundary dates defined in\r\n> 1995. An example is 04/01/1986 because 07/01/1995 is the earliest date available on that\r\n> year. We have to be careful with this interpolation because we do not want to mix December\r\n> 1985 with January 1995. In this case, we perform another interpolation to obtain a date in\r\n> December 1994 and reduce to the first case using this date as second half of the\r\n> interpolation bracket. To find what date to interpolate to, we walk the available dates\r\n> backwards in time at find the first date that we can interpolate because it falls into the\r\n> first case. In this example, it is 11/02/1994 (which we can obtain because we have data for\r\n> 11/12/1985 and we can interpolate data on 11/12/1995).\r\n\r\nCloses #74 ",
+    "changedFiles": 16,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6PGP69",
+        "number": 74,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/74"
+      }
+    ],
+    "createdAt": "2024-08-05T23:55:17Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2024-08-13T17:23:19Z",
+    "number": 85,
+    "title": "Add LinearPeriodFillingInterpolation"
+  }
+]

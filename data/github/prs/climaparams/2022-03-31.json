@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 997,
+    "author": {
+      "id": "MDQ6VXNlcjEwNjczMDcw",
+      "is_bot": false,
+      "login": "bielim",
+      "name": ""
+    },
+    "body": "- [x] Read UQ parameters from TOML file. UQ parameters come with prior distributions and constraints (see `ParameterDistributionStorage`), which have to be reconstructed from the parsed TOML file\r\n- [x] Write UQ parameters to file, \r\n- [x] Implement \"broadcasting solution\" for defining priors of array-valued parameters (use case: a 100-dim parameter of weights of a neural network, each of which has the same prior distribution. Users should not have to write down 100 parameter distributions in the parameter toml file for cases like this one - rather, we want them to be able to write down a single distribution that gets broadcast and applied to each of the 100 weights).\r\n- [x] Clean up: consistent formatting, consistent naming of variables\r\n\r\n-----\r\nCurrent implementation for constructing parameter distributions for parameters read from file `uq_parameters.toml`: \r\n```\r\nimport CLIMAParameters\r\nconst CP = CLIMAParameters\r\nparam_set = CP.parse_toml_file(\"uq_test_parameters.toml\")\r\n\r\n# get `ParameterDistribution` for the parameter named \"uq_param_1\" (a 10d parameter of type `Parameterized`)\r\npd1 = CP.get_parameter_distribution(param_set, \"uq_param_1\")\r\n# get `ParameterDistribution` for the parameter named \"uq_param_5\" (a 4-dim parameter of type `Samples`)\r\npd5 = CP.get_parameter_distribution(param_set, \"uq_param_5\")\r\n# get `ParameterDistribution`s for parameters \"uq_param_1\" and \"uq_param_5\r\npd = CP.get_parameter_distribution(param_set, [\"uq_param_1\", \"uq_param_5\"])\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-10T03:29:48Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-03-31T23:38:53Z",
+    "number": 68,
+    "title": "[WIP] Read and write UQ parameters"
+  }
+]

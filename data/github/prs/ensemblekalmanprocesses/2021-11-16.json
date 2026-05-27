@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nResolves #71, when we load data from data storage we should always copy, as it is history and should not be overwritable\r\n\r\n## Example\r\nI was recently stung by the old mutability vs assignment:\r\n```julia \r\nx=ones(10)\r\nf() = return x\r\n```\r\nthen \r\n```julia \r\nu1 =  f()\r\nu1 += ones(10)\r\n# u1 = 2*ones(10)\r\n# x = ones(10)\r\n```\r\nand\r\n```julia \r\nu2 = f()\r\nu2 = 2*ones(10)\r\n# u2 = 2*ones(10)\r\n# x = ones(10)\r\n```\r\nBut(!)\r\n```julia \r\nu3 = f()\r\nu3[:] = 2*ones(10)\r\n# u2 = 2*ones(10)\r\n# x = 2*ones(10)\r\n```\r\nlet's not rely on people like me to remember this in e.g. the getters from storage `get_u`,`get_u_final`,`get_u_prior` etc.\r\n A copy in the `get_data` method of the `DataStorage` class resolves this\r\n```julia \r\nx=ones(10)\r\ng() = return copy(x)\r\nu4 = g()\r\nu4[:] = 2*ones(10)\r\n# u4 = 2*ones(10)\r\n# x = ones(10)\r\n```\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD584-rT9H",
+        "number": 71,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/71"
+      }
+    ],
+    "createdAt": "2021-11-15T23:53:20Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-11-16T20:28:59Z",
+    "number": 72,
+    "title": "added a copy"
+  }
+]

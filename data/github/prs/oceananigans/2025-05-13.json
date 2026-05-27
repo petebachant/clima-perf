@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 251,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "cc @hdrake @liuchihl",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-01T23:37:37Z",
+    "deletions": 104,
+    "labels": [],
+    "mergedAt": "2025-05-13T13:46:25Z",
+    "number": 3646,
+    "title": "Include background tracer and velocities in closure tendency terms"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Working on the distributed CG with @xkykai we figured out that the `dot` implementation was wrong, i.e. it was accounting values inside the immersed boundary which should be discarded.\r\n\r\nThis might be the issue with the custom PCG being terrible in the implicit free surface implementation?\r\n\r\n```julia\r\ngrid = RectilinearGrid(size = (10, 10, 10), extent = (1, 1, 1))\r\ngrid = ImmersedBoundaryGrid(grid, GridFittedBottom(-0.5)) # 1000 points of which 500 active\r\nc = CenterField(grid)\r\nfill!(c, 1)\r\n```\r\non main:\r\n```julia\r\njulia> dot(c, c)\r\n1000.0\r\n\r\njulia> sum(c)\r\n500.0\r\n```\r\non this PR\r\n```julia\r\njulia> dot(c, c)\r\n500.0\r\n\r\njulia> sum(c)\r\n500.0\r\n```\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-09T12:34:02Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2025-05-13T18:00:07Z",
+    "number": 4493,
+    "title": "Fix dot implementation"
+  }
+]

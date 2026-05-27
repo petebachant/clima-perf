@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR updates the 2-moment microphysics scheme to working fluid changes (i.e. precipitation is also part of the working fluid). Requires `CloudMicrophysics` version 0.25 \r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-01T20:33:48Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-07-02T01:33:46Z",
+    "number": 3880,
+    "title": "Update 2M scheme to working fluid (CM v0.25)"
+  },
+  {
+    "additions": 822,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "## Purpose \r\nThis PR refactors the `AtmosModel` struct by grouping related parameters into logical sub-structs. The new struct has a simple keyword based constructor and maintains backward compatibility with AtmosModel property access. This PR should leave behavior unchanged.\r\n\r\n## Key Benefits:\r\n- This PR simplifies type complexity and improves extensibility of AtmosModel while maintaining existing property access\r\n- User interface improvements: Users can now construct an AtmosModel without an AtmosConfig. Users can also create convenience constructors for common model types: `DryAtmosModel(), EquilMoistAtmosModel()` etc\r\n- Future work: This is a first step towards a composable Julia-only interface for atmos.\r\n\r\nCloses #3385, addresses #2063 but it could use some more discussion before closing.\r\n\r\n\r\n## Content\r\n- **Structural reorganization**: Replaced the monolithic AtmosModel with 33 type parameters with a grouped structure containing 11 logical sub-components (hydrology, forcing, radiation, advection, turbconv, gravity_wave, hyperdiff, vert_diff, sponge, surface, numerics). This largely matches the structure in #3385, I have a similar hierarchical tree diagram below.\r\n- **Backward compatibility**: Implemented property forwarding using `@generated` functions so existing property access like atmos.moisture_model still works.\r\n- **Constructor improvements**: Added unified flat interface constructor that accepts sub-models at the top level and organizes them internally. Also added sample keyword based convenience constructors such as `DryAtmosModel` and `EquilMoistAtmosModel`\r\n- Extended default diagnostics to support the new AtmosModel struct\r\n- Added tests for AtmosModel\r\n\r\nNew AtmosModel structure with possible types/arguments for each field:\r\n```\r\nAtmosModel\r\n\u251c\u2500\u2500 hydrology::AtmosWater\r\n\u2502   \u251c\u2500\u2500 moisture_model = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 DryModel()\r\n\u2502   \u2502   \u251c\u2500\u2500 EquilMoistModel()\r\n\u2502   \u2502   \u2514\u2500\u2500 NonEquilMoistModel()\r\n\u2502   \u251c\u2500\u2500 precip_model = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 NoPrecipitation()\r\n\u2502   \u2502   \u251c\u2500\u2500 Microphysics0Moment()\r\n\u2502   \u2502   \u251c\u2500\u2500 Microphysics1Moment()\r\n\u2502   \u2502   \u2514\u2500\u2500 Microphysics2Moment()\r\n\u2502   \u251c\u2500\u2500 cloud_model = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 GridScaleCloud()\r\n\u2502   \u2502   \u251c\u2500\u2500 QuadratureCloud(sgs_quad)\r\n\u2502   \u2502   \u2514\u2500\u2500 SGSQuadratureCloud(sgs_quad)\r\n\u2502   \u251c\u2500\u2500 noneq_cloud_formation_mode = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 Explicit()\r\n\u2502   \u2502   \u2514\u2500\u2500 Implicit()\r\n\u2502   \u2514\u2500\u2500 call_cloud_diagnostics_per_stage = nothing\r\n\u251c\u2500\u2500 scm_setup::SCMSetup\r\n\u2502   \u251c\u2500\u2500 subsidence = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 Subsidence(profile)\r\n\u2502   \u251c\u2500\u2500 external_forcing = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 GCMForcing(file, cfsite_number)\r\n\u2502   \u2502   \u251c\u2500\u2500 ExternalDrivenTVForcing(file)\r\n\u2502   \u2502   \u2514\u2500\u2500 ISDACForcing()\r\n\u2502   \u251c\u2500\u2500 ls_adv = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 LargeScaleAdvection(...)\r\n\u2502   \u251c\u2500\u2500 advection_test = nothing  # Bool\r\n\u2502   \u2514\u2500\u2500 scm_coriolis = nothing\r\n\u2502       \u2514\u2500\u2500 SCMCoriolis(...)\r\n\u251c\u2500\u2500 radiation::AtmosRadiation\r\n\u2502   \u251c\u2500\u2500 radiation_mode = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 RRTMGPI.ClearSkyRadiation()\r\n\u2502   \u2502   \u251c\u2500\u2500 RRTMGPI.AllSkyRadiation()\r\n\u2502   \u2502   \u2514\u2500\u2500 RRTMGPI.AllSkyRadiationWithClearSkyDiagnostics()\r\n\u2502   \u251c\u2500\u2500 ozone = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 IdealizedOzone()\r\n\u2502   \u2502   \u2514\u2500\u2500 PrescribedOzone()\r\n\u2502   \u251c\u2500\u2500 co2 = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 FixedCO2()\r\n\u2502   \u2502   \u2514\u2500\u2500 MaunaLoaCO2()\r\n\u2502   \u251c\u2500\u2500 insolation = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 IdealizedInsolation()\r\n\u2502   \u2502   \u251c\u2500\u2500 TimeVaryingInsolation(start_date)\r\n\u2502   \u2502   \u251c\u2500\u2500 RCEMIPIIInsolation()\r\n\u2502   \u2502   \u251c\u2500\u2500 GCMDrivenInsolation()\r\n\u2502   \u2502   \u2514\u2500\u2500 ExternalTVInsolation()\r\n\u2502   \u2514\u2500\u2500 held_suarez_forcing = nothing\r\n\u2502       \u251c\u2500\u2500 HeldSuarezForcing()\r\n\u2502       \u251c\u2500\u2500 RadiationDYCOMS()\r\n\u2502       \u251c\u2500\u2500 RadiationISDAC()\r\n\u2502       \u2514\u2500\u2500 RadiationTRMM_LBA(FT)\r\n\u251c\u2500\u2500 turbconv::AtmosTurbconv\r\n\u2502   \u251c\u2500\u2500 edmfx_model = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 EDMFXModel()\r\n\u2502   \u251c\u2500\u2500 turbconv_model = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 PrognosticEDMFX{N, use_tke}(a_half)\r\n\u2502   \u2502   \u251c\u2500\u2500 DiagnosticEDMFX{N, use_tke}(a_half)\r\n\u2502   \u2502   \u2514\u2500\u2500 EDOnlyEDMFX()\r\n\u2502   \u251c\u2500\u2500 sgs_*_mode = nothing  # adv, entr_detr, nh_pressure, mf\r\n\u2502   \u2502   \u251c\u2500\u2500 Explicit()\r\n\u2502   \u2502   \u2514\u2500\u2500 Implicit()\r\n\u2502   \u2514\u2500\u2500 smagorinsky_lilly = nothing\r\n\u2502       \u2514\u2500\u2500 SmagorinskyLilly()\r\n\u251c\u2500\u2500 gravity_wave::AtmosGravityWave\r\n\u2502   \u251c\u2500\u2500 non_orographic_gravity_wave = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 NonOrographicGravityWave()\r\n\u2502   \u2514\u2500\u2500 orographic_gravity_wave = nothing\r\n\u2502       \u2514\u2500\u2500 OrographicGravityWave()\r\n\u251c\u2500\u2500 sponge::AtmosSponge\r\n\u2502   \u251c\u2500\u2500 viscous_sponge = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 ViscousSponge()\r\n\u2502   \u2514\u2500\u2500 rayleigh_sponge = nothing\r\n\u2502       \u2514\u2500\u2500 RayleighSponge()\r\n\u251c\u2500\u2500 surface::AtmosSurface\r\n\u2502   \u251c\u2500\u2500 sfc_temperature = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 ZonallySymmetricSST()\r\n\u2502   \u2502   \u251c\u2500\u2500 ZonallyAsymmetricSST()\r\n\u2502   \u2502   \u251c\u2500\u2500 RCEMIPIISST()\r\n\u2502   \u2502   \u2514\u2500\u2500 ExternalTVColumnSST()\r\n\u2502   \u251c\u2500\u2500 surface_model = nothing\r\n\u2502   \u2502   \u251c\u2500\u2500 PrescribedSurfaceTemperature()\r\n\u2502   \u2502   \u2514\u2500\u2500 PrognosticSurfaceTemperature()\r\n\u2502   \u2514\u2500\u2500 surface_albedo = nothing\r\n\u2502       \u251c\u2500\u2500 ConstantAlbedo(value)\r\n\u2502       \u251c\u2500\u2500 RegressionFunctionAlbedo(...)\r\n\u2502       \u2514\u2500\u2500 CouplerAlbedo()\r\n\u251c\u2500\u2500 numerics::AtmosNumerics\r\n\u2502   \u251c\u2500\u2500 *_upwinding  # energy, tracer, edmfx, edmfx_sgsflux\r\n\u2502   \u2502   \u251c\u2500\u2500 Val(:first_order)\r\n\u2502   \u2502   \u251c\u2500\u2500 Val(:third_order)\r\n\u2502   \u2502   \u251c\u2500\u2500 Val(:vanleer_limiter)\r\n\u2502   \u2502   \u2514\u2500\u2500 Val(:none)  # sgsflux only\r\n\u2502   \u251c\u2500\u2500 test_dycore_consistency = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 TestDycoreConsistency()\r\n\u2502   \u251c\u2500\u2500 limiter = nothing\r\n\u2502   \u2502   \u2514\u2500\u2500 QuasiMonotoneLimiter()\r\n\u2502   \u2514\u2500\u2500 diff_mode = nothing\r\n\u2502       \u251c\u2500\u2500 Explicit()\r\n\u2502       \u2514\u2500\u2500 Implicit()\r\n\u251c\u2500\u2500 hyperdiff = nothing\r\n\u2502   \u2514\u2500\u2500 ClimaHyperdiffusion()\r\n\u251c\u2500\u2500 vert_diff = nothing\r\n\u2502   \u251c\u2500\u2500 VerticalDiffusion()\r\n\u2502   \u2514\u2500\u2500 DecayWithHeightDiffusion()\r\n\u2514\u2500\u2500 disable_surface_flux_tendency::Bool = false\r\n```\r\n\r\n## To-do\r\n- rename: vert_diff -> vertical_diffusion, PrognosticSurfaceTemperature -> SlabOceanSST, precip_model -> microphysics_model\r\n- Move hyperdiff into numerics\r\n- Make `summary(::AtmosModel)` nicer now that the model is not flat\r\n\r\n## Future work\r\n\r\n- Add proper `AtmosSimulation` constructor\r\n- Sketch out future UI capability: \r\n    - Add sensible defaults so that calling `AtmosModel()` is useful\r\n    - Add more convenience constructors for a composable model: `AtmosModel() |> with_moist_physics(options...)`. I ",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6aWmOK",
+        "number": 3385,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3385"
+      }
+    ],
+    "createdAt": "2025-06-28T19:55:01Z",
+    "deletions": 99,
+    "labels": [],
+    "mergedAt": "2025-07-02T22:03:45Z",
+    "number": 3875,
+    "title": "Refactor AtmosModel"
+  }
+]

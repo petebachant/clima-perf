@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Sadly, #1787 was 2 characters away (`<:`) from being correct, but the result was that it introduced a bug. GPU dispatching is broken on the main branch, this PR fixes the issue, and adds and fixes the test (which requires views to catch the `SubArray` case).\r\n\r\nI've also defined `rebuild(data::IF{S, Nij}` since I found it was missing, and I've included `unit_ndims.jl` into the buildkite pipeline.\r\n\r\ncc @trontrytel, @AlexisRenchon, @szy21 ",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-12T19:36:45Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-06-12T21:19:39Z",
+    "number": 1802,
+    "title": "Fix broken GPU dispatching"
+  },
+  {
+    "additions": 116,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the terrain warp unit tests, which take over 10 minutes to run:\r\n\r\n```julia\r\njulia> using Revise; include(joinpath(\"test\", \"Spaces\", \"terrain_warp.jl\"))\r\nTest Summary:                    | Pass  Total     Time\r\n2D Extruded Terrain Warped Space |  600    600  1m18.3s\r\nTest Summary:                           | Pass  Total   Time\r\n2D Extruded Terrain Laplacian Smoothing |  144    144  39.2s\r\nTest Summary:                       | Pass  Total  Time\r\n2D Warped Mesh RHS Integration Test |    2      2  1.6s\r\nTest Summary:                    | Pass  Total     Time\r\n3D Extruded Terrain Warped Space |  600    600  5m35.7s\r\nTest Summary:                           | Pass  Total     Time\r\n3D Extruded Terrain Laplacian Smoothing |   72     72  6m31.1s\r\n```\r\n\r\nRefactoring items include:\r\n\r\n - We pass `device` through, since it's type unstable (it depends on `ENV`)\r\n - Reduces the number of combinations that the tests are run for (some are currently testing 150 combinations of npoly, helem, velem, 300 including Float32+Float64)\r\n - Removed Float64 tests (those should converge if the Float64 converge)\r\n - Split `generate_base_spaces` into two type-stable methods\r\n - Combine the `test_throws` test with the one before it (to avoid recreating the same objects)\r\n\r\nI think that there's more that can be done, but perhaps #1797 is a culprit here.\r\n\r\nWith these changes, the runtime looks more reasonable:\r\n\r\n```julia\r\njulia> using Revise; include(joinpath(\"test\", \"Spaces\", \"terrain_warp.jl\"))\r\nTest Summary:                    | Pass  Total   Time\r\n2D Extruded Terrain Warped Space |   36     36  14.4s\r\nTest Summary:                           | Pass  Total  Time\r\n2D Extruded Terrain Laplacian Smoothing |   54     54  2.4s\r\nTest Summary:                       | Pass  Total  Time\r\n2D Warped Mesh RHS Integration Test |    2      2  4.2s\r\nTest Summary:                    | Pass  Total   Time\r\n3D Extruded Terrain Warped Space |   36     36  22.7s\r\nTest Summary:                           | Pass  Total     Time\r\n3D Extruded Terrain Laplacian Smoothing |   27     27  1m13.7s\r\nTest Summary:                    | Pass  Total  Time\r\nInterior Mesh `Adaption` \u03b7\u2095 Test |    1      1  2.8s\r\nTest Summary:                             | Pass  Total  Time\r\nInterior Mesh `Adaption` (\u03b7\u2095=1, s=1) Test |   12     12  0.3s\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-12T13:31:16Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-06-12T21:38:07Z",
+    "number": 1798,
+    "title": "Refactor terrain warp tests"
+  }
+]

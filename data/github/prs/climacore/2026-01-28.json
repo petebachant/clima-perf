@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 194,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR updates the `SplitDivergence` operator to make it discretely conservative for discontinuous fields. The current version is already conservative for fields that have been DSSed, but it includes additional terms at element boundaries that violate conservation for discontinuous quantities (e.g., velocities reconstructions on a cubed sphere).\r\n\r\nThe first commit in this PR removes the erroneous terms at element boundaries and updates the unit tests to demonstrate improved conservation properties. The unit tests are also simplified to avoid unnecessary checks and repetitive code.\r\n\r\nThe second commit in this PR makes the implementation of `SplitDivergence` more similar to the other spectral operators, ensuring correct use of `RecursiveApply` and consistent caching/indexing. Although this makes the code somewhat harder to read, it should simplify the process of removing `RecursiveApply` in #2417, with identical changes required for `SplitDivergence` and other spectral operators. (The convoluted cache indexing will also be removed from all operators in a future PR.) In addition, the docstring for `SplitDivergence` is updated to improve formatting and correct errors.\r\n\r\nTODO: Update `SplitDivergence` in CUDA extension.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-21T05:18:14Z",
+    "deletions": 219,
+    "labels": [],
+    "mergedAt": "2026-01-28T07:50:14Z",
+    "number": 2432,
+    "title": "Fix conservation of split divergence"
+  }
+]

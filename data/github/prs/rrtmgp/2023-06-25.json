@@ -1,0 +1,148 @@
+[
+  {
+    "additions": 169,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds some benchmarks. Closes #369.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODGrFgs5pq-8H",
+        "number": 369,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyMDgzMjM5NzA=",
+          "name": "RRTMGP.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/RRTMGP.jl/issues/369"
+      }
+    ],
+    "createdAt": "2023-06-25T06:11:11Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "0B0305",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUVtJwA",
+        "name": "Performance monitoring"
+      }
+    ],
+    "mergedAt": "2023-06-25T14:43:01Z",
+    "number": 371,
+    "title": "Add benchmarks"
+  },
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Based on the flame graphs, some functions seem to be suffering from the tuple splatting. This PR removes them for `glaycol` and just passes the two indices.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-24T18:53:29Z",
+    "deletions": 96,
+    "labels": [
+      {
+        "color": "3D2732",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUVre8A",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2023-06-25T16:47:55Z",
+    "number": 368,
+    "title": "Do less splatting"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Based on the flame graph, the `exp` and `log` functions are a bit expensive and, since they are repeated, this PR precomputes and reuses the precomputed values.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-25T16:35:52Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2023-06-25T17:01:51Z",
+    "number": 372,
+    "title": "Precompute expensive terms"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Based on the flame graphs, we seem to be hitting this slow path (https://stackoverflow.com/questions/14687665/very-slow-stdpow-for-bases-very-close-to-1), same as what we hit in thermodynamics.\r\n\r\nThis PR adds `pow_fast(x, y) = exp(y * log(x))` to avoid the slow path.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-25T16:54:17Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "3D2732",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUVre8A",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2023-06-25T18:30:00Z",
+    "number": 373,
+    "title": "Avoid slowpath in pow"
+  },
+  {
+    "additions": 118,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes some splatting / slurping of arguments, which the compiler cannot seem to infer well. Closes #365.\r\n\r\nThis is a clear improvement based on the benchmarks.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODGrFgs5pn8kQ",
+        "number": 365,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyMDgzMjM5NzA=",
+          "name": "RRTMGP.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/RRTMGP.jl/issues/365"
+      }
+    ],
+    "createdAt": "2023-06-25T23:26:33Z",
+    "deletions": 126,
+    "labels": [
+      {
+        "color": "3D2732",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUVre8A",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2023-06-25T23:50:55Z",
+    "number": 374,
+    "title": "Remove splatting"
+  }
+]

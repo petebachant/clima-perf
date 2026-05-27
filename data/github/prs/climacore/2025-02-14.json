@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nUsing DiskArrays `v0.4.9` instead of `v0.4.8` breaks our ClimaCoreTempestRemap CI---a deprecation warning is printed for `DiskArrays.canscalar` and then the test hangs.\r\n\r\nThis package is only used by NCDatasets, which is currently on `v0.14.6` and has a DiskArrays compatibility entry of `v0.4.5`, which corresponds to the range `[0.4.5, 0.5.0)`. However, NCDatasets does not call any of the functions that were changed in DiskArrays `v0.4.9`, so I have no idea why the deprecation warning is printed and what's causing the ClimaCoreTempestRemap test to hang. In the interest of getting ClimaCore CI working again, I'm adding a compatibility entry for DiskArrays of `<v0.4.9`. Hopefully we can remove this after an update to NCDatasets is released.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-14T19:16:16Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "DCBE23",
+        "description": "Issues releated to CI",
+        "id": "MDU6TGFiZWwzMjk4MjM0MDA4",
+        "name": "CI"
+      }
+    ],
+    "mergedAt": "2025-02-14T20:15:06Z",
+    "number": 2188,
+    "title": "Pin DiskArrays to fix ClimaCoreTempestRemap CI"
+  },
+  {
+    "additions": 821,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\nThis PR adds GPU support for extruded 1D spaces, with the following modifications:\r\n- Remove the assumption that `Ni == Nj` from `mapreduce_cuda_kernel`, `columnwise_partition`, `columnwise_universal_index`, and `multiple_field_solve_universal_index`\r\n- Add methods for `operator_shmem` `operator_fill_shmem!`, and `operator_evaluate` corresponding to the 1D versions of all SEM operators\r\n- Rename `DSSDataTypes` to `DSSTypes2D`, and define a new constant `DSSTypes1D`\r\n- Add a method for `dss_1d!` corresponding to `CUDADevice`, and extend `dss!` to support both 1D and 2D data types\r\n- Adapt the `local_geometry` and `dss_weights` of a `SpectralElementSpace1D` from `Array`s to `CuArray`s\r\n\r\nThese changes are also tested through CI:\r\n- Add a CUDA job that runs `unit_2d.jl` and `convergence_2d.jl`\r\n- Add tests for `IFH`, `IHF`, `VIFH`, and `VIHF`  to `unit_mapreduce.jl`, which already has a CUDA job\r\n\r\nTo fix several test failues, I had to make a few additional changes:\r\n- Simplify the CUDA implementation of `Gradient` by directly differentiating vectors instead of breaking them up into components, as the original design could not distinguish the gradient of a scalar from the gradient of a single-component vector, and one of the tests in `unit_2d.jl` takes the gradient of a `UVector` field\r\n- Extend `strip_space` to `FiniteDifferenceOperator` boundary conditions, as one of the tests in `unit_2d.jl` uses a 1D field for the `CurlC2F` boundary condition\r\n- Reduce the number of methods for `level(space::ExtrudedFiniteDifferenceSpace, v)` from 4 to 1 to avoid a GPU inference failure in `reconstruct_placeholder_space` when evaluating boundary conditions (we hit some sort of compiler heuristic when we use 2 or 4 specialized methods, so we need to just have one method with union-splitting)\r\n  - By making this change, I have inadvertently fixed the issue in #1989\r\n- Adapt several `CuArray`s to `Array`s in `unit_2d.jl` and `unit_spaces.jl` to avoid scalar indexing errors\r\n- Bump the number of allowed JET failures for `SpectralElementSpace1D` in `opt_spaces.jl` from 141 to 825 on GPUs and from 137 to 150 on CPUs\r\n\r\n---\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6Wjk1v",
+        "number": 1989,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1989"
+      }
+    ],
+    "createdAt": "2025-02-03T20:28:32Z",
+    "deletions": 566,
+    "labels": [],
+    "mergedAt": "2025-02-14T23:32:14Z",
+    "number": 2172,
+    "title": "Add GPU support for extruded 1D spaces"
+  },
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "The `CommonGrids` module passes down the context to all the grid it creates. This is a problem for IntervalTopology, because it can only be created with Singletons.\r\n\r\nThis commit fixes this issue and adds test checking that we can create CommonSpaces with MPI and CUDA\r\n\r\nCloses #2175 \r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6pdlMD",
+        "number": 2175,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2175"
+      }
+    ],
+    "createdAt": "2025-02-10T17:25:24Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2025-02-14T23:47:38Z",
+    "number": 2176,
+    "title": "Fix CommonSpaces and MPI"
+  }
+]

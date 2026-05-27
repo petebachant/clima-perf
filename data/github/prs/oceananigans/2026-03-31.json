@@ -1,0 +1,119 @@
+[
+  {
+    "additions": 336,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR adds a validation case following Haidvogel and Beckmann (1999), section 6.1, used by Marchesiello, McWilliams, & Shchepetkin (2001) in order to test open boundary conditions. For now it runs only with an implicit free surface solver + `PerturbationAdvection`, but in the future we might expand to several cases as we develop capabilities. (For example https://github.com/CliMA/Oceananigans.jl/pull/5351)\n\nThat said, the simulation isn't really working very well I'd say. Here's an animation comparing the simulation with the analytical solution:\n\nhttps://github.com/user-attachments/assets/19c86591-7355-4082-8e2e-aab3e5d9db88\n\nNote that I'm not using any sponge layers in the example above, which definitely would help, but I also would think that the results would be better even without sponge layers. (Maybe that's naive of me?)\n\nFor comparison, in their set-up Marchesiello et alia (2001) used\n\n- A split explicit scheme (I think)\n- No sponge layers for $\\eta$, but weak/strong nudging for both baroclinic and barotropic velocities during outflow/inflow\n- Orlanski-like oblique radiation regime for velocities and tracers, but only a zero-gradient boundary condition for the free surface\n\n**Code fixes applied based on review feedback:**\n- Removed unused `e_val` argument from the `v\u00b9` first-order correction function (and its erroneous multiplication in the return expression).\n\ncc @simone-silvestri",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-11T10:53:03Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-03-31T01:52:18Z",
+    "number": 5387,
+    "title": "Add a hydrostatic barotropic soliton case validation for hydrostatic open boundaries"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\n- The `turbulence_closures` test group is already covered by Buildkite on both CPU and GPU\n- The `turbulent_closures` GitHub Actions job was a redundant CPU-only duplicate, wasting CI resources\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-30T22:51:55Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2026-03-31T10:53:05Z",
+    "number": 5460,
+    "title": "Remove duplicate turbulence closure test from GitHub Actions"
+  },
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-29T18:07:59Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-03-31T13:13:37Z",
+    "number": 5453,
+    "title": "[CI] Run sharding tests under earlyoom"
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "This aims to resolve some dependency related issues I have run into:\r\n\r\n1. Incompatible versions of dependencies between main project and sub-environments (`/test` and `/benchmarking`)\r\n2. Outdated minimum versions\r\n3. Outdated dependencies when new version exists on registry",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T11:53:30Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2026-03-31T16:53:55Z",
+    "number": 5432,
+    "title": "Automated dependency checking"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Ref: https://buildkite.com/clima/oceananigans/builds/30556#019d4386-ab52-4dc5-8460-e26f66cf521b/L724.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-31T11:54:15Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-03-31T17:03:33Z",
+    "number": 5462,
+    "title": "Update number of ambiguities"
+  }
+]

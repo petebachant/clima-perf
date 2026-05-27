@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR tweaks `initialize_simulation!` so that the schedules get called when `iteration == 0` --- in addition to running diagnostics, executing callbacks, and writing output.\r\n\r\nThis is a tiny step in the direction of having a robust initialization procedure. I think we still need to work on the abstractions a bit though, since it'd be nice to initialize schedules / callbacks more explicitly rather than implicitly relying on `iteration == 0`. This change will affect `SpecifiedTimes` and `WallTimeInterval` the most, I think.\r\n\r\nTODO:\r\n\r\n- [ ] Test for initialization of `SpecifiedTimes`?",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-22T14:25:41Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-02-23T22:37:38Z",
+    "number": 2268,
+    "title": "Initialize schedules at iteration 0"
+  },
+  {
+    "additions": 107,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR updates CATKE with an improved model for how the presence of shear modulates the mixing length and turbulent mixing.\r\n\r\nA few preliminary calibration results suggest that these changes are very promising, especially at coarse resolutions. A short summary is that, originally, CATKE was flexible enough to model both convection and shear-driven mixing --- just not at the same time (because TKE levels are much higher for shear-driven mixing). Adding a more explicit model for the modulation of the mixing length in the presence of shear allows CATKE to capture both convection and shear-driven regimes.\r\n\r\nWe can update the default values for CATKE in this PR as well.\r\n\r\nThis figure is a little out of context, but it shows agreement between LES (gray line) and the \"best parameters\" from a calibration run (blue line) at 8m resolution with five physical scenarios (from LESbrary's 4 day suite). The \"other line\" is the \"worst\" parameters in the calibration ensemble (so that one should be ignored).\r\n\r\n![image](https://user-images.githubusercontent.com/15271942/155232297-9fa83269-0383-4f9e-a060-757b3632ce9d.png)\r\n\r\n\r\nCloses #2272",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5EYzpd",
+        "number": 2272,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2272"
+      }
+    ],
+    "createdAt": "2022-02-22T22:46:08Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2022-02-23T22:38:05Z",
+    "number": 2273,
+    "title": "CATKE with an improved model for shear-driven mixing"
+  }
+]

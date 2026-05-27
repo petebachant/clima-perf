@@ -1,0 +1,68 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-11T17:16:06Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-02-11T18:33:15Z",
+    "number": 5279,
+    "title": "Update NumericalEarth Slack link in README"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "This PR modifies the function `rotation_angle` to output the angle `\u03b8` in radians instead of degrees. It also modifies method definitions of `intrinsic_vector` and `extrinsic_vector` for `OrthogonalSphericalShellGrid`, since these use rotation_angle as a helper, and modifies the unit test for rotation_angles to use angles in radians.\r\n\r\nThis PR is made as a response to this issue: https://github.com/CliMA/ClimaOcean.jl/issues/749\r\n\r\nIn some contexts these functions can be called within GPU/Reactant kernels. Currently they rely on the functions `sind`, `cosd`, and `atand` which do not work in GPU kernels. By switching to radians we bypass that problem.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-11T18:14:52Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-02-11T23:25:01Z",
+    "number": 5280,
+    "title": "Changing rotation_angle to output in radians instead of degrees"
+  },
+  {
+    "additions": 79,
+    "author": {
+      "is_bot": true,
+      "login": "app/copilot-swe-agent"
+    },
+    "body": "## Description\n\nConverts the deleted MWE into a formal test case in `test/test_hydrostatic_free_surface_models.jl` to validate the `PrescribedFreeSurface` functionality with `PrescribedVelocityFields` and `ZStarVerticalCoordinate`.\n\n## Changes\n\n- Added imports for `PrescribedFreeSurface` and `MutableVerticalDiscretization`\n- Created new testset validating:\n  - Model construction with `PrescribedFreeSurface` + `PrescribedVelocityFields` + ZStar grid\n  - Correct \u03c3 scaling factor updates during time stepping\n  - Expected \u03c3 values after free surface oscillation (\u03b7 = A\u00b7sin(2\u03c0t))\n\nThe test verifies grid vertical coordinates evolve correctly with prescribed velocities and free surface displacement, ensuring vertical velocity computation (which depends on horizontal divergence and free surface) is accurate.\n\n## Example\n\n```julia\n# Test validates this workflow\n\u03b7_prescribed(x, y, z, t) = A * sin(2\u03c0 * t)\nfree_surface = PrescribedFreeSurface(displacement=\u03b7_prescribed)\nvelocities = PrescribedVelocityFields(; u=u_prescribed, v=v_prescribed)\n\nmodel = HydrostaticFreeSurfaceModel(grid; velocities, free_surface)\n# \u03c3 correctly tracks (H + \u03b7(t)) / H throughout simulation\n```\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n\ud83d\udcac We'd love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-11T05:55:09Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-02-11T23:50:34Z",
+    "number": 5278,
+    "title": "Add test for PrescribedFreeSurface with PrescribedVelocityFields and ZStar"
+  }
+]

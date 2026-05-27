@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 893,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR integrates the finite volume operators introduced in PR #283. This includes merging `closure_operators.jl` into `Oceananigans.Operators`. All tests pass but there's quite a bit of cleanup to be done.\r\n\r\n@glwagner This PR affects a lot of code you've written so we should probably work on merging this PR together. Now that tests pass we can focus on cleanup.\r\n\r\nI still need to convert the biharmonic operators and `leith_enstrophy_diffusivity.jl` closure to finite volume. I'll also add a test for Leith.\r\n\r\nThere are regression tests for constant diffusivty, Smagorinsky, and AMD, but not for other closures, so we should probably be careful that closures with no regression test remain unchanged.\r\n\r\nSome comments:\r\n\r\n1. The `norm` functions defined in `velocity_tracer_gradients.jl` https://github.com/climate-machine/Oceananigans.jl/blob/2bb32015e64bff830f2233d588360ccc6b8605b4/src/TurbulenceClosures/velocity_tracer_gradients.jl#L130-L154 all make use of functions like `\u0394\u1da0x_ffc` but they are defined in an `@eval` loop in in `verstappen_anisotropic_minimum_dissipation.jl`. We should probably make it clearer that these functions are closure-specific.\r\n\r\n2. In `smagorinsky_lilly.jl`, the `\u03ba_\u2202x_c`, `\u03ba_\u2202y_c`, and `\u03ba_\u2202z_c` functions use `\u2111x\u1da0\u1d43\u1d43(i, j, k, grid, \u03bd\u2091, closure)` however I'm pretty sure we can just use `\u2111x\u1da0\u1d43\u1d43(i, j, k, grid, \u03bd\u2091)` here. If so, we can get rid of the `\u2111x\u1da0\u1d43\u1d43(i, j, k, grid::AG{FT}, c, args...)` function definitions.\r\n\r\n3. Certain functions are shared between turbulence closures, e.g. `\u03a3\u1d62\u2c7c\u03a3\u1d62\u2c7c\u1d9c\u1d9c\u1d9c` is used by both `smagorinsky_lilly.jl` and `blasius_smagorinsky.jl`. Should they be moved to `closure_operators.jl`?\r\n\r\n4. Also, VAMD uses `\u0394\u1da0x\u1d9c\u1d9c\u1d9c` for the filter widths while Rozema AMD uses `\u0394x` (which looks like the regular `\u0394x` used by `Oceananigans.Operators`). We should probably change all filter widths to use `\u0394\u1da0`.\r\n\r\n5. Smagorinsky-Lilly uses `\u0394\u1da0_ccc` for filter widths. Switching to `\u0394\u1da0\u1d9c\u1d9c\u1d9c` is probably a bad idea as `\u1da0` is denotes face. Should we change them to `\u0394\u1da0x\u1d9c\u1d9c\u1d9c = \u0394\u1da0y\u1d9c\u1d9c\u1d9c = \u0394\u1da0z\u1d9c\u1d9c\u1d9c = \u0394\u1da0_ccc`?\r\n\r\n6. I could never find a symbol like `\\cdot` for divergences that can be used in function names. What do you think of renaming function names like `\u2207_\u03ba_\u2207c` to `div_\u03ba_\u2207c`?\r\n\r\n7. `\u25b6` is used in a lot of places in the `AbstractOperators` module. They should probably be changed to `\u2111` for consistency, but since it's all local to AbstractOperators, I'm leave the decision to @glwagner.\r\n\r\nSome changes we need to make for vertically stretched grids:\r\n* I initially thought that we might need `apply_z_top_bc!` and `apply_z_bottom_bc!` to use \u0394zC or \u0394zF based on the field, but this would only apply to `w` for which you cannot use flux boundary conditions for z, so maybe it can always just use \u0394zF (spacing between faces) and we can keep the one version.\r\n* Same comment as above for `_fill_top_halo!` and `_fill_bottom_halo!`.\r\n\r\nI'll release v0.16 once this is merged as JULES.jl depends on these finite volume operators.",
+    "changedFiles": 54,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-11-11T17:06:12Z",
+    "deletions": 1407,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-11-27T22:34:32Z",
+    "number": 529,
+    "title": "Integrate finite volume operators"
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR finally gets rid of all the Casette warnings and a few other similar warnings due to method redefinitions.\r\n\r\nHad to refactor the `FPlane` constructor to avoid a method redefinition. I chose to infer the float type `FT` from the inputs and remove the option to explicitly pass in an `FT`. This is a breaking change (hopefully a minor one) but I couldn't think of another approach that would less intrusive.\r\n\r\nSuggestions welcome for other ways to resolve the ambiguity between `FPlane` constructors.\r\n\r\nResolves #537\r\nResolves #366",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0ODQyMDg2Nzc=",
+        "number": 366,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/366"
+      },
+      {
+        "id": "MDU6SXNzdWU1MjkzMzUwMzA=",
+        "number": 537,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/537"
+      }
+    ],
+    "createdAt": "2019-11-27T20:07:49Z",
+    "deletions": 45,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-11-27T22:35:18Z",
+    "number": 538,
+    "title": "Get rid of method redefinition warnings during precompile stage"
+  }
+]

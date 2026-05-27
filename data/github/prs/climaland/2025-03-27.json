@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 552,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nIn the PR adding flux calculation functions for the coupled full land model #1062, I incorrectly extended `boundary_var_types` for EnergyHydrology with a CoupledAtmosphere. I'm not sure where the complex types there came from, but they're fixed now (tested from ClimaCoupler and pass). The only difference between the coupled and prescribed atmosphere case is the presence of momentum fluxes in the cache, which is what we want. This change is in `src/standalone/Soil/boundary_conditions.jl`\r\n\r\nI'm also tagging a patch release in this PR instead of rebasing #1088 after the `boundary_var_types` fix merges.\r\n\r\nNote: The downstream ClimaCoupler test is failing because the interface for `surface_specific_humidity` was changed to take in the atmosphere as the first argument. This will be fixed on the coupler side by changing the call [here](https://github.com/CliMA/ClimaCoupler.jl/blob/1a61e29fa479f8113300b56740a5f43a78c78505/experiments/ClimaEarth/components/land/climaland_bucket.jl#L256).",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-26T22:37:36Z",
+    "deletions": 326,
+    "labels": [],
+    "mergedAt": "2025-03-27T16:11:23Z",
+    "number": 1089,
+    "title": "fix full land coupled boundary_var_types"
+  }
+]

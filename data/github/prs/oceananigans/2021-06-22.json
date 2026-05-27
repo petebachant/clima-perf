@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 77,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/1749\r\n\r\nApparently there are currently two ways to get minimum spacing from a grid, and they work a bit differently from each other, which is causing some problems with `VerticallyStretchedGrids`.\r\n\r\nOption 1. This way works with `VerticallyStretchedGrids` and `RegularGrids`, whre each type of grid defines these separately.\r\n\r\n```julia\r\n    \u0394x = min_\u0394x(grid)\r\n    \u0394y = min_\u0394y(grid)\r\n    \u0394z = min_\u0394z(grid) \r\n```\r\n\r\nOption 2: I suspect this was added recently (idk when or which commit) and it appears to be an ad-hoc way of dealing with flat dimensions.\r\n\r\n```julia \r\n    \u0394x = minimum_grid_spacing(grid.\u0394x, topo[1])\r\n    \u0394y = minimum_grid_spacing(grid.\u0394y, topo[2])\r\n    \u0394z = minimum_grid_spacing(grid.\u0394z, topo[3])\r\n```\r\n\r\nI'm including both ways in my first commit (which solves an issue for `VerticallyStretchedGrids`) but I'm thinking of unifying this and use only `min_\u0394x`, which is imo more succinct and can also take Flat topologies into account.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MjY1NDY2MDA=",
+        "number": 1749,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1749"
+      }
+    ],
+    "createdAt": "2021-06-21T20:31:34Z",
+    "deletions": 63,
+    "labels": [],
+    "mergedAt": "2021-06-22T02:09:02Z",
+    "number": 1750,
+    "title": "Unifying approaches for `min_\u0394xyz`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #1742",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5MjQyOTI0NTA=",
+        "number": 1742,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1742"
+      }
+    ],
+    "createdAt": "2021-06-17T22:47:42Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-06-22T19:04:57Z",
+    "number": 1743,
+    "title": "Propagate boundary_conditions kwarg through DistributedShallowWaterModel"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "These lines should not be there and at the least lower the accuracy of calculations on stretched grids.\r\n\r\nWe need tests that the metrics and grid geometry are correct for stretched grids (eg all the cell spacings added up gives the total domain size; cell centers are located halfway between cell interfaces, etc). \r\n\r\nNot sure why these lines are there but it may have been necessary due to a serious bug with the vertically stretched Poisson solver that was fixed in https://github.com/CliMA/Oceananigans.jl/pull/1541. I'm not sure.\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-06-22T19:45:52Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2021-06-22T21:48:38Z",
+    "number": 1755,
+    "title": "Removes manual grid manipulation in VerticallyStretchedRectilinearGrid constructor"
+  }
+]

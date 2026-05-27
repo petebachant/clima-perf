@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nCloses #223\r\n\r\n## To-do\r\n- [x] Test with newest allowed versions\r\n- [x] Test with oldest allowed versions\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5oAAuC",
+        "number": 223,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/223"
+      }
+    ],
+    "createdAt": "2023-06-23T23:29:34Z",
+    "deletions": 119,
+    "labels": [],
+    "mergedAt": "2023-06-28T20:01:55Z",
+    "number": 248,
+    "title": "reconcile compats"
+  },
+  {
+    "additions": 326,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nIn the current codebase, setting the area indices of the plant to zero would result in a 0/0, because, for example, we have:\r\n` d theta_leaf/dt = [stem_flux *LAI - canopy_transpiration]/ (LAI x Delta z)`, where canopy_transpiration involves a multiplication by LAI as well. \r\n\r\nBecause we cannot have a changing number of prognostic variables across the domain, even when there is no vegetation present, we need to have a canopy model with some prognostic variables, parameters, etc. To turn off the canopy, setting LAI = SAI = RAI = 0 will imply zero fluxes and zero root extraction, and no change in the initial conditions of the plant prognostic variables. \r\n\r\nTherefore, update the codebase so that when LAI=SAI=RAI = 0, `d theta/ dt = 0` and there is no divide by zero.\r\n\r\nOnce we get closer to global runs, we should do some refactoring as it makes sense to make it so you dont need to define all these parameters where there is no vegetation. See Issue #250.\r\n\r\n## Content\r\n1. Change \"LAI/(LAI x dz)\" terms to \"LAI/max(LAI x dz, eps(FT))\". When LAI = 0, this gives zero flux and does not divide by zero.\r\n2. Add consistency checks to the PlantHydraulics constructor:\r\n- if LAI == 0, all area indices should be zero (no plant present)\r\n- if LAI is nonzero, RAI must be nonzero (a plant cannot exist without roots)\r\n- if n_stem == 0, the stem area index must be zero for consistency.\r\n3. Adds unit tests to make sure consistency checks pass and that when LAI =RAI = SAI = 0, the root extraction and transpiration are both zero.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-16T00:26:27Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2023-06-28T22:30:14Z",
+    "number": 238,
+    "title": "Zero lai"
+  }
+]

@@ -1,0 +1,151 @@
+[
+  {
+    "additions": 41,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request sets the compat entry for the `CubedSphere` package to `0.1`.\n\nThis is a brand new compat entry. Previously, you did not have a compat entry for the `CubedSphere` package.\n\nNote: I have not tested your package with this new compat entry. It is your responsibility to make sure that your package tests pass before you merge this pull request. Note: Consider tagging a patch release immediately after merging this PR, as downstream packages may depend on this for tests to pass.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-15T23:29:18Z",
+    "deletions": 40,
+    "labels": [],
+    "mergedAt": "2021-03-16T01:22:30Z",
+    "number": 1474,
+    "title": "CompatHelper: add new compat entry for \"CubedSphere\" at version \"0.1\""
+  },
+  {
+    "additions": 41,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request sets the compat entry for the `Rotations` package to `1.0`.\n\nThis is a brand new compat entry. Previously, you did not have a compat entry for the `Rotations` package.\n\nNote: I have not tested your package with this new compat entry. It is your responsibility to make sure that your package tests pass before you merge this pull request. Note: Consider tagging a patch release immediately after merging this PR, as downstream packages may depend on this for tests to pass.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-15T23:31:10Z",
+    "deletions": 40,
+    "labels": [],
+    "mergedAt": "2021-03-16T01:22:53Z",
+    "number": 1475,
+    "title": "CompatHelper: add new compat entry for \"Rotations\" at version \"1.0\""
+  },
+  {
+    "additions": 383,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a distributed constructor for `ShallowWaterModel`, pair programmed with @francispoulin.\r\n\r\nEnd goal might be to add a new example showing the distributed MPI interface! Might also showcase the shallow water model, NetCDF output, and plotting with CairoMakie?\r\n\r\nThis PR depends on PR #590 (which is why it's 90+ commits long...). Most recent 4 commits are the relevant ones.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-05T22:43:16Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2021-03-16T12:32:15Z",
+    "number": 1430,
+    "title": "Distributed shallow water model"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MzIxMzM1OTc=",
+        "number": 1470,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1470"
+      }
+    ],
+    "createdAt": "2021-03-16T02:44:03Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "af66dd",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTcxNjgw",
+        "name": "models \ud83e\uddeb"
+      }
+    ],
+    "mergedAt": "2021-03-16T14:02:35Z",
+    "number": 1476,
+    "title": "Changing the name to shallow water Bickley jet"
+  },
+  {
+    "additions": 410,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR partially generalizes the implementation of flux boundary conditions to work on curvilinear grids. The design implemented in this PR required a number of changes:\r\n\r\n- Preservation of field locations in GPU kernels through a generalization of `adapt_structure(to, field::Field)`\r\n- Creation of generic area and volume operators that dispatch on location like `Ax(i, j, k, grid, X, Y, Z)` (others are `Ay`, `Az`, and `volume`)\r\n- Generalization of `apply_top_z_flux!`, etc. The similar functions for `x` and `y` could also be generalized in this PR, though we don't have regression tests to ensure that they still work as before...\r\n- Activation of `calculate_boundary_tendencies!` for `HydrostaticFreeSurfaceModel`.\r\n\r\nThe new `validation/barotropic_gyre.jl` experiment is definitely a work in progress but will eventually produce a movie like\r\n\r\nhttps://user-images.githubusercontent.com/15271942/110257064-a747fc00-7f61-11eb-83aa-18665f01efb4.mp4\r\n\r\nWe may want to add side and bottom drag, tweak the surface stress, and tweak the viscosity.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-07T22:25:11Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2021-03-16T15:40:07Z",
+    "number": 1433,
+    "title": "Flux boundary conditions for HydrostaticFreeSurfaceModel and barotropic gyre validation experiment"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR does two things:\r\n\r\n1. It generalizes halo filling for `NormalFlow` boundary conditions so that `fill_halo_regions` works when the optional arguments `clock, model_fields` are not provided\r\n2. It eliminates the unnecessary `arch` argument from `fill_halo_regions!`. In many cases `fill_halo_regions!(c::AbstractField)` will now work. ",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-09T14:49:33Z",
+    "deletions": 47,
+    "labels": [],
+    "mergedAt": "2021-03-16T15:40:29Z",
+    "number": 1444,
+    "title": "Improved fill_halo_regions"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts CliMA/Oceananigans.jl#1444\r\n\r\nPR #1444 is quite nice but unfortunately I think the new `fill_halo_regions!`\r\n\r\n```julia\r\nfill_halo_regions!(c::AbstractArray, fieldbcs, grid, args...; kwargs...)\r\n```\r\n\r\nbroke MPI halo filling since it needs dispatch on\r\n\r\n```julia\r\nfill_halo_regions!(c::AbstractArray, bcs, arch::AbstractMultiArchitecture, grid, c_location, args...)\r\n```\r\n\r\nIt might be tricky to fix since you can't tell whether you're on `CPU` or `MultiCPU` from inside `fill_halo_regions!` with just knowledge of the `field`...\r\n\r\nI propose we revert #1444 just for now (since distributed models + tests are broken on master) and immediately open a new PR with the contents of #1444 where we can find a solution. My only idea is to add `architecture` to Field but perhaps it feels a little bloated...\r\n\r\nThis failure was not caught by Buildkite since PR #590 was merged after #1444 was opened, and I think Buildkite only runs tests on branches, not pull requests (i.e. it doesn't merge master and run tests).",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-16T18:53:46Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2021-03-16T19:42:42Z",
+    "number": 1484,
+    "title": "Revert \"Improved fill_halo_regions\""
+  }
+]

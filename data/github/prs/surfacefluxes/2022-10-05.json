@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 245,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "## Purpose and Content\r\nFollowing Gryanik et al. (2021) DOI: 10.1029/2021MS002590, we include a non-iterative solution for stability parameter \u03b6 (and therefore Monin-Obukhov length) in cases where \u03b6 >= 0. Design documentation has been updated. \r\n\r\n1. Neutral b.l. tolerance is specified at just one point now (via user interface function `surface_conditions`). Value is kept at cp_d/100 following PR#66.  \r\n2. Keyword argument added to `surface_conditions` to allow user to select whether they want to use the non-iterative procedure specified above. \r\n3. For stability functions which are only for zeta >= 0, Businger-Dyer functions are applied as the default option in cases with \u03b6 <= 0. \r\n4. Adds convergence checks for the `Gryanik` and `Grachev` type universal functions. \r\n\r\n## Benefits\r\nOptional removal of dependence on user specified tolerances in \u03b6 >= 0 solutions. Following Gryanik et al. (2021) the modifications are expected to be useful for a wider range of stability parameters \u03b6 if the `Gryanik / Grachev` type stability functions are applied. \r\n \r\n## Risks\r\nEffect on existing solutions. Can be mitigated by full integration testing prior to merge. Two changes to user interface via keyword arguments for `tol_neutral` and `noniterative_stable_sol`. \r\n\r\n## Linked Issues\r\n#35 \r\n\r\ncc @yairchn @szy21 \r\n\r\n## PR Checklist\r\n- [x] This PR has a corresponding issue OR is linked to an SDI.\r\n- [x] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [x] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [x] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [x] I linted my code on my local machine prior to submission OR N/A.\r\n- [x] Unit tests are included.\r\n- [x] Code used in an integration test OR N/A.\r\n- [x] All tests ran successfully on my local machine OR N/A.\r\n- [x] All classes, modules, and function contain docstrings OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-19T15:51:27Z",
+    "deletions": 82,
+    "labels": [],
+    "mergedAt": "2022-10-05T17:08:28Z",
+    "number": 68,
+    "title": "Non-iterative solution for stability parameter in stable boundary layers"
+  }
+]

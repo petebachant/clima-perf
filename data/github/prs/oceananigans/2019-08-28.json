@@ -1,0 +1,154 @@
+[
+  {
+    "additions": 348,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR reintroduces checkpointing. This time the checkpointer saves the bare essentials to a JLD2 file.\r\n\r\nCheckpointer will not save forcing functions as before (see #141).\r\n\r\nNeed to test GPU checkpointing, checkpointing with LES closures (I assumed `model.diffusivities` does not need to be checkpointed), and checkpointing with fancier boundary conditions.\r\n\r\nA major issue with this checkpointer is that it can't restore the largest models because it creates a `Model` and then copies the data from the checkpoint file into the model fields. But if the model is using up all memory, then there's no room for reading data from disk to memory.\r\n\r\nIt should feed the data directly through the Model constructor, but this would require refactoring some of the model and field code.\r\n\r\nThis can be addressed in this PR or in a future PR, although it's kind of useless because checkpointing becomes more important the larger the model/simulation...\r\n\r\nResolves #324 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0NzU0MzM5NTM=",
+        "number": 324,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/324"
+      }
+    ],
+    "createdAt": "2019-08-02T00:11:04Z",
+    "deletions": 200,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-08-28T00:02:51Z",
+    "number": 326,
+    "title": "Checkpointer revival"
+  },
+  {
+    "additions": 190,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR reorganizes the diagnostics structs and introduces a new `VerticalProfile` diagnostic that can calculate vertical profiles efficiently on-the-fly on CPUs and GPUs. Product profiles and velocity covariance profiles are built on top of it.\r\n\r\n`HorizontallyAveragedVerticalProfile` would be a more accurate name, but is much longer. So I'm sticking with the \"convention\" that a profile is implied to be horizontally averaged.\r\n\r\nThe `profile` can be passed to an output writer which can write it to disk.\r\n\r\nThe horizontal averaging currently relies on a parallel reduction prefix sum algorithm that I hacked over a CUDAnative.jl example, although I do have a test for the diagnostic so it does work. The algorithm can be more efficient (see https://github.com/JuliaGPU/CuArrays.jl/issues/68).\r\n\r\nIt allocates very minimal amounts of memory (less than `mean`) and benchmarks show that it is ~20x faster than what we were doing before (copying to CPU and calculating there) which is great but it's ~5x slower than optimal performance.\r\n\r\nAs it does not allocate memory, we can now calculate vertical profiles even when running large models that fill up memory.\r\n\r\nAlthough I should mention that an intermediate array with a size of at least `1*Ny*Nz` is required for the parallel reduction step (so I'm using `poisson_solvers.storage` because it's a vanilla CuArray that can be overwritten).\r\n\r\n```julia\r\nN, H = 512, 1\r\nT = N + 2H\r\n\r\na = rand(T, T, T) |> CuArray\r\nh = zeros(N) |> CuArray\r\n```\r\n\r\nWhat we were doing before:\r\n```julia\r\n@benchmark CuArrays.@sync mean(Array(view(a, H:N+H, H:N+H, H:N+H)), dims=[1, 2])\r\n\r\nBenchmarkTools.Trial: \r\n  memory estimate:  1.01 GiB\r\n  allocs estimate:  250\r\n  --------------\r\n  minimum time:     684.013 ms (2.29% GC)\r\n  median time:      712.570 ms (6.28% GC)\r\n  mean time:        732.480 ms (8.79% GC)\r\n  maximum time:     807.437 ms (16.95% GC)\r\n  --------------\r\n  samples:          7\r\n  evals/sample:     1\r\n```\r\n\r\nWhat this PR does:\r\n```julia\r\nNx, Ny, Nz = 512, 512, 512\r\nC = rand(Nx, Ny, Nz) |> CuArray\r\nRx = zeros(Float64, 1, Ny, Nz) |> CuArray\r\nRxy = zeros(Float64, 1, 1, Nz) |> CuArray\r\n\r\n@benchmark CuArrays.@sync @cuda threads=Nx blocks=(Ny, Nz) shmem=2*Nx*sizeof(eltype(C)) gpu_accumulate_xy!(Rxy, Rx, C, +)\r\n\r\nBenchmarkTools.Trial: \r\n  memory estimate:  2.88 KiB\r\n  allocs estimate:  64\r\n  --------------\r\n  minimum time:     39.129 ms (0.00% GC)\r\n  median time:      39.245 ms (0.00% GC)\r\n  mean time:        39.248 ms (0.00% GC)\r\n  maximum time:     39.374 ms (0.00% GC)\r\n  --------------\r\n  samples:          128\r\n  evals/sample:     1\r\n```\r\n\r\nProbably optimal performance:\r\n```julia\r\n@benchmark CuArrays.@sync mean(a, dims=[1, 2])\r\n\r\nBenchmarkTools.Trial: \r\n  memory estimate:  8.56 KiB\r\n  allocs estimate:  220\r\n  --------------\r\n  minimum time:     7.426 ms (0.00% GC)\r\n  median time:      7.526 ms (0.00% GC)\r\n  mean time:        7.527 ms (0.00% GC)\r\n  maximum time:     8.817 ms (0.00% GC)\r\n  --------------\r\n  samples:          663\r\n  evals/sample:     1\r\n ```\r\n\r\nResolves #186 ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MzUyMDkzMDk=",
+        "number": 186,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/186"
+      }
+    ],
+    "createdAt": "2019-08-10T22:34:44Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2019-08-28T13:01:57Z",
+    "number": 352,
+    "title": "Fast on-the-fly vertical profiles"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "To support intervals",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-28T15:37:34Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2019-08-28T15:37:44Z",
+    "number": 375,
+    "title": "Checkpointer needs a previous field"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "I forgot I left it at 128^3 when it should have been 16^3.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-28T17:57:43Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-08-28T22:07:23Z",
+    "number": 379,
+    "title": "Fix diagnostics test problem size"
+  }
+]

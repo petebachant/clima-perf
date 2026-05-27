@@ -1,0 +1,165 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This method has a higher computational cost than just \"not masking the periphery\" (although it may be noted, this cost might be totally negligible compared to the cost of drawing a plot), so may not be desirable.\r\n\r\nDiscussed on #4519 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM63Fm0s",
+        "number": 4519,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4519"
+      }
+    ],
+    "createdAt": "2025-05-19T12:55:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-22T02:35:19Z",
+    "number": 4524,
+    "title": "Re-zero immersed fields after creating plotting data"
+  },
+  {
+    "additions": 137,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR adds reductions for distributed fields.\r\n\r\nWhen merged, should allow https://github.com/CliMA/Oceananigans.jl/pull/4470 to go through",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-12T10:07:31Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-05-22T03:40:58Z",
+    "number": 4497,
+    "title": "Add distributed reductions"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjQzMTM5MDIz",
+      "is_bot": false,
+      "login": "loisbaker",
+      "name": "Lois Baker"
+    },
+    "body": "This PR fixes some small indexing bugs for `FieldTimeSeries` described in https://github.com/CliMA/Oceananigans.jl/issues/4100\r\n\r\n- Changes the way that times are compared in https://github.com/CliMA/Oceananigans.jl/blob/d1e9b46586150f2f3508ac8a861d87ef67e22b1c/src/OutputReaders/field_time_series.jl#L252 and https://github.com/CliMA/Oceananigans.jl/blob/d1e9b46586150f2f3508ac8a861d87ef67e22b1c/src/OutputReaders/set_field_time_series.jl#L10 so that `\u2248` is replaced with a comparison using a vector norm in the first case, and using an absolute tolerance based on a characteristic timescale in the second case. This avoids returning `false` due to the default relative error criterion when comparing values close to zero. \r\n- Moves the time array that is indexed in https://github.com/CliMA/Oceananigans.jl/blob/d1e9b46586150f2f3508ac8a861d87ef67e22b1c/src/OutputReaders/set_field_time_series.jl#L25 to the CPU so errors aren't thrown when `fts.times` is a `CuArray`.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-13T14:30:48Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2025-05-22T07:31:49Z",
+    "number": 4505,
+    "title": "Fix some `FieldTimeSeries` indexing bugs"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Docs have been built and the preview shows that the links now work; see https://clima.github.io/OceananigansDocumentation/previews/PR4537/appendix/library/#VarianceDissipationComputations\r\n\r\nI suggest we merge this without requiring the rest of the CI to pass (for economy of resources)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-22T02:36:02Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-05-22T14:32:55Z",
+    "number": 4537,
+    "title": "Fix `VarianceDissipation` docstring links"
+  },
+  {
+    "additions": 284,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR implements the variance dissipation for a `SplitRungeKutta3Timestepper`. Builds on top of #4522.\r\nThe output of `validation/implicit_dissipation/variance_dissipation.jl` shows the huge advantage of using an RK3 instead of an AB2 for advection-dominated problems. \r\nThis is the output\r\n\r\n<img width=\"771\" alt=\"image\" src=\"https://github.com/user-attachments/assets/2a98a8ba-0acc-4973-9a8e-90c5753d7985\" />\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-19T10:58:07Z",
+    "deletions": 109,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-05-22T14:46:15Z",
+    "number": 4523,
+    "title": "RK3 variance dissipation support"
+  },
+  {
+    "additions": 42,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "This splits the kernel `substep_turbulent_kinetic_energy!` into two separate kernels:\r\n\r\n- `substep_turbulent_kinetic_energy_diffusivities!`, which computes `Ke` and `Le`\r\n- `substep_turbulent_kinetic_energy!`, which just computes `e`\r\n\r\nThis is done to avoid a race condition: computing `Ke` requires use of both `e[i,j,k]` and `e[i,j,k-1]`. The latter can be permuted by another thread in the kernel before it is used for `Ke`.\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-22T02:35:49Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2025-05-22T23:34:26Z",
+    "number": 4536,
+    "title": "Splitting `substep_turbulent_kinetic_energy!` into two kernels"
+  }
+]

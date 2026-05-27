@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 943,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpgrade to the new surface fluxes interface.\r\n\r\nSince this let's us provide parameterization functions for q_sfc, T_sfc, we no longer need special methods of `turbulent_fluxes!` for each land model component, and can instead have methods for functions like `component_temperature`, etc, which are called by `turbulent_fluxes!`.\r\nSee:\r\n```\r\nfunction turbulent_fluxes!(\r\n    dest,\r\n    atmos::AbstractAtmosphericDrivers,\r\n    model::AbstractModel,\r\n    Y,\r\n    p,\r\n    t,\r\n)\r\n\r\n    T_sfc = component_temperature(model, Y, p) # guess\r\n    q_sfc = component_specific_humidity(model, Y, p) # guess\r\n    roughness_model = surface_roughness_model(model, Y, p)\r\n    update_T_sfc = get_update_surface_temperature_function(model, Y, p)\r\n    update_q_sfc = get_update_surface_humidity_function(model, Y, p)\r\n    h_sfc = surface_height(model, Y, p)\r\n    displ = surface_displacement_height(model, Y, p)\r\n    update_\u2202T_sfc\u2202T = get_\u2202T_sfc\u2202T_function(model, Y, p)\r\n    update_\u2202q_sfc\u2202T = get_\u2202q_sfc\u2202T_function(model, Y, p)\r\n    earth_param_set = get_earth_param_set(model)\r\n    momentum_fluxes = Val(return_momentum_fluxes(atmos))\r\n    dest .=\r\n        turbulent_fluxes_at_a_point.(\r\n            momentum_fluxes, # return_extra_fluxes\r\n            p.drivers.P,\r\n            p.drivers.T,\r\n            p.drivers.q, # q_tot\r\n            p.drivers.u,\r\n            atmos.h,\r\n            T_sfc,\r\n            q_sfc,\r\n            roughness_model,\r\n            update_T_sfc,\r\n            update_q_sfc,\r\n            h_sfc,\r\n            displ,\r\n            update_\u2202T_sfc\u2202T,\r\n            update_\u2202q_sfc\u2202T,\r\n            earth_param_set,\r\n        )\r\n    return nothing\r\nend\r\n```\r\nthe exception is for the soil model - I will update that in a later PR. (It is using the latest SF.jl, but not the common function as canopy, snow, bucket)\r\n\r\n\r\nThis function: `turbulent_fluxes_at_a_point` uses the new SF.jl\r\n## To-do\r\nnew unit tests or documentation pages? (doc strings are updated in this PR)\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-07T23:36:08Z",
+    "deletions": 953,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2026-01-17T20:08:00Z",
+    "number": 1591,
+    "title": "Update to new surface fluxes and refactor `turbulent_fluxes!` function"
+  }
+]

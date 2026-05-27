@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1255\r\n\r\n## Content\r\n- remove `area_mask` and use `area_fraction` instead, which is maintained to sum to 1 across components at each point\r\n- remove the `mono_surface` option, which was rarely used and did not do what it was documented to do\r\n- don't multiply by `area_fraction` in RHS calculations; only use `area_fraction` for flux calculations/exchanges\r\n  - While multiplying the RHS by area fraction should be okay when using a binary area fraction, it may lead to incorrect values along coasts when using fractional area fractions because we multiply by the area fraction multiple times (fluxes and RHS). Now, the use of area fractions is limited to flux calcuations.\r\n\r\nNote that simulations which previously used `mono_surface: true` will have changed results because we're no longer using fractional area fractions along coastlines. Among other things, this results in conservation changes - conservation is slightly improved after this PR.",
+    "changedFiles": 54,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6ws-3W",
+        "number": 1255,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1255"
+      }
+    ],
+    "createdAt": "2025-04-10T20:26:07Z",
+    "deletions": 164,
+    "labels": [],
+    "mergedAt": "2025-04-18T18:36:17Z",
+    "number": 1268,
+    "title": "remove `area_mask`"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nInstead of zeroing out all NaNs in a surface field, we zero out all values where the area fraction is 0. This ensures that a surface model does indeed not contribute where it isn't present, and that meaningful (i.e. bug- or instability-indicating) NaNs are not removed.\r\n\r\ncloses #1267\r\n\r\nThis PR is similar in intention to #1268\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6x_npj",
+        "number": 1267,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1267"
+      }
+    ],
+    "createdAt": "2025-04-18T17:45:18Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2025-04-18T23:25:10Z",
+    "number": 1278,
+    "title": "remove `nans_to_zero`"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 97,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Extensions are defined to mirror the modules defined in src. However, this leads to circular dependencies, where some extensions trigger the loading of others. This is not properly handled by the precompiling logic in Julia as of Julia 1.9-1.11 (fixed in master, upcoming to Julia 1.12, or maybe it will be backported at some point).\r\n\r\nHere, I change the way extensions are organized to match the packages that are needed to load them. In this, I still maintain the abstraction that each module in `src` has its implementation in `ext/XYZExt.jl`.\r\n\r\nI also added the prefix `ClimaUtilities` to everything to make sure that it won't clash with anything.\r\n\r\nCloses #68 \r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6McVV6",
+        "number": 68,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/68"
+      }
+    ],
+    "createdAt": "2024-06-17T03:02:56Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2024-06-17T19:18:39Z",
+    "number": 69,
+    "title": "Reorder extensions"
+  }
+]

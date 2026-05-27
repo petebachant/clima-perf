@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 1498,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR takes a stab at designing a non-invasive interface to running Oceananigans on multiple CPUs and GPUs, i.e. distributed parallelism with MPI. By non-invasive I mean that no existing code will have to change. It may not be the best solution but I really like it and I'm hoping we can discuss this design. I see no reason why it won't perform well.\r\n\r\nVision of this PR:\r\n1. Oceananigans core code base wil be free of MPI and uses GPUifyLoops.jl as it already does so nothing changes there.\r\n2. Everything needed for distributed parallelism will live in the `Oceananigans.Distributed` submodule.\r\n3. Support for x, y, and z decompositions. In practice, choice of pressure solver may limit which decomposition we can use but they're all supported right now.\r\n4. Each rank will time step it's own submodel communicating with its neighbors as needed, i.e. in `fill_halo_regions!`. There is no \"master rank\".\r\n5. Halo communication is implemented by injecting `HaloCommunication` boundary conditions wherever a submodel shares a halo with another rank. This is then dispatched on so no need to modify existing code.\r\n6. With PR #589 we will be able to easily slide in a `DistributedPressureSolver` struct that can be used to dispatch on `solve_for_pressure!`. So again, no need to modify existing code.\r\n\r\nThis way MPI does not invade the core code base making it easier to maintain, and there will be a very clear boundary between \"core Oceananigans\" and \"distributed parallelism functionality\" which I think will serve us well in the future as MPI seems to permeate deeply into other codes, making them hard to modify.\r\n\r\nThe big thing that is missing is of course the distributed pressure solver, the hard thing to implement. This is where [DistributedTranspose.jl](https://github.com/leios/DistributedTranspose.jl) will come in handy. I also recently found [PencilFFTs.jl](https://github.com/jipolanco/PencilFFTs.jl) which also looks interesting. cc @leios\r\n\r\nFor testing purposes, I'm tempted to do the pressure solve via an `MPI.Gather` onto rank 0 where it can be solved locally then an `MPI.Scatter` to pass the pressure to all ranks. Super inefficient but might be good to ensure that the `DistributedModel` can reproduce existing regression tests.\r\n\r\nPerformance issues:\r\n* Right now `MPI.Isend`, `MPI.Recv!`, and `MPI.SendRecv!` all expect send and receive buffers to be contiguous in memory I believe. To get around this I allocate memory for these buffers, but this is definitely not performant. @vchuravy suggested that we may be able to send and receive into strided buffers, so will look into this. cc @simonbyrne maybe you know more about this?\r\n\r\nQuality of life features we may want in the future (which might effect design choices):\r\n* Distributed diagnostics: these will be pretty expensive no matter how we implement them due to the extra reduction step (`MPI.Gather`) required across all ranks. I wonder if it's even worth thinking about them much. If we really need things like a `DistributedHorizontalAverage` then we can look into that.\r\n* Distributed output writers: I wonder if we should add e.g. a distributed NetCDF output writer or if each rank just writes out its own output and we have a utility function that post-processes the output files and merges them at the end (this seems easier than writing another output writer).",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-01-06T20:12:58Z",
+    "deletions": 73,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2021-03-10T06:23:45Z",
+    "number": 590,
+    "title": "MPI distributed parallelism"
+  }
+]

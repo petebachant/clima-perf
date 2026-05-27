@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjU1MTU0OTc4",
+      "is_bot": false,
+      "login": "sriharshakandala",
+      "name": "Sriharsha Kandala"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-01T18:36:33Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-02-01T22:06:54Z",
+    "number": 1116,
+    "title": "Update compat for ClimaCoreTempestRemap"
+  },
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\nThis PR reduces ClimaCore memory usage due to excessive code inlining, and it closes #1064.\r\n\r\nSpecifically, it\r\n\r\n- Removes the `@inline` annotations to `Base.copyto!` that were added in #945 and #978.\r\n- Removes all `slurm_mem` increases from the CI pipeline, so that the default value of 8GB applies to every task.\r\n- Extends broadcasting over `Field`s and `DataLayout`s so that it can handle single-element `Tuple`s. In theory, broadcasting with a single-element `Tuple` should be equivalent to broadcasting with a `Ref`. However, since a `Ref` is mutable, it looks like the compiler needs to perform runtime allocations when using a `Ref`, unless we force it to inline the majority of the broadcasting machinery.\r\n- Replaces every `Ref` in `test/Fields/field_opt.jl` with a single-element `Tuple`, so that the runtime allocation unit tests can pass.\r\n- Replaces two of the `@test_broken`s in `test/Operators/finitedifference/opt_examples.jl` with `@test`s, since those tests are now passing, even though they don't appear to have anything to do with `Ref`s.\r\n\r\nNote: It is still necessary to go through the rest of our code (both in ClimaCore and elsewhere) and replace every `Ref` in a `Field`/`DataLayout` broadcast with a single-element `Tuple`. Now that the `@inline` annotations have been removed, broadcasting with a `Ref` will trigger runtime allocations, which will pose a problem for our long runs.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5Z0jM1",
+        "number": 1064,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1064"
+      }
+    ],
+    "createdAt": "2023-01-31T20:08:27Z",
+    "deletions": 91,
+    "labels": [],
+    "mergedAt": "2023-02-01T23:51:30Z",
+    "number": 1113,
+    "title": "Fix memory issues"
+  }
+]

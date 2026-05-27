@@ -1,0 +1,112 @@
+[
+  {
+    "additions": 2867,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR refactors how the `Checkpointer` works by now checkpointing simulations, rather than just models. This is needed as the simulations (+ output writers, callbacks, etc.) all contain crucial information needed to properly restore/pickup a simulation and continue time stepping.\r\n\r\nBasic design idea:\r\n* We now have two new functions: `prognostic_state(obj)` which returns a named tuple corresponding to the prognostic state of `obj` and `restore_prognostic_state!(obj, state)` which restores `obj` based on information contained in `state` (which is a named tuple and is read from a checkpoint file).\r\n* Objects are checkpointed recursively by serializing prognostic information to the JLD2 checkpoint file.\r\n* The goal is for checkpointing to be flexible enough that we can very easily use it for different types of simulations, e.g. coupled simulations in ClimaOcean.jl by just defining `prognostic_state` and `restore_prognostic_state!`.\r\n\r\nRight now I've only implemented proper checkpointing for non-hydrostatic model but it looks like it'll be straightforward to do it for hydrostatic and shallow water models. I'm working on adding comprehensive testing too.\r\n\r\nWill continue working on this PR, but any feedback is very welcome!\r\n\r\nResolves #1249\r\nResolves #2866\r\nResolves #3670\r\nResolves #3845\r\nResolves #4516 \r\nResolves #4857\r\n\r\n---\r\n\r\n### Rhetorical aside\r\n\r\nIn general, the checkpointer is assuming that the simulation setup is the same. So only prognostic state information that changes will be checkpointed (e.g. field data, `TimeInterval.actuations`, etc.). The approach I have been taking (based on #4857) is to only checkpoint the prognostic state.\r\n\r\nShould we operate under this assumption? I think so because not doing so can lead to a lot of undefined behavior. The checkpointer should not be responsible for checking that you set up the same simulation as the one that was checkpointed.\r\n\r\nFor example, take the `SpecifiedTimes` schedule. It has two properties `times` and `previous_actuation`. Since `previous_actuation` changes as the simulation runs, only `previous_actuation` needs to be checkpointed.\r\n\r\nThis leads to the possibility of the user changing `times` then picking up `previous_actuation` which can lead to undefined behavior. I think this is fine, because the checkpointer only works assuming you set up the same simulation as the one that was checkpointed.\r\n\r\nCheckpointing both `times` and `previous_actuation` allows us to check that `times` is the same when restoring. But I don't think this is the checkpointer's responsibility.",
+    "changedFiles": 37,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NTc5MzkwNDI=",
+        "number": 1249,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1249"
+      },
+      {
+        "id": "I_kwDOCRy_aM5bhUfa",
+        "number": 2866,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2866"
+      },
+      {
+        "id": "I_kwDOCRy_aM6RVR92",
+        "number": 3670,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3670"
+      },
+      {
+        "id": "I_kwDOCRy_aM6Zn1g5",
+        "number": 3845,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3845"
+      },
+      {
+        "id": "I_kwDOCRy_aM628f-y",
+        "number": 4516,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4516"
+      },
+      {
+        "id": "I_kwDOCRy_aM7RkNxG",
+        "number": 4857,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4857"
+      }
+    ],
+    "createdAt": "2025-10-30T18:27:11Z",
+    "deletions": 363,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-01-13T00:22:36Z",
+    "number": 4892,
+    "title": "(v0.104.0) Checkpointing simulations"
+  }
+]

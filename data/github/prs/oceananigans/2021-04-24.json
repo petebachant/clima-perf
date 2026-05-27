@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 129,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Just added a bit more info about `CuArrays` in the Simulation tips section",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-23T21:07:09Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2021-04-24T03:57:03Z",
+    "number": 1609,
+    "title": "Added information about CuArrays"
+  },
+  {
+    "additions": 986,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #1452 .\r\n\r\nExample:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> using Oceananigans.AbstractOperations: GridMetric\r\n\r\njulia> grid = RegularRectilinearGrid(size=(1, 1, 1), extent=(1, 1, 1))\r\nRegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}\r\n                   domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n                 topology: (Periodic, Periodic, Bounded)\r\n  resolution (Nx, Ny, Nz): (1, 1, 1)\r\n   halo size (Hx, Hy, Hz): (1, 1, 1)\r\ngrid spacing (\u0394x, \u0394y, \u0394z): (1.0, 1.0, 1.0)\r\n\r\njulia> \u0394z = GridMetric{Center, Center, Center}(Oceananigans.Operators.\u0394z\u1d43\u1d43\u1d9c, grid)\r\nGridMetric at (Center, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    GridMetric at (Center, Center, Center)\r\n\r\njulia> c = CenterField(CPU(), grid)\r\nField located at (Center, Center, Center)\r\n\u251c\u2500\u2500 data: OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}, size: (3, 3, 3)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2514\u2500\u2500 boundary conditions: x=(west=Periodic, east=Periodic), y=(south=Periodic, north=Periodic), z=(bottom=ZeroFlux, top=ZeroFlux)\r\n\r\njulia> c_dz = c * \u0394z\r\nBinaryOperation at (Center, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    * at (Center, Center, Center)\r\n \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Center, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 GridMetric at (Center, Center, Center)\r\n```\r\n\r\nTODO:\r\n\r\n- [x] Add `architecture(grid)` for grids other than `RegularRectilinearGrid`.\r\n- [x] Tests\r\n- [x] Explore the possibility of special objects `\u0394x, \u0394y, \u0394z` that infer `BinaryOperation` location and create appropriate `GridMetric` operations at appropriate locations automagically.\r\n- [x] I don't think we need `Difference` as proposed on #1452, but if others disagree we can add them here.\r\n\r\ncc @tomchor ",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4Mjg0OTY0ODg=",
+        "number": 1452,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1452"
+      }
+    ],
+    "createdAt": "2021-04-23T16:54:53Z",
+    "deletions": 803,
+    "labels": [],
+    "mergedAt": "2021-04-24T13:27:40Z",
+    "number": 1607,
+    "title": "Adds GridMetric AbstractOperation"
+  }
+]

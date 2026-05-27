@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Reactant is having some compatibility issues with new GPUCompiler version, I'm pinning older versions of both until those issues are sorted out.  Taken out of #5450.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-06T18:50:32Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      },
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-05-07T07:58:23Z",
+    "number": 5566,
+    "title": "Temporarily use older versions of Reactant and GPUCompiler"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n- Reinstates the enum bias change from #5318 (reverted in #5449) by reverting the revert\n- Re-enables the `sharding_tests` CI job that #5318 had commented out\n\nThis PR tests whether the enum bias change passes sharding/Reactant tests.\nSharding tests currently fail with an IFRT rendezvous timeout \u2014 the same failure\noccurs on the `bool-bias` branch (#5451), which replaces enums with `Bool`.\nSince `Bool` is a valid `ReactantPrimitive`, this rules out enum-specific memory\ncorruption. The issue appears to be related to compiling a single method with\n`ifelse` branching (single concrete type) vs two specialized methods (two struct types).\n\n## Test plan\n\n- [ ] Sharding tests pass (the key test \u2014 these were disabled in #5318)\n- [ ] All other CI tests pass\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-29T17:10:19Z",
+    "deletions": 62,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-05-07T17:54:04Z",
+    "number": 5450,
+    "title": "Reinstate enum bias (#5318) with sharding tests enabled"
+  }
+]

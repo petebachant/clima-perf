@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 490,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "The cubed sphere grid from the MIT as read from DataDeps has the faces ordered:\r\n  1. `+ x` direction\r\n  2. `+ y` direction\r\n  3. `+ z` direction (Arctic)\r\n  4. `- x` direction\r\n  5. `- y` direction\r\n  6. `- z` direction (Antarctica)\r\n \r\nSo to avoid confusion for (users and developers!) I thought I make sure that the ConformalCubedSphere follows the same convention.\r\n\r\nThis PR does that + it adds tests to check whether the ConformalCubedSphereGrid metrics from the grid read from file and the grid constructed in Oceananigans.jl are the same.\r\n\r\nAfter this is merged we'll move on to #2867 to constructing `ConformalCubedSphereGrid` using MultiRegion (an possibly nuke the `CubedSpheres` module completely). We will have a `ConformalCubedSphereGrid` (which is the same as the `cs32` grid read from file) to bench our MultiRegion implementation with!\r\n\r\n(This PR also moves some of the spherical trigonometry utility function to `grid_utils.jl`.)\r\n\r\nCloses #1586 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NTgwMzk1OTM=",
+        "number": 1586,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1586"
+      }
+    ],
+    "createdAt": "2023-01-21T02:56:31Z",
+    "deletions": 218,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2023-02-04T09:31:19Z",
+    "number": 2871,
+    "title": "CubedSphere grid construction + tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "I guess it doesn't make any difference since both \u0394\u03c6 spacings between faces or centers are the same. But for the sake of sanity it should be changed. Thus, I removed the \"bug\" label.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-03T23:06:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-02-04T23:16:27Z",
+    "number": 2897,
+    "title": "Fix in lat-lon grid `\u0394y` metric"
+  }
+]

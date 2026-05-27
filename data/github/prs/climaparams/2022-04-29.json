@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1694,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nGeneralize away from alias => `::Dict`. Also we can now write **re-readable** log files\r\n\r\n## In this PR\r\n- Documentation! See  the latest documentor build below.\r\n- New wrapper ```ParamDict{FT}```around dictionary read from toml. Currently parametric on one type of all the values, provided when it is built (default is `Float64`). Construction:\r\n```julia\r\ncreate_parameter_struct(override_filepath, default_filepath; dict_type=\"alias\",value_type=Float64) # builds with override and custom default provided\r\ncreate_parameter_struct(override_filepath ; dict_type=\"alias\",value_type=Float64) # builds, overriding the default from CLIMAParameters\r\ncreate_parameter_struct(; dict_type=\"alias\",value_type=Float64) # builds using only default in CLIMAParameters\r\n```\r\n- Automated parameter logging on reading parameter values: (can do multiple parameters at once). At the call of this function, the type is enforced on the return values.\r\n```julia \r\nget_parameter_values!(pd::ParamDict, names, component; log_component=true) #logs component in pd\r\nget_parameter_values(pd::ParamDict,names) # no logging in pd\r\n```\r\n- writing the re-readable log file in `log_parameter_information(pd::ParamDict,filepath)`. Example parameter tested in `CloudMicrophysics.jl`:\r\n```toml\r\n# initial parameter file\r\n[molar_mass_water]\r\nalias = \"molmass_water\"\r\nvalue = 0.01801528\r\ntype = \"float\"\r\n```\r\nIn this test, a copy of the parameters was created and stored in (1) Thermodynamics, (2) the general CloudMicrophysics, and (3) the specific 1-moment-based Microphysics scheme. Indeed the logfile shows this information below\r\n```toml\r\n# log file\r\n[molar_mass_water]\r\nalias = \"molmass_water\"\r\nvalue = 0.01801528\r\ntype = \"float\"\r\nused_in = [\"Thermodynamics\", \"CloudMicrophysicsParameters\", \"Microphysics_1M_Parameters\"]\r\n```\r\nThe `log_parameter_information(pd::ParamDict,filepath; warn_else_error=\"warn\")` will also throw warnings if a parameter is in the override file, but unused in the simulation. This works as parameters from the override file are checked for whether they have gained a \"used_in\" tag, if not found then an this is logged as a warning or error\r\n- From PR #65, reading of array-type parameters\r\n- From PR #68, reading and writing for calibration tools\r\n### TODO\r\n- still using alias based structs\r\n- still based on float, and array-of-float parameters\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-11T18:39:36Z",
+    "deletions": 85,
+    "labels": [],
+    "mergedAt": "2022-04-29T22:23:23Z",
+    "number": 63,
+    "title": "[WIP] pilot parameter refactor (b) "
+  }
+]

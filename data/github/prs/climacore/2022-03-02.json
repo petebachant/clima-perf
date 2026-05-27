@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 306,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Renames the implicit stencil operator test file\r\n - Adds implicit stencil operator allocation (broken) tests\r\n\r\nMost of the added test was duplicated from the correctness test, we could unify some of this code if that's preferred.\r\n\r\ncc @jakebolewski, I think this should help us dive into allocations systematically.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-01T18:31:38Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-03-02T01:21:56Z",
+    "number": 564,
+    "title": "Add broken allocation tests for implicit fd stencils"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR significantly reduces allocations in the held suarez examples. The `@time` of `OrdinaryDiffEq.solve!()` cost breakdown is:\r\n\r\n```\r\n                      main                 |         This PR\r\n\u03c1e:      94.001 GiB, 3.44% gc time         |  10.646 GiB, 0.46% gc time\r\n\u03c1\u03b8:      91.321 GiB, 3.14% gc time         |   7.967 GiB, 0.42% gc time\r\n```\r\nI think the big gain here was from using `ntuple` instead of `map(, (1:N...,))`.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-02T01:35:46Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2022-03-02T03:18:37Z",
+    "number": 568,
+    "title": "Reduce allocations in implicit operators"
+  }
+]

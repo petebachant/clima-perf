@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "It looks like we have two stencil styles, that from what I can tell have no reason to be different: a `StencilStyle` and a `ColumnStencilStyle`. For some reason, `StencilStyle` is used in `result_style` in `broadcasted`, and `ColumnStencilStyle` is used elsewhere.\r\n\r\nI ran into an issue:\r\n\r\n```julia\r\nERROR: LoadError: conflicting broadcast rules defined\r\n  Broadcast.BroadcastStyle(::ClimaCore.Operators.StencilStyle, ::ClimaCore.Operators.ColumnStencilStyle) = ClimaCore.Operators.StencilStyle()\r\n  Broadcast.BroadcastStyle(::ClimaCore.Operators.ColumnStencilStyle, ::ClimaCore.Operators.StencilStyle) = ClimaCore.Operators.ColumnStencilStyle()\r\nOne of these should be undefined (and thus return Broadcast.Unknown).\r\nStacktrace:\r\n  [1] error(s::String)\r\n    @ Base ./error.jl:35\r\n  [2] \r\n    @ Base.Broadcast ./broadcast.jl:474\r\n  [3] result_style(s1::ClimaCore.Operators.StencilStyle, s2::ClimaCore.Operators.ColumnStencilStyle)\r\n    @ Base.Broadcast ./broadcast.jl:457\r\n  [4] broadcasted(op::ClimaCore.Operators.GradientC2F{\u2026}, args::Base.Broadcast.Broadcasted{\u2026})\r\n    @ ClimaCore.Operators ~/.julia/packages/ClimaCore/7GN1g/src/Operators/finitedifference.jl:3960\r\n```\r\nin a development branch. I think this change fixes this issue.\r\n\r\nIt looks like these were introduced in these two commits (from a while ago)\r\n - https://github.com/CliMA/ClimaCore.jl/commit/d2061529740be3e6a89a09f0f4278a0a7a463ab5\r\n - https://github.com/CliMA/ClimaCore.jl/commit/7645f97c0675920ac4c6dad304639aa4a32c4f2b",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-04T20:10:26Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "415645",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABddHO7w",
+        "name": "Broadcasting"
+      }
+    ],
+    "mergedAt": "2025-03-27T19:15:52Z",
+    "number": 2207,
+    "title": "Remove unnecessary broadcast type"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "I don't claim to fully understand why an explicit stream synchronization is required before a MPI call (maybe because MPI calls are executed in their own stream?), but starting from CUDA 5.7, `interpolate` fails if this is not done (under certain conditions, unsure which exactly).\r\n\r\nAdding a synchronization was also advice I got when debugging a similar bug a few months ago from the MPI.jl folks.\r\n\r\nPassing PR: https://buildkite.com/clima/climaatmos-gpulongruns/builds/526\r\n(check the summary.pdf)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-27T21:08:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-27T23:12:16Z",
+    "number": 2256,
+    "title": "Sync CUDA streams before MPI calls"
+  }
+]

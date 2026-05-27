@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 326,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Latest Update for this the goals of this PR: This PR will close https://github.com/CliMA/Oceananigans.jl/issues/4634, close https://github.com/CliMA/Oceananigans.jl/issues/4692, an close https://github.com/CliMA/Oceananigans.jl/issues/4693 since they are all closely related.\r\n\r\n1. The volume operators in the Laplacian is moved to the RHS i.e. the source term, to ensure that the operator is symmetric in nonuniform grids. This allows conjugate gradient to be used on nonuniform grids as well.\r\n2. With nonuniform grids in mind, the `FourierTridiagonalPoissonSolver` will be fixed so that it can be used both as a preconditioner or on its own with immersed boundaries.\r\n3. Issues with partial cells are also being sorted out, so one can freely use partial cells on uniform and nonuniform grids.\r\n4. With the change in the Laplacian operator, `reltol` and `abstol` of `ConjugateGradientPoissonSolver` will now depend on grid cell volume metrics, so a heuristic default is implemented that scales with the cell sizes of the grid.\r\n\r\n@glwagner @simone-silvestri this is ready to merge I think! Let me know of any comments/feedback/suggestions.\r\n\r\n---\r\n\r\nAs noted by @Yixiao-Zhang, the Laplacian operator in its current form is not symmetric when grids are non-uniform. Mathematically, conjugate gradient method should be used for symmetric (semi-) positive definite operators.\r\nThis is still very much work in progress, but I will outline the mathematical details of why and how below.\r\n\r\n## The Laplacian operator is non-symmetric on nonuniform grids.\r\nWe first note that the Laplacian operator $\\nabla^2$ on the staggered grid is given by\r\n```julia\r\n@inline function \u2207\u00b2\u1d9c\u1d9c\u1d9c(i, j, k, grid, c)\r\n    return V\u207b\u00b9\u1d9c\u1d9c\u1d9c(i, j, k, grid) * (\u03b4x\u1d9c\u1d43\u1d43(i, j, k, grid, Ax_\u2202x\u1da0\u1d9c\u1d9c, c) +\r\n                                    \u03b4y\u1d43\u1d9c\u1d43(i, j, k, grid, Ay_\u2202y\u1d9c\u1da0\u1d9c, c) +\r\n                                    \u03b4z\u1d43\u1d43\u1d9c(i, j, k, grid, Az_\u2202z\u1d9c\u1d9c\u1da0, c))\r\nend\r\n```\r\nTo see why it is nonsymmetric, consider the second derivative in x $\\partial_x^2p$:\r\n```math\r\n(\\partial_x^2p)^{ccc} = \\frac{1}{V_i^{ccc}} \\delta x_i^{caa} \\left[\\frac{A x_i^{fcc}}{\\Delta x_i^{fcc}} \\delta x_i^{faa} \\left[ p \\right] \\right]\r\n```\r\nwhere\r\n\r\n```math\r\n\\begin{align}\r\n\\delta x_i ^{faa} \\left[ f \\right] &= f[i] - f[i-1], \\\\\r\n\\delta x_i ^{caa} \\left[ f \\right] &= f[i+1] - f[i].\r\n\\end{align}\r\n```\r\n\r\nPlugging everything into $(\\partial_x^2p)^{caa}$, and grouping terms by their locations we get\r\n```math\r\n(\\partial_x^2p)^{ccc} = \\frac{1}{V_i^{ccc}} \\left( p[i+1] \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} - p[i] \\left( \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} + \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}} \\right) + p[i-1] \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}}  \\right)\r\n```\r\n\r\nWriting this out as a matrix, we get entries of the second derivative operator as\r\n```math\r\n(\\partial_x^2)^{ccc}_{ij} = \r\n\\begin{cases}\r\n-\\frac{1}{V_i^{ccc}} \\left( \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} + \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}} \\right), & \\text{for } i = j,\\\\\r\n\\frac{1}{V_i^{ccc}} \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} & \\text{for } j = i+1,\\\\\r\n\\frac{1}{V_i^{ccc}} \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}} & \\text{for } j = i-1,\\\\\r\n0 & \\text{otherwise}.\r\n\\end{cases}\r\n```\r\n\r\nFrom this we can see that $`(\\partial_x^2)^{ccc}_{ij}`$ is nonsymmetric when grids are nonuniform. A concrete example can be shown if one tries to write out $`(\\partial_x^2)^{ccc}_{12} \\neq (\\partial_x^2)^{ccc}_{21}`$.\r\n\r\n## Symmetrizing the Laplacian operator for nonuniform grids\r\nHowever, in nonuniform grids, we can perform a symmetrization to create a \"symmetrized Laplacian\" so that it is still amenable to conjugate gradient methods,\r\nLet our original system be \r\n$$Lp = b$$\r\nwhere $L$ is nonsymmetric. To symmetrize the system, we use the cell volume operator $V$ and solve the transformed system\r\n```math\r\n\\begin{align}\r\n\\tilde{L} \\tilde{x} &= \\tilde{b}, \\\\\r\n\\tilde{L} &= V^{\\frac{1}{2}} L V^{-\\frac{1}{2}}, \\\\\r\n\\tilde{x} &= V^{\\frac{1}{2}} x, \\\\\r\n\\tilde{b} &= V^{\\frac{1}{2}} b, \\\\\r\nV_{ij} &= V_{i}^{ccc} \\delta_{ij}, \\\\\r\n\\end{align}\r\n```\r\nwhere $\\delta_{ij}$ is the Kronecker delta. In words, $V$ is the operator that gives the volume of the cell at specific index $i$.\r\nNow we will show that $\\tilde{L}$ is symmetric.\r\n\r\nConsider again only the $x$-direction, as it is analagous in $y$ and $z$. In matrix form, \r\n```math\r\n\\tilde{L}_{ij} =  \\left( V^{\\frac{1}{2}} (\\partial_x^2) V^{-\\frac{1}{2}} \\right)^{ccc}_{ij} = \r\n\\begin{cases}\r\n-\\frac{1}{V_i^{ccc}} \\left( \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} + \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}} \\right), & \\text{for } i = j,\\\\\r\n(V_i^{ccc} V_{i+1}^{ccc})^{-\\frac{1}{2}} \\,  \\frac{A x_{i+1}^{fcc}}{\\Delta x_{i+1}^{fcc}} & \\text{for } j = i+1,\\\\\r\n(V_i^{ccc} V_{i-1}^{ccc})^{-\\frac{1}{2}} \\,  \\frac{1}{V_i^{ccc}} \\frac{A x_{i}^{fcc}}{\\Delta x_{i}^{fcc}} & \\text{for } j = i-1,\\\\\r\n0 & \\text{otherwise}.\r\n\\end{cases}\r\n```\r\nA substitution to show $`\\tilde{L}_{12} = \\tilde{L}_{21}`$ will illustrate that $\\tilde{L}_{ij}$ is indeed symmetric.\r\n\r\n## Implementation details\r\n\r\n### Where to do the volume transform?\r\nThere are 2 ways to implement this, and they differ in what goes where.\r\n1. At the beginning of each solve, we can transform $b$ to $\\tilde{b}$, then precondition (or not) and solve the system using conjugate gradient to obtain $\\tilde{p}$. After `solve!` for CG is completed we then transform back by doing $p = V^{-\\frac{1}{2}}\\tilde{p}$. In this approach, the linear operator is given $\\tilde{p}$, which it then has to first transform back to $p$ to compute the symmetrized laplacian, since in practice the symmetrized linear operator is really doing $V^{\\frac{1}{2}} L p$. This is what is currently implemented in my code sketch.\r\n5. Alternatively, the linear operator is given $p$, and it computed $\\tilde{L} \\tilde{p}$ in return. After the CG iteration, the $\\tilde{p} \\rightarrow p$ operation is performed before being passed into the linear operation. To me this seemed more clunky, which is why I have opted for option 1 for now.\r\n\r\n### What should the API be?\r\nIn my mind there are 2 ways to expose the symmetrized Laplacian to the user: \r\n1. We keep it under `ConjugateGradientPoissonSolver`,\r\n2.  or we create a new solver (something like `ConjugateGradientSymmetrizedPoissonSolver`.\r\n\r\nI am inclined to use option 1 since using the asymmetric Laplacian when grids are nonuniform is probably a no go. If we are going with option 1, I have attempted to sketch out how it might look, dispatching the appropriate form of laplacian depending on the grid type (uniform or not)\r\n\r\n### Enforcing gauge condition.\r\nThis is also another subtlety that came up when I am testing the code, but I haven't really looked closely and will investigate further. Currently the gauge condition is proposed to be enforced after every CG iteration. In the nonsymmetric case, this amounts to enforcing the gauge condition on $\\tilde{x}$ rather than $x$. This also means that $x$ will not have zero mean once scaled. Thus we will likely have to think about enforcing gauge condition at different locations depending on which Laplacian is used.\r\n\r\nFinally, here's a video of a test case that I was testing using a nonuniform grid in z, with the symmetrized Laplacian in CG with no preconditioner. Unfortunately at this stage using `FourierTridiagonalPoissonSolver` causes numerical instability so it still remains a work in progress.\r\n\r\nhttps://github.com/user-attachments/assets/fc2e879e-88e3-41aa-a4f4-0fc7a32c3b73\r\n\r\nI have also tried the symmetrized version on a uniform grid (with and without `FFTBasedPoissonSolver` as preconditioner) which theoretically should perform identically as the old Laplacian we have. The solutions look fine, so perhaps this idea and implementation is still not that crazy.\r\n\r\nSorry this is a long explanation @glwagner @simone-silvestri happy to hear your thoughts, also I'm more than happy to explain over a zoom call since this is honestly too much text.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6-9BrU",
+        "number": 4634,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4634"
+      },
+      {
+        "id": "I_kwDOCRy_aM7DxSHu",
+        "number": 4692,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4692"
+      },
+      {
+        "id": "I_kwDOCRy_aM7DxcI3",
+        "number": 4693,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4693"
+      }
+    ],
+    "createdAt": "2025-05-29T21:54:16Z",
+    "deletions": 43,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-09-29T21:48:28Z",
+    "number": 4563,
+    "title": "Symmetrizing Laplacian in order to use conjugate gradient in nonuniform grids"
+  }
+]

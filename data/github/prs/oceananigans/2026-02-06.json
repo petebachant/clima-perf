@@ -1,0 +1,140 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Using `$(Base.julia_cmd())` instead of `julia` in MPI tests is what's [recommended in MPI.jl documentation](https://juliaparallel.org/MPI.jl/stable/usage/#Writing-MPI-tests) and not doing so is problematic for multiple reasons:\r\n\r\n* you end up calling a julia process with compiler flags different than the launching process, which in some cases can [cause precompilation failures](https://github.com/JuliaLang/julia/issues/48039)\r\n* furthermore, because of the point above, you now have a bunch of concurrent processes which are all trying to precompile the environment at the same time, stepping on each other's toes, [causing absolute chaos](https://github.com/CliMA/Oceananigans.jl/actions/runs/21729692149/job/62692071513?pr=5246#step:6:1005)\r\n\r\nI'd even go further and use `--compiled-modules=strict` which would make a process terminate with an error if a module isn't precompiled (that's what I ***strongly*** recommend doing on clusters, you really don't want wasting hours of compute time because of this).\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-06T01:05:13Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-02-06T08:45:05Z",
+    "number": 5258,
+    "title": "Always run `Base.julia_cmd()` in distributed tests"
+  },
+  {
+    "additions": 105,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I know some people are unhappy with the new whitespace check, and here is a way to address the situation: pre-commit is a mechanism to automatically resolve some issues (in this case, whitespace) upon `git commit`.  I added a section to the docs in the Contributing page to explain how to use it.\r\n\r\nThe pre-commit configuration is adapted from [`Pkg.jl`](https://github.com/JuliaLang/Pkg.jl/blob/841395ebb16b23fde2ba9a010ccdce85f904abdf/.pre-commit-config.yaml).\r\n\r\nThis is basically same PR as https://github.com/NumericalEarth/Breeze.jl/pull/449.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-05T22:55:12Z",
+    "deletions": 70,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-02-06T13:39:35Z",
+    "number": 5256,
+    "title": "Add pre-commit hook and explain how to use it"
+  },
+  {
+    "additions": 120,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Extends `OceananigansReactantExt/` such that we can do planning with `ConcreteRArray`, enabling us to build `NonhydrostaticModel` on top of `ReactantState` with periodic bcs. Adds a test for such a build.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7nuTwh",
+        "number": 5244,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5244"
+      }
+    ],
+    "createdAt": "2026-02-03T01:30:33Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-02-06T14:06:01Z",
+    "number": 5246,
+    "title": "Support FFT planning for `ConcreteRArray`"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Other models that follow the same pattern (such as the `AtmosphereModel` in breeze) does not timestep the same exact variables (for example the atmosphere model updates `model.momentum` instead of `model.velocities`).\r\n\r\nTherefore, this PR removes the explicit timestepping of `model.velocities` in favor of a more generic timestepping of `prognostic_fields(model)`",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-19T17:05:14Z",
+    "deletions": 40,
+    "labels": [],
+    "mergedAt": "2026-02-06T14:23:08Z",
+    "number": 5178,
+    "title": "Do not explicitly step `model.velocities` for pressure_correction models"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7n-vv5",
+        "number": 5249,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5249"
+      }
+    ],
+    "createdAt": "2026-02-04T01:41:11Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-02-06T16:34:31Z",
+    "number": 5253,
+    "title": "unpin reactant"
+  }
+]

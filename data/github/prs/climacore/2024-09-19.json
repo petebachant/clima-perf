@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "It turns out that we were not saving and restoring a piece of information that is required to fully reconstruct a `2DSpectralSpace`: the bubble correction.\r\n\r\nWhen enabled, the bubble correction recomputes the Jacobian to improve their accuracy. `InputOutput` was not saving this piece of information into the HDF5 file, so spaces read from file always assumed that it was false. This led to discrepancies in the space, and these discrepancies led to problems in the evolution.\r\n\r\nInterestingly, for the low-resolution cases we consider in the Atmos CI, `enable_bubble` has very small effects on the value of the Jacobian, with a relative difference compared to the case without bubble smaller than the floating point precision for Float32. In spite of this, it affected the evolution in more noticeable way, in particular in vectors and with hyperdiffusion.\r\n\r\nNow, `bubble` is saved as attribute so that it can be read back.\r\n\r\nThis commit also bumps the version of ClimaCore to 0.14.6\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-19T01:57:22Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2024-09-19T12:34:00Z",
+    "number": 1999,
+    "title": "Fix InputOutput when enable_bubble is true"
+  }
+]

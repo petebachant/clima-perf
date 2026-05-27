@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR modifies `TimeInterval` so that, rather than keeping track of the `previous_actuation_time`, it keeps track of the `first_actuation_time` plus the number of `actuations` (including the initial actuation). The next actuation time is then computed by \r\n\r\n```julia\r\nfunction next_actuation_time(schedule::TimeInterval)\r\n    t\u2080 = schedule.first_actuation_time\r\n    N = schedule.actuations\r\n    T = schedule.interval\r\n    return = t\u2080 + N * T\r\nend\r\n```\r\n\r\nNote we use `N` instead of `N+1` because the first actuation occurs at `t\u2080`. So for example, after this first actuation the next actuation time is `t\u2080 + T`.\r\n\r\nThis may address #3056.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-06T12:04:36Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2024-06-08T06:59:47Z",
+    "number": 3616,
+    "title": "Change `TimeInterval` to avoid roundoff error issue plus some cleanup"
+  }
+]

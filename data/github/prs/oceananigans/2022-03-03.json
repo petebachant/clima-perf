@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "So that\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = RectilinearGrid(size=(4, 4, 4), extent=(4, 4, 4));\r\n\r\njulia> a = CenterField(grid); b = XFaceField(grid);\r\n\r\njulia> (; a, b)\r\n(a = 4\u00d74\u00d74 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 boundary conditions: west=Periodic, east=Periodic, south=Periodic, north=Periodic, bottom=ZeroFlux, top=ZeroFlux, immersed=ZeroFlux\r\n\u2514\u2500\u2500 data: 6\u00d76\u00d76 OffsetArray(::Array{Float64, 3}, 0:5, 0:5, 0:5) with eltype Float64 with indices 0:5\u00d70:5\u00d70:5\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0, b = 4\u00d74\u00d74 Field{Face, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 boundary conditions: west=Periodic, east=Periodic, south=Periodic, north=Periodic, bottom=ZeroFlux, top=ZeroFlux, immersed=ZeroFlux\r\n\u2514\u2500\u2500 data: 6\u00d76\u00d76 OffsetArray(::Array{Float64, 3}, 0:5, 0:5, 0:5) with eltype Float64 with indices 0:5\u00d70:5\u00d70:5\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0)\r\n```\r\n\r\nbecomes\r\n\r\n```julia\r\njulia> (; a, b)\r\nNamedTuple with 2 Fields on 4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo:\r\n\u251c\u2500\u2500 a: 4\u00d74\u00d74 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u2514\u2500\u2500 b: 4\u00d74\u00d74 Field{Face, Center, Center} on RectilinearGrid on CPU\r\n```\r\n\r\nIf the fields are on different grids (an edge case) then:\r\n\r\n```julia\r\njulia> c = CenterField(RectilinearGrid(size=(5, 5, 5), extent=(1, 1, 1)));\r\n\r\njulia> (; a, b, c)\r\nNamedTuple with 3 Fields on different grids:\r\n\u251c\u2500\u2500 a: 4\u00d74\u00d74 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u2502   \u2514\u2500\u2500 grid: 4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 b: 4\u00d74\u00d74 Field{Face, Center, Center} on RectilinearGrid on CPU\r\n\u2502   \u2514\u2500\u2500 grid: 4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u2514\u2500\u2500 c: 5\u00d75\u00d75 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n    \u2514\u2500\u2500 grid: 5\u00d75\u00d75 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n```\r\n\r\nCloses #1256",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NTc5OTI3NTI=",
+        "number": 1256,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1256"
+      }
+    ],
+    "createdAt": "2022-03-02T19:56:11Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-03-03T00:05:22Z",
+    "number": 2299,
+    "title": "Add show method for FieldTuple"
+  },
+  {
+    "additions": 303,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR updates the baroclinic adjustment validations scripts.\r\n\r\nCloses #2291 ",
+    "changedFiles": 26,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5E08_k",
+        "number": 2286,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2286"
+      },
+      {
+        "id": "I_kwDOCRy_aM5E2_hs",
+        "number": 2291,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2291"
+      }
+    ],
+    "createdAt": "2022-02-28T22:18:29Z",
+    "deletions": 254,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2022-03-03T03:46:47Z",
+    "number": 2284,
+    "title": "Fix bug for horizontal diffusivity with Flat horizontal dimension + updates baroclinic adjustment validation script"
+  }
+]

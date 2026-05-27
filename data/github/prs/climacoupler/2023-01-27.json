@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 460,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nClimaLSM has been updated to read in surface albedo from a data file, rather than passing in a function for it as before (see ClimaLSM [PR #125](https://github.com/CliMA/ClimaLSM.jl/pull/125)). The coupler is updated to have a command line option `albedo_from_file` to specify whether we want to read in the albedo from a data file, with the default being `true`. The code relating to the bucket model in the coupler is also updated to reflect the changes in ClimaLSM.\r\n\r\nThis PR also updates ClimaCoupler to use the most recent package versions, notably of ClimaAtmos, SurfaceFluxes, and ClimaLSM.\r\n\r\n## A Note on Buildkite Changes\r\nAfter making these changes, one buildkite test fails to converge (`target_params_in_slab`). When the same test is set up with prescribed albedo, as was previously the default, it runs successfully. Because of this, we think the failure is due to the more realistic albedo from the input file causing too sharp of a contrast between land and ocean. For now, we will address this by changing this buildkite run to use prescribed albedo rather than albedo from a file.\r\nSee relevant plots [here](https://docs.google.com/document/d/17spTazJ0z45Qak8yCpVYaBUxc5Xz7nHxiOwM-T3d9NI/edit?usp=sharing).\r\n\r\n## Albedo Plots\r\nHere, you can see the surface albedo stored in the atmos simulation when albedo is read in from a file vs. when albedo is prescribed via a function. The difference between these plots shows us that the atmosphere is actually getting updated when we read in albedo from a file. Note that in each case, the \"direct\" and \"diffuse\" albedos were identical in the atmosphere, so we just show direct albedo here.\r\n\r\n\r\n![albedo_highres_file](https://user-images.githubusercontent.com/51397186/215230187-966fad5e-27b5-42b6-a6ae-1594b14e15c9.png)\r\n![albedo_highres_func](https://user-images.githubusercontent.com/51397186/215230192-91e9db58-09e7-400e-b5c4-58daef0b0cc1.png)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-19T18:34:55Z",
+    "deletions": 259,
+    "labels": [],
+    "mergedAt": "2023-01-27T19:26:56Z",
+    "number": 197,
+    "title": "Use land albedo from file, update packages"
+  }
+]

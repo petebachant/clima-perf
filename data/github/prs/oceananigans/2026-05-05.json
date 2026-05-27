@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "## Summary\n- append `\"_rank{local_rank}\"` to checkpointer filenames on distributed architectures\n- reuse the existing `with_architecture_suffix` behavior used by output writers\n- keep checkpoint pickup and cleanup scoped per-rank by storing the suffixed prefix in the checkpointer\n\n## Why\nDistributed runs were writing checkpoints with shared filenames across ranks. This change mirrors output writer naming and avoids rank collisions.\n\n## Changes\n- update `Checkpointer(model; ...)` to derive a rank-suffixed prefix from architecture-aware filename suffixing\n- add a short doc note that distributed checkpointer prefixes automatically append `\"_rank{local_rank}\"`\n\n## Testing\n- not run in this change\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-04T09:56:13Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-05-05T00:14:30Z",
+    "number": 5561,
+    "title": "Append distributed rank suffix to checkpointer filenames"
+  },
+  {
+    "additions": 191,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "\r\nTwo fixes for distributed tripolar grids:\r\n\r\n1. `show(field)` crashes on 2\u00d72 pencil decompositions. This is because `show` calls reduced fields (to show the min/max, with loc `Nothing`) and hits `has_fold_line(::TY, ::Nothing)` which does not exist. This PR adds the needed methods.\r\n\r\n2. Zipper north BC on tripolar grids are not enforced (#5503). A user-supplied non-zipper north BC was silently discarded (distributed) or silently used (serial, producing wrong halos). Now in this PR:\r\n   - `validate_boundary_conditions` rejects any non-zipper/DCBC/nothing on a folded-y direction (new `FoldedTopology` union, mirrors the `Periodic` validation pattern).\r\n   - Tripolar `regularize_field_boundary_conditions` only fills the default Zipper when the user omitted the north BC (`DefaultBoundaryCondition` placeholder); user-supplied BCs flow through untouched.\r\n   - Dead `sign(LX, LY)` fallback removed; `zipper_sign` collapsed to a 2-method dispatch.\r\n   - `FoldedTopology` split into `SerialFoldedTopology` / `SlabFoldedTopology` / `PencilFoldedTopology` / `DistributedFoldedTopology` for clarity.\r\n   - includes tests exercising the new validation.\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/5503\r\n\r\n\ud83e\udd16 Generated with help from [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM795W-w",
+        "number": 5503,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5503"
+      }
+    ],
+    "createdAt": "2026-04-12T13:49:51Z",
+    "deletions": 116,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2026-05-05T04:30:55Z",
+    "number": 5489,
+    "title": "Fix show(field) + zipper BC validation for (distributed) tripolar grids"
+  }
+]

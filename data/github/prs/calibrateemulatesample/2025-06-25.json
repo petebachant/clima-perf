@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 1295,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- Closes #364\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Added a few typical univariate Affine scalings (min-max, quartile (aka robust), zscore)\r\n- Added several multivariate decorrelations  (to map samples to have N(0,I) distribution) or to whiten with structure matrices, or both. One can also reduce dimension to subspace, \r\n- Added a CanonicalCorrelation analysis method. uses both input/output data to find a mutually reduced space for inputs and outputs\r\n- Added tooling to extend with other encoders/decoders\r\n- Added user interface to provide a schedule of several processing operations\r\n- Unit tests for each encoder-decoder\r\n- Added methods to encode new data (only) with a learnt schedule, or to decode data (only)\r\n- Docstrings for the API\r\n\r\n## Example of use:\r\n```julia\r\n# for data:\r\n    in_dim = 10\r\n    out_dim = 50\r\n    samples = 100\r\n    prior_cov = ...\r\n    in_data = rand(MvNormal(..., prior_cov), samples) \r\n    obs_noise_cov = ...\r\n    out_data = rand(MvNormal(..., obs_noise_cov), samples) \r\n    io_pairs = PairedDataContainer(in_data, out_data)\r\n```\r\nUser API to create a bunch of (silly) processing in order \r\n```julia\r\n    data_proc_schedule = [\r\n        (zscore_scale(), \"in_and_out\"),  # univariate scaling of inputs and outputs with zscore\r\n        (quartile_scale(), \"in\"), # scale inputs by univariate quartiles\r\n        (decorrelate_sample_cov(), \"out\"), # transform outputs to subspace where the have distribution N(0,I)\r\n        (minmax_scale(), \"in_and_out\"), # transform inputs and outputs so range is in [0,1]\r\n    ]\r\n```\r\npass into the emulator as (poss. with keywords)\r\n```julia\r\nEmulator(machine_learning_tool, io_pairs, prior_cov, obs_noise_cov, data_proc_schedule)\r\n```\r\nThen under the hood we perform\r\n```julia\r\n    # make schedule more parsable\r\n    encoder_schedule = create_encoder_schedule(schedule_builder)\r\n    # initialize encoders and encode\r\n    enc_io_pairs, enc_prior_cov, enc_obs_noise_cov = \r\n        encode_with_schedule(encoder_schedule, io_pairs, prior_cov, obs_noise_cov)\r\n\r\n### Displays:    \r\n[ Info: Initialize encoding of data: \"in\" with AffineScaler: ZScoreScaling\r\n[ Info: Initialize encoding of data: \"out\" with AffineScaler: ZScoreScaling\r\n[ Info: Initialize encoding of data: \"in\" with AffineScaler: QuartileScaling\r\n[ Info: Initialize encoding of data: \"out\" with Decorrelater: decorrelate_with=sample_cov\r\n[ Info: Initialize encoding of data: \"in\" with AffineScaler: MinMaxScaling\r\n[ Info: Initialize encoding of data: \"out\" with AffineScaler: MinMaxScaling\r\n\r\n```\r\nWe can later decode all at once as\r\n```julia\r\n    dec_io_pairs, dec_prior_cov, dec_obs_noise_cov = decode_with_schedule(encoder_schedule, enc_io_pairs, enc_prior_cov, enc_obs_noise_cov)\r\n```\r\nWe also have methods for using the schedule to encode new data and matrices easily etc. via:\r\n```julia\r\nid = DataContainer(new_in_data)\r\nencoded_id = encode_with_schedule(encoder_schedule, id, \"in\")\r\ndecoded_id = decode_with_schedule(encoder_schedule, encoded_id, \"in\")\r\n       \r\nencoded_oc = encode_with_schedule(encoder_schedule, new_output_covariance, \"out\")\r\ndecoded_oc = decode_with_schedule(encoder_schedule, encoded_oc, \"out\")\r\n```   \r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN868OYJZ",
+        "number": 364,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/364"
+      }
+    ],
+    "createdAt": "2025-06-18T18:59:32Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-06-25T20:57:41Z",
+    "number": 363,
+    "title": "Utilities for new data processing pipeline"
+  }
+]

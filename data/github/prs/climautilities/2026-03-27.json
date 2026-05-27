@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 156,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Add `first_update_after_n_calls` and `first_update_after_t_simulation` Also report inst sypd\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe reported sypd in ClimaAtmos is extremely unstable, likely due to various callbacks and saves. The docs for `WallTimeInfo` state that the estimated SYPD should be expected to be unreliable until the number of steps is large. In practice, we often don't run benchmark simulations long enough for SYPD to stabilize.\r\n\r\nWhen the first step is slow because of compilation, SYPD should asymptotically approach a value. \r\n\r\nThe current implementation assumes that all compilation is done during the first step. In cases where this is true, estimated SYPD stabilizes quickly. When this is not true, SYPD can take a very long time to stabilize. \r\n\r\n\r\n## Content\r\nThis commit adds two new features, and retains previous behavior by default.\r\n\r\n- When constructing the `WallTimeInfo` struct, two new kwargs can be used: ` first_update_after_n_call` and `first_update_after_t_simulation`.  The callback will avoid using the recorded wall time per step until it has been called more than ` first_update_after_n_call` times and the simulation time is after `first_update_after_t_simulation`. This replaces and simplifies the previous logic, which detected the first call after the simulation started, and skipped it. The behavior of scaling the first used measurement to account for skipped measurements is retained.\r\n\r\n- Add an `instantaneous_sypd` to the reported info. I think this is useful to notice when the simulation compiles or saves, and to see how close estimated SYPD is to stabilizing.  \r\n\r\n\r\n\r\nIf any reviewers think some of the content can be removed, or have alternate suggestions, I'm not super attached to any of these additions.\r\n\r\n\r\nExample [coupler build](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/974#019d2753-b5ff-4f47-8d20-fbe53db5c370)\r\n\r\n\r\nExample atmos: [after](https://buildkite.com/clima/climaatmos-ci/builds/29153#019d2750-6458-48dc-9ab1-16be38674bb0/L253) [before](https://buildkite.com/clima/climaatmos-ci/builds/29155#019d27d9-6294-498c-ad9b-750c58d76b2d/L253)\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-23T21:51:20Z",
+    "deletions": 148,
+    "labels": [],
+    "mergedAt": "2026-03-27T16:14:02Z",
+    "number": 208,
+    "title": "Add additional control over WallTimeInfo delay behavior"
+  }
+]

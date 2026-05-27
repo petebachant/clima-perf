@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 906,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nCurrently, our file reading and regridding works on files that contain one variable. For global runs, we will have input data for multiple variables, so we should extend our infrastructure to work for that case.\r\n\r\n## To-do\r\n- [x] each `PrescribedDataTemporal` object contains multiple `FileState` objects, not just one\r\n  - Dict mapping `varname` to `FileState`\r\n- [x] update FileReader functions:\r\n  - PrescribedDataTemporal\r\n  - FileInfo\r\n  - FileState\r\n  - read_data_fields!\r\n  - interpolate_data (renamed to get_data_at_date)\r\n- [x] update Regridder functions:\r\n  - hdwrite_regridfile_rll_to_cgll\r\n  - remove regrid_netcdf_to_field (was only used in `set_initial_parameter_field` for `BulkAlbedoStatic` - see last bullet point)\r\n- [x] remove regridder tests (now empty)\r\n- [x] add test for file with multiple varnames (use file that's smaller than ERA)\r\n- [x] unify PrescribedDataTemporal and PrescribedDataStatic interfaces\r\n  - before, temporal constructor downloaded data and called `hdwrite_regridfile_rll_to_cgll`, and static constructor just downloaded data\r\n    - now both constructors call `hdwrite_regridfile_rll_to_cgll` so all data is regridded after PrescribedData objects are created\r\n- [x] unify `set_initial_parameter_field`\r\n  - before, `PrescribedDataTemporal` called `read_data_fields!` and `interpolate_data` (now `get_data_at_date`), and `PrescribedDataStatic` called `regrid_netcdf_to_field`\r\n  - now, temporal calls `read_data_fields!` and `get_data_at_date`, and static calls `get_data_at_date`\r\n  - can remove `regrid_netcdf_to_field` function now as unused\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-16T20:07:28Z",
+    "deletions": 594,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      },
+      {
+        "color": "5319E7",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfrouHA",
+        "name": "API"
+      }
+    ],
+    "mergedAt": "2024-02-06T00:09:44Z",
+    "number": 452,
+    "title": "accommodate files containing multiple vars"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd methods for compatibility with ClimaCoupler:\r\n- turbulent_fluxes(::CoupledAtmosphere, ...)\r\n- initialize_drivers(::CoupledAtmosphere, ...)\r\n\r\nThis will allow us to remove these functions from ClimaCoupler\r\n\r\ncloses #476 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5-IRQE",
+        "number": 476,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/476"
+      }
+    ],
+    "createdAt": "2024-02-05T20:16:13Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2024-02-06T18:11:09Z",
+    "number": 479,
+    "title": "add CoupledAtmos methods"
+  }
+]

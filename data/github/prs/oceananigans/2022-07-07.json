@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "(after a proper warning)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-06T20:56:32Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-07-07T12:48:57Z",
+    "number": 2644,
+    "title": "`VectorInvariant` as a default for `HydrostaticFreeSurfaceModel` with `LatitudeLongitudeGrid`"
+  },
+  {
+    "additions": 369,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR allows to have a dynamic viscosity and diffusivity\r\n\r\n\r\nif a location is specified through the keyword argument `loc` the function will be interpolated automatically, otherwise the function will have `lx, ly, lz` in the signature\r\n```\r\nusing Oceananigans.Operators: \u03b6\u2083\u1da0\u1da0\u1d9c, div_xy\u1d9c\u1d9c\u1d9c, \u2111xy\u1d9c\u1d9c\u1d43, Az\u1d9c\u1d9c\u1d9c, \u0394x, \u0394y\r\n\r\nC\u2084 = 0.2\r\n\r\n@inline function \u03bdhb_1(i, j, k, grid, clock, fields, C\u2084) \r\n\r\n    \u03b4  = div_xy\u1d9c\u1d9c\u1d9c(i, j, k, grid, fields.u, fields.v)\r\n    \u03b6  = \u2111xy\u1d9c\u1d9c\u1d43(i, j, k, grid, \u03b6\u2083\u1da0\u1da0\u1d9c, fields.u, fields.v)\r\n    \r\n    \u0394\u2082 = Az\u1d9c\u1d9c\u1d9c(i, j, k, grid)\r\n    return C\u2084 * \u0394\u2082^2 sqrt(\u03b4^2 + \u03b6^2)\r\nend\r\n\r\n@inline function \u03bdhb_2(i, j, k, grid, lx, ly, lz, clock, fields, \u03bb) \r\n    \u0394 = (1 / (1 / \u0394x(i, j, k, grid, lx, ly, lz)^2 + 1 / \u0394y(i, j, k, grid, lx, ly, lz)^2) )^2\r\n    return \u0394 / \u03bb\r\nend\r\n\r\nbiharmonic_viscosity_1  = HorizontalScalarBiharmonicDiffusivity(\u03bd=\u03bdhb_1, discrete_form=true, loc = (Center, Center, Center), parameters = C\u2084)\r\nbiharmonic_viscosity_2  = HorizontalScalarBiharmonicDiffusivity(\u03bd=\u03bdhb_2, discrete_form=true, parameters = 1days)\r\n```",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-26T16:20:00Z",
+    "deletions": 277,
+    "labels": [],
+    "mergedAt": "2022-07-07T20:32:15Z",
+    "number": 2580,
+    "title": "Fields in viscosity operators"
+  }
+]

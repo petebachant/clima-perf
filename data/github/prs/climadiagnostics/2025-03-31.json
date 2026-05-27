@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 117,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds time and date bounds when writing to a netCDF file and also changes the type of date to a `Dates.DateTime` instead of a string.\r\n\r\nHere's output of a netcdf file from a ClimaLand simulation that ran for two months of simulation time with this branch.\r\n\r\n```julia\r\njulia> x[\"time\"]\r\ntime (2)\r\n  Datatype:    Float64 (Float64)\r\n  Dimensions:  time\r\n  Attributes:\r\n   units                = s\r\n   axis                 = T\r\n   standard_name        = time\r\n   long_name            = Time\r\n   bounds               = time_bnds\r\n\r\n\r\njulia> x[\"date\"]\r\ndate (2)\r\n  Datatype:    Dates.DateTime (Float64)\r\n  Dimensions:  time\r\n  Attributes:\r\n   units                = seconds since 2008-01-01T00:00:00\r\n   bounds               = date_bnds\r\n\r\n\r\njulia> x[\"time_bnds\"]\r\ntime_bnds (2 \u00d7 2)\r\n  Datatype:    Float64 (Float64)\r\n  Dimensions:  nv \u00d7 time\r\n  Attributes:\r\n   comments             = time bounds for each time value\r\n   units                = s\r\n\r\n\r\njulia> x[\"date_bnds\"]\r\ndate_bnds (2 \u00d7 2)\r\n  Datatype:    Dates.DateTime (Float64)\r\n  Dimensions:  nv \u00d7 time\r\n  Attributes:\r\n   comments             = date bounds for each date value\r\n   units                = seconds since 2008-01-01T00:00:00\r\n\r\n\r\njulia> x[\"time_bnds\"][:,:]\r\n2\u00d72 Matrix{Float64}:\r\n 0.0       2.6784e6\r\n 2.6784e6  5.184e6\r\n\r\njulia> x[\"date_bnds\"][:,:]\r\n2\u00d72 Matrix{Dates.DateTime}:\r\n 2008-01-01T00:00:00  2008-02-01T00:00:00\r\n 2008-02-01T00:00:00  2008-03-01T00:00:00\r\n\r\njulia> x[\"time\"][:]\r\n2-element Vector{Float64}:\r\n 2.6784e6\r\n 5.184e6\r\n\r\njulia> x[\"date\"][:]\r\n2-element Vector{Dates.DateTime}:\r\n 2008-02-01T00:00:00\r\n 2008-03-01T00:00:00\r\n\r\n```\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n- **New Features**\n\t- Enhanced data files with clear time and date bounds, providing a precise representation of temporal intervals (e.g., a value now reflects the average over a specific range).\n- **Tests**\n\t- Expanded coverage to verify that the new temporal bound functionality works accurately, ensuring reliable data output.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-12T22:17:48Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2025-03-31T15:31:45Z",
+    "number": 108,
+    "title": "Add time and date bounds"
+  },
+  {
+    "additions": 520,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis provides an alternative to  PR #99 with a different solution to support PointSpaces.\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\nWhen a point space results from computating a diagnostic,\r\ninterpolation is not run. Additionally, no space coordinate is\r\nadded to the output netcdf file.\r\n\r\nA constructor for a NetCDF writer on only PointSpaces is also defined,\r\nwhich sets `num_points`, `z_sampling_method`, and `interpolated_physical_z`\r\nto nothing. \r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n- **Bug Fixes**\n\t- Fixed issues in output generation to correctly handle vertical and point spatial configurations.\n- **New Features**\n\t- Enhanced spatial data handling with flexible configuration for diagnostics and improved coordinate processing across varied spatial layouts.\n- **Tests**\n\t- Expanded test coverage and integration checks to ensure robust and consistent behavior across multiple spatial setups.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-05T17:07:48Z",
+    "deletions": 113,
+    "labels": [],
+    "mergedAt": "2025-03-31T15:51:37Z",
+    "number": 102,
+    "title": "Tr/point space support"
+  },
+  {
+    "additions": 310,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR adds support for specifying diagnostics with a `compute` function instead of `compute!`. `compute(state, cache, time)` can return either a `Field` or a `Base.Broadcast.Broadcasted` object (obtained with `@lazy`) and are now the recommended way to specify diagnostics. `compute!` is still supported to preserve existing code.\r\n\r\nCloses #5 \r\nCloses #103 \n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **New Features**\n  - Introduced support for defining diagnostic variables with lazy expressions, enabling more concise and efficient computations.\n  - Simplified diagnostic computation methods that now return results directly for improved performance.\n  - Added new computation functions for lazy evaluation and field-based computations.\n\n- **Bug Fixes**\n  - Enhanced error handling in the `DiagnosticVariable` constructor to ensure proper function requirements.\n\n- **Documentation**\n  - Updated user and developer guides to showcase the new lazy evaluation approach with clear examples and revised usage instructions.\n  - Added compatibility notes and usage patterns for the new `compute` function.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOH9KWKs6EiO2i",
+        "number": 5,
+        "repository": {
+          "id": "R_kgDOH9KWKg",
+          "name": "ClimaDiagnostics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaDiagnostics.jl/issues/5"
+      },
+      {
+        "id": "I_kwDOH9KWKs6pOiQa",
+        "number": 103,
+        "repository": {
+          "id": "R_kgDOH9KWKg",
+          "name": "ClimaDiagnostics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaDiagnostics.jl/issues/103"
+      }
+    ],
+    "createdAt": "2024-08-13T20:24:19Z",
+    "deletions": 79,
+    "labels": [],
+    "mergedAt": "2025-03-31T17:44:06Z",
+    "number": 64,
+    "title": "Add support for `Broadcasted` objects"
+  }
+]

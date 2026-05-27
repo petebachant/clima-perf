@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "The failure [here](https://buildkite.com/clima/climaatmos-ci/builds/24411#01973684-acab-4b2e-89ff-e5469efe038c) revealed that ClimaDiagnostics.jl is reconstructing the vertical grid, via `_FiniteDifferenceGrid`, which is not efficient (we can instead just return a pointer) and will become gpu-incompatible in #2343 (as the mesh, once made, will be moved to the gpu).\r\n\r\nThis PR defines `FiniteDifferenceSpace(space::ExtrudedFiniteDifferenceSpace)` which avoids that code path and reconstructs a new grid with the same backing data.\r\n\r\nI suppose I should add this to ClimaDiagnostics, so that I can test it in ClimaAtmos, as this is the only place where this functionality seems to be exercised. I'll do that now, but this feature should probably exist in ClimaCore.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-03T16:58:03Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-06-03T18:16:24Z",
+    "number": 2344,
+    "title": "Define FiniteDifferenceSpace for extruded spaces"
+  }
+]

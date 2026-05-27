@@ -1,0 +1,86 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #2595.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5K9eYD",
+        "number": 2595,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2595"
+      }
+    ],
+    "createdAt": "2022-06-02T22:15:59Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2022-06-03T11:28:09Z",
+    "number": 2596,
+    "title": "Check for CUDA-enabled device on `grid` construction rather than in model constructors"
+  },
+  {
+    "additions": 1194,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "As for now the `ShallowWaterModel` is implemented in a conservative form. \r\n\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_t(uh)%2B\\partial_x(hu^2%2B\\frac{1}{2}gh^2)%2B\\partial_y(huv)-fvh=0}\">\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_t(vh)%2B\\partial_x(huv)%2B\\partial_y(hv^2%2B\\frac{1}{2}gh^2)%2Bfuh=0}\">\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_th%2B\\partial_x(hu)%2B\\partial_y(hv)=0}\">\r\n\r\nThis PR attempts to introduce a non-conservative form of the equation with a vector invariant formulation of advection\r\n\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_tu-(\\zeta%2Bf)v%2B\\partial_x(gh%2Bk)=0}\">\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_tv%2B(\\zeta%2Bf)u%2B\\partial_y(gh%2Bk)=0}\">\r\n<img src=\"https://render.githubusercontent.com/render/math?math={\\partial_th%2B\\partial_x(hu)%2B\\partial_y(hv)=0}\">\r\n\r\nsuch that we can treat the advection with high order WENO reconstruction.\r\nWe should also think about introducing bathymetric terms (<img src=\"https://render.githubusercontent.com/render/math?math={gh\\partial_x h_B}\">  and  <img src=\"https://render.githubusercontent.com/render/math?math={gh\\partial_y h_B}\">) and viscous term (#2403)\r\n\r\nwith @francispoulin ",
+    "changedFiles": 29,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5GA90X",
+        "number": 2372,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2372"
+      }
+    ],
+    "createdAt": "2022-05-05T14:23:56Z",
+    "deletions": 273,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2022-06-03T19:14:11Z",
+    "number": 2522,
+    "title": "Vector Invariant Formulation of the `ShallowWaterModel`"
+  }
+]

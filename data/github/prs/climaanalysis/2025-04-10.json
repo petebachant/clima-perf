@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 126,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds an extra longitude point to the interpolant if the longitudes represent oncell and spans all 360 degrees.\r\n\r\n## TODO\r\n- [X] Add a test for 2D/3D OutputVar (decided to only do 2D OutputVar)\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-04T22:55:28Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-04-10T18:36:21Z",
+    "number": 242,
+    "title": "Add extra lon point when resampling if needed"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit extends `slice` and `window` so that they can detect and recognized \"improperly\" named dimensions. For example, if a file has dimension of `lon`, now the functions will work with `lon`, `long`, or `longitude`.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-10T00:22:39Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2025-04-10T18:59:59Z",
+    "number": 245,
+    "title": "Make `slice` and `window` smarter"
+  },
+  {
+    "additions": 383,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit adds support for more operations that act directly on `OutputVar`s, including `-`, `max`, `log`.\r\n\r\nCloses #246\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc6yCGDz",
+        "number": 246,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/246"
+      }
+    ],
+    "createdAt": "2025-04-10T22:04:01Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2025-04-10T23:48:20Z",
+    "number": 248,
+    "title": "Add support for more operations on `OutputVar`s"
+  },
+  {
+    "additions": 144,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "`slice` and `window` are very commonly used functions. One of the main use cases it selecting a moment of time to plot, or a subset of data to analyze.\r\n\r\nWhen working with real observations, it is often very convenient to operate at the level of dates, instead of simulation time. This PR adds support for this feature.\r\n\r\nNow, the following operations are supported\r\n```julia\r\nslice(var, time = Dates.DateTime(2009, 12, 15))\r\nwindow(var, left = Dates.DateTime(2009, 12, 15), right = Dates.DateTime(2009, 12, 17))\r\n```\r\n\r\nThe requirement for this is that `var` contains a `start_date` among its attributes. We also assume that the units of `time` are second.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-10T21:38:36Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2025-04-10T23:59:37Z",
+    "number": 247,
+    "title": "Add support for dates in `slice` and `window`"
+  }
+]

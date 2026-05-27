@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 1348,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #377\r\nIndirectly, Closes #288 \r\n\r\nTo review the PR and see what is going on I would suggest, \r\n- playing with the `example/UpdateGroups/calibrate.jl`.\r\n- Looking at the `src/UpdateGroups.jl` file\r\n- Looking at `src/EnsembleKalmanProcess.jl` function `update_ensemble!(...)`\r\n- look at the docs page [\"Update Groups\"](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR380/update_groups/)\r\n \r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- `UpdateGroup` object\r\n- unit tests for `UpdateGroup`\r\n- implemented an interface with all EKP methods, in  particular this necessitated  lifting saving of \"g\", and verbose flag statements out of the individual updates thus reducing a lot of duplicated code\r\n- implemented functionality for EKI\r\n- Constructed an example based on learning \"fast\" and \"slow\" parameters of a coupled L96 model, hopefully improved by the grouping process. \r\n- Updated to work with new Observations and ObservationSeries framework: In particular, a nice constructor that takes in `prior, observation, dict_in_to_out` and produces a list of `UpdateGroups` that can be passed to EKP. \r\n- It also now works with minibatching, by repeating index blocks for each observation in the minibatch\r\n- Small refactor to Localizers, (instantiated without dimensionality, then dimensionality is inferred from current ensembles)\r\n- Functionality for: ETKI,UKI,EKS,SEKI\r\n- Docs page \"Update Groups\"\r\n\r\n## Example: Multiscale lorenz 96 with j=k\r\n\r\nParameters (Slow)\r\n`F`: 3-vector of amplitude, frequency and mean of a periodic forcing on slow variables\r\n`G`: Coupling term in slow equation to the fast variables\r\nParameters (Fast)\r\n`h`: Coupling term in the fast variables\r\n`c`: Timescale separation parameter of the fast variables\r\n`b`: nonlinearity scaling in the fast variables\r\nWith labelled observations observed \"Independently\" I.e. we _assume_ independent with regards to observation (probably untrue)\r\n`<X>, <Y>, <X^2>, <Y^2>, <XY>`\r\none can define two update groups as\r\n```julia\r\ngroup_identifiers = Dict(\r\n    [\"F\"] => [\"<X>\", \"<X^2>\"], \r\n    [\"G\", \"h\", \"c\", \"b\"] => [\"<Y>\", \"<Y^2>\", \"<XY>\"],\r\n)\r\nupdate_groups = create_update_groups(priors, observation, group_identifiers) # handles all the indexing \r\n```\r\nBy allowing more correlations in the observations e.g. create `<X><X^2>` and `<Y><Y^2><XY>`one can also define groups by these identifiers\r\n```julia\r\ngroup_identifiers = Dict(\r\n    [\"F\"] => [\"<X><X^2>\"], \r\n    [\"G\", \"h\", \"c\", \"b\"] => [\"<Y><Y^2><XY>\"],\r\n)\r\nupdate_groups = create_update_groups(priors, observation, group_identifiers)\r\n```\r\nand pass to the EKP object with `update_groups = update_groups` flag\r\nSpin up over a year.\r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/fa4aa35f-fd16-4f2a-a8ba-f98530da6c79\" width=\"350\"> <img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/8e355a52-4d52-4e11-bc20-56e9002081bd\" width=\"350\">\r\nsamples of the trajectories used for data\r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/a9a90674-70cd-44ec-ba2b-84f165acffa9\" width=\"350\">\r\nforward map used for data (noise covaraince and true data `<X><Y><X^2><Y^2><XY>` nomalized by the noise)\r\n<img src=\"https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/0993e4fe-9eab-4b9c-b3d7-d0e8e8337e19\" width=\"350\">\r\nShown below is the initial and final 50-ensemble (normalized by the noise) pushed through the forward map, over the true sample +/- 2sd (grey), after 5 iterations.\r\n- True parameters `[8.0, 2.0, 0.05555555555555555], 10.0, 10.0, 10.0, 10.0 ]`\r\n- Left: Full calibration, `{F,G,h,c,b}` with all data `{<X><Y><X^2><Y^2><XY>}`. \r\n```julia\r\n[7.864338120823016, 1.1500565821985165, 0.05883690301359528, 2.7165402443001034, 2.8197381618086217, 6.8072979930231945, 7.978078567957204]\r\n```\r\n- Right: calibration with grouped `{F}`, `{G,h,c,b}` and fast/slow data batches `{<X><X^2>}`, `{<Y><Y^2><XY>}`. \r\n```julia \r\n[5.093003061750248, 2.1573021824213985, 0.0060389967710004905, 1.0526243678897405, 0.8561707192010413, 8.331178239855038, 3.594166654372452]\r\n```\r\n<img src=\"https://github.com/user-attachments/assets/132be7f9-4b7e-4c92-8391-5353efec8be0\" width=\"350\"> <img src=\"https://github.com/user-attachments/assets/7d39bb33-6ddf-45d3-83f1-71db1428d356\" width=\"350\">\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585ni_MZ",
+        "number": 288,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/288"
+      },
+      {
+        "id": "I_kwDOEreD586JJ629",
+        "number": 377,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/377"
+      }
+    ],
+    "createdAt": "2024-05-23T21:48:16Z",
+    "deletions": 215,
+    "labels": [],
+    "mergedAt": "2024-11-27T23:20:02Z",
+    "number": 380,
+    "title": "Update groups, i.e. domain and observation localization"
+  }
+]

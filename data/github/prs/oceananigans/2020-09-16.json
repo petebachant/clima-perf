@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 684,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a third-order Runge-Kutta time stepping method.\r\n\r\nThe implementation is based off [Le and Moin (1991)](https://www.sciencedirect.com/science/article/pii/0021999191902157). It should be noted, however, that we do not use an implicit method for diffusion, and that the pressure correction is calculated every substep. It could be possible in the future to implement the optimization described in Le and Moin (1991) that reduces the number of times the pressure Poisson equation needs to be solved each time-step from 3 to 1, though this would reduce the accuracy of the scheme from third to second-order.\r\n\r\nSo far, this PR extends the dynamics tests and incompressibility test to `RungeKutta3TimeStepper`. It also extends the time stepper convergence test to the `RungeKutta3TimeStepper`.\r\n\r\nI am open to changing the name of the time stepper. It may also be a good idea to add basic documentation. The time stepper is used by setting the keyword `timestepper=:RungeKutta3` in the constructor for `IncompressibleModel`.\r\n\r\n~~I am not sure if checkpointing will work with this timestepper.~~\r\n\r\nCheckpointing will not work with this timestepper. A more generic checkpointer awaits a future PR.\r\n\r\nResolves #506 ",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MTIyNDIwMTM=",
+        "number": 506,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/506"
+      }
+    ],
+    "createdAt": "2020-09-15T13:04:47Z",
+    "deletions": 352,
+    "labels": [],
+    "mergedAt": "2020-09-16T14:51:49Z",
+    "number": 945,
+    "title": "Third-order Runge-Kutta timestepper"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #939 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDAyNDY1NDc=",
+        "number": 939,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/939"
+      }
+    ],
+    "createdAt": "2020-09-16T12:29:40Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2020-09-16T19:36:51Z",
+    "number": 947,
+    "title": "Support closure=nothing; resolves #939"
+  }
+]

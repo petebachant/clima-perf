@@ -1,0 +1,151 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Claude came up with this:\r\n\r\nAvoid calling `sync_device!` (CUDA.synchronize) in `fill_corners!` when all corner connectivity is `nothing`. This occurs for slab decompositions and single-rank distributed configurations where no diagonal neighbors exist.\r\n\r\nEach `sync_device!` call flushes the GPU's async execution pipeline. With ~300 halo fills per 10 timesteps in a typical Breeze.jl anelastic benchmark, the unnecessary syncs cause a 2.95x overhead on a single distributed GPU.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T18:48:57Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-03-27T01:00:43Z",
+    "number": 5435,
+    "title": "Skip fill_corners! when no corner neighbors exist"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Currently, I think we inject MPI communication BCs along distributed axes without checking that the extent is non-zero. If we ever have to build a z-only field, we will hit `BoundsError`. FYI this is important downstream in Breeze where we construct a z-only reference state",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-26T16:47:15Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-03-27T01:00:53Z",
+    "number": 5434,
+    "title": "Distributed should account for z-only fields"
+  },
+  {
+    "additions": 308,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Reorganize Reactant tests into numbered groups (`reactant_1`, `reactant_2`, `reactant_3`) plus `reactant_correctness`\n- Move unit tests from `test_reactant.jl` into `test_reactant_unit.jl` for cleaner separation\n- Add CI coverage jobs for all Reactant test groups (previously only `reactant_unit` and `reactant_correctness` uploaded coverage)\n\n### New test group mapping\n\n| Group | CI Job | Tests | Timeout |\n|---|---|---|---|\n| `reactant_1` | Reactant Unit | `test_reactant_unit.jl` (grids, fields, reductions, FieldTimeSeries) | 60min |\n| `reactant_2` | Reactant Simulations | `test_reactant.jl` + `test_reactant_fft_models.jl` + `test_reactant_hydrostatic_free_surface_models.jl` | 120min |\n| `reactant_3` | Reactant LLG Simulations | `test_reactant_latitude_longitude_grid.jl` | 120min |\n| `reactant_correctness` | Reactant Correctness | `test_reactant_correctness.jl` (unchanged) | 120min |\n\n## Motivation\nPR #5389 showed 45.64% patch coverage because the main Reactant test group (`reactant_1`) had no CI coverage upload. This PR ensures all Reactant test groups contribute to Codecov.\n\n## Test plan\n- [x] `reactant_1` tests pass locally with `--check-bounds=auto` (290/290)\n- [ ] All CI jobs pass on this PR\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-23T23:08:56Z",
+    "deletions": 239,
+    "labels": [],
+    "mergedAt": "2026-03-27T01:01:30Z",
+    "number": 5423,
+    "title": "Reorganize Reactant test groups and add CI coverage"
+  },
+  {
+    "additions": 276,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n\nThe benchmarking pipeline had several duplicate runs, a separate NSYS profiling step that re-ran the same configurations, and would cancel in-progress builds on main. This PR streamlines the whole thing.\n\n### Duplicate removal\n- **Closure Sweep**: Removed `CATKE` entry \u2014 identical to the Default baseline (360x180x50, tripolar, Float64, zstar=false, WENOVectorInvariantDefault, WENO7, CATKE, 2 tracers)\n- **Grid Type Sweep**: Dropped `tripolar + zstar=false` \u2014 also identical to the Default baseline. The sweep now tests all 3 grid types with `zstar=true`, and only `lat_lon` + `immersed_lat_lon` with `zstar=false`\n\n### Single Default baseline\n- A dedicated `Default` run (360x180x50 with all defaults) is now the first benchmark, removed from the Resolution Sweep\n- The publish workflow injects this Default result into every sweep chart as a baseline reference point, so all charts show the default configuration for comparison without re-running it\n\n### NSYS unification\n- Since nsys profiling adds no overhead, the Default run is now wrapped with `$NSYS profile` directly in the benchmark step\n- A reusable `nsys_extract` shell function handles kernel CSV extraction and merges `nsys_top_kernels` into the matching JSON entries\n- The entire separate NSYS profiling step is eliminated (~70 lines), along with the nsys JSON merge logic in the compare step\n- NSYS kernel charts now report **median time per kernel** instead of total time, which is more useful for tracking per-call performance\n\n### Advection sweep consolidation\n- The 3 separate Julia invocations for the Advection Sweep are consolidated into 1\n- `run_benchmarks.jl` now **zips** momentum/tracer advection lists when they have equal length (paired sweep), instead of taking their Cartesian product. This means `--momentum_advection=\"nothing, WENO5, WENO9\" --tracer_advection=\"nothing, WENO5, WENO9\"` produces 3 paired runs, not 9\n- Falls back to full product when lists have different lengths (backward compatible)\n\n### Concurrency\n- **Buildkite**: Added `concurrency: 1` with `concurrency_group: \"oceananigans-benchmarks/gpu\"` so benchmark builds queue instead of running in parallel on the GPU node\n- **GitHub Actions** (`publish-benchmarks.yml`): `cancel-in-progress` is now conditional \u2014 PRs still cancel superseded runs, but main builds queue and wait\n\n### Other cleanup\n- Default warmup steps reduced from 10 to 5\n- Removed commented-out IO sweep dead code\n- Fixed a pre-existing bug where `nsys_zstar.json` was generated but never listed in artifact_paths\n\n### Net effect on pipeline runtime\n- 3 fewer benchmark configurations (2 duplicates + 1 moved to Default)\n- 2 fewer Julia process launches (advection consolidation)\n- Entire NSYS step eliminated (was 2 separate Julia+nsys runs + instantiate)\n- Warmup overhead halved\n\n## Test plan\n- [x] Verify Buildkite pipeline runs successfully with all groups producing results\n- [x] Verify Default entry appears in benchmark_results.json with `nsys_top_kernels` field\n- [ ] Verify publish workflow correctly injects Default into all sweep charts\n- [x] Verify NSYS kernel summary shows median times in GitHub step summary\n- [ ] Verify builds queue on main instead of canceling\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM71Bq3L",
+        "number": 5418,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5418"
+      }
+    ],
+    "createdAt": "2026-03-25T18:05:09Z",
+    "deletions": 175,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-03-27T06:21:46Z",
+    "number": 5429,
+    "title": "Streamline benchmarking pipeline"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n- **Fix NSYS kernel chart entries not appearing on the benchmark website**: The nsys kernel extraction code was referencing a stale loop variable (`d` from a finished `for d in all_data` loop) instead of the current `deflt` variable, so the `nsys_top_kernels` check always failed and no kernel entries were emitted. Moved the extraction back into the main loop.\n- **Add NSYS kernel comparison against main in the job summary**: The summary table now shows the baseline median time from main and a percentage change column when baseline data is available. Added `baseline_benchmark_results.json` to Buildkite artifact paths to make this possible.\n\n## Test plan\n- [ ] Verify NSYS kernel entries appear on [benchmark website](https://numericalearth.github.io/OceananigansBenchmarks/#benchmark-default) after next main build\n- [ ] Verify GitHub Actions job summary shows NSYS kernel comparison table with Main (ms) and Change columns\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-27T11:48:13Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-03-27T16:33:50Z",
+    "number": 5440,
+    "title": "Fix NSYS kernel charts and add kernel comparison to summary"
+  },
+  {
+    "additions": 100,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "Making this change reduces the kernel execution time by reducing the branching in interpolations. I think that the since the bias was implemented as two types, Julia compiled to two different functions and then branched between them. Nsight compute files are here:\r\n[enum_bias_reports.tar.gz](https://github.com/user-attachments/files/25448574/enum_bias_reports.tar.gz)\r\n\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-20T17:28:10Z",
+    "deletions": 101,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-03-27T22:46:39Z",
+    "number": 5318,
+    "title": "Switch biases to be enums rather than distinct types."
+  }
+]

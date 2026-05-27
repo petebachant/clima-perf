@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 969,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #368 \r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Removed learning of \"sigma\" which is not stably learnt!\r\n- Applied some data standardization to ensure reasonable prior ranges, then chose some defaults that stay in this range\r\n- Helped scale defaults with 1/sqrt(dimension) and 1/rank, for more general performance\r\n- Allow for users to intentionally override overfit regularization (if over-regularization appears during optimization)\r\n- Change default covariance regularization from \"shrinkage\" to \"nice\" (in ScalarRF)\r\n- Changed (Corrected?) the \"LR\" factorization `R*D*R' + eps*I` to \"LR plus D\" `R*R' + (D+eps)*I` to rely less on the definiteness correction nugget `eps`\r\n- Updated unit tests for latest EKP.\r\n- We already can incorporate tikhonov with the prior distribution. therefore I have removed all mentions of other tikhonov regularization. the existing code was untested and not used anywhere.\r\n\r\n\r\n\r\n### MISC\r\n- Added packages into `Cloudy_emulate_sample` that are missing.\r\n\r\n### Cloudy results (`RF-scalar`, `RF-nonsep`, `gp-gpjl`)\r\n<img width=\"250\" alt=\"pairplot_posterior_constr_gp-gpjl\" src=\"https://github.com/user-attachments/assets/b83207ae-73fe-4759-ab00-1ac99970ce96\" />\r\n<img width=\"250\" alt=\"pairplot_posterior_constr_rf-nonsep\" src=\"https://github.com/user-attachments/assets/289161f8-9650-4abc-b282-b1f50cba7a5d\" />\r\n<img width=\"250\"  alt=\"pairplot_posterior_constr_rf-scalar\" src=\"https://github.com/user-attachments/assets/4b93b03e-cf68-46d6-b8a3-df111f2df301\" />\r\n\r\n### Regression 2d-2d results (true, `RF-scalar`, `RF-nonsep`, `gp-skljl`)\r\n**Plotting only 1st output component**\r\n<img width=\"250\" alt=\"g1_true\" src=\"https://github.com/user-attachments/assets/f6449ba9-73d7-4dce-8b13-ce2287bba11a\" /> <img width=\"250\" alt=\"rf-lr-scalar_no-proc_y1_predictions\" src=\"https://github.com/user-attachments/assets/9b3f5b5e-2d68-462b-aec5-77ed1c301336\" /> \r\n<img width=\"250\" alt=\"rf-nonsep_no-proc_y1_predictions\" src=\"https://github.com/user-attachments/assets/db2360b7-42df-4a35-b42f-009b4d37fda8\" /> <img width=\"250\" alt=\"gp-skljl_no-proc_y1_predictions\" src=\"https://github.com/user-attachments/assets/830a6f02-ff55-4426-86ea-2d66514f3f9f\" />\r\n\r\n### L63 (`RF-diag-scalar`, `RF-nonsep`, `gp-gpjl`)\r\nCDFs of long time trajectories (over 5 repeats for RF)\r\n<img width=\"250\" alt=\"rf-diag-scalar_l63_cdfs\" src=\"https://github.com/user-attachments/assets/6f5bbe94-e8ec-40dd-8ca0-42a94def8f92\" /> <img width=\"250\" alt=\"RF-nonsep_l63_cdfs\" src=\"https://github.com/user-attachments/assets/3b865304-503f-47d3-8894-bb7a63ccdf40\" /> <img width=\"250\" alt=\"GP_l63_cdfs\" src=\"https://github.com/user-attachments/assets/4b9d18be-b886-4e27-a08a-2d0a08c7506e\" />\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN86-W-xn",
+        "number": 368,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/368"
+      }
+    ],
+    "createdAt": "2025-08-18T21:03:30Z",
+    "deletions": 564,
+    "labels": [],
+    "mergedAt": "2025-09-23T04:13:11Z",
+    "number": 375,
+    "title": "Generalize Random feature defaults for greater stability"
+  }
+]

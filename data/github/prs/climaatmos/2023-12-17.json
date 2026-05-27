@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nLimits diagnostic edmf entrainment and detrainment to w / dz. Also refactors the limiter on entrainment and detrainment.\r\n\r\nRight now I am limiting both entrainment and detrainment to w / dz for diagnostic edmf. I am not sure if it makes sense for detrainment, as this makes it small when w goes to zero near the cloud top, but I think we want detrainment to be large there. I'll need to think more about it. For entrainment, I can't use this upper limit at the first level, as w is zero and limiting it will result in zero entrainment, and zero area fraction throughout the column. So it's a bit ugly:( Another way is to calculate w at the next level first then use that for the limiter, but this can potentially result in different entrainment for w and tracers, which I would like to avoid unless we have to. Other than these issues this PR is ready for review.\r\n\r\nSome time ago I increased the entrainment to make the timestep more limited by mass flux. The simulations didn't fail but the results look pretty noisy. I reduced dt here to make the results look slightly smoother. We can revisit this after we treat mass flux implicitly.\r\n\r\nCloses #2407 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs54qE6_",
+        "number": 2407,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2407"
+      }
+    ],
+    "createdAt": "2023-12-09T07:47:47Z",
+    "deletions": 77,
+    "labels": [],
+    "mergedAt": "2023-12-17T21:16:39Z",
+    "number": 2424,
+    "title": "add entrainment and detrainment limiter to diagnostic edmf"
+  }
+]

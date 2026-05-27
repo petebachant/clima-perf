@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 348,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Upgrades to julia 1.8 (will upgrade to 1.9 in follow up)\r\n - Updates the manifest files\r\n - Adds JET to the examples env\r\n - Deletes the perf folder, since all of our test runs in the examples / gpuenv environments",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-21T17:51:16Z",
+    "deletions": 200,
+    "labels": [],
+    "mergedAt": "2023-06-21T18:25:07Z",
+    "number": 359,
+    "title": "Upgrade to julia 1.8"
+  },
+  {
+    "additions": 301,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "There is no reason to have type parameters that we bound to concrete types:\r\n\r\n```julia\r\njulia> isconcretetype(UInt8)\r\ntrue\r\n\r\njulia> isconcretetype(Int)\r\ntrue\r\n```\r\n\r\nThis is similar to using `where {FT <: Float64}`, we might as well not have the type parameters, and not waste compiling a generic method with type assertions.\r\n\r\n\r\nThis PR removes these unnecessary type parameters. [xref](https://julialang.slack.com/archives/C03LD7K8HLN/p1683743629523789?thread_ts=1683740387.868789&cid=C03LD7K8HLN):\r\n\r\n> FWIW, this bit also a bit odd: `where I<:Int64`, since this means I is either `Union{}` or `Int`, but seems like it would always just be an `Int`?\r\n\r\n\r\n\r\nUnfortunately, this is a breaking change, but fixing upstream breakages with this should be easy.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-21T19:33:53Z",
+    "deletions": 337,
+    "labels": [
+      {
+        "color": "A555DE",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUK-3Dg",
+        "name": "Latency"
+      },
+      {
+        "color": "8D355D",
+        "description": "",
+        "id": "LA_kwDODGrFgs8AAAABUK--qA",
+        "name": "Breaking :boom:"
+      }
+    ],
+    "mergedAt": "2023-06-21T19:50:59Z",
+    "number": 360,
+    "title": "Remove unnecessary type parameters"
+  }
+]

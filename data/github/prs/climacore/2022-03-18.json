@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1343,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR moves the explicit tendencies defined in `baroclinic_wave_utilities.jl` into `staggered_nonhydrostatic_model.jl`, unifying them into a single function and generalizing them to work with both 2D and 3D domains. It also separates the default tendencies from the non-default tendencies (e.g., hyperdiffusion and Held-Suarez forcing), so that test case files only need to specify non-default tendencies (if there are any), which can be done by defining methods for `additional_cache()` and `additional_tendency!()`.\r\n\r\nIn addition, this PR introduces a new naming convention for Fields defined on hybrid domains---Fields on cell centers are prefixed with a superscript \"c\", and Fields on cell faces are prefixed with a superscript \"f\". Previously, this was only done for some fields, and with non-superscript \"c\" and \"f\", which caused confusion when such fields were used alongside variables whose names start with \"c\" and \"f\" (e.g., heat capacity and Coriolis frequency). Similarly, this PR introduces a new data structure convention---Fields on cell centers are stored in `Y.c`, and Fields on cell faces are stored in `Y.f`. Previously, the prognostic state was stored as `Y.Yc.\u03c1`, `Y.Yc.\u03c1e` (or equivalent), `Y.u\u2095`, and `Y.w`, which was arbitrary and inefficient (for example, dss needed to be called on both `Y.Yc` and `Y.u\u2095`, whereas it can now be called just once on `Y.c`). These new conventions account for most of the lines changed in this PR, but hopefully they will make the code easier to understand.\r\n\r\nThis PR also adds support for using internal energy as an prognostic variable, and it adds a new Held-Suarez test case that demonstrates this capability (\"held_suarez_rhoe_int.jl\"). It also adds the \"inertial_gravity_wave.jl\" test case to \"hybrid/plane\"; the analytic solution in this test case is still not working, so it can't be used as a proper integration test, but that can be fixed later.\r\n\r\nFinally, this PR fixes a minor buildkite bug I introduced in my previous PR that was causing some artifacts from the rising bubble tests to be missing.",
+    "changedFiles": 26,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-18T01:39:44Z",
+    "deletions": 910,
+    "labels": [],
+    "mergedAt": "2022-03-18T22:26:37Z",
+    "number": 606,
+    "title": "Unify hybrid model tendencies and add rhoe_int"
+  }
+]

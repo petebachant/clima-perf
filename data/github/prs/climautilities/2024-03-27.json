@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 4858,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR adds several modules to ClimaUtilities (described below). All the modules are implmented as Julia extensions, so that ClimaUtilities has no (new) direct dependency. This PR builds on recent work that we've been doing in ClimaLand, and uses components that were built in the past for ClimaLand and/or ClimaCoupler.\r\n\r\nThis PR enables model developers to read and interpolate files to computational grids. This is an important capability that is required by several of our high-priority goals. This PR also centralizes a good chunk of infrastructure that is shared across Land/Coupler but currently maintained separately.\r\n\r\nThe spirit of this addition is to set up the infrastructure needed to accomplish our science goals, and leave improvements and refinements to the future. This PR is by no means perfect (it also reuses code developed elsewhere), but I hope that it can be a starting point. \r\n\r\nBecause of the origin of this PR (from various pieces of code from pre-existing repos), breaking this PR into smaller chunks would add significant overhead. Some components were also already reviewed elsewhere. \r\n\r\n## ClimaArtifacts\r\n\r\nClimaArtifacts provides a MPI-safe way to lazily download artifacts and to tag artifacts that are being accessed in a given simulation.\r\n\r\n[This is independent enough that it could be split off to a separate PR]\r\n\r\nDocumentation: [ClimaArtifacts](https://clima.github.io/ClimaUtilities.jl/previews/PR19/climaartifacts/)\r\n\r\n## Space and Time Inputs\r\n\r\n`SpaceVaryingInputs` and `TimeVaryingInputs` provide functions to seamlessly map input to a `Field`. The input could be a function, a 1D array, a NetCDF file, and it could be static or time varying. `SpaceVaryingInputs` and `TimeVaryingInputs` objects can be `evaluate!`d to set the value of `Field` (potentially using the `Regridders`). `TimeVaryingInputs` implement linear and nearest neighbor interpolations.\r\n\r\nDocumentation: [Space and Time Inputs](https://clima.github.io/ClimaUtilities.jl/previews/PR19/inputs/)\r\n\r\n## FileReaders\r\n\r\nThe `FileReaders` module provides a way to efficiently read data from files. Efficiently might mean chunked/threaded/cached/something else. Currently, this is mostly and interface barrier to provide a path for future improvements.\r\n\r\nDocumentation: [FileReaders](https://clima.github.io/ClimaUtilities.jl/previews/PR19/filereaders/)\r\n\r\n## DataHandling\r\n\r\nThe `DataHandling` module bundles a `Regridder` and a `FileReader` together to serve regridded fields at a given time upon request. The main interface for `DataHandling` is `regridded_snapshot(data_handler, date)`, a function that returns a `Field` with data read from file for the given `date`. The `DataHandler` maintains a cache of regridded fields to amortize the cost of (expensive) regridding operations.\r\n\r\nDocumentation: [DataHandling](https://clima.github.io/ClimaUtilities.jl/previews/PR19/datahandling/)\r\n\r\n## Regridders\r\n\r\n`ClimaUtilities` comes with two modules to map rectangular grids two (extruded) finite spectral elements, `InterpolationsRegridder` and `TempestRegridder`. These modules are primarily used to ingest data and resample it onto the computational grid.\r\n\r\nDocumentation: [Regridders](https://clima.github.io/ClimaUtilities.jl/previews/PR19/regridders/)\r\n\r\nCloses #4\r\nCloses #5\r\n\r\n(I am aware that this PR, as it stands, is completely unreviewable)",
+    "changedFiles": 49,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM5wippn",
+        "number": 4,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/4"
+      },
+      {
+        "id": "I_kwDOKJvhPM5wrN20",
+        "number": 5,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/5"
+      }
+    ],
+    "createdAt": "2024-03-20T15:16:47Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2024-03-27T14:33:58Z",
+    "number": 19,
+    "title": "Add several modules"
+  }
+]

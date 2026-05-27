@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "With the recent change in interpolation in #4074, we are hitting an error in ClimaOcean.jl (see https://github.com/CliMA/ClimaOcean.jl/actions/runs/13301013435/job/37142339229).\r\n\r\nThis is because the convert function\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/399695072641a53cfa02f8d9bc34c5f2ad54dffa/src/Fields/interpolate.jl#L84 is susceptible to precision errors when the input is small enough:\r\n```julia\r\njulia> convert_to_0_360(-1e-12)\r\n359.999999999999\r\n\r\njulia> convert_to_0_360(-1e-13)\r\n359.9999999999999\r\n\r\njulia> convert_to_0_360(-1e-14)\r\n0.0\r\n```\r\nThis is not acceptable because a negative number should always be on the \"left\" side of the zero corresponding to values between 359 and 360, i.e. moving to zero from the left side should result in 360 not 0.\r\nIn ClimaOcean we were hitting this error because the bathymetry we interpolate from starts at `-1.4e-14` instead of 0, exposing this issue. \r\nThis PR fixes this problem by making sure we are on the correct side of the zero when converting to the 0 - 360 range",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-13T08:54:23Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-02-13T16:57:29Z",
+    "number": 4098,
+    "title": "Precision error when converting to 0 - 360"
+  }
+]

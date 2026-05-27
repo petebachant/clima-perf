@@ -1,0 +1,130 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjI0NDQzODgz",
+      "is_bot": false,
+      "login": "yairchn",
+      "name": "Yair Cohen"
+    },
+    "body": "",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-14T18:06:11Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2022-07-15T02:13:24Z",
+    "number": 652,
+    "title": "remove unused diagnostic in mixing length"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjI0NDQzODgz",
+      "is_bot": false,
+      "login": "yairchn",
+      "name": "Yair Cohen"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-14T17:34:31Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2022-07-15T10:28:21Z",
+    "number": 650,
+    "title": "cleanup unused bulk variables"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR corrects the threading flags for the performance target job. There's several options that can / should be used together, and from [these docs](https://slurm.schedmd.com/cpu_management.html#Overview):\r\n\r\n> Some experimentation may be required to discover the exact combination of options needed to produce a desired outcome.\r\n\r\nSo, I've experimented a bit to understand what needs to be defined. Here's what I found:\r\n\r\n```yaml\r\n  agents: # works\r\n    slurm_nodes: 1\r\n    slurm_ntasks: 8\r\n    slurm_ntasks_per_node: 8\r\n\r\n  agents: # does not work\r\n    slurm_nodes: 1\r\n    slurm_ntasks_per_node: 8\r\n\r\n  agents: # works\r\n    slurm_ntasks: 8\r\n    slurm_ntasks_per_node: 8\r\n\r\n  agents: # works\r\n    slurm_nodes: 1\r\n    slurm_ntasks: 8\r\n```\r\n\r\nThe takeaway is: `slurm_ntasks` _must_ be specified, _along with_ either `slurm_nodes` or `slurm_ntasks_per_node`.\r\n\r\nWe need to apply corrections to the threading specification in #657. I think that PR also needs fixes with how we specify the distributed configuration (maybe a similar job like this would be useful for breaking down the problem with a distributed config). Also, @sriharshakandala, it looks like there's a typo in ClimaCore.jl's scaling pipeline:\r\n - [`slurm_tasks_per_node`](https://github.com/CliMA/ClimaCore.jl/blob/d1d73c92869047b7d44e2ab3c68fa3685ab7e1ed/.buildkite/scaling/pipeline.yml#L41) should be [`slurm_ntasks_per_node`](https://www.hpc.caltech.edu/documentation/slurm-commands)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-15T18:35:24Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      },
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      }
+    ],
+    "mergedAt": "2022-07-15T19:55:21Z",
+    "number": 660,
+    "title": "Fix threading performance target"
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades to the latest version of ClimaCore, which includes some performance improvements.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-15T20:11:25Z",
+    "deletions": 69,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-07-15T20:43:25Z",
+    "number": 661,
+    "title": "Upgrade deps"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjI0NDQzODgz",
+      "is_bot": false,
+      "login": "yairchn",
+      "name": "Yair Cohen"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-15T17:48:51Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2022-07-15T23:21:23Z",
+    "number": 658,
+    "title": "cleanup intermidiaries in upd equations "
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjI0NDQzODgz",
+      "is_bot": false,
+      "login": "yairchn",
+      "name": "Yair Cohen"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-14T17:51:51Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2022-07-15T23:50:21Z",
+    "number": 651,
+    "title": "rm the diagnostic diffusive and massflux tendencies"
+  }
+]

@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 134,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is a peel off (of the better / more stable pieces) from #850.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-02T15:14:48Z",
+    "deletions": 89,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-08-02T18:40:03Z",
+    "number": 855,
+    "title": "Improve axis tensor tests"
+  },
+  {
+    "additions": 684,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR makes some pretty big changes, and moves away from using Combinatorics to testing over observed inputs. I've reformatted some things accordingly. I think that this is basically usable now, however, we'll need to add a mechanism for changing between expected failures to expected passing.\r\n\r\nThis PR will include performance and correctness tests for\r\n - Geometry.project\r\n - Geometry.transform\r\n - Geometry.contravariant1\r\n - Geometry.contravariant2\r\n - Geometry.contravariant3\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-02T19:17:13Z",
+    "deletions": 465,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-08-02T20:22:59Z",
+    "number": 858,
+    "title": "Improve axis tensor conversion tests"
+  },
+  {
+    "additions": 399,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "It turns out that the benchmarks for the project/transform/contravariant123 functions have too wide a variance to identify and test against outliers.\r\n\r\nSo, this PR adds the use of `GFlops`, which uses Cassette to automatically count the number of flops per function call. This has two distinct advantages:\r\n - The tests are free of noise, so they're more robust / reliable\r\n - We can print how many flops each method uses, so we objectively know which methods have the most room for improvement.\r\n\r\nSo, this PR adds the existing number of flops into what is now called `method_info`. The computed number of flops will be recorded and will serve as the primary test for making improvements. \r\n\r\nIn other words, when we add performance improvements, the last entry `method_info` (the integer) will need to be updated so that the test `@test benchmarks[key].\u0394flops \u2264 0` remains tightly bounded. cc @simonbyrne \r\n\r\nThe only remaining methods that are not yet really explored, are the functor definitions, which is a bit complicated because printing the types shows and `AxisTensor`, and so I need to look up which Alias this was for.\r\n\r\nAlso, I've also added tests for `Jcontravariant3`.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-08-02T22:54:12Z",
+    "deletions": 318,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-08-02T23:59:12Z",
+    "number": 859,
+    "title": "Use GFlops for more robust and precise tests"
+  }
+]

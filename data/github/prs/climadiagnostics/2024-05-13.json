@@ -1,0 +1,98 @@
+[
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Closes #26 ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOH9KWKs6IelH8",
+        "number": 26,
+        "repository": {
+          "id": "R_kgDOH9KWKg",
+          "name": "ClimaDiagnostics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaDiagnostics.jl/issues/26"
+      }
+    ],
+    "createdAt": "2024-05-12T07:50:42Z",
+    "deletions": 33,
+    "labels": [],
+    "mergedAt": "2024-05-13T15:26:47Z",
+    "number": 28,
+    "title": "Add MPI and GPU tests on buildkite "
+  },
+  {
+    "additions": 119,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Fixes #30 \r\n\r\nClimaCore 0.13.4 comes with a fix.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOH9KWKs6IlKhB",
+        "number": 30,
+        "repository": {
+          "id": "R_kgDOH9KWKg",
+          "name": "ClimaDiagnostics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaDiagnostics.jl/issues/30"
+      }
+    ],
+    "createdAt": "2024-05-13T20:39:20Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2024-05-13T22:59:12Z",
+    "number": 35,
+    "title": "Bump required version of ClimaCore"
+  },
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Sometimes, NetCDF files need syncing (force-writing to disk). This seems to be particularly the case for GPU runs.\r\n\r\nThis PR adds an option to provide the `NetCDFWriter` with a schedule to call `NCDatasets.sync` based on arbitrary conditions.\r\n\r\nThe default behavior depends on the context: on CPUs, we let `NetCDF` manage its buffered writes, on GPUs, we call `sync` at the every time steps for those datasets that need to be synced (ie, those that were written since the last sync).\r\n\r\nIn general, we keep track of what files have been recently touched (adding them to a list internal to the `writer`) and whenever `sync` is called, `NCDatasets.sync` is called on those files. This ensures that only files that needs to be synced are synced and that calling `sync` twice in a row results in a no-op for the second `sync`.\r\n\r\nCloses #33 \r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOH9KWKs6Ir1Tq",
+        "number": 33,
+        "repository": {
+          "id": "R_kgDOH9KWKg",
+          "name": "ClimaDiagnostics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaDiagnostics.jl/issues/33"
+      }
+    ],
+    "createdAt": "2024-05-13T18:53:17Z",
+    "deletions": 39,
+    "labels": [],
+    "mergedAt": "2024-05-13T22:59:26Z",
+    "number": 34,
+    "title": "Add option to sync NetCDF files"
+  }
+]

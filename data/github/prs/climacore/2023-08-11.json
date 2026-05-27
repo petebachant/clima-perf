@@ -1,0 +1,120 @@
+[
+  {
+    "additions": 316,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "Peeled off from #1399. Fixes a bug in matrix-matrix multiplication (i.e., the `MultiplyColumnwiseBandMatrixField()` operator with two matrix fields as inputs) that was causing entries from outside the second input matrix to be used in the computation of entries outside the product matrix. These entries are used for padding, allowing us to store the nonzero entries of band matrices in `Field`s with rectangular parent arrays, so using them during the computation of matrix-matrix products leads to an unnecessary performance loss. Moreover, it breaks the assumption that these outside entries have no effect on program behavior.\r\n\r\nIn addition to fixing the bug, this PR\r\n- Updates the documentation of `MultiplyColumnwiseBandMatrixField` to reflect the change.\r\n- Adds a unit test which ensures that outside entries are never used during matrix-matrix multiplication.\r\n- Simplifies some of the code for `MultiplyColumnwiseBandMatrixField`, making sure that it reflects the updated documentation as closely as possible.\r\n- Introduces the `column_axes(matrix_field)` utility function, which can be used to obtain the space that corresponds to the columns of `matrix_field` (as opposed to `axes(matrix_field)`, which corresponds to the rows). This function simplifies the computation of interior/boundary indices during matrix multiplication.\r\n- Fixes a type instability in `field2arrays` and updates the corresponding unit test. This also decreases the memory allocated by the new unit test for outside entries.\r\n- Modifies the `show` method for matrix `Field`s so that it also displays the matrix shape.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-10T00:12:14Z",
+    "deletions": 128,
+    "labels": [],
+    "mergedAt": "2023-08-11T03:02:50Z",
+    "number": 1424,
+    "title": "Fix matrix multiplication at boundaries"
+  },
+  {
+    "additions": 54,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR makes the docs strict and fixes the remaining broken docs. One more thing we could do is delete some of the previews (cc @simonbyrne), there are many, many, of them based on the docbuild log. Closes #1418",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5ty8TL",
+        "number": 1418,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1418"
+      }
+    ],
+    "createdAt": "2023-08-09T18:46:51Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwyODk5ODQwNjE4",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2023-08-11T15:36:09Z",
+    "number": 1421,
+    "title": "Make docs strict"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Comment out Mac OS tests",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-11T14:52:20Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-08-11T16:42:06Z",
+    "number": 1426,
+    "title": "Update bors.toml"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the `getindex` overloading (which we don't really need) in the test directory.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-09T19:52:50Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "914EC9",
+        "description": "",
+        "id": "LA_kwDOFT2Pms72QB3I",
+        "name": "House cleaning :broom:"
+      }
+    ],
+    "mergedAt": "2023-08-11T16:42:06Z",
+    "number": 1422,
+    "title": "Remove getindex overload in test"
+  },
+  {
+    "additions": 920,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "My fork of #1417 \r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-08T23:26:51Z",
+    "deletions": 381,
+    "labels": [],
+    "mergedAt": "2023-08-11T18:07:38Z",
+    "number": 1420,
+    "title": "Update buildkite to 1.9"
+  }
+]

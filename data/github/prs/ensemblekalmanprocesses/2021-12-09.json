@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 110,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\n\r\nTo get the EKI runtest properly working with a linear map from R^{2} -> R^{10}. (i) some reason a couple of the `@test` statements were commented out (ii) the tests comparing EKS and EKI are very dependent on N_iter\r\n\r\n## In the PR\r\nChanges to the EKI test in `test/EnsembleKalmanInversion/runtests.jl` So that it now converges reasonably and satisfies all the test conditions. \r\n\r\nNB some of the comparisons of eks/eki depended heavily on `N_iter`. To compare the two algorithms we should really look at the timesteps in absolute time. So now\r\n1. I have increased the prior strength and bias\r\n1. I run EKS first with it's adaptive timestep, which I store in `eksobj`\r\n2.  then use these values in the EKI updates. \r\n\r\nThe OLS mean is nearer the EKI at the end time, and the posterior mean is nearer the EKS at the end time, far more robustly than previously. \r\n\r\n## Test output plot\r\nFor EKI\r\n![EKI_test](https://user-images.githubusercontent.com/47412152/145308290-24ca3c6e-3f48-4370-be40-a2e736cef1a0.png)\r\n\r\n\r\n\r\nFor EKS\r\n![EKS_test](https://user-images.githubusercontent.com/47412152/145308296-a254c276-70d7-4e6e-9fdf-fa83a1fe716c.png)\r\n\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-11-19T01:30:13Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2021-12-09T19:14:12Z",
+    "number": 73,
+    "title": "modified EKI/EKS runtest"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjY0MDIwODE=",
+      "is_bot": false,
+      "login": "agarbuno",
+      "name": "Alfredo Garbuno I\u00f1igo"
+    },
+    "body": "Updates EKS documentation to match the finite-sample correction. It should resolve #50. ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU5ODk0ODYwMDk=",
+        "number": 50,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/50"
+      }
+    ],
+    "createdAt": "2021-10-28T16:10:42Z",
+    "deletions": 27,
+    "labels": [],
+    "mergedAt": "2021-12-09T20:47:56Z",
+    "number": 69,
+    "title": "EKS docs update."
+  }
+]

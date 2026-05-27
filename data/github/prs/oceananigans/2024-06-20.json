@@ -1,0 +1,82 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR improves the `adapt_structure` method of the `OrthogonalSphericalShellGrid` to allow a more complicated `conformal_mapping` to be transferred to the GPU",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-13T12:37:48Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2024-06-20T13:13:23Z",
+    "number": 3619,
+    "title": "`Adapt`ing all fields of the `OrthogonalSphericalShellGrid`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-18T15:06:39Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-06-20T16:36:41Z",
+    "number": 3623,
+    "title": "Fixes small typo in docs"
+  },
+  {
+    "additions": 2112,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR replaces #3509. Also, it builds off #3585 which hopefully we can merge soon so we don't enter merge conflict hell.\r\n\r\nIn short this PR implements k-epsilon. Although, the version that's implemented now is not by-the-book k-epsilon but rather a simplified version. I'd like to merge this PR basically as is and hopefully continue to work on it in the future.\r\n\r\nThere are some numerical considerations which should be reviewed and documented I think. First of all is the challenge of specifying a minimum tke, minimum dissipation rate, and also a maximum dissipation rate. These are useful for producing smooth diffusivities, which note are \r\n\r\n$$ \\kappa \\sim \\frac{e^2}{\\epsilon} $$\r\n\r\nBut then there are challenges with implementing the TKE and dissipation equations. Because depending on the term, one may either want to impose or not impose these constraints.\r\n\r\nIt could be useful to try to get some lessons from other codes too.\r\n\r\nIt's not ready for production use, but at least it's doing reasonable things...\r\n\r\n<img width=\"384\" alt=\"image\" src=\"https://github.com/CliMA/Oceananigans.jl/assets/15271942/c7df14e6-8ed2-4c13-b892-99b04e5f8809\">\r\n\r\n",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-23T23:24:34Z",
+    "deletions": 81,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      },
+      {
+        "color": "AAFEBB",
+        "description": "Fudge factors and hand-waving",
+        "id": "MDU6TGFiZWwzMDMxMzc4MDU1",
+        "name": "parameterizations"
+      }
+    ],
+    "mergedAt": "2024-06-20T22:08:59Z",
+    "number": 3605,
+    "title": "TKEDissipationVerticalDiffusivity (aka k-epsilon) turbulence closure (take 2)"
+  }
+]

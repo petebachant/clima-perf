@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 653,
+    "author": {
+      "id": "MDQ6VXNlcjEwNjczMDcw",
+      "is_bot": false,
+      "login": "bielim",
+      "name": ""
+    },
+    "body": "Revise CES code.\r\nChanges include the following:\r\n\r\n- Created a separate module GModel that contains all the functionality  to run the forward model G\r\n--> anything Cloudy-related is contained in   that module. The idea is that this module (and specifically the  function run_G) is all the user has to modify for a specific CES  application (at least for applications where G is a simple model that  can be run without using a cluster etc.)\r\n- The module \"Observations.jl\" replaces \"Truth.jl\" - instead of a Truth  object, there is now an \"Obs\" object that contains the observations. In the general case, CES will deal with observations coming from some external observing system rather than with artificial, model-generated \"observations\" - in the latter case, the observation can be thought of as the \"truth\" (since they result from running the model with the  known \"true\" parameters), but more generally the name \"observations\" is probably more appropriate.\r\n- All \"helper functions\" (including some new ones) have been moved to Utilities.jl\r\n- Documented the main structs (EKIObj, GPObj, MCMCObj, Obs)\r\n- Made the covariance (kernel) an (optional) input argument to the GP emulator.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-02-13T04:00:28Z",
+    "deletions": 536,
+    "labels": [],
+    "mergedAt": "2020-02-16T02:11:16Z",
+    "number": 32,
+    "title": "Separate cloudy and improve CES"
+  }
+]

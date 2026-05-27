@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 525,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "## Purpose\r\nConstruct a flexible object to store parameter distributions. We wish for it to work with both given distributions, or simply a collection of samples of a distribution, we also wish for it to include transformations between constrained an unconstrained spaces. The vision is this will hold both prior and posterior distributions. \r\n\r\n### Contained in the PR\r\nIn the PR we will build a `ParameterDistributions` object, with useful auxilliary functions to sample the distributions within, and some appropriate transformations mapping between constrained space (corresponding to boundary conditions of parameters) into an unbounded space (where priors are placed). We also provide a suite of unit tests for the objects and functions.\r\n\r\n**The functionality will be integrated into CES in the next PR.**\r\n\r\n## The Primary Structure\r\nA `ParameterDistribution` is initialized with 3 inputs.\r\n1. Single or array of  `ParameterDistributionType` derived objects in the \"unconstrained space\" (currently `Samples` (initialized with an array) or `Parameterized` (initialized with a Julia Distributions object) )\r\n2. Single of array of `Array{ConstraintType}` derived object `Constraint` with (ease-of-use constructors `no_constraint`, `bounded_below`, `bounded_above`, or `bounded`) with array size to match the distribution parameter space dimension \r\n3. A name `String`\r\n\r\n## Other functions\r\nIf applied to `ParameterDistributions` typically these will return `Dict` of with `ParameterDistribution.name` as keys or an `Array` \r\n- `get_name`: returns the names\r\n- `get_distribution`: returns the Julia Distribution object, if it is `Parameterized`\r\n- `sample_distribution`: samples the Julia Distribution if `Parameterized`, or draws from the list of samples if `Samples`\r\n- `transform_constrained_to_unconstrained`: identity map if `no_constraint`, log-transform if `bounded_below` or `bounded_above`, logit-transform if `bounded`, otherwise use the maps provided. \r\n- `transform_unconstrained_to_constrained`: The inverses for the above mappings\r\n\r\n## An example from the runtests:\r\nWe create a 6D parameter distribution from 2 parameters. The first parameter is a 4D distribution with the following constraints in real space:\r\n\r\n    c1 = [no_constraint(),\r\n          bounded_below(-1.0), # provide lower bound\r\n          bounded_above(0.4), # provide upper bound\r\n          bounded(-0.1,0.2)] # provide lower and upper bound\r\n\r\nWe choose to use a multivariate normal to represent it's distribution in the transformed (unbounded) space. In fact we take each dimension as independent (so this could also be represented as 4 separate univariate distributions in this exact case).\r\n\r\n    d1 = Parameterized(MvNormal(4,0.1)) # 4D multivariate normal with 0.1^2 I covariance\r\n\r\nWe provide a name\r\n\r\n    name1 = \"constrained_mvnormal\"\r\n\r\nThe second parameter distribution is a 2D one. It is only given by 4 samples in the transformed space - (where one will typically generate samples). It is bounded in the first dimension by the constraint shown, there is a user provided transform for the second dimension - using the default constructor.\r\n\r\n    d2 = Samples([1.0 3.0; 5.0 7.0; 9.0 11.0; 13.0 15.0]) # 4 samples of 2D parameter space\r\n    transform = (x -> 3*x + 14)\r\n    inverse_transform = (x -> (x-14) / 3)\r\n    c2 = [bounded(10,15),\r\n          Constraint(transform, inverse_transform)]\r\n    name2 = \"constrained_sampled\"\r\n    u = ParameterDistribution([d1,d2],[c1,c2],[name1,name2])",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-25T02:34:53Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-12-07T22:56:40Z",
+    "number": 88,
+    "title": "Refactor: Parameter Distributions"
+  }
+]

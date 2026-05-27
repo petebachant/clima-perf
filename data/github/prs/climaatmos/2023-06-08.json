@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 101,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #1727. I'll take a look at the log to confirm that this fixes the issue before opening for review. This solution is a bit clunky. Concretely, using:\r\n\r\n```julia\r\ns = @timed_str begin expression end\r\n@info \"description $s\"\r\n```\r\ninstead of something like (ideally)\r\n```julia\r\n@info \"description\" @timed_str expression\r\n```\r\n\r\n. But the log is really pretty large for many processors, and I think the clunkiness outweighs the bloated log.\r\n\r\nThoughts? I'm happy to wait until there is something cleaner, I'm just not sure when that will be.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5noBa9",
+        "number": 1727,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1727"
+      }
+    ],
+    "createdAt": "2023-06-06T18:22:57Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2023-06-08T19:44:13Z",
+    "number": 1740,
+    "title": "Fix distributed log"
+  },
+  {
+    "additions": 347,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies.\r\n\r\nUnfortunately https://github.com/CliMA/ClimaCore.jl/pull/1198 1) fixed a bug and 2) fixed inference for several cases when calling dss, but https://github.com/CliMA/ClimaCore.jl/pull/1295 demonstrates that inference fails pretty badly for our use case in ClimaAtmos. The result is that we need to increment the allocation limit. I'm going to try and fix the broken test in https://github.com/CliMA/ClimaCore.jl/pull/1295, at which point we should be able to reduce the limit back down. All in all, the allocations are a ClimaCore issue, and not ClimaAtmos related.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-05T23:48:27Z",
+    "deletions": 335,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2023-06-08T22:55:13Z",
+    "number": 1737,
+    "title": "Update dependencies"
+  }
+]

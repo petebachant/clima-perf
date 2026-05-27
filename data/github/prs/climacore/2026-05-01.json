@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1790,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "### Purpose\r\n\r\nThis replaces the `RecursiveApply` module with a new interface that follows the opposite design pattern: instead of defining functions for `Tuple`s and `NamedTuple`s that need to be called in `Fields`, `Operators`, `MatrixFields`, and external libraries like `ClimaAtmos`, we can now use a wrapper for `Tuple`s and `NamedTuple`s that behaves the same way when passed to standard math functions. The number of places where this interface needs to be explicitly used is quite small, making it possible to decouple iteration over field variables from most of ClimaCore's internals.\r\n\r\n### Content\r\n\r\n- Introduce the `AutoBroadcaster` wrapper, which triggers `nested_broadcast` (an analogue of the old `RecursiveApply.rmap`) when passed to any common math function or constructor\r\n  - Replace all `RecursiveApply` functions in ClimaCore's source code with standard math operations\r\n  - Make it possible to add support for any iterator type `T` by defining the method `is_auto_broadcastable(::T) = true`, as long as `T` is compatible with UnrolledUtilities\r\n- Preserve backward-compatibility with original `RecursiveApply` implementation\r\n  - Add a `RecursiveApply` module that defines the same functions as the old version, but as simple wrappers around `add_auto_broadcasters` and `drop_auto_broadcasters`\r\n  - Define an `auto_broadcasted` function that automatically introduces calls to either `add_auto_broadcasters` or `drop_auto_broadcasters` in `Broadcasted` expressions, allowing ClimaCore operators to be used in the same expressions as user-defined functions that are incompatible with `AutoBroadcaster`s (e.g., functions that dispatch on non-`AutoBroadcaster` types)\r\n- Unify broadcasting across DataLayouts, Fields, and Operators\r\n  - The `broadcastable` form of any `AbstractData` or `Field` has `add_auto_broadcasters` applied to its values\r\n  - Calling `Base.broadcasted` triggers`auto_broadcasted` instead of the standard `Broadcasted` constructor\r\n  - The result of `eltype` is the output of `unsafe_eltype`, which acts as an unrolled version of `Base.Broadcast.combine_eltypes`\r\n  - The result of `similar` uses the output of `safe_eltype`, which can identify the first point during inference where a non-concrete type appears in a broadcast expression (essentially a simplified and corrected version of the old `call_with_first`)\r\n- Update the implementation of `new` to avoid segfaults and other errors when dealing with `DataType` fields\r\n- Refactor the `deformation_flow.jl` example by removing all loops over field variables, adding several missing cases, and clarifying precisely what needs to be tested\r\n\r\n---\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 82,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-10T02:15:38Z",
+    "deletions": 2284,
+    "labels": [],
+    "mergedAt": "2026-05-01T12:05:15Z",
+    "number": 2417,
+    "title": "Replace RecursiveApply functions with AutoBroadcaster wrappers"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 509,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "Before I add implicit solvers and radiation, I wanted to clean up a couple of things. Here is a complete list of all the changes in this PR:\r\n- Fix type instabilities\r\n    - Replace all abstract field types with concrete field types; e.g., `Integer` -> `Int`, `AbstractModel` -> `M <: AbstractModel`\r\n    - Make functions specialize on type arguments; e.g., `FT::DataType` -> `::Type{FT}` (not sure if this actually improves performance, but it's done in all our other code)\r\n    - Fix `if`-statement type instability in `initial_conditions/dry_rising_bubble_2d.jl` (not sure if this will still be necessary after Julia 1.7, but might as well)\r\n    - Replace `1.0` with `FT(1)` and `0.0` with `FT(0)` in boundary condtions for `Nonhydrostatic2DModel` and `SingleColumnModel`\r\n- Clean up imports and exports\r\n    - Remove `get_boundary_flux` from the `Models` module while leaving the definition in the `BoundaryConditions` module, which gets rid of a precompilation warning\r\n    - Move `export` statements so that they run before `include` statements, allowing submodules to access exported symbols from parent modules\r\n    - Remove imports of unused symbols\r\n    - Remove unnecessary qualifiers for imported symbols\r\n    - Utilize relative paths for importing from the `ClimaAtmos` module in `/src`\r\n    - Organize imported symbols in a manner that is consistent across files\r\n- Clean up `Domains` module\r\n    - Remove overloaded methods of `ndims`, `length`, and `size` for `AbstractDomain`, since they inconsistently extend the `AbstractArray` interface\r\n    - Remove unnecessary typecasts to `FT`\r\n    - Use consistent interval notation\r\n    - Remove `PeriodicPlane`, which confusingly looks like a separate type from `Plane` and `HybridPlane` (both of which can be periodic)\r\n    - Make `Plane` have a default keyword argument `periodic = (true, true)`\r\n- Clean up `BoundaryConditions` module\r\n    - Remove function stub for `get_boundary_flux`, since the module already provides methods for this function\r\n- Clean up `Models` module\r\n    - Make default methods for `default_initial_conditions` and `make_ode_function` throw errors indicating missing implementations\r\n- Clean up `Callbacks` module\r\n    - Remove default method for `generate_callback`, since the module already provides a method for the only possible input type (`JLD2Output`)\r\n- Clean up `Simulations` module\r\n    - Remove definition of `AbstractSimulation`, as all simulation code is specific to `Simulation`\r\n    - Make `step!` a new function, rather than an overload of `DiffEqBase.step!`\r\n- Clean up `/test`\r\n    - Rewrite `test_domains.jl` so that it is more succinct and so that it tests `make_function_space`\r\n    - Prevent `test_callbacks.jl` from generating an empty folder after it is done running\r\n    - Combine `test_regression.jl` and `test_validation.jl` into `test_simulations.jl`, reducing code duplication and adding missing unit test for Ekman column\r\n    - Ensure that running `runtests.jl` does not print anything (unit tests should be automated, so they should not rely on visual inspection)\r\n    - Remove `Float32` type warnings for simulations, since the type instability fixes allow simulations to run with `Float32`\r\n\r\nNote that the use of `FT` in boundary conditions will need to be rethought as I add implicit solvers, since `autodiff` solvers can pass either a `Float64` `FieldVector` or a `Dual` `FieldVector` to the tendency function, depending on the stage of the computation.\r\n\r\nThere are some other things I'd like to clean up (particularly the unit tests), but I'll leave those for later.\r\n\r\nCloses #119 ",
+    "changedFiles": 32,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs47ZOSg",
+        "number": 119,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/119"
+      }
+    ],
+    "createdAt": "2021-12-03T03:29:28Z",
+    "deletions": 834,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA3",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2021-12-09T00:01:40Z",
+    "number": 141,
+    "title": "Housekeeping \ud83e\uddf9\ud83e\uddf9\ud83e\uddf9"
+  }
+]

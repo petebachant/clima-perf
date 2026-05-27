@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "```julia\r\n    xp_low = Distributions.quantile(Distributions.Normal(), low_percentile)\r\n    xp_high = Distributions.quantile(Distributions.Normal(), high_percentile)\r\n    return (gauss_int(xp_high) - gauss_int(xp_low)) / max(\r\n        Distributions.cdf(Distributions.Normal(), xp_high) -\r\n        Distributions.cdf(Distributions.Normal(), xp_low),\r\n        eps(FT),\r\n    )\r\n```\r\n\r\nPart of this block is doing nothing.\r\n\r\n`Distributions.quantile(percentile)` computes the `x` so that the CDF is `percentile`. Then, `Distributions.cdf(x)` computes the `percentile` corresponding to `x`. The two functions are one the inverse of the other when the same distribution is used.\r\n\r\nSo, all we need to remove distributions is implement the inverse error function. I used one of the appromation listed on Wikipedia:\r\n![image](https://github.com/CliMA/ClimaAtmos.jl/assets/9167485/673de00b-10f8-4f20-bcf1-73f717a69f84)\r\n\r\n\r\nCloses #3046 \r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6J8vdg",
+        "number": 3046,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3046"
+      }
+    ],
+    "createdAt": "2024-06-06T16:41:49Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2024-06-06T21:49:53Z",
+    "number": 3071,
+    "title": "Remove Distributions"
+  }
+]

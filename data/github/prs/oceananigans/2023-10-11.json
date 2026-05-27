@@ -1,0 +1,109 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Before this PR, the following would *NOT* error:\r\n\r\n```Julia\r\njulia> grid = RectilinearGrid(size=2, z=[0, -0.5, -1], topology=(Flat, Flat, Bounded))\r\n1\u00d71\u00d72 RectilinearGrid{Float64, Flat, Flat, Bounded} on CPU with 0\u00d70\u00d73 halo\r\n\u251c\u2500\u2500 Flat x\r\n\u251c\u2500\u2500 Flat y\r\n\u2514\u2500\u2500 Bounded  z \u2208 [0.0, -1.0]      variably spaced with min(\u0394z)=-0.5, max(\u0394z)=-0.5\r\n```\r\n\r\nAfter this PR:\r\n\r\n```Julia\r\njulia> grid = RectilinearGrid(size=2, z=[0, -0.5, -1], topology=(Flat, Flat, Bounded))\r\nERROR: ArgumentError: z=[0.0, -0.5, -1.0] should be a vector with increasing values.\r\nStacktrace:\r\n [1] validate_dimension_specification(T::Type, \u03be::Vector{Float64}, dir::Symbol, N::Int64, FT::Type)\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/input_validation.jl:109\r\n [2] validate_rectilinear_domain(TX::Type, TY::Type, TZ::Type, FT::Type, size::Tuple{Int64, Int64, Int64}, extent::Nothing, x::Nothing, y::Nothing, z::Vector{Float64})\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/input_validation.jl:100\r\n [3] validate_rectilinear_grid_args(topology::Tuple{DataType, DataType, DataType}, size::Int64, halo::Nothing, FT::Type, extent::Nothing, x::Nothing, y::Nothing, z::Vector{Float64})\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/rectilinear_grid.jl:293\r\n [4] RectilinearGrid(architecture::CPU, FT::DataType; size::Int64, x::Nothing, y::Nothing, z::Vector{Float64}, halo::Nothing, extent::Nothing, topology::Tuple{DataType, DataType, DataType})\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/rectilinear_grid.jl:268\r\n [5] RectilinearGrid\r\n   @ ~/Research/OC6.jl/src/Grids/rectilinear_grid.jl:254 [inlined]\r\n [6] top-level scope\r\n   @ REPL[13]:1\r\n```\r\n\r\n```\r\njulia> grid = LatitudeLongitudeGrid(size=(2, 2, 2), longitude=(-20, 20), latitude=(10, 20), z=[0, -0.5, -1], topology=(Bounded, Bounded, Bounded))\r\n\r\nERROR: ArgumentError: z=[0.0, -0.5, -1.0] should be a vector with increasing values.\r\nStacktrace:\r\n [1] validate_dimension_specification(T::Type, \u03be::Vector{Float64}, dir::Symbol, N::Int64, FT::Type)\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/input_validation.jl:109\r\n [2] validate_lat_lon_grid_args(FT::Type, latitude::Tuple{Int64, Int64}, longitude::Tuple{Int64, Int64}, z::Vector{Float64}, size::Tuple{Int64, Int64, Int64}, halo::Nothing, topology::Tuple{DataType, DataType, DataType}, precompute_metrics::Bool)\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/latitude_longitude_grid.jl:272\r\n [3] LatitudeLongitudeGrid(architecture::CPU, FT::DataType; size::Tuple{Int64, Int64, Int64}, longitude::Tuple{Int64, Int64}, latitude::Tuple{Int64, Int64}, z::Vector{Float64}, radius::Float64, topology::Tuple{DataType, DataType, DataType}, precompute_metrics::Bool, halo::Nothing)\r\n   @ Oceananigans.Grids ~/Research/OC6.jl/src/Grids/latitude_longitude_grid.jl:189\r\n [4] LatitudeLongitudeGrid\r\n   @ ~/Research/OC6.jl/src/Grids/latitude_longitude_grid.jl:174 [inlined]\r\n [5] top-level scope\r\n   @ REPL[14]:1\r\n```\r\n\r\nCloses #3307 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5y13h3",
+        "number": 3307,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3307"
+      }
+    ],
+    "createdAt": "2023-10-06T18:40:10Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-10-11T13:36:29Z",
+    "number": 3319,
+    "title": "Add validation for array-based coordinates"
+  },
+  {
+    "additions": 100,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-10T17:22:49Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-10-11T14:25:40Z",
+    "number": 3326,
+    "title": "Add distributed test pipeline"
+  },
+  {
+    "additions": 349,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR adds tests for Face-Face halo filling and ensures that the `fill_halo_regions!` for Face-Face fields are done correctly.\r\n\r\nAfter this PR a `fill_halo_regions!` works on a Face-Face field on a `ConformalCubedSphereGrid` **with the exception** of the 2 corner points that belong in the halo regions and _do not_ correspond to any interior point!\r\n\r\nIf those corner points are filled manually\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/b0ff6c4874355ec69208f437be4f46fc8935f3d7/validation/multi_region/cubed_sphere_tracer_advection.jl#L32-L53\r\n\r\nThen everything seems fine.\r\n\r\n(This is of course not a final solution but I wanted to make a note here.)\r\n\r\n(work done with @siddharthabishnu)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-10T17:13:19Z",
+    "deletions": 116,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2023-10-11T19:53:21Z",
+    "number": 3324,
+    "title": "Add tests for Face-Face halo filling"
+  }
+]

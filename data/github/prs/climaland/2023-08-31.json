@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWhen adding the `BulkAlbedoTemporal` type, two debugging `@show` statements were left in the code. These are causing issues in the coupler because too many lines are printed when running a simulation for many timesteps.\r\n\r\nThis PR removes these extra prints, and bumps the patch version so we can make a new release for the coupler to use.\r\n\r\nCloses #307 \r\n\r\n\r\n## To-do\r\n- [x] remove `@show`s\r\n- [x] bump version to 0.3.2\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5vMYeW",
+        "number": 307,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/307"
+      }
+    ],
+    "createdAt": "2023-08-31T15:41:11Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2023-08-31T17:57:19Z",
+    "number": 313,
+    "title": "remove extra shows, bump version to 0.3.2"
+  },
+  {
+    "additions": 217,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAllows for variable domain stretching (finer resolution at the top of the domain compared to the bottom).\r\n\r\nWhenever we need dz in source code, we obtain it using the function `get_\u0394z`, which uses ClimaCore to extract the `dz` values. so we do not make the assumption of uniform spacing in src code. (we do in some tests, but that seems OK if those tests use uniform spacing.)\r\n## To-do\r\nFuture PRs: fix piracy and add the aqua test back in:\r\n#277 #311 \r\n\r\n## Content\r\n\r\n1. Adds domain stretching to all domains with a z coordinate.\r\n2. Renames height to depth for the SphericalShell domain\r\n3. uses the stretched domain in the ozark example\r\n4. adds unit tests.\r\n\r\nNote that the user passes the target (dz_bottom, dz_top) desired, as a Tuple, or `nothing`, if no stretching is needed. We then create the ClimaCore.Meshes.GeneralizedExponentialStretching object in the domain constructor appropriately. Instead, the user could pass the stretching object itself, and the default could be `ClimaCore.Meshes.Uniform`. In a way this is nicer (it's not prescribed that they use Uniform or GeneralizedExponentialStretching, gives them all the options that ClimaCore develops in the future, no `if` statement in the constructor), but I felt this might be more confusing than supplying the target layer widths at the top and bottom. Happy to change if anyone feels strongly!\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-30T00:40:20Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2023-08-31T19:18:36Z",
+    "number": 310,
+    "title": "Domain stretching"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nRemove PointSpace method which sets the default comms to the SingletonContext; instead define it with a default kwarg to out Point() constructor.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5vs3jQ",
+        "number": 311,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/311"
+      }
+    ],
+    "createdAt": "2023-08-31T20:53:57Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2023-08-31T22:29:53Z",
+    "number": 315,
+    "title": "Remove PointSpace method"
+  }
+]

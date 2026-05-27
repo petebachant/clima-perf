@@ -1,0 +1,152 @@
+[
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies, including a new version of Adapt, that should reduce gpu allocations.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-21T02:48:55Z",
+    "deletions": 51,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2024-03-21T04:49:31Z",
+    "number": 2816,
+    "title": "Update deps"
+  },
+  {
+    "additions": 361,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #2595 Closes #2596 \r\n\r\nNote: The implicit solver only works for 1 updraft. I will open an issue about it.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs59dhRD",
+        "number": 2595,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2595"
+      },
+      {
+        "id": "I_kwDOFoZ0Vs59dhTW",
+        "number": 2596,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2596"
+      }
+    ],
+    "createdAt": "2024-01-30T07:22:51Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2024-03-21T08:43:25Z",
+    "number": 2607,
+    "title": "Make diffusion and advection implicit in prognostic edmf"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes an inference failure when calling `mapreduce` inside broadcast expressions. Generally speaking, we need to provide `init` so that `mapreduce` can infer the result (due to the edge case of an empty collection). In one other case, however, we're hitting a compiler heuristic, and we need to define a custom `unrolled_dot_product`, so that the compiler can unroll / infer the result. \r\n\r\nrelevant issue: #2365.\r\n\r\nI'm going to merge this, and I'll followup on the next issue when I have a chance. Thanks again @szy21 for adding that job!",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-20T14:18:26Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      },
+      {
+        "color": "D12BFA",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABMz2CoA",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-03-21T15:34:55Z",
+    "number": 2814,
+    "title": "Fix an inference failure in gpu prognostic edmf"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR attempts to fix the inference failure in:\r\n\r\n```julia\r\n        updraft_top = FT(0)\r\n        for level in 1:Spaces.nlevels(axes(\u1d9cz))\r\n            if draft_area(\r\n                Spaces.level(Y.c.sgs\u02b2s.:($j).\u03c1a[colidx], level)[],\r\n                Spaces.level(\u1d9c\u03c1\u02b2s.:($j)[colidx], level)[],\r\n            ) > a_min\r\n                updraft_top = Spaces.level(\u1d9cz[colidx], level)[]\r\n            end\r\n        end\r\n        updraft_top = updraft_top - z_sfc[colidx][]\r\n```\r\n\r\nI know that we probably want to get rid of this segment of the code altogether but, updating this only took a few minutes, and this might allow me to see the next failure (if any, hopefully not!).\r\n\r\nThis PR needs rebased once #2814 lands, to see the impact.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-21T14:25:36Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      },
+      {
+        "color": "D12BFA",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABMz2CoA",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2024-03-21T19:26:11Z",
+    "number": 2819,
+    "title": "Fix updraft_top computation on the gpu"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-21T18:38:18Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-03-21T21:36:14Z",
+    "number": 2822,
+    "title": "change configs for some prognostic edmf jobs"
+  }
+]

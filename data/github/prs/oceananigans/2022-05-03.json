@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjUxNjU5NDY=",
+      "is_bot": false,
+      "login": "jm-c",
+      "name": "Jean-Michel Campin"
+    },
+    "body": "Just so that we could run this validation test with latest Oceananigans\r\n\r\n- fix Coriolis, Simulation setting and 2-D initial free-surface in\r\n  single face test: surface_gravity_waves_on_face.jl\r\n- fix single face animation: animate_face.jl\r\n- remove \"animate.jl\" (was identical to \"animate_face.jl\")\r\n- fix Simulation setting in full cubed test (but more to fix there).",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-02T19:36:26Z",
+    "deletions": 90,
+    "labels": [],
+    "mergedAt": "2022-05-03T13:15:00Z",
+    "number": 2506,
+    "title": "Update CubedSpheres"
+  },
+  {
+    "additions": 199,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR updates PencilFFTs to 0.13.4, and fixes the DistributedFFTBasedPoissonSolver. Previously we were attempting to \"partition\" the eigenvalues manually, which produce an inconsistency between the layout of the spectral-space pressure and the eigenvalues.\r\n\r\nThis PR uses `PencilFFTs.localgrid` to partition the eigenvalues instead, and furthermore correctly identifies `last(solver.storage)` (not `solver.storage[2]`) with the _outcome_ of the in-place spectral transform of pressure.\r\n\r\nThanks @jlpolanco especially for patiently enduring my utter inability to read documentation.\r\n\r\nI believe this should resolve #2347 but we'll need to test that directly.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5FmVjq",
+        "number": 2347,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2347"
+      }
+    ],
+    "createdAt": "2022-04-29T15:49:55Z",
+    "deletions": 122,
+    "labels": [],
+    "mergedAt": "2022-05-03T21:22:04Z",
+    "number": 2502,
+    "title": "Update PencilFFTs and GPUArrays and fix DistributedFFTBasedPoissonSolver"
+  }
+]

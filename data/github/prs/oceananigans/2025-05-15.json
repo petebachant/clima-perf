@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This PR fixes a bug in the definitions of `ConformalCubedSpherePanel` and `ConformalCubedSpherePanelGrid` by removing an extra sixth `:Any` type parameter that does not belong in the `OrthogonalSphericalShellGrid` type.\r\n\r\nPreviously:\r\n```\r\nconst ConformalCubedSpherePanel = OrthogonalSphericalShellGrid{<:Any, FullyConnected, FullyConnected,\r\n                                                               <:Any, <:Any, <:Any,\r\n                                                               <:CubedSphereConformalMapping}\r\n\r\nconst ConformalCubedSpherePanelGrid = OrthogonalSphericalShellGrid{<:Any,\r\n                                                                   <:Any,\r\n                                                                   <:Any,\r\n                                                                   <:Any,\r\n                                                                   <:Any,\r\n                                                                   <:Any,\r\n                                                                   <:CubedSphereConformalMapping}\r\n```\r\nThe sixth `:<Any` parameter was unnecessary and did not correspond to any field in the underlying `OrthogonalSphericalShellGrid` type. This PR removes that extraneous type to ensure correctness and proper method dispatch.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-12T18:49:46Z",
+    "deletions": 109,
+    "labels": [
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2025-05-15T10:38:43Z",
+    "number": 4500,
+    "title": "Fix incorrect type parameter count in ConformalCubedSpherePanel and ConformalCubedSpherePanelGrid definitions"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This PR addresses and prevents out-of-bounds memory access during the computation of the vertical vorticity field on the conformal cubed sphere grid, specifically along the southernmost and westernmost halos of each panel.\r\n\r\nTo reproduce the issue, consider the following minimal working example (MWE) using a Julia session with bounds checking enabled (`--check-bounds=yes`):\r\n```julia\r\nusing Oceananigans\r\n\r\narch = CPU()\r\ngrid = ConformalCubedSphereGrid(arch; panel_size=(4, 4, 1), z=(-1, 0), horizontal_direction_halo=2, radius=1)\r\nu = XFaceField(grid); set!(u, 1)\r\nv = YFaceField(grid); set!(v, 2)\r\n\u03b6 = Field{Face, Face, Center}(grid)\r\n\r\nusing KernelAbstractions: @kernel, @index\r\nusing Oceananigans.Operators: \u03b6\u2083\u1da0\u1da0\u1d9c\r\n\r\n@kernel function _compute_vorticity!(grid, u, v, \u03b6)\r\n    i, j, k = @index(Global, NTuple)\r\n    @inbounds \u03b6[i, j, k] = \u03b6\u2083\u1da0\u1da0\u1d9c(i, j, k, grid, u, v)\r\nend\r\n\r\nusing Oceananigans.Grids: halo_size, total_size\r\nusing Oceananigans.MultiRegion: fill_halo_regions!\r\nusing Oceananigans.Utils: KernelParameters, launch!\r\n\r\nfunction compute_vorticity!(grid, u, v, \u03b6)\r\n    offset = -1 .* halo_size(grid)\r\n    fill_halo_regions!((u, v))\r\n    @apply_regionally begin\r\n        kernel_parameters = KernelParameters(total_size(\u03b6[1]), offset)\r\n        launch!(arch, grid, kernel_parameters, _compute_vorticity!, grid, u, v, \u03b6)\r\n    end\r\nend\r\n\r\ncompute_vorticity!(grid, u, v, \u03b6)\r\n```\r\nRunning this MWE results in a bounds error:\r\n```julia\r\nERROR: BoundsError: attempt to access 8\u00d78 OffsetArray(::Matrix{Float64}, -1:6, -1:6) \r\nwith eltype Float64 with indices -1:6\u00d7-1:6 at index [-2, -1]\r\n```\r\nNote that the vorticity field `\u03b6\u2083\u1da0\u1da0\u1d9c` at a given grid point is computed by first evaluating the circulation around that point and then dividing it by the corresponding cell area. However, the circulation computation along the outermost line of the western halos `i = 1 - Hx` or the outermost line of the southern halos `j = 1 - Hy` tries to access velocity values beyond their designated halo regions. Specifically, the circulation defined by\r\n```julia\r\n\u0393 = \u03b4x\u1da0\u1da0\u1d9c(i, j, k, grid, \u0394y_q\u1d9c\u1da0\u1d9c, v) - \u03b4y\u1da0\u1da0\u1d9c(i, j, k, grid, \u0394x_q\u1da0\u1d9c\u1d9c, u)\r\n```\r\ntries to access `v[i = -Hx]` at `i = 1 - Hx`, and `u[j = -Hy]` at `j = 1 - Hy`, which are out-of-bounds.\r\n\r\nSince the vorticity values along the outermost lines of the western and southern halos are not used anywhere, their numerical correctness is not required. So, this PR introduces a simple workaround by clamping the indices used for velocity access when computing vorticity at these halo locations:\r\n```julia\r\nip = ifelse(i == 1 - Hx, 1, i)\r\njp = ifelse(j == 1 - Hy, 1, j)\r\n```\r\nThese dummy indices `ip` and `jp` are then used in place of `i` and `j` within the vorticity operator, ensuring all array accesses remain within bounds while preserving simulation correctness.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-12T19:08:20Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2025-05-15T17:25:02Z",
+    "number": 4501,
+    "title": "Fix out-of-bounds access in vorticity computation at halo boundaries on conformal cubed sphere panels"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "plus WENO(order=9) instead of AMD.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-14T21:03:53Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-05-15T17:41:05Z",
+    "number": 4512,
+    "title": "Try running Langmuir turbulence example on GPU with higher resolution"
+  },
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-14T12:31:22Z",
+    "deletions": 71,
+    "labels": [],
+    "mergedAt": "2025-05-15T23:29:48Z",
+    "number": 4394,
+    "title": "Small improvements to `PerturbationAdvectionOpenBoundaryCondition` interface"
+  }
+]

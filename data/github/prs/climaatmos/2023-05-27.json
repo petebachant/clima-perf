@@ -1,0 +1,165 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "We need to update the `examples/README.md` to reflect recent ClimaComms changes to run on the Cluster. \r\n\r\nWe don't use the env variable `CLIMACORE_DISTRIBUTED` anymore, but we need to specify `CLIMACOMMS_CONTEXT` instead. Even though ClimaComms should detect automatically if we're running on a distributed MPI env, I tried this via `sbatch` and if we don't specify this env variable, we run multiple single-process runs, rather than a distributed run.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-26T21:58:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-05-27T00:12:50Z",
+    "number": 1717,
+    "title": "Update examples/README.md"
+  },
+  {
+    "additions": 368,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the driver a bit for setting up simple performance benchmarks.\r\n\r\nHere's the docs for the workflow we're trying to achieve:\r\n\r\n    benchmark_step!(integrator)\r\n\r\n#### Example\r\n\r\nTo instantiate the environment:\r\n```\r\njulia --project=examples\r\n```\r\n\r\nThen, to run interactively:\r\n```julia\r\nimport ClimaAtmos as CA\r\nconfig = CA.AtmosPerfConfig();\r\nintegrator = CA.get_integrator(config);\r\nY\u2080 = deepcopy(integrator.u);\r\nCA.benchmark_step!(integrator, Y\u2080);\r\n```\r\n\r\nAlternatively, this can be run non-interactively,\r\nwith adjusted flags as:\r\n```\r\njulia --project=examples perf/benchmark_step.jl --h_elem 6\r\n```\r\n\r\nSee `argparse_settings` for the\r\nmethod defining the flags, and\r\n\r\nhttps://clima.github.io/ClimaAtmos.jl/dev/cl_args/\r\n\r\nfor the flags outlined in a table.\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-25T18:08:00Z",
+    "deletions": 339,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2023-05-27T04:57:11Z",
+    "number": 1713,
+    "title": "Refactor driver for performance benchmark"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes some broken artifact downloads (the errors are thrown in Logging, so it doesn't actually fail the job). See the [latest build](https://buildkite.com/clima/climaatmos-ci/builds/10016#01885b92-5227-4444-82ea-9b60789bcf58/1295-1302)\r\n\r\nThis also tests out a minor adjustment to the CI settings.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-25T00:31:33Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-05-27T16:25:14Z",
+    "number": 1709,
+    "title": "Remove broken artifacts download"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-27T00:45:33Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2023-05-27T19:06:16Z",
+    "number": 1718,
+    "title": "add lat lon plots of bottom level temperature and qt to held suarez post processing"
+  },
+  {
+    "additions": 144,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjY0NDQ4",
+      "is_bot": false,
+      "login": "bischtob",
+      "name": "Nawibot"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRefactoring the src folder. Closes #1663.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- [x] followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- [x] followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- [x] followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- [x] checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- [x] relevant unit tests, and integration tests, \r\n- [x] appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 48,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5lub5R",
+        "number": 1663,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1663"
+      }
+    ],
+    "createdAt": "2023-05-27T15:14:36Z",
+    "deletions": 90,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2023-05-27T20:11:10Z",
+    "number": 1721,
+    "title": "Refactoring of files and folder structure in src"
+  },
+  {
+    "additions": 515,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdds vertical integral for diagnostic EDMF updraft variables.\r\nco-authored-by: @dennisYatunin \r\nSupersedes #1656 \r\nCloses #1655 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5le27N",
+        "number": 1655,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1655"
+      }
+    ],
+    "createdAt": "2023-05-19T00:48:51Z",
+    "deletions": 134,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2023-05-27T23:55:12Z",
+    "number": 1689,
+    "title": "Add vertical integral for diagnostic EDMFX"
+  }
+]

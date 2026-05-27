@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 175,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\nThis PR \r\n- changes instances of end_date to stop_date so that we uniformly use stop_date to indicate the end of the simulation\r\n- simplifies the LAI modis function which returns the TVI object. While for ERA5 forcing we do sometimes change the path, this is not the case for MODIS LAI, so we can make the path internally.\r\n- changes the maxLAI function so that it takes a date and not a path (this was necessary since we hid the paths from the user in LAI_modis function)\r\n\r\nclose #1340 \r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 43,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7Goc9F",
+        "number": 1340,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1340"
+      }
+    ],
+    "createdAt": "2025-08-19T17:06:33Z",
+    "deletions": 351,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2025-08-20T14:03:32Z",
+    "number": 1344,
+    "title": "end_date -> stop_date; hide MODIS path"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "The functions `get_sim_var_dict` and `get_era5_obs_var_dict` are not defined in `LandSimVis` and it is not clear if they should be, so the functions are accessed by `Base.get_extension` instead.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-20T18:51:04Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-08-20T20:36:56Z",
+    "number": 1353,
+    "title": "Fix bug with observation map in calibration"
+  },
+  {
+    "additions": 138,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nIn our fluxnet plotting, we make plots comparing climaland diagnostics (saved hourly, with a timestamp at the end of the averaging hour) with half hourly data (output at the start of the averaging window). this leads to a relative phase shift between the two diurnal cycles. To be directly comparable to fluxnet we need to save diagnostics at 30 minute intervals, and return the comparison data at the end of the averaging window (TIMESTAMP_END).\r\n\r\nThis PR addresses that and fixes a typo in our conservation plots (this only affects soil global runs right now). \r\n\r\n@nefrathenrici @juliasloan25 \r\n\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-15T23:41:38Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2025-08-20T22:02:58Z",
+    "number": 1332,
+    "title": "Kd/plots and offset"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n@szy21 has found a bug in our land zenith angle computation. \r\nMean anomaly uses t0:\r\nhttps://clima.github.io/Insolation.jl/dev/ZenithAngleEquations/#Mean-Anomaly\r\ne.g. here:\r\nhttps://github.com/CliMA/Insolation.jl/blob/990e3521d377fa12260416a059d5492b1e1e3d1e/src/ZenithAngleCalc.jl#L65-L72\r\nwhich is used here:\r\nhttps://github.com/CliMA/Insolation.jl/blob/990e3521d377fa12260416a059d5492b1e1e3d1e/src/ZenithAngleCalc.jl#L142-L157\r\n\r\n\r\nIn our code, we were passing start_date, which will lead to errors if start_date is ne Jan 1\r\n\r\n@imreddyTeja Zhaoyi and I think this makes sense based on what is in Insolations.jl; this is the only place where we define the zenith angle, right?\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-20T21:02:00Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-08-20T23:30:06Z",
+    "number": 1355,
+    "title": "fix land zenith computation"
+  }
+]

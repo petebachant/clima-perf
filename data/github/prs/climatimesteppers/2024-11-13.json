@@ -1,0 +1,205 @@
+[
+  {
+    "additions": 1656,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an attempt to parallelize the `report_gen` and limiters documentation scripts and some unit tests.. This should have a few advantages:\r\n\r\n - We should be able to debug this more easily, since we can run exercise code more granularly\r\n - CI will be much faster (we can remove the serially run `report_gen` from the docs, which takes ~40 min)",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-11T16:34:40Z",
+    "deletions": 1120,
+    "labels": [
+      {
+        "color": "74bec9",
+        "description": "Unit and regression testing",
+        "id": "MDU6TGFiZWwyMjIxNDM4OTg3",
+        "name": "testing"
+      },
+      {
+        "color": "1993D4",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABIvI4iQ",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2024-11-13T03:03:25Z",
+    "number": 324,
+    "title": "Parallelize report_gen script + more on buildkite"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR marks some jobs as soft fail, as they have shown success and failures without code changes. Success build [here](https://buildkite.com/clima/climatimesteppers-ci/builds/1355), and failures:\r\n - [SSP22Heuns](https://buildkite.com/clima/climatimesteppers-ci/builds/1356#0193237a-c0c9-4095-982d-fc942af4c2b0)\r\n - [SSP222](https://buildkite.com/clima/climatimesteppers-ci/builds/1362)\r\n - [IMKG242a](https://buildkite.com/clima/climatimesteppers-ci/builds/1361#0193238b-6565-4c58-8e03-939d9956949f)\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T14:17:29Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-11-13T14:17:50Z",
+    "number": 328,
+    "title": "Mark some jobs as soft fail"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an attempt to prevent the limiters summary table from being cropped:\r\n\r\n<img width=\"887\" alt=\"Screenshot 2024-11-12 at 10 14 35\u202fPM\" src=\"https://github.com/user-attachments/assets/db66227e-dca8-4056-8674-f7adcb5a02a9\">\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T03:14:46Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-11-13T14:25:16Z",
+    "number": 325,
+    "title": "Do not crop limiters table"
+  },
+  {
+    "additions": 1094,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR applies a bunch of environment updates:\r\n\r\n - Adds a .buildkite environment and checks in the manifest for reproducibility\r\n - Changes all buildkite jobs to use this env\r\n - Deletes the perf Project and Manifest files\r\n - Removes the patch compat bounds for ClimaCore, as this is implied to be compatible with all 0.14 versions\r\n\r\nI'm hoping this reduces precompilation on buildkite, which took _51 minutes_ on the last build.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T03:25:08Z",
+    "deletions": 783,
+    "labels": [],
+    "mergedAt": "2024-11-13T16:46:10Z",
+    "number": 326,
+    "title": "Environment updates"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "The test suite on GHA has a bunch of errors:\r\n\r\n```julia\r\nWARNING: Method definition kwcall(NamedTuple{names, T} where T<:Tuple where names, typeof(##232.test_convergence_order!), Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:57 overwritten on the same line (check for duplicate calls to `include`).\r\nWARNING: Method definition kwcall(NamedTuple{names, T} where T<:Tuple where names, typeof(##232.test_convergence_order!), Any, Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:57 overwritten on the same line (check for duplicate calls to `include`).\r\nWARNING: Method definition pass_conv(Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:73 overwritten on the same line (check for duplicate calls to `include`).\r\nWARNING: Method definition fail_conv(Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:74 overwritten on the same line (check for duplicate calls to `include`).\r\nWARNING: Method definition super_conv(Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:75 overwritten on the same line (check for duplicate calls to `include`).\r\nWARNING: Method definition convergence_order_results(Any, Any) in module ##232 at /home/runner/work/ClimaTimeSteppers.jl/ClimaTimeSteppers.jl/test/convergence_utils.jl:79 overwritten on the same line (check for duplicate calls to `include`).\r\n```\r\ndue to re-including utility files (build [here](https://github.com/CliMA/ClimaTimeSteppers.jl/actions/runs/11821908144/job/32937723732)).\r\n\r\nThis PR conditionally loads based on if `IntegratorTestCase` is defined.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T17:14:51Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "74bec9",
+        "description": "Unit and regression testing",
+        "id": "MDU6TGFiZWwyMjIxNDM4OTg3",
+        "name": "testing"
+      }
+    ],
+    "mergedAt": "2024-11-13T17:25:49Z",
+    "number": 330,
+    "title": "Conditionally load convergence utils"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR makes IMKG254b soft-fail, failure found in this [build](https://buildkite.com/clima/climatimesteppers-ci/builds/1374#0193266c-58f3-4ccd-b03b-635669c2d2e5).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T17:28:08Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-11-13T17:28:16Z",
+    "number": 332,
+    "title": "Make IMKG254b soft-fail"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the buildkite `wait` and instead uses `depends_on` using `group` keys, so that the convergence summaries can start before the limiters analysis finishes.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T16:47:51Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "485A7F",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABBxiyeg",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2024-11-13T17:30:06Z",
+    "number": 329,
+    "title": "Remove buildkite wait and use depends_on"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes the buildkite environment to _dev_ CTS. Praying this isn't an issue. If it is, the parallelization PR is still safe, we may just need to revert back to https://github.com/CliMA/ClimaTimeSteppers.jl/commit/9c286d4a84165599c9f5394699bdabe668d00c73",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T17:44:13Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "E8C248",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABB6jk3Q",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-11-13T19:04:34Z",
+    "number": 333,
+    "title": "Dev from buildkite env"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the test Project, so that we can test with `ClimaTimeSteppers>test`, and widens the ClimaCore compat, which seems to be needed to merge #248.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-05T20:27:16Z",
+    "deletions": 52,
+    "labels": [
+      {
+        "color": "0E2B28",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAABo-Gwpw",
+        "name": "workflow :gear:"
+      }
+    ],
+    "mergedAt": "2024-11-13T20:47:06Z",
+    "number": 295,
+    "title": "Fix `ClimaTimesteppers> test`"
+  }
+]

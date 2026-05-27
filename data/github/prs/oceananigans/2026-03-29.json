@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 101,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "This reverts commit f70a4e492e5e24f2a12945c53561dbc396018d5c.\r\n\r\n@giordano @glwagner @jackdfranklin @simone-silvestri \r\n\r\nThe PR should be re-landed after tests pass (and not just comment out tests)\r\n\r\n\r\nSpecifically the failing tests demonstrated memory corruption (aka reading or writing undefined memory locations). This is really bad because its non-determinstic when or if an error is seen, including the possibility of running the model (and in doing so corrupting memory like maybe a base julia object), then when unrelated plotting code is run and loads from the corrupted memory, crashes -- making it very hard to pinpoint.\r\n\r\nLikely what is happening from that optimization is julia is embedding the literal object pointer inside the kernel to become a runtime condition, rather than on the outside doing a dynamic dispatch based on type. This should be fine, but clearly (as seen in earlier debugging) some subsequent passes do not currently handle that properly, and thus, corruption.\r\n\r\nOnce the tests pass we should probably run them like 100 times in a loop or something just to be safe.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-28T23:14:39Z",
+    "deletions": 100,
+    "labels": [],
+    "mergedAt": "2026-03-29T16:52:48Z",
+    "number": 5449,
+    "title": "Revert \"Switch biases to be enums rather than distinct types. (#5318)\""
+  }
+]

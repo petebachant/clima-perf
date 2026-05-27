@@ -1,0 +1,103 @@
+[
+  {
+    "additions": 1590,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdd implicit tendency for canopy temperature\r\nAddress #696 \r\n\r\nPreviously, all canopy variables were stepped explicitly. Now temperature\r\nis stepped implicitly in both standalone CanopyModel runs and integrated\r\nSoilCanopyModel runs. Changes include adding a jacobian and implicit \r\ntendency for the CanopyModel, and updating scripts to use ImEx steppers.\r\nWe've also added scripts to test convergence behavior of the standalone\r\nand integrated cases, which are output as plots on buildkite.\r\n\r\nThis change increases the stability of our global\r\nSoilCanopyModel runs, decreasing the number of NaNs we see, and allows\r\nus to take timesteps of 450s.\r\n\r\n\r\n### Notes\r\nThere are two things we dont understand about this change:\r\n- there seem to be some times during the simultation where the error is always large, and a smaller dt doesnt help. For example, the 99th percentile error curve dips below the mean error for small dt, which indicates there are outliers that are very large in the top 1% error\r\n  - update 9/18: it's possible this may happen during times in the simulation where temperature is changing a lot, e.g. shortly after a driver update, as opposed to when the temperature is in equilibrium. See plots in comments for more information\r\n- the derivative of SHF with respect to temperature is correct to a few percent, but the derivative of LHF with respect to temeperature is ~30% wrong. This is partly due to d_qsat/d_T errors (but Ive double checked that I entered the formula correct), but seems like it is also due to d_LHF/d_qsat. I think I have followed CLM exactly. Not sure why the error is large.\r\n\r\nThese two questions will be investigated in a later PR - see https://github.com/CliMA/ClimaLand.jl/issues/782\r\n\r\n## Results\r\nWith an explicit stepper, RK4, a test script at the Ozark site with the canopy alone permits dt = 60 [ac_canopy = 1e3]. Time to solution = 114 seconds - see kd/canopy_explicit_tests branch. Using dt = 180 fails.\r\nWith an implicit stepper ARS111, updated jacobian every newton iteration, max_iters = 6, the same simulation can be run with dt=3600. Time to solution = 16 seconds. Using only a single iteration failed.\r\n\r\nAccuracy as a function of timestep (ref solution = dt = 6, implicit solver)\r\nFloat 32:\r\n![errors_f32](https://github.com/user-attachments/assets/925c7c39-d59e-44bd-bb36-6de9917916c3)\r\nFloat64:\r\n![errors_f64](https://github.com/user-attachments/assets/0a528162-4529-4ee4-b47c-dd8996c2ff43)\r\n\r\nIn the global long run, on this branch: [kd/canopy_explicit_global_nans](https://buildkite.com/clima/climaland-long-runs/builds?branch=kd%2Fcanopy_explicit_global_nans) I just changed the value of ac_canopy but left everything else the same as #main - i.e. using an explicit solver. The resulting map is almost entirely NaN [ look at time 86400]\r\n\r\nOn the implicit branch (this PR), we have no NaNs after one day. [ look at time 86400]\r\n\r\n## To-do\r\n- [X] Merge ClimaCore Branch\r\n- [X] Test timestep improvement\r\n- [X] Unit test Jacobian\r\n- [x] Cleanup canopy timestep_test.jl\r\n- [x] Add script to show soil/canopy convergence (analogous to canopy timestep_test.jl) - add to buildkite pipeline\r\n- [x] Rebase\r\n- [x] Check longruns\r\n  - requires https://github.com/CliMA/ClimaCore.jl/pull/2016 for GPU compatibility\r\n- [x] Review\r\n\r\n\r\n\r\n## Content\r\n- Adds canopy temp to the list of implicitly stepped variables\r\n- Adds the canopy jacobian\r\n- Adds the canopy implicit tendency\r\n- updates scripts and some timesteps\r\n- adds a script testing timestep convergence, adds to buildkite\r\n- update docs Manifest to ClimaCore 0.14.11\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6Pbwm5",
+        "number": 696,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/696"
+      }
+    ],
+    "createdAt": "2024-06-24T23:48:04Z",
+    "deletions": 124,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      },
+      {
+        "color": "bfdadc",
+        "description": "improve performance",
+        "id": "LA_kwDOGiZe4s8AAAABp6hNEg",
+        "name": "performance"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2024-10-04T03:04:54Z",
+    "number": 675,
+    "title": "Add implicit tendency for canopy temperature"
+  },
+  {
+    "additions": 349,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "This PR adds calibration experiments, starting with a minimal working example.\r\n\r\nhttps://clima.github.io/ClimaLand.jl/previews/PR621",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-22T17:42:05Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2024-10-04T03:08:37Z",
+    "number": 621,
+    "title": "Add a calibration tutorial for single site perfect model "
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "I went through the NEWS and did not see any breaking changes. So I'm thinking a patch release should be fine?\r\n\r\nAre there any Manifest files I should modify to make sure Thermodynamics v.12.8 is used when testing?\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-04T16:57:21Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "9BCD8A",
+        "description": "",
+        "id": "LA_kwDOGiZe4s72mQw4",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2024-10-04T23:06:14Z",
+    "number": 817,
+    "title": "Tag v0.15.1"
+  }
+]

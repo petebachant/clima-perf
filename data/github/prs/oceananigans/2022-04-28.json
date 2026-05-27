@@ -1,0 +1,119 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This emits a warning when Oceananigans is compiled:\r\n\r\n```\r\nWARNING: Method definition diffusive_flux_z(Any, Any, Any, Any, Oceananigans.TurbulenceClosures.AbstractScalarDiffusivity{var\"#s139\", var\"#s138\"} where var\"#s138\"<:Oceananigans.TurbulenceClosures.HorizontalDivergenceFormulation where var\"#s139\", Any, Base.Val{x} where x, Any...) in module TurbulenceClosures at /Users/gregorywagner/Projects/Oceananigans.jl/src/TurbulenceClosures/abstract_scalar_diffusivity_closure.jl:192 overwritten at /Users/gregorywagner/Projects/Oceananigans.jl/src/TurbulenceClosures/abstract_scalar_diffusivity_closure.jl:204.\r\n  ** incremental compilation may be fatally broken for this module **\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-27T22:03:12Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-04-28T00:55:01Z",
+    "number": 2482,
+    "title": "Remove redundant definition of `diffusive_flux_z` for divergence damping"
+  },
+  {
+    "additions": 215,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the calculation of `isopycnal_rotation_components` to _actually_ use the \"Cox stencil\" described by [Griffies et al 1998](https://journals.ametsoc.org/view/journals/phoc/28/5/1520-0485_1998_028_0805_idiazc_2.0.co_2.xml).\r\n\r\n~~It looks to me like MITgcm uses this so-called anti-Cox stencil.~~ It looks like MITgcm uses the Cox stencil. For example, when calculating the \"Gradient of Sigma at rVel points\" --- which appears in `isopycnal_rotation_tensor_xz_ccf` --- MITgcm uses\r\n\r\nhttps://github.com/MITgcm/MITgcm/blob/9bcb4977016b9cc234328aa357b105d227417e43/pkg/gmredi/gmredi_calc_tensor.F#L712\r\n\r\nwhich reconstructs the x-component of the density gradient by _averaging the gradient_ (with a four point average). On the other hand, we use\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/001ec56debf0447103d9b75c81de4036a8d6a94a/src/TurbulenceClosures/isopycnal_rotation_tensor_components.jl#L68\r\n\r\nwhich instead computes the _gradient of the average_ (first by averaging with 4 points, then calculating the gradient of that).\r\n\r\n~~But Griffies 1998 describers the Cox87 discretization as~~ EDIT: we were confused by Griffies' notation.\r\n\r\nNOW, this PR changes all the buoyancy gradient calculations so they are similar to MITgcm (average of the gradient) --- the \"actually-Cox stencil\". We'll see what that does.\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-27T21:54:30Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2022-04-28T05:11:39Z",
+    "number": 2481,
+    "title": "Implement the actually-Cox (aka the anti-anti-Cox) stencil for GM"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "With @navidcy \r\n\r\nResolves #2485\r\n\r\nX-ref: https://github.com/JuliaParallel/MPI.jl/issues/583",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-28T00:57:09Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2022-04-28T08:39:38Z",
+    "number": 2486,
+    "title": "Pin MPICH_jll at 4.0.1"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-28T10:52:05Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-04-28T15:34:08Z",
+    "number": 2491,
+    "title": "Fix docs url typo in `README`"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR introduces a \"Biharmonic\" divergence damping.\r\n\r\nIn line with #2440, `ScalarBiharmonicDiffusivity(HorizontalDivergenceFormulation(), \u03bd = 1)`, is a biharmonic diffusion that acts only on the divergent component of the horizontal velocity field.\r\n\r\nThis allows us to diffuse the remaining horizontally rotational component through the use of a WENO scheme (which does not act on vertical motions, hence does not dissipate noise generated through divergent motions)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-28T16:20:05Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2022-04-28T19:38:57Z",
+    "number": 2495,
+    "title": "Biharmonic divergence damping"
+  }
+]

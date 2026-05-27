@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 181,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #1289\r\n\r\nThis PR adds modules in src for FluxnetSimulations and LandSimVis.\r\n\r\nAs a result, instead of typing\r\n```julia\r\nLandSimulationVisualizationExt =\r\n    Base.get_extension(\r\n        ClimaLand,\r\n        :LandSimulationVisualizationExt,\r\n    ).LandSimulationVisualizationExt;\r\n```\r\nyou can now use\r\n```julia\r\nimport ClimaLand.LandSimVis as LandSimVis\r\n```\r\n\r\nIt is a little difficult to do the same for NeuralSnow, so it will be done in a separate PR.",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7EWJdr",
+        "number": 1289,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1289"
+      }
+    ],
+    "createdAt": "2025-08-04T19:17:28Z",
+    "deletions": 159,
+    "labels": [],
+    "mergedAt": "2025-08-06T18:02:14Z",
+    "number": 1286,
+    "title": "Add modules in src for LandSimVis and FluxnetSimulations"
+  },
+  {
+    "additions": 472,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nSwitch to using nearest neighbor interpolation by default:\r\n- for spatially varying parameters of the canopy & soil albedo. NN is better than linear because many spatially varying parameters are defined by PFT or soil class.\r\n- for ERA5 forcing. this should let us run low res sims with low res forcing without the error induced by linearly interpolating to an unphysical atmos state\r\n- for the mask\r\n- for MODIS LAI for consistency.\r\n\r\nNote that using NN for the initial conditions and soil parameters greatly changed the initial state in a way that lead to some instability. This is plausible since the spun up IC are state variables that correspond to certain parameters, and the new parameters are different. I'm not 100% sure if that is the whole explanation. This requires investigation starting from a non spun up state & future work.\r\n@juliasloan25 @nefrathenrici for visibility\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-05T21:46:13Z",
+    "deletions": 68,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-08-06T19:53:17Z",
+    "number": 1290,
+    "title": "use nearest neighbor interpolation"
+  },
+  {
+    "additions": 1136,
+    "author": {
+      "id": "MDQ6VXNlcjQ5MDQ0Mzg1",
+      "is_bot": false,
+      "login": "ThanhNguyen428",
+      "name": "Thanhthanh Nguyen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- this is a subset of #1253, containing only functions for US-Ha1, US-MOz, US-NR1, US-Var\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-05T23:45:48Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-08-06T21:22:32Z",
+    "number": 1292,
+    "title": "created extension module functions + tests for 4 ameriflux sites"
+  }
+]

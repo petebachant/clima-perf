@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 881,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nThis PR updates the implicit solver in our ClimaCore examples to use the `MatrixFields` interface, brining it in alignment with the implicit solver in ClimaAtmos.\r\n\r\n## Updates to Examples and Tests\r\n- Replace `compose`, `operator2stencil`, and `StencilCoefs` in the tendency Jacobian with their new versions: `\u22c5`, `operator_matrix`, and `BandMatrixRow` from `MatrixFields`\r\n  - Since `operator_matrix` supports upwinding, add the missing upwinding derivative to the tendency Jacobian\r\n- Replace scalar Jacobian entries with vector, covector, and tensor entries, so that they match the ones in ClimaAtmos\r\n  - To avoid modifying the `Wfact!` function and making it set `dt\u03b3 * \u2202Y\u209c\u2202Y - I` instead of `\u2202Y\u209c\u2202Y`,  this required adding support for scalar multiplication/division of matrices, as well as support for identity matrices with non-scalar elements to `MatrixFields`\r\n- Remove the autodiff testing functionality from the implicit solver, as it needs to be reimplemented in a way that supports non-scalar entries\r\n- Remove the `linsolve` test from CI, as it was testing an outdated duplicate of the Thomas algorithm from `MatrixFields`\r\n\r\n## Updates to Internals\r\n- Allow `FieldMatrix` broadcasts to include multiplication and division by single values (`Number`s, `AxisTensor`s, or broadcast expressions that return `Number`s or `AxisTensor`s)\r\n- Allow multiples of identity matrix blocks in a `FieldMatrix` to be represented as either `UniformScaling`s for `Number`s or `DiagonalMatrixRow`s for `Axis2Tensor`s\r\n- Fix the behavior of `one(::FieldMatrix)`\r\n  - Ensure that the identity matrix block for a `ColumnwiseBandMatrixField` of `Axis2Tensor`s is also an `Axis2Tensor`\r\n  - Enable better handling of sparse matrices, so that `one(matrix)` will contain an identity matrix block for each variable that appears as a row or column index, even if `matrix` does not contain the corresponding diagonal entry\r\n- Add an alternative to `one(::FieldMatrix)`, `identity_field_matrix(::FieldVector)`, which captures missing identity matrix blocks for very sparse matrices\r\n  - E.g., if `matrix` does not contain any blocks with `Y.c.u\u2095` as a row or column value, `one(matrix)` will not contain an identity block for `Y.c.u\u2095`, but `identity_field_matrix(Y)` will contain `(@name(c.u\u2095), @name(c.u\u2095)) => I`\r\n  - This can be used to fill in missing diagonal blocks in a sparse `FieldMatrix`, so that it can be passed to a `FieldMatrixSolver`\r\n- These changes will allow us to simplify the implicit solver in ClimaAtmos, since we can now subtract `I` and multiply by `dt\u03b3` automatically, instead of relying on developers to do this manually for each matrix block\r\n- Add broadcasting support to `FieldMatrixWithSolver`, as well as a definition of `one(::FieldMatrixWithSolver)`, so that we do not need to directly access the internal `matrix` when subtracting `I` and multiplying by `dt\u03b3`\r\n\r\n---\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-12T01:31:09Z",
+    "deletions": 889,
+    "labels": [],
+    "mergedAt": "2025-02-25T01:11:28Z",
+    "number": 2181,
+    "title": "Update examples to use new implicit solver interface"
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #2198.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6rbNfG",
+        "number": 2198,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2198"
+      }
+    ],
+    "createdAt": "2025-02-24T20:34:57Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2025-02-25T01:17:38Z",
+    "number": 2199,
+    "title": "Mv ncolumns to Spaces, define nlevels on fields"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nThis PR removes the remnants of the original implicit solver interface, consisting of the files `stencilcoefs.jl`, `operator2stencil.jl`, `pointwisestencil.jl`, and `thomas_algorithm.jl`. The operators and data structures in these files have been superseded by the `MatrixFields` module, which has been rigorously tested and documented. There is no longer any code in `ClimaAtmos`, `ClimaLand`, or the `ClimaCore` examples that uses the outdated interface.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-25T01:53:41Z",
+    "deletions": 2653,
+    "labels": [],
+    "mergedAt": "2025-02-25T18:01:38Z",
+    "number": 2200,
+    "title": "Remove outdated implicit solver interface"
+  }
+]

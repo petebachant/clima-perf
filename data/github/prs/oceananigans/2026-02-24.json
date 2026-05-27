@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Ref: https://github.com/CliMA/Oceananigans.jl/pull/5225#discussion_r2776488351.  Detected by JETLS.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-22T17:37:04Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-02-24T00:14:46Z",
+    "number": 5328,
+    "title": "Fix undefined variable `free_surface` inside error message"
+  },
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Introduce `maybe_initialize_state!(model, callbacks)` which checks `model.clock.iteration == 0` and calls `update_state!` if true. This replaces inline conditionals in RK3, AB2, and SplitRK time steppers, enabling Reactant extensions to override a single function (as a no-op) instead of duplicating entire time_step! implementations.\r\n\r\nAdditional changes:\r\n- Fix RK3 final-tick pattern: use `tick!(clock, \u0394t); clock.time = t\u207f\u207a\u00b9` instead of computing a corrected \u0394t, which simplifies Reactant compatibility\r\n- Make Clock constructor use ConcreteRNumber for last_\u0394t/last_stage_\u0394t so that `clock.last_\u0394t = \u0394t` works when \u0394t is TracedRNumber\r\n- Fix tick! Reactant override to set last_\u0394t/last_stage_\u0394t via .mlir_data\r\n- Remove Reactant RK3 and SplitRK time_step! overrides (src/ versions now work)\r\n- Simplify Reactant AB2 override (remove manual post-tick .mlir_data code)\r\n\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-20T03:01:12Z",
+    "deletions": 220,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-02-24T08:37:31Z",
+    "number": 5315,
+    "title": "Add maybe_initialize_state! and simplify Reactant time stepper overrides"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "It was using the time-step wizard with an Adams-Bashforth which is not recommended (because it changes timestepper under the hood when the wizard is called).\r\n\r\nThis PR fixes the example",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-03T13:11:05Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-02-24T09:13:30Z",
+    "number": 5248,
+    "title": "Fix lock-exchange example"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Allows Reactant-Enzyme differentaibility tests",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-23T23:17:52Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-02-24T18:12:55Z",
+    "number": 5331,
+    "title": "`--check-bounds=auto` for Reactant tests"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "we already have a \"fill_halo\" mode for the split explicit free surface. We can use that as a prototype to implement open boundary conditions since the literature review in #5229 showed that we need to fill the halos each substep.\r\n\r\nHowever, at the moment, the split explicit evolution use topology-aware operators that automatically encode boundary conditions in the barotropic mode.\r\n\r\nThis PR chooses the operators to used based on if the halos are filled (then we can use normal operators) or not (we use topology-aware operators).\r\n\r\nA little step to start supporting #5229 \r\n\r\nAfter this I will open a PR that slightly refactors the \"fill halo mode\" of the split explicit free surface to avoid distributed halos (`only_local_halos=true`) and convert the necessary fill halo inputs to devices only once such that it will still be efficient (hopefully) even if we introduce open boundaries.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-24T11:01:27Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-02-24T20:40:37Z",
+    "number": 5332,
+    "title": "Avoid topology-aware operators when filling halos in the SplitExplicitFreeSurface"
+  }
+]

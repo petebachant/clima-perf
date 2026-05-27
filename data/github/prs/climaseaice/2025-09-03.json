@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 141,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Branch used for the OMIP simulations in ClimaOcean. No need to merge. Just to document what is being done.\r\nWhen the OMIP is stable and running we can start decomposing the bits and pieces of this branch into different PRs.\r\n\r\n## Speeding up (quite considerably) `SeaIceDynamics`\r\n\r\nThis branch deals with the efficient execution of the sea ice dynamics in split form. Many small kernels need to be launched, so this PR ensures that:\r\n1) kernels are fused as much as possible (no individual `mask_immersed_field_xy!` for example, but zeroing out the velocity in peripheral regions directly in the kernels)\r\n2) All the arguments passed to the kernels are converted once before the substepping\r\n3) We save configured kernels so that we do not have to pay the cost of kernel configuration at every substep\r\n\r\nTo achieve this, the auxiliaries of a particular rheology are divided into `auxiliaries.fields` and `auxiliaries.kernels` for the `ElastoViscoPlasticRheology` where `auxiliaries.kernels` hold the preconfigured kernels to compute viscosity and stresses.\r\n\r\n***Note!!!*** this branch requires https://github.com/CliMA/Oceananigans.jl/pull/4706 to be efficient and work properly, since we are passing converted arguments to the `fill_halo_regions!` function, which is not possible prior to 4706, that refactors how fill halos work by saving down preconfigured kernels.\r\n\r\n## No internal heat flux if the ice is not consolidated\r\n\r\nThis PR also removes the internal heat flux if the sea ice is unconsolidated to avoid very large internal heat flux values. This was already done for all top boundary conditions except for a `PrescribedTemperature` top boundary condition which is the one we use in ClimaOcean.jl\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-08T16:00:22Z",
+    "deletions": 107,
+    "labels": [],
+    "mergedAt": "2025-09-03T12:01:57Z",
+    "number": 89,
+    "title": "Speeding up Dynamics and removing internal heat flux when `h < hc`"
+  }
+]

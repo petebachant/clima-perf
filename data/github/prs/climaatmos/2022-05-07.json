@@ -1,0 +1,113 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Per [this request](https://github.com/CliMA/ClimaAtmos.jl/issues/409#issuecomment-1120230938).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-07T15:56:13Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-05-07T16:59:10Z",
+    "number": 416,
+    "title": "Try upwinding with smaller dt"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Adds the `config` CL option, and uses it for the column radiation case\r\n - Combines `make_distributed_horizontal_space` and `make_horizontal_space` and use dispatch\r\n - inlines some included contents in `single_column_radiative_equilibrium.jl`\r\n - Adds a TODO for a bug I found in the restart block:\r\n```\r\n    # TODO:   quad, horizontal_mesh, z_stretch,\r\n    #         z_max, z_elem should be taken from Y.\r\n```\r\nOtherwise restarting can result in inconsistent grid data.\r\n\r\nThis is another small step towards removing the `TEST_NAME` flag.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-07T17:14:25Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2022-05-07T18:21:11Z",
+    "number": 417,
+    "title": "Add config flag, move column parts to driver"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Deletes and inlines `single_column_radiative_equilibrium.jl`\r\n - Removes a global closure over `FT`\r\n - Changes `t_end` from `60 * 60 * 24 * 365.25` to `60 * 60 * 24 * 365` in `single_column_radiative_equilibrium.jl` (for simplicity). Perhaps we could add an option `n_days` and use that or `t_end`, it may just be a nicer interface for users\r\n\r\nI'm not really satisfied with `center_initial_condition_column` / `center_initial_condition_sphere`, since I don't think that's really an accurate characterization, I'll need help on improving names here. For now this will help make the next steps easier. Also, we're stacking up quite a few args for the radiative equilibrium, and we could handle this differently by having column-specific defaults (kind of like what I did with `dt_rad`), which may alleviate the number of args. I think we can do this in a follow up PR, once managing the different configs is a bit more elegant.\r\n\r\nThis is one more step towards removing `TEST_NAME`.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-07T19:24:32Z",
+    "deletions": 61,
+    "labels": [],
+    "mergedAt": "2022-05-07T19:57:19Z",
+    "number": 418,
+    "title": "Prep for removing TEST_NAME"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "The documentation is currently broken (everything is passing because we're not running in strict mode). This PR:\r\n - Removes `jldoctest; `\r\n - Enforces `strict = true` so that they don't go stale again\r\n - Adds docs for initial conditions in the API\r\n - Adds submodule docs in the API\r\n\r\nI'm happy to fix the `jldoctest`s in this PR if someone is willing to help, otherwise I'll open an issue to add the tests back in, and get to it when possible.\r\n\r\nI was hoping to add some docs for the command line options that automatically sync, so that we only need to maintain a single list that is always up to date (cc @jiahe23)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-06T23:25:00Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA1",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2022-05-07T20:31:15Z",
+    "number": 414,
+    "title": "Fix documentation, make docs strict"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR builds ontop of #414 and auto-documents the CL arguments. Here's an example of the output on one of the newly added [doc page](https://clima.github.io/ClimaAtmos.jl/previews/PR415/cl_args/).\r\n\r\nI think there's ways that we can improve formatting. It might be nice if we point to this page in the `examples/sphere/README.md`. That way we have a single consistent command line argument list. I'm open to moving that entire readme into the docs proper, too. Let's follow that up in a subsequent PR.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-07T00:27:45Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA1",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2022-05-07T23:01:13Z",
+    "number": 415,
+    "title": "Auto-document CL arguments"
+  }
+]

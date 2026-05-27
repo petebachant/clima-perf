@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR tries to clarify the README statement about the motivation for ClimaOcean as a software package separate from Oceananigans.\r\n\r\nI included a \"hello world\" code snippet to illustrate how ClimaOcean extends Oceananigans:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing Dates, CFTime\r\nimport ClimaOcean\r\n\r\narch = GPU()\r\ngrid = LatitudeLongitudeGrid(arch,\r\n                             size = (1440, 560, 10),\r\n                             halo = (7, 7, 7),\r\n                             longitude = (0, 360),\r\n                             latitude = (-70, 70),\r\n                             z = (-3000, 0))\r\n\r\nbathymetry = ClimaOcean.regrid_bathymetry(grid) # builds gridded bathymetry based on ETOPO1\r\ngrid = ImmersedBoundaryGrid(grid, GridFittedBottom(bathymetry))\r\n\r\n# Build an ocean simulation initialized to the ECCO state estimate on Jan 1, 1993\r\nocean = ClimaOcean.ocean_simulation(grid)\r\ndate  = DateTimeProlepticGregorian(1993, 1, 1)\r\nset!(ocean.model, T = ClimaOcean.ECCOMetadata(:temperature; date),\r\n                  S = ClimaOcean.ECCOMetadata(:salinity; date))\r\n\r\n# Build and run an OceanSeaIceModel (with no sea ice component) forced by JRA55 reanalysis\r\natmosphere = ClimaOcean.JRA55_prescribed_atmosphere(arch)\r\ncoupled_model = ClimaOcean.OceanSeaIceModel(ocean; atmosphere)\r\nsimulation = Simulation(coupled_model, \u0394t=5minutes, stop_time=30days)\r\nrun!(simulation)\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-04T21:11:32Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2024-10-23T20:01:20Z",
+    "number": 189,
+    "title": "Improve mission statement and description in README"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWhere there is no vegetation, we have alpha_leaf = tau_leaf = 0, and LAI = 0. In this case, alpha_land should equal the weighted albedo of bare soil and bare snow. In our calibration runs, we noticed funny behavior where albedo over snowy regions was incorrect and equal to 1.\r\n\r\nIn debugging this we found that the two stream scheme has numerical issues when alpha_leaf = tau_leaf = 0. We had sought to address this before by clipping their sum to be eps(FT) (rather than zero), but this was not sufficient to fix the problem. Now it is clipped to 1e-4 in the case where they are both zero.\r\n\r\nSee the plot below:\r\n![albedo_plot](https://github.com/user-attachments/assets/b36e1f66-6ac7-40c0-a04c-ca8c1c133515)\r\n\r\n## To-do\r\n\r\n\r\n\r\n## Content\r\nClips alpha_leaf+tau_leaf = 1e-4 or 1-1e-4 in the two stream code. Updates one element of the vector used in testing to correspond to alpha_leaf = tau_leaf = 0.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-26T21:48:08Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-06-27T17:23:30Z",
+    "number": 1193,
+    "title": "Bug in two stream scheme"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Adds Tsoil and LAI to our default diagnostics\r\n- Clips dz_snow to be 10 cm or less when computing the heat flux between soil and snow. If dz_snow = height of snow (our current implementation), the flux between soil and snow will be very small if the snow is deep. This will lead to unphysical soil temperatures.\r\n\r\nLong run: https://buildkite.com/clima/climaland-long-runs/builds/4048\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-27T16:31:03Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-06-27T23:38:14Z",
+    "number": 1195,
+    "title": "Add LAI and Tsoil to output diagnostics, fix flux from soil to snow"
+  }
+]

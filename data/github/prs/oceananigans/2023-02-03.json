@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "```Julia\r\nusing Oceananigans\r\nmodel = HydrostaticFreeSurfaceModel(grid=RectilinearGrid(topology=(Bounded, Bounded, Bounded), size=(8, 6, 8), extent=(10, 20, 3)));\r\nmodel.velocities.u\r\n```\r\n\r\nbefore this PR would give:\r\n```julia\r\n9\u00d76\u00d78 Field{Face, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 8\u00d76\u00d78 RectilinearGrid{Float64, Bounded, Bounded, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Open, east: Open, south: ZeroFlux, north: ZeroFlux, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 15\u00d712\u00d714 OffsetArray(::Array{Float64, 3}, -2:12, -2:9, -2:11) with eltype Float64 with indices -2:12\u00d7-2:9\u00d7-2:11\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0\r\n```\r\n\r\nafter this PR:\r\n```julia\r\n9\u00d76\u00d78 Field{Face, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 8\u00d76\u00d78 RectilinearGrid{Float64, Bounded, Bounded, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Impenetrable, east: Impenetrable, south: ZeroFlux, north: ZeroFlux, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 15\u00d712\u00d714 OffsetArray(::Array{Float64, 3}, -2:12, -2:9, -2:11) with eltype Float64 with indices -2:12\u00d7-2:9\u00d7-2:11\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-02-01T21:04:12Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-02-03T02:16:08Z",
+    "number": 2894,
+    "title": "Better show for impenetrable boundary condition"
+  },
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR defines some binary operations involving `ZeroField`s that might be useful, and adds tests for those operations. The issue came up at https://github.com/tomchor/Oceanostics.jl/pull/104",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-01-29T00:51:25Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-02-03T15:45:42Z",
+    "number": 2883,
+    "title": "Defines some binary operations with `ZeroField`"
+  }
+]

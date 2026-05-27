@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 373,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR adapts the hydrostatic regression tests to be run in distributed mode.\r\n\r\nan important step in this direction is to allow array partitioning under the hood in `set!` if the array size coincides with the global size of the field (implemented here)\r\n\r\na more important step is to remove the topology from the `Distributed` architecture (it should not know anything about topology which is a grid property)\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-10T19:35:49Z",
+    "deletions": 149,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-10-13T02:42:23Z",
+    "number": 3328,
+    "title": "Regression tests for the Distributed module "
+  },
+  {
+    "additions": 624,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The intention of this PR is to extend the capability of `FieldTimesSeries` such that it can be used in time-dependent boundary conditions and forcing.\r\n\r\nThis PR develops over 2 main points, but it is still a work in progress so suggestions are welcome\r\n\r\n1) Allow writing down files with `set!`ing the `OnDisk` flavor of a field time series so that it aligns with the format of our jld2 output writer. In this way, it is possible to easily format BC from different file types (such as binary or text) to be used with Oceananigans. \r\nAn example of this is:\r\n```julia\r\ngrid = LatitudeLongitudeGrid(size = (16, 16, 10), latitude = (-60, -40), longitude = (-10, 10), z = (0, 1))\r\nu = XFaceField(grid)\r\nfts = FieldTimeSeries{location(u)...}(grid, 1:100, backend = OnDisk(), path = \"testfile.jld2\", name = \"u\")\r\nfor i in 1:length(fts.times)\r\n    set!(u, 2i)\r\n    set!(fts, u, i)\r\nend\r\n```\r\nThis will generate a file called `testfile.jld2` with the following structure\r\n```\r\njulia> f = jldopen(\"testfile.jld2\")\r\nJLDFile /Users/simonesilvestri/development/Oceananigans.jl/testfile.jld2 (read-only)\r\n \u251c\u2500\ud83d\udcc2 serialized\r\n \u2502  \u2514\u2500\ud83d\udd22 grid\r\n \u2514\u2500\ud83d\udcc2 timeseries\r\n    \u251c\u2500\ud83d\udcc2 u\r\n    \u2502  \u251c\u2500\ud83d\udd22 1\r\n    \u2502  \u251c\u2500\ud83d\udcc2 serialized\r\n    \u2502  \u2502  \u251c\u2500\ud83d\udd22 location\r\n    \u2502  \u2502  \u2514\u2500 \u22ef (2 more entries)\r\n    \u2502  \u2514\u2500 \u22ef (99 more entries)\r\n    \u2514\u2500\ud83d\udcc2 t (100 entries)\r\n```\r\nwhich can be easily read by the other field time series types.\r\n\r\n2) To do linear interpolation we need at least 2 fields in memory, so `OnDisk` will not do. On the other hand, we might not want _all_ fields in memory as if we are dealing with forcings that might overwhelm the memory (especially on the GPU). So the proposal is to implement a `Chunked` abstraction that only keeps in memory a \"chunk\" of the data. The details of this implementation are still open do be decided, especially if we want an automatic update of the chunk if we index into an index not existing in memory or if we want the user to be responsible in updating the data in memory through something like a callback\r\n```julia\r\njulia> fts3 = FieldTimeSeries(\"testfile.jld2\", \"u\", backend = Chunked(chunk_size = 4))\r\n17\u00d716\u00d710\u00d7100 FieldTimeSeries{Chunked} located at (Face, Center, Center) on CPU\r\n\u251c\u2500\u2500 grid: 16\u00d716\u00d710 LatitudeLongitudeGrid{Float64, Bounded, Bounded, Bounded} on CPU with 3\u00d73\u00d73 halo and with precomputed metrics\r\n\u251c\u2500\u2500 indices: (Colon(), Colon(), Colon())\r\n\u2514\u2500\u2500 data: 23\u00d722\u00d716\u00d74 OffsetArray(::Array{Float64, 4}, -2:20, -2:19, -2:13, 1:4) with eltype Float64 with indices -2:20\u00d7-2:19\u00d7-2:13\u00d71:4\r\n    \u2514\u2500\u2500 max=8.0, min=0.0, mean=1.67984\r\n```\r\n\r\nThis is not final and all open to suggestions/changes/improvement\r\n\r\nmaybe interesting for @yuchenma23\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-25T01:05:45Z",
+    "deletions": 149,
+    "labels": [],
+    "mergedAt": "2023-10-13T02:42:56Z",
+    "number": 3233,
+    "title": "FieldTimeSeries for time-dependent boundary condition"
+  }
+]

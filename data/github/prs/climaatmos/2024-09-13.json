@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a function barrier to the computation of the coriolis force, which I noticed captures a variable (`f`):\r\n\r\n```julia\r\n        f = CAP.f_plane_coriolis_frequency(params)\r\n        coriolis_f_plane(coord) = Geometry.WVector(f)\r\n        \u1d9cf\u00b3 = @. CT3(coriolis_f_plane(\u1d9ccoord))\r\n        \u1da0f\u00b9\u00b2 = nothing\r\n```\r\nDue to this, users cannot copy-paste this into the REPL. I've also refactored that code to use `map` with an assertion so that it can be copy-pasted into the REPL. I did not yet apply these changes to the deep atmosphere, because we need to somehow avoid capturing `global_geom`.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-11T13:02:00Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "99E46A",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABUGEUUQ",
+        "name": "Inference :mag:"
+      }
+    ],
+    "mergedAt": "2024-09-13T03:41:59Z",
+    "number": 3289,
+    "title": "Add function barrier to coriolis computation"
+  }
+]

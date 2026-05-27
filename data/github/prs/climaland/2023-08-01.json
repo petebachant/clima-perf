@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 306,
+    "author": {
+      "id": "MDQ6VXNlcjg2MDM1NjQ5",
+      "is_bot": false,
+      "login": "Espeer5",
+      "name": "Edward Speer"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdds soil drivers to the canopy model to prevent the requirement to specify soil albedo in multiple places when using a TwoStream radiative transfer model. Will resolve #271\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Creates the type `AbstractSoilDriver` with 3 different concrete types, and requires a soil driver of this type to be input into the canopy model\r\n- There are now `PrescribedSoil` (fully prescribed by the user), `PrognosticSoil` (for use with SoilEnergyHydrology), and `PrognosticSoilHydrology` (Hydrology only is prognostic and user needs to specify albedo (for SoilPlantHydrologyModel)) which can be the `soil_driver` for the CanopyModel\r\n- Integrated models edited to use these types\r\n- Ozark experiment and canopy tutorials updated to use these types\r\n\r\nThere are a couple things we may want to think about still before merging\r\n- `plant_absorbed_ppfd` is now a function of the canopy model since it requires the `soil_driver` from the canopy. If it isn't, then we need to supply the soil_driver to the TwoStream model only when soil is prescribed which seems confusing for a user. However, this would mean that `plant_absorbed_ppfd` should be moved out of the parameterizations file and the parameterizations tests need to change.\r\n    - One alternative would be to use the canopy model similar to how we use the integrated CanopySoilModel... provide arguments for the component models to the constructor of the canopy model, then have the CanopyModel instantiate the component models and supply the soil driver to the ones that need it. This way the user would only have to input the soil driver once, but it would be supplied to the hydraulic model and radiative_transfer model where needed.\r\n- Similarly as it stands now, we have to supply the soil_driver to the Hydraulics model only when running standalone or `SoilPlantHydrologyModel`, which seems confusing for a user\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5r6Iyp",
+        "number": 271,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/271"
+      }
+    ],
+    "createdAt": "2023-07-27T18:33:12Z",
+    "deletions": 237,
+    "labels": [],
+    "mergedAt": "2023-08-01T22:59:16Z",
+    "number": 279,
+    "title": "Create prescribed and prognostic soil drivers for the canopy model"
+  }
+]

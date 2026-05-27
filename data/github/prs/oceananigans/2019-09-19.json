@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 618,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR rewrites the user interface for specifying rotation rates and buoyancy parameters, such as gravitational acceleration, and the relationship between tracers and density via an equation of state.\r\n\r\nThe main purpose of this PR is to move towards a more logical, functionality-driven encapsulation of parameters. \r\n\r\nFor rotation, this PR defines a new type called `AbstractRotation` whose subtypes are intended to describe parameters related to the background rotation rate of the model. At the moment there is only one such type: `VerticalRotationAxis`, or `FPlane`. In the future we expect to have `BetaPlane` and `TiltedRotationAxis` or `FullCoriolis`. The `AbstractRotation` types are uniquely associated with a function that computes the x, y, and z components of \"f X U\", associated with the background vorticity `f`.\r\n\r\nFor density, equations of state, and buoyancy, a new abstract type `AbstractBuoyancy` is defined. This type is intended to encapsulate both a gravitational acceleration parameter (when applicable), and an equation of state that contains parameters associated with the relationship between tracer values and density.\r\n\r\nThe advantage of this design is that parameters logically associated with certain terms in the equation of motion are now associated with a particular abstract type. This permits an easy extension of the rotational of buoyancy/equation of state models currently contained in the code; for example in the future we hope to support a `TracerBuoyancy` type for the case that buoyancy is itself a tracer and gravitational acceleration is no longer a parameter, and perhaps a `TemperatureBuoyancy` type for the case that only temperature contributes to buoyancy, rather than both temperature and salinity as is currently the case.\r\n\r\nIn addition, our hydrostatic and non-hydrostatic pressure fields now have the same units and can be directly summed to obtain the total pressure.\r\n\r\nResolves #191.\r\nResolves #217.\r\nResolves #403.",
+    "changedFiles": 29,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MzU1MjE4NTI=",
+        "number": 191,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/191"
+      },
+      {
+        "id": "MDU6SXNzdWU0NDI0NTI2NzY=",
+        "number": 217,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/217"
+      },
+      {
+        "id": "MDU6SXNzdWU0OTMzNDIwOTc=",
+        "number": 403,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/403"
+      }
+    ],
+    "createdAt": "2019-09-17T04:45:30Z",
+    "deletions": 538,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-09-19T20:39:06Z",
+    "number": 412,
+    "title": "New abstractions for buoyancy and rotation"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "someone plz approve and merge",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-19T22:29:02Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2019-09-19T22:31:51Z",
+    "number": 422,
+    "title": "Bump version to v0.11.0"
+  }
+]

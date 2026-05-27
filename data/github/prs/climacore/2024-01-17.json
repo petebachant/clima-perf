@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 180,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Possible fix to #1589 \r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-11T22:22:26Z",
+    "deletions": 65,
+    "labels": [],
+    "mergedAt": "2024-01-17T00:02:34Z",
+    "number": 1590,
+    "title": "don't use WeakValueDicts to memoize"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR fixes a bug in ClimaAtmos related to the advection of precipitation.\r\n\r\nAdvection is implemented using the `DivergenceF2C` operator, and, at the bottom cell center, we need to enforce a zero-divergence boundary condition for precipitation. We initially implemented this using `SetDivergence`, but this is not supported for `DivergenceF2C` and was ignored due to the following fallback method in `finitedifference.jl`:\r\n```\r\nboundary_width(::DivergenceF2C, ::AbstractBoundaryCondition) = 0\r\n```\r\n\r\nThis PR adds support for `SetDivergence` to `DivergenceF2C`, as well as its operator matrix. It also includes a new unit test for these additions.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-17T00:36:40Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-01-17T18:47:39Z",
+    "number": 1593,
+    "title": "Add support for SetDivergence to DivergenceF2C"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "Fixes #1592\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms58JYtb",
+        "number": 1592,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1592"
+      }
+    ],
+    "createdAt": "2024-01-17T19:54:30Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-01-17T21:50:03Z",
+    "number": 1595,
+    "title": "Fix hash of interval meshes"
+  },
+  {
+    "additions": 251,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\nmake new release including some bug fixes\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-17T19:14:10Z",
+    "deletions": 631,
+    "labels": [],
+    "mergedAt": "2024-01-17T22:39:29Z",
+    "number": 1594,
+    "title": "tag v0.11.8"
+  }
+]

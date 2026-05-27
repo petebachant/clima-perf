@@ -1,0 +1,198 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #866",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODQ1OTMzMTI=",
+        "number": 866,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/866"
+      }
+    ],
+    "createdAt": "2020-08-27T02:29:59Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-08-27T13:38:11Z",
+    "number": 875,
+    "title": "Update `Utils.versioninfo_with_gpu()`"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #865",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODQ1OTA4NTg=",
+        "number": 865,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/865"
+      }
+    ],
+    "createdAt": "2020-08-27T03:08:32Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2020-08-27T14:09:44Z",
+    "number": 877,
+    "title": "Update docstrings for `{x,y,z}nodes` functions"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #864 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODM4ODE1MDI=",
+        "number": 864,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/864"
+      }
+    ],
+    "createdAt": "2020-08-27T03:14:04Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2020-08-27T14:10:34Z",
+    "number": 878,
+    "title": "Fix some CuArray scalar operations"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #867",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODY4MzU0ODA=",
+        "number": 867,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/867"
+      }
+    ],
+    "createdAt": "2020-08-27T00:09:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-08-27T14:11:36Z",
+    "number": 868,
+    "title": "Use `FFTW.set_num_threads` if more than 1 thread is available"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Converted `benchmark_static_ocean.jl` to do a strong scaling test on a 256\u00b3 simulation when `Threads.nthreads() > 1`.\r\n\r\nResults are pretty sweet for multithreading that we basically got for free from KernelAbstractions.jl. Not sure what kind of speedups to expect for multithreading though. Maybe @leios, @christophernhill, or @vchuravy have a better idea.\r\n\r\nSome results on number of threads and wall clock time per time step:\r\n\r\n# Tartarus\r\n\r\n```zsh\r\n#!/bin/zsh\r\nfor threads in 1 4 8 16 24 32 40; ~/julia-1.5.0/bin/julia  --project -t $threads benchmark_static_ocean.jl\r\n```\r\n\r\n```\r\nJulia 1.5.0 + Intel(R) Xeon(R) Silver 4214 CPU @ 2.20GHz\r\n\r\n 1 thread:   3.78 s\r\n 4 threads:  1.35 s (2.8x)\r\n 8 threads:  839 ms (4.5x)\r\n16 threads:  585 ms (6.5x)\r\n24 threads:  551 ms (6.9x)\r\n32 threads:  539 ms (7.0x)\r\n40 threads:  483 ms (10.6x)\r\n48 threads:  479 ms (10.7x)\r\n```\r\n\r\n# Satori\r\n\r\n```bash\r\n#!/bin/bash\r\nfor threads in 1 4 8 16 32 64 128 160; do JULIA_NUM_THREADS=$threads julia --project benchmark_static_ocean.jl; done\r\n```\r\n\r\n```\r\nJulia 1.4.1 + IBM Power System AC922 (8335-GTH)\r\n\r\n  1 thread:   5.13 s\r\n  4 threads:  2.44 s (2.1x)\r\n  8 threads:  1.35 s (3.8x)\r\n 16 threads:  796 ms (6.4x)\r\n 32 threads:  637 ms (8.0x)\r\n 64 threads:  503 ms (10.2x)\r\n128 threads:  501 ms (10.2x)\r\n160 threads:  511 ms (10.0x)\r\n```\r\n\r\nA beautiful scene from Satori:\r\n\r\n![image](https://user-images.githubusercontent.com/20099589/91370150-96ad1100-e7db-11ea-9bf2-12e40de5ff93.png)\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-08-27T00:40:37Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2020-08-27T14:12:02Z",
+    "number": 869,
+    "title": "Multithreading benchmarks"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-08-27T14:26:45Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2020-08-27T15:53:48Z",
+    "number": 880,
+    "title": "Adds missing convergence plots to docs"
+  },
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR splits the tests into four test groups, selectable with the `TEST_GROUP` environment variable: `unit`, `integration`, `regression`, and `scripts`. Using `TEST_GROUP=all` (the default if `TEST_GROUP` is not defined) will run all tests.\r\n\r\nThe purpose of this PR is to address long test build times (see #860) that time out at 50 minutes on Travis CI and at 60 minutes on GitLab CI by splitting tests into multiple jobs (i.e. building a job matrix) that each should individually run much faster.\r\n\r\nIf the different jobs could be run in parallel this would speed up our test builds significantly, but alas we are stuck with free-tier CI pipelines so we can't run too many jobs in parallel and will probably end up waiting longer. But at least our jobs won't time out.\r\n\r\nIn working on this PR I was also able to revive the Appveyor and Docker CI pipelines (I think Appveyor will only show up for future PRs).\r\n\r\nResolves #139 ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MjI4MDg4MzI=",
+        "number": 139,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/139"
+      }
+    ],
+    "createdAt": "2020-08-27T02:00:16Z",
+    "deletions": 68,
+    "labels": [],
+    "mergedAt": "2020-08-27T20:34:05Z",
+    "number": 872,
+    "title": "Split tests into four groups for CI job matrices"
+  }
+]

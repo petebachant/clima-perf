@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Good to keep packages updated to avoid abrupt changes in dependencies.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-13T16:57:54Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2019-09-14T14:39:36Z",
+    "number": 404,
+    "title": "Update packages"
+  },
+  {
+    "additions": 110,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the boundary conditions container to reflect the fact that there are three boundary conditions: a tuple of `FieldBoundaryConditions` for the `solution`, a tuple of `FieldBoundaryConditions` for the `tendencies`, and a single `FieldBoundaryConditions` for the `pressures` (which is also used to set boundary conditions on `diffusivities`.\r\n\r\nTo reflect these facts, this model creates a new tuple called `SolutionBoundaryConditions` to hold the boundary conditions for solution. `ModelBoundaryConditions` then becomes a named tuple with fields `solution`, `tendency`, and `pressure`.\r\n\r\nThe model constructor may be passed either a `SolutionBoundaryConditions` (preserving existing behavior), or a `ModelBoundaryConditions` (convenient for checkpointing). Ditto for `PoissonBCs` --- though technically we don't need `PoissonBCs` anymore; we simply need to dispatch on the type of `model.boundary_conditions.pressure` (work for the future).\r\n\r\nPreviously, a new instance of boundary conditions for pressure was created every time-step. This PR avoids that unnecessary cost / allocation. It also moves boundary conditions out of `timestepper`, slightly changing the time stepper struct.\r\n\r\n@ali-ramadhan, the tests pass so I think the checkpointer works, but it'd be worth thinking about whether its doing the right thing now.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-13T18:15:05Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-09-14T18:29:23Z",
+    "number": 405,
+    "title": "Refactor boundary conditions container"
+  }
+]

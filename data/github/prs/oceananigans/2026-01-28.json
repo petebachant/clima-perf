@@ -1,0 +1,132 @@
+[
+  {
+    "additions": 1176,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This is WIP to implement a F-point pivot fold. That is, a fold that passes by y faces (current Zipper BC assumes the fold passes by y centers).\r\n\r\n---\r\n\r\n[EDIT: update now that the PR is close to ready to be merged] \r\n\r\n### This PR introduces the `FPivot` zipper BC and the `RightFaceFolded` topology. \r\n\r\nIt folds the northern boundary of the grid on the `Ny`-th `(Center, Face)` location in the y direction. That is, the `v[:, Ny, :]` slice is folded on itself and is thus half prognostic / half diagnostic (just like the `u[:, Ny, :]` slice with the current Zipper condition, with topology now called `RightCenterFolded`). The diagram below shows what this looks like, with double lines for the boundaries of the interior, the fold indicated on the right, and the pivot points indicated as circling arrows `\u21bb`:\r\n\r\n```julia\r\n              \u2502           \u2502           \u2502           \u2502           \u2502           \u2502           \u2502\r\n    Ny+1 \u2500\u25b6 \u2500\u2500\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\u2500\u2500\r\n              \u2551           \u2502           \u2502           \u2502           \u2502           \u2502           \u2551\r\n    Ny   \u2500\u25b6   u     c     u     c     u     c     u     c     u     c     u     c     \u2551\r\n              \u2551           \u2502           \u2502           \u2502           \u2502           \u2502           \u2551\r\n    Ny   \u2500\u25b6   \u21bb \u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500 \u21bb \u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500 \u21bb \u25c0\u2500 Fold\r\n              \u2551           \u2502           \u2502           \u2502           \u2502           \u2502           \u2551\r\n    Ny-1 \u2500\u25b6   u     c     u     c     u     c     u     c     u     c     u     c     \u2551\r\n              \u2551           \u2502           \u2502           \u2502           \u2502           \u2502           \u2551\r\n    Ny-1 \u2500\u25b6 \u2500\u2500\u256b\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500 v \u2500\u2500\u2500\u2500\u256b\u2500\u2500\r\n              \u2551           \u2502           \u2502           \u2502           \u2502           \u2502           \u2551\r\n              \u25b2     \u25b2     \u25b2                       \u25b2                       \u25b2     \u25b2     \u25b2\r\n              1     1     2                     Nx\u00f72+1                    Nx    Nx    Nx+1\r\n```\r\n\r\nHowever that means that the `Ny`-th row of `c` tracers at `(Center, Center)` locations and `u` velocities at `(Face, Center)` locations are effectively diagnostic. This is a bit odd as these are in the interior so they are actually computed prognostically, but their values are then overwritten by the `FPivot` zipper BC. One solution, to be implemented in a separate PR, would be to construct the grid with size `(Nx, Ny, Nz)` for `c` and `u` but with size `(Nx, Ny + 1, Nz)` for `v`. But that would require to dispatch the kernel parameters on the topology, so that the `c[:, Ny, :]` and `u[:, Ny, :]` slices would be prognostic, but the `v[:, Ny + 1, :]` slice would be half prognostic. Note half of this work has already been done, i.e., the grid construction with varying sizes was implemented a few commits before this comment, but without the kernel-parameter dispatch, and was later reverted in favor of the current \"extra\" row approach. (So I will keep this branch and its commits safe in case it's useful in that future PR.)",
+    "changedFiles": 25,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-02T06:46:58Z",
+    "deletions": 673,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-01-28T09:19:11Z",
+    "number": 5094,
+    "title": "F-point pivot fold zipper boundary for tripolar grids"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "needed if different regions have different sizes\r\n\r\n@siddharthabishnu ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-26T10:23:56Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-01-28T10:41:17Z",
+    "number": 5203,
+    "title": "`apply_regionally!` on multi-region kernels"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "Minor changes, added `fname` and `dirname` functions to Glob to support absolute paths. Also made the removal of the `.jld2` extension less fragile. ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-28T07:10:24Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-01-28T12:44:13Z",
+    "number": 5221,
+    "title": "Added support for combining FTS using multiple ranks where filename is an absolute path"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-28T08:44:48Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-28T18:10:05Z",
+    "number": 5222,
+    "title": "Fix formatting of titles in oceananigans.bib"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Updated the test_checkpointing_catke_closure function to accept an additional closure parameter. Added a new test function for checkpointing with multiple closures.\r\n\r\nWith @taimoorsohail we run onto this issue where the closure is a tuple of closures, then the `restore_prognostic_state` can't figure what to do for the closure_fields. Even if each closure has its method, I think we are missing a method such that if `closure::Tuple` then loop through all the elements of the Tuple; right?\r\n\r\nCould someone have a look and help me fix this?\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-27T03:23:49Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-01-28T18:57:22Z",
+    "number": 5209,
+    "title": "Enhance checkpointing tests with closure::Tuple"
+  }
+]

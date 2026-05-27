@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 500,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR fixes the computation of terminal velocities. They are now calculated consistently from the subdomain terminal velocities for both 1-moment and 2-moment microphysics.  \r\n\r\nIt also fixes a bug: after applying boundary conditions for the area fraction, the constraint  \r\n\r\n$$\r\n\\langle \\hat{\\rho} u^j \\rangle = \\rho u\r\n$$  \r\n\r\nwas not satisfied at the boundary. This introduced errors in the SGS mass flux computations. I now recompute $u^{3,0}$ so that the constraint holds.  \r\n\r\nBy the new definition of sedimentation velocities, the sum of fluxes of any tracer or energy over subdomains equals the flux at grid scale. As a result, there is no need to add sedimentation effects into the computation of SGS mass fluxes. The general form of the EDMF tracer flux is  \r\n\r\n$$\r\nF_\\chi = \\langle \\hat{\\rho} \\\\, a \\\\, w^j \\chi^j \\rangle - \\rho w \\chi ,\r\n$$\r\n\r\nwhere  \r\n- $w = w_\\text{air} + w_\\chi$ is the vertical velocity, including both air motion and the sedimentation velocity of tracer $\\chi$,  \r\n- $\\langle \\cdot \\rangle$ denotes the sum over subdomains, and  \r\n- the second term is the resolved grid-scale flux.  \r\n\r\n---\r\n\r\n### Cancellation for tracers  \r\n\r\nIf we define the terminal velocities such that  \r\n\r\n$$\r\n\\langle \\hat{\\rho} \\\\, a \\\\, w_\\chi^j \\chi^j \\rangle = \\rho w_\\chi \\chi ,\r\n$$\r\n\r\nthen sedimentation contributions cancel in the SGS flux:  \r\n\r\n$$\r\n\\begin{aligned}\r\nF_\\chi &= \\langle \\hat{\\rho} \\\\, a \\\\, (w_\\text{air}^j + w_\\chi^j)\\chi^j \\rangle \r\n         - \\rho (w_\\text{air} + w_\\chi)\\chi \\\\\r\n       &= \\langle \\hat{\\rho} \\\\, a \\\\, w_\\text{air}^j \\chi^j \\rangle - \\rho w_\\text{air} \\chi .\r\n\\end{aligned}\r\n$$\r\n\r\nThis cancellation holds for all tracers ($q_\\text{liq}, q_\\text{ice}, q_\\text{rai}, q_\\text{sno}$), their sum (total water sedimentation), and also for energy.  \r\n\r\n---\r\n\r\n### Energy case  \r\n\r\nFor total energy, the flux is  \r\n\r\n$$\r\nF_h = \\Big\\langle \\hat{\\rho} \\big( w_\\text{air}^j h_\\text{tot}^j + \r\n \\sum_p w_p^j q_p^j h_p^j \\big)\\Big\\rangle - \\rho \\Big( w_\\text{air} h_\\text{tot} + \\sum_p w_p q_p h_p \\Big) ,\r\n$$\r\n\r\nwhere $p$ runs over the precipitating species (liq, ice, rain, snow).  \r\n\r\nWe define the sedimentation velocity of energy as  \r\n\r\n$$\r\nw^j_h = \\frac{\\sum_p w^j_p q^j_p h^j_p}{h^j_\\text{tot}} .\r\n$$\r\n\r\nThe grid-scale sedimentation velocity of energy is defined analogously to tracers, such that the sum of subdomain energy fluxes equals the grid-scale energy flux. Therefore, as with tracers, energy sedimentation does not contribute to SGS fluxes.\r\n\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-12T21:31:43Z",
+    "deletions": 132,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-08-24T19:12:42Z",
+    "number": 3947,
+    "title": "Redefine sedimentation velocity in Prognostic EDMF (1M/2M)"
+  }
+]

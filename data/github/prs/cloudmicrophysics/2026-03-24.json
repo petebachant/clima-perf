@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 276,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request refactors and improves the implementation of rain evaporation and two-moment microphysics tendencies in the codebase. \r\n\r\n- In `src/Microphysics2M.jl`, the `rain_evaporation` function now returns a NamedTuple `(; \u2202\u209c\u03c1n_rai, \u2202\u209cq_rai)` instead of `(; evap_rate_0, evap_rate_1)` for improved clarity. The docstring is also improved, as well as formatting.\r\n- In `src/parameters/Microphysics2M.jl`, a few convenience constructors are added\r\n  - Notably, `RainParticlePDF_SB2006_limited` and `RainParticlePDF_SB2006_notlimited` can now be constructed e.g. by `RainParticlePDF_SB2006(param_dict; is_limited = true)`\r\n  - The `SB2006` constructor is also simplified\r\n- In `src/parameters/Microphysics2MParams.jl`[^1], I make similar improvements and simplifications to construction\r\n- In `src/BulkMicrophysicsTendencies.jl`, I add condensation/evaporation tendency to 2m, which was missing. Then I move rain evaporation and number adjustment tendencies to the `warm_rain_tendencies_2m`, changing its function signature, which allows easier reusing of code between 2M with and without P3.\r\n  - there as some additional light reformatting of the code and docstrings.\r\n\r\ntests are updated accordingly.\r\n\r\n[^1]: This being a separate file is not entirely clear to me, but I'll leave as-is for now.\r\n",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-02T00:50:21Z",
+    "deletions": 285,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-03-24T02:10:47Z",
+    "number": 694,
+    "title": "fix: 2M tendencies, params"
+  }
+]

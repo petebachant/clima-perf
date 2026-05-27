@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 131,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR updates the calibration end-to-end test to use Distributed.jl and the updated ClimaCalibrate with task-based parallelism. The main two files changed are `calibration/model_interface.jl` and `calibration/test/e2e_test.jl`\r\n\r\n ClimaCalibrate v0.0.6 has three changes relevant to this PR\r\n- just requires `forward_model` instead of `set_up_forward_model` and `run_forward_model`\r\n- `addprocs(SlurmManager(n))` can be used to acquired Slurm workers\r\n- Adds WorkerBackend to distribute `forward_model` runs across Julia workers \r\n\r\nOther changes:\r\n- Removed the Calibration test GHA, it does not have a clear purpose\r\n- Removed the prior.toml and put it in the test script\r\n- Added *.out to the gitignore because the worker output goes to .out log files.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6cvJRG",
+        "number": 3418,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3418"
+      }
+    ],
+    "createdAt": "2024-12-02T18:26:28Z",
+    "deletions": 231,
+    "labels": [],
+    "mergedAt": "2025-01-21T20:25:51Z",
+    "number": 3461,
+    "title": "Add slurm workers for calibration end-to-end test"
+  }
+]

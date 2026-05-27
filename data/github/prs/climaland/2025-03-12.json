@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nInclude the option to get the diffuse fraction directly from the prescribed forcing, rather than computing it empirically.\r\n\r\n\r\n## To-do\r\n\r\n\r\n## Content\r\n- rename empirical diffuse function for clarity\r\n- add diffuse fraction to PrescribedRadiation and allow it to be nothing vs TimeVaryingInput\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-05T01:09:32Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2025-03-12T00:32:22Z",
+    "number": 1058,
+    "title": "Diffuse fraction from ERA5"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR changes the artifact used for the soil and snow initial conditions to be the IC at the end of a 10 year run.\r\n\r\n\r\n## To-do\r\n\r\n## Content\r\nChange artifact toml\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-07T16:54:06Z",
+    "deletions": 52,
+    "labels": [],
+    "mergedAt": "2025-03-12T16:32:13Z",
+    "number": 1063,
+    "title": "Use initial conditions for soil and snow from 10 year run"
+  },
+  {
+    "additions": 60,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1041\r\n\r\nThis PR updates the behavior of the integrated land model in the case of coupled drivers (atmosphere and radiation), so that it works as expected in coupled simulations.\r\n\r\nAfter this PR, `p.drivers` now contains the following fields: `(:P_liq, :P_snow, :c_co2, :T, :P, :q, :SW_d, :LW_d, :cos\u03b8s, :frac_diff, :soc)`.\r\n\r\nThis branch is tested by https://github.com/CliMA/ClimaCoupler.jl/pull/1199, where a `LandModel` is initialized with coupled drivers, and tested to verify the object is constructed correctly. The next step will be updating the turbulent flux calculations in ClimaCoupler to support `LandModel` and running a coupled simulation with the `LandModel`.\r\n\r\n## Content\r\n- extend functions to operate when using either prescribed or coupled drivers: `soil_boundary_fluxes!`, `initialize_drivers` for radiation, `compute_PAR`, `compute_NIR`\r\n- update the `initialize_drivers` method for coupled atmosphere to allocate space for the needed fields\r\n- add a function to return surface albedo of `LandModel`\r\n- `turbulent_fluxes!` now does nothing in the coupled case\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6q7C_M",
+        "number": 1041,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1041"
+      }
+    ],
+    "createdAt": "2025-02-19T21:50:08Z",
+    "deletions": 53,
+    "labels": [],
+    "mergedAt": "2025-03-12T18:01:00Z",
+    "number": 1035,
+    "title": "Make coupled drivers support full land model"
+  }
+]

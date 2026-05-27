@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 222,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds some unit tests for dss and `dss_transform` to support #1958.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-05T01:28:27Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "60472C",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABBqmNSQ",
+        "name": "unit tests"
+      }
+    ],
+    "mergedAt": "2024-09-05T15:12:12Z",
+    "number": 1971,
+    "title": "Add `dss_transform` unit test"
+  },
+  {
+    "additions": 164,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors DSS to avoid using DataLayout internals, and reduces code duplication. We can apply a similar pattern to the cuda code (wip).\r\n\r\nThis should make fixing #1910 easier.\r\n\r\nWhat this PR does:\r\n - We pass the datalayouts themselves into the dss function, instead of the underlying array.\r\n - Swap the field and level order of the loops, and indexing into the datalayouts using the universal spatial index `(I, J, F, V, H)`, which recursively indexes into the field variables via `get_struct`/`set_struct`.\r\n - I'm reusing the already existing `dss_transform` to transform the data.\r\n - The only unexpected thing I ran into was the need to define `drop_vert_dim` in `Geometry.UVWVector` due to a comment in `dss.jl`: `For DSS of Covariant123Vector, the third component is treated like a scalar and is not transformed`. I'm not 100% sure if what I did was correct here\r\n \r\nThe last bullet point still confuses me because it seems like `N` variables come in and `N - M` are defined. Can someone confirm that this is correct?\r\n\r\nAlso, I should note that I purposefully did not apply changes to other similar kernels, like `dss_local_kernel!`, because they do not loop over field variables. In all the kernels refactored in this PR, a single thread loops over field variables, so memory access wasn't significantly changed. It's not clear that the same refactoring pattern would perform as well with `dss_local_kernel!` because, currently, all of the field variables are processed in parallel.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-27T15:51:38Z",
+    "deletions": 798,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      }
+    ],
+    "mergedAt": "2024-09-05T16:03:29Z",
+    "number": 1958,
+    "title": "Refactor DSS to better leverage DataLayouts"
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "additions": 649,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This pull request introduces a new way to interpolate a field onto a given set of points that works for distributed simulations.\r\n\r\nThis change introduces a new object, a `Remapper`. `Remapper`s are process-local and are defined starting from the target points where we want to interpolate and the `Space`. `Remapper`s contain all the information necessary to perform interpolations of all the fields that are defined on the same `Space`. \r\n\r\nOnce a `Remapper` is defined, it can be used as many times as needed. To use a `Remapper`, just call the new `interpolate` function with the field you want to remap:\r\n```julia\r\nremapper = Remapper(hcoords, zcoords, space)\r\ninterpolate(remapper, field) \r\n# => Array of values interpolated on hcoords \u00d7 zcoords\r\n```\r\nInternally, `interpolate` computes the process-local points and then calls a `MPI.reduce` to return the final value in the root process.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-26T23:18:24Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "05DE9D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7X_S9e",
+        "name": "distributed"
+      },
+      {
+        "color": "BBDA8D",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABAH1nOQ",
+        "name": "remapping"
+      },
+      {
+        "color": "F31151",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABEZCqBQ",
+        "name": "diagnostic"
+      }
+    ],
+    "mergedAt": "2023-10-05T03:23:35Z",
+    "number": 1475,
+    "title": "Add distributed_remapping.jl"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "HDF5.jl complains if you try writing an attribute that already exists, so that appending to `ClimaCore`-generated files can be a problem \r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-18T21:16:35Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-10-05T04:48:33Z",
+    "number": 1464,
+    "title": "Check if \"ClimaCore version\" is already attribute"
+  }
+]

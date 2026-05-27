@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR removes part of the time-stepping algorithm that uses the continuity equation to 'recompute' the vertical velocity at the end of a time-step, after using a fractional step to project the predictor velocity field onto an incompressible field.\r\nThis recomputation of vertical velocity relies on a discrete vertical integral of the continuity equation starting at the bottom of the domain and proceeding upwards.\r\n\r\nThe reason for omitting \"w recomputation\" is primarily because vertically integrating the continuity equation _accumulates_ pressure projection round-off error into the vertical velocity field, biased towards the top of the domain. Most models are probably unaffected by this error accumulation and upward bias. However, accumulation of round-off error in a particular part of the domain may become a problem for models with high vertical resolution. The recomputation step also has a computational cost, and the top of the domain is crucial in many oceanographic contexts.\r\n\r\nThe incompressibility of the flow field is still assured without this recomputation step, and it is probable that the velocity field errors are more isotropic and therefore probably more benign. We should note that the error in the _divergence_ is larger without recomputation. However, it probably still falls below acceptable limits, and it does not accumulate in time.\r\n\r\nWith this change the regression tests fail. Also, an \"incompressibility test\" that relies on a measurement of the absolute magnitude of the divergence error fails. We probably simply need to relax the error requirement for the incompressibility test. The regression tests, on the other hand, will have to be regenerated.\r\n\r\ncc @sandreza @kburns\r\n\r\nResolves #338 ",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0Nzc5NDI3MzM=",
+        "number": 338,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/338"
+      }
+    ],
+    "createdAt": "2020-03-19T13:17:15Z",
+    "deletions": 188,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2020-09-14T20:15:04Z",
+    "number": 711,
+    "title": "Stop 'recomputing w' at the end of each time step"
+  },
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR regenerates data for the \"Ocean LES\" regression tests.\r\n\r\nIt should be merged after #711.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-14T18:51:57Z",
+    "deletions": 188,
+    "labels": [],
+    "mergedAt": "2020-09-14T21:08:25Z",
+    "number": 943,
+    "title": "Regenerate LES regression test data"
+  }
+]

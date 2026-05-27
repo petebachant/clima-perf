@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "There have been 78 commits since the last release so I thought it would be good to put out a checkpoint release. Happy to close this PR if people think this is not necessary.\r\n\r\nRelease notes could say:\r\n\r\nCheckpoint release including very experimental support for curvilinear grids, a vertically-stretched rectilinear grid, and a preconditioned conjugate-gradient solver.\r\n\r\n(or nothing at all)\r\n\r\nThere should be no breaking changes.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-19T20:21:45Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-02-22T15:18:40Z",
+    "number": 1388,
+    "title": "Bump v0.49.0 (as a checkpoint)"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Sorry meant to delete the sandbox before merging PR #1348.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-22T15:35:19Z",
+    "deletions": 208,
+    "labels": [],
+    "mergedAt": "2021-02-22T16:32:37Z",
+    "number": 1395,
+    "title": "Nuke vertically stretched sandbox"
+  },
+  {
+    "additions": 159,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR aims to add a regular lat-lon grid (i.e. with regularly spaced latitude and longitude lines), mainly to test all the new curvilinear operators.\r\n\r\nFinal design TBD probably until PR #1375 is merged. Also gotta figure out the halo situation (probably quite similar to `RegularCartesianGrid`) and add some unit tests.\r\n\r\nThe implementation is based on MITgcm's `ini_spherical_polar_grid.F`: https://github.com/MITgcm/MITgcm/blob/fc300b65987b52171b1110c7930f580ca71dead0/model/src/ini_spherical_polar_grid.F#L142-L151\r\n\r\nSince Oceananigans.jl has always assumed rectilinear grids so far, I have kept some conventions like `Nx, Ny, Nz` instead of going for `N\u03bb, N\u03d5, Nz`.\r\n\r\nI have made the assumption that the user will primarly be interested in the (latitude, longitude) of each grid point. So the grid stores e.g. \u0394\u03bb and \u03bb\u1da0\u1d43\u1d43 instead of \u0394x and x\u1da0\u1d43\u1d43.\r\n\r\n`RegularLatitudeLongitudeGrid` seems possible with very little memory as the grid spacings are cheap to compute, so I think we should try computing as much as we can on the fly.\r\n\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-18T20:41:03Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2021-02-22T19:11:47Z",
+    "number": 1380,
+    "title": "Regular latitude-longitude grid"
+  },
+  {
+    "additions": 434,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR changes \"Cartesian\" to \"rectilinear\" to comply with widely used conventions.\r\n\r\nAccording to wikipedia:\r\n> A Cartesian grid is a special case where the elements are unit squares or unit cubes, and the vertices are points on the integer lattice.\r\n\r\nCloses  #1377\r\n\r\n(This PR came to replace #1386. Resolving merge conflicts in #1386 was a mess so I decided to create a new PR.)",
+    "changedFiles": 104,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MTEyODQ4ODk=",
+        "number": 1377,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1377"
+      }
+    ],
+    "createdAt": "2021-02-21T02:06:36Z",
+    "deletions": 434,
+    "labels": [
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-02-22T21:23:25Z",
+    "number": 1393,
+    "title": "Change Cartesian -> rectilinear"
+  }
+]

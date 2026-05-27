@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Every time `write_field` is called for a NetCDF writer, the code would allocate small vectors containing the desired target dimension. Once the file is written the first time, such vectors were only used to ensure that the target file contains consistent information. This PR moves this check one at higher level, removing the need to allocate the vectors.\r\n\r\nThe function that is allocating is `target_coordinates`, that now is called only when writing the file the first time.\r\n\r\nThis PR also fixed an unrelated import error. ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-08T18:38:40Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2024-03-09T00:22:36Z",
+    "number": 2772,
+    "title": "Reduce allocations in NetCDF writer"
+  }
+]

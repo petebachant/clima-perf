@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 356,
+    "author": {
+      "id": "MDQ6VXNlcjMyNjQxNTc3",
+      "is_bot": false,
+      "login": "Mikolaj-A-Kowalski",
+      "name": "Mikolaj Adam Kowalski"
+    },
+    "body": "@jackdfranklin @TomMelt \r\n\r\nReplaces the `newton_div` on Nvidia GPUs with a custom implementation based on the fast path of the implementation of the division in SASS. \r\n\r\nIt uses the [`rcp.approx.ftz`](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-rcp-approx-ftz-f64) to get an initial guess for the reciprocal of the divisor (error $`\\epsilon = \\mathcal{O}(2^{-20}) `$) and enhances it with a single cubic (Halley?) iteration. \r\n\r\nIn the range `[2.2250738585072014e-308; 4.494237123190219e307 )` (i.e. `floatmin(Float64)` to 1st number where `rcp.approx.ftz` underflows) it should give quite accurate results. The main source of error being substitution `a/b => a * 1/b` and few ULPs in the evaluation of the reciprocal. \r\n\r\nI have not checked the performance benefit on the current `main`... but when run on the branch with the \r\n benchmark case from #4882 we get ~7% runtime improvement in the `Gu` advection kernel. I attach the reports: [reports.tar.gz](https://github.com/user-attachments/files/24619361/reports.tar.gz) \r\n \r\nThe biggest danger with the implementation is that it has not great underflow behaviours. For values `x < floatmin(Float64)` it evaluates to  NaN (as opposed to Inf). This should not be an issue though in the context where `newton_div` is used as the denominator in these cases seems to include regularisation constant $`\\epsilon`$. \r\n\r\nOne open question and todo is adding a test for the implementation. Will `test_cuda.jl` be appropriate place for that?  ",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-14T16:52:23Z",
+    "deletions": 54,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-04-15T09:08:47Z",
+    "number": 5140,
+    "title": "Use specialised implementation of `newton_div` on CUDA"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Fixes https://github.com/CliMA/Oceananigans.jl/issues/5495",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM791xRx",
+        "number": 5495,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5495"
+      }
+    ],
+    "createdAt": "2026-04-14T22:56:14Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-04-15T15:01:38Z",
+    "number": 5504,
+    "title": "(0.106.6) Bugfix for the Lagrangian Averaged Dynamic Smagorinsky"
+  },
+  {
+    "additions": 264,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR adds a serialized local grid for each saved field in the `JLD2Writer` such that each output can be independently parsed in a FieldTimeseries. The motivation for this PR is here https://github.com/NumericalEarth/NumericalEarth.jl/pull/157\r\n\r\nThis PR requires defining a `grid()` accessor (the same that we have for `location` and `indices`) which was missing for the grid. In this way we can safely dispatch on different types to get their grid. We can also have dispatch on the model for example.\r\n\r\nI need to think a second on how to do it for NetCDF, but I think it would be similar\r\n\r\n# Structural changes to JLD2 Output files:\r\n\r\n### main \u2014 single grid (multi-grid not supported)\r\n\r\n```\r\n  output.jld2\r\n  \u251c\u2500\u2500 grid/                                   # Legacy top-level (from `saveproperties!`)\r\n  \u2502   \u251c\u2500\u2500 Nx, Ny, Nz, Hx, Hy, Hz\r\n  \u2502   \u251c\u2500\u2500 Lx, Ly, Lz\r\n  \u2502   \u251c\u2500\u2500 \u0394x\u1da0\u1d43\u1d43, \u0394y\u1d43\u1da0\u1d43, ...\r\n  \u2502   \u2514\u2500\u2500 ...\r\n  \u2502\r\n  \u251c\u2500\u2500 serialized/\r\n  \u2502   \u251c\u2500\u2500 grid                                # Full grid (from `serializeproperty!`)\r\n  \u2502   \u251c\u2500\u2500 coriolis\r\n  \u2502   \u251c\u2500\u2500 buoyancy\r\n  \u2502   \u2514\u2500\u2500 closure\r\n  \u2502\r\n  \u2514\u2500\u2500 timeseries/\r\n      \u251c\u2500\u2500 t/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 0.0\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 600.0\r\n      \u2502   \u2514\u2500\u2500 ...\r\n      \u251c\u2500\u2500 u/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 Array{Float32}(Nx, Ny, Nz)\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 Array{Float32}(Nx, Ny, Nz)\r\n      \u2502   \u2514\u2500\u2500 serialized/\r\n      \u2502       \u251c\u2500\u2500 location             \u2192 (Face, Center, Center)\r\n      \u2502       \u251c\u2500\u2500 indices              \u2192 (:, :, :)\r\n      \u2502       \u2514\u2500\u2500 boundary_conditions/ \u2192 ...\r\n      \u251c\u2500\u2500 v/\r\n      \u2502   \u2514\u2500\u2500 ... (same structure)\r\n      \u2514\u2500\u2500 w/\r\n          \u2514\u2500\u2500 ... (same structure)\r\n```\r\n  Note: `:grid` was part of default_included_properties, so it was serialized both at the legacy top-level path (grid/Nx, grid/Ny, ...) and under serialized/grid.\r\n  Multiple grids were not supported \u2014 all outputs were assumed to live on model.grid.\r\n\r\n### This PR \u2014 single grid\r\n\r\n```\r\n  output.jld2\r\n  \u251c\u2500\u2500 serialized/\r\n  \u2502   \u251c\u2500\u2500 grid                                # Extracted from outputs (deduplicated)\r\n  \u2502   \u251c\u2500\u2500 coriolis\r\n  \u2502   \u251c\u2500\u2500 buoyancy\r\n  \u2502   \u2514\u2500\u2500 closure\r\n  \u2502\r\n  \u2514\u2500\u2500 timeseries/\r\n      \u251c\u2500\u2500 t/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 0.0\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 600.0\r\n      \u2502   \u2514\u2500\u2500 ...\r\n      \u251c\u2500\u2500 u/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 Array{Float32}(Nx, Ny, Nz)\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 Array{Float32}(Nx, Ny, Nz)\r\n      \u2502   \u2514\u2500\u2500 serialized/\r\n      \u2502       \u251c\u2500\u2500 location             \u2192 (Face, Center, Center)\r\n      \u2502       \u251c\u2500\u2500 indices              \u2192 (:, :, :)\r\n      \u2502       \u2514\u2500\u2500 boundary_conditions/ \u2192 ...\r\n      \u251c\u2500\u2500 v/\r\n      \u2502   \u2514\u2500\u2500 ...\r\n      \u2514\u2500\u2500 w/\r\n          \u2514\u2500\u2500 ...\r\n```\r\n\r\n  When all outputs share the same grid, the file structure is nearly identical to main except:\r\n  - `:grid` is no longer in default_included_properties \u2014 no legacy top-level grid/ group\r\n  - The grid is extracted directly from the output fields and stored at serialized/grid\r\n  - No grid_index is written (single grid \u2192 all outputs implicitly use serialized/grid)\r\n\r\n  ### This PR \u2014 multiple grids\r\n\r\n```\r\n  output.jld2\r\n  \u251c\u2500\u2500 serialized/\r\n  \u2502   \u251c\u2500\u2500 grid_1                              # First unique grid\r\n  \u2502   \u251c\u2500\u2500 grid_2                              # Second unique grid\r\n  \u2502   \u251c\u2500\u2500 coriolis\r\n  \u2502   \u251c\u2500\u2500 buoyancy\r\n  \u2502   \u2514\u2500\u2500 closure\r\n  \u2502\r\n  \u2514\u2500\u2500 timeseries/\r\n      \u251c\u2500\u2500 t/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 0.0\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 600.0\r\n      \u2502   \u2514\u2500\u2500 ...\r\n      \u251c\u2500\u2500 u/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 Array{Float32}(Nx1, Ny1, Nz1)\r\n      \u2502   \u251c\u2500\u2500 10      \u2192 Array{Float32}(Nx1, Ny1, Nz1)\r\n      \u2502   \u2514\u2500\u2500 serialized/\r\n      \u2502       \u251c\u2500\u2500 grid_index           \u2192 1     # Points to serialized/grid_1\r\n      \u2502       \u251c\u2500\u2500 location             \u2192 (Face, Center, Center)\r\n      \u2502       \u251c\u2500\u2500 indices              \u2192 (:, :, :)\r\n      \u2502       \u2514\u2500\u2500 boundary_conditions/ \u2192 ...\r\n      \u251c\u2500\u2500 T/\r\n      \u2502   \u251c\u2500\u2500 0       \u2192 Array{Float32}(Nx2, Ny2, Nz2)\r\n      \u2502   \u2514\u2500\u2500 serialized/\r\n      \u2502       \u251c\u2500\u2500 grid_index           \u2192 2     # Points to serialized/grid_2\r\n      \u2502       \u251c\u2500\u2500 location             \u2192 (Center, Center, Center)\r\n      \u2502       \u251c\u2500\u2500 indices              \u2192 (:, :, :)\r\n      \u2502       \u2514\u2500\u2500 boundary_conditions/ \u2192 ...\r\n      \u2514\u2500\u2500 w/\r\n          \u2514\u2500\u2500 serialized/\r\n              \u251c\u2500\u2500 grid_index           \u2192 1     # Also on grid_1\r\n              \u2514\u2500\u2500 ...\r\n```\r\n\r\n  Key features of multi-grid support:\r\n  - Unique grids are deduplicated by objectid \u2014 if two fields share the same grid object, it's stored only once\r\n  - Each unique grid is stored as serialized/grid_1, serialized/grid_2, ...\r\n  - Each output gets a grid_index entry pointing to its grid\r\n  - Non-field outputs (functions, reductions) that have no grid simply skip grid_index\r\n\r\n# Structural changes to NetCDF Output files:\r\n\r\n### main \u2014 single grid (multi-grid not supported)\r\n\r\n```\r\n  output.nc\r\n  \u2502\r\n  \u251c\u2500\u2500 Global attributes:\r\n  \u2502   \u251c\u2500\u2500 date, Julia, Oceananigans\r\n  \u2502   \u2514\u2500\u2500 schedule_interval, ...\r\n  \u2502\r\n  \u251c\u2500\u2500 Groups (grid reconstruction):\r\n  \u2502   \u251c\u2500\u2500 underlying_grid_reconstruction_args\r\n  \u2502   \u251c\u2500\u2500 underlying_grid_reconstruction_kwargs\r\n  \u2502   \u2514\u2500\u2500 grid_reconstruction_metadata\r\n  \u2502\r\n  \u251c\u2500\u2500 Dimensions:\r\n  \u2502   \u251c\u2500\u2500 x_faa(Nx+1), x_caa(Nx)\r\n  \u2502   \u251c\u2500\u2500 y_afa(Ny+1), y_aca(Ny)\r\n  \u2502   \u251c\u2500\u2500 z_aaf(Nz+1), z_aac(Nz)\r\n  \u2502   \u2514\u2500\u2500 time(unlimited)\r\n  \u2502\r\n  \u251c\u2500\u2500 Grid metrics:\r\n  \u2502   \u251c\u2500\u2500 \u0394x_faa, \u0394x_caa\r\n  \u2502   \u251c\u2500\u2500 \u0394y_afa, \u0394y_aca\r\n  \u2502   \u2514\u2500\u2500 \u0394z_aaf, \u0394z_aac\r\n  \u2502\r\n  \u2514\u2500\u2500 Output variables:\r\n      \u251c\u2500\u2500 u(x_faa, y_aca, z_aac, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices}\r\n      \u251c\u2500\u2500 v(x_caa, y_afa, z_aac, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices}\r\n      \u2514\u2500\u2500 w(x_caa, y_aca, z_aaf, time)\r\n          \u2514\u2500\u2500 attributes: {location, indices}\r\n```\r\n\r\n###  This PR \u2014 single grid\r\n\r\n```\r\n  output.nc\r\n  \u2502\r\n  \u251c\u2500\u2500 Global attributes:\r\n  \u2502   \u251c\u2500\u2500 date, Julia, Oceananigans\r\n  \u2502   \u2514\u2500\u2500 schedule_interval, ...\r\n  \u2502\r\n  \u251c\u2500\u2500 Groups (grid reconstruction \u2014 unprefixed, same as main):\r\n  \u2502   \u251c\u2500\u2500 underlying_grid_reconstruction_args\r\n  \u2502   \u251c\u2500\u2500 underlying_grid_reconstruction_kwargs\r\n  \u2502   \u2514\u2500\u2500 grid_reconstruction_metadata\r\n  \u2502\r\n  \u251c\u2500\u2500 Dimensions (unsuffixed, same as main):\r\n  \u2502   \u251c\u2500\u2500 x_faa(Nx+1), x_caa(Nx)\r\n  \u2502   \u251c\u2500\u2500 y_afa(Ny+1), y_aca(Ny)\r\n  \u2502   \u251c\u2500\u2500 z_aaf(Nz+1), z_aac(Nz)\r\n  \u2502   \u2514\u2500\u2500 time(unlimited)\r\n  \u2502\r\n  \u251c\u2500\u2500 Grid metrics (unsuffixed, same as main):\r\n  \u2502   \u251c\u2500\u2500 \u0394x_faa, \u0394x_caa\r\n  \u2502   \u251c\u2500\u2500 \u0394y_afa, \u0394y_aca\r\n  \u2502   \u2514\u2500\u2500 \u0394z_aaf, \u0394z_aac\r\n  \u2502\r\n  \u2514\u2500\u2500 Output variables:\r\n      \u251c\u2500\u2500 u(x_faa, y_aca, z_aac, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices, grid_index=1}\r\n      \u251c\u2500\u2500 v(x_caa, y_afa, z_aac, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices, grid_index=1}\r\n      \u2514\u2500\u2500 w(x_caa, y_aca, z_aaf, time)\r\n          \u2514\u2500\u2500 attributes: {location, indices, grid_index=1}\r\n```\r\n\r\nFully backward compatible with main. Only difference: outputs carry an extra grid_index attribute which is a throw-away.\r\n\r\n###  This PR \u2014 multiple grids\r\n\r\n```\r\n  output.nc\r\n  \u2502\r\n  \u251c\u2500\u2500 Global attributes:\r\n  \u2502   \u251c\u2500\u2500 date, Julia, Oceananigans\r\n  \u2502   \u2514\u2500\u2500 schedule_interval, ...\r\n  \u2502\r\n  \u251c\u2500\u2500 Groups (per-grid reconstruction, prefixed):\r\n  \u2502   \u251c\u2500\u2500 grid_1_underlying_grid_reconstruction_args\r\n  \u2502   \u251c\u2500\u2500 grid_1_underlying_grid_reconstruction_kwargs\r\n  \u2502   \u251c\u2500\u2500 grid_1_grid_reconstruction_metadata\r\n  \u2502   \u251c\u2500\u2500 grid_2_underlying_grid_reconstruction_args\r\n  \u2502   \u251c\u2500\u2500 grid_2_underlying_grid_reconstruction_kwargs\r\n  \u2502   \u2514\u2500\u2500 grid_2_grid_reconstruction_metadata\r\n  \u2502\r\n  \u251c\u2500\u2500 Dimensions (suffixed per grid):\r\n  \u2502   \u251c\u2500\u2500 x_faa_grid1(Nx1+1), x_caa_grid1(Nx1)\r\n  \u2502   \u251c\u2500\u2500 y_afa_grid1(Ny1+1), y_aca_grid1(Ny1)\r\n  \u2502   \u251c\u2500\u2500 z_aaf_grid1(Nz1+1), z_aac_grid1(Nz1)\r\n  \u2502   \u251c\u2500\u2500 x_faa_grid2(Nx2+1), x_caa_grid2(Nx2)\r\n  \u2502   \u251c\u2500\u2500 y_afa_grid2(Ny2+1), y_aca_grid2(Ny2)\r\n  \u2502   \u251c\u2500\u2500 z_aaf_grid2(Nz2+1), z_aac_grid2(Nz2)\r\n  \u2502   \u2514\u2500\u2500 time(unlimited)\r\n  \u2502\r\n  \u251c\u2500\u2500 Grid metrics (suffixed per grid):\r\n  \u2502   \u251c\u2500\u2500 \u0394x_faa_grid1, \u0394x_caa_grid1, ...\r\n  \u2502   \u2514\u2500\u2500 \u0394x_faa_grid2, \u0394x_caa_grid2, ...\r\n  \u2502\r\n  \u2514\u2500\u2500 Output variables:\r\n      \u251c\u2500\u2500 u(x_faa_grid1, y_aca_grid1, z_aac_grid1, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices, grid_index=1}\r\n      \u251c\u2500\u2500 v(x_caa_grid1, y_afa_grid1, z_aac_grid1, time)\r\n      \u2502   \u2514\u2500\u2500 attributes: {location, indices, grid_index=1}\r\n      \u2514\u2500\u2500 T(x_caa_grid2, y_aca_grid2, z_aac_grid2, time)\r\n          \u2514\u2500\u2500 attributes: {location, indices, grid_index=2}\r\n```",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-10T06:56:35Z",
+    "deletions": 154,
+    "labels": [],
+    "mergedAt": "2026-04-15T21:52:39Z",
+    "number": 5486,
+    "title": "(0.107.0) Save grid per field in `JLD2Writer` to be consumed by `FieldTimeSeries`"
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 228,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd aerosol activation based on Abdulrazzak and Ghan (2000).\r\n\r\n\r\n## To-do\r\nAdd a good test\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-27T00:16:55Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-07-29T01:00:45Z",
+    "number": 3872,
+    "title": "Sa/add aerosol activation"
+  },
+  {
+    "additions": 1640,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds the `AutoSparseJacobian`, which runs a (mostly) automatic implicit solver with `O(N*c)` memory and time requirements, where `N` is the number of values in each column's state vector and `c` is the number of colors in an optimal column coloring of the tendency derivative matrix. This is in contrast to the `AutoDenseJacobian` that was added in #3827, which runs in `O(N^2)` memory and `O(N^3)` time.\r\n\r\nAll GPU longruns have been tested [here](https://buildkite.com/clima/climaatmos-gpulongruns/builds/627) with an update of the `AutoSparseJacobian` on every linear solve. With the exception of two examples (\"aquaplanet non-equil moisture allsky radiation + 1M microphysics\" and \"aquaplanet dyamond\") everything appears to be stable, though it is very slow because of the frequent Jacobian updates. Once this build is done I will try running another one with an update on every timestep instead of every linear solve.\r\n\r\nHuge thank you to @ray-chew for helping with the conceptual understanding for this algorithm. Hopefully the code comments and documentation are able to accurately summarize our many long discussions.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Implement the `AutoSparseJacobian` and add relevant documentation\r\n  - Add `SparseMatrixColorings.jl` as a project dependency\r\n  - Add a `SparseJacobian` abstract type for `ManualSparseJacobian` and `AutoSparseJacobian`\r\n  - Provide `use_auto_jacobian` and `auto_jacobian_padding_bands` flags for the config\r\n  - Modify preexisting code and docs for the `AutoDenseJacobian` to ensure consistency with `AutoSparseJacobian`\r\n  - Split off `implicit_temporary_quantities` from `temporary_quantities` to minimize allocations\r\n  - Add useful low-level utilities to `autodiff_utils.jl`\r\n- Implement debugging for Jacobian algorithms\r\n  - Use a `verbose` flag in the `AutoSparseJacobian` to log automatically chosen parameters\r\n  - Print block-wise summary tables that can be used to compare different Jacobians\r\n  - Provide a `debug_jacobian` flag for the config that sets `verbose = true` and prints the summary tables\r\n- Fix a bug in the behavior of comparison operators with dual numbers\r\n  - This also happens to fix GPU compilation of saturation adjustment with dual numbers\r\n- Add tests with `use_auto_jacobian = true` and `debug_jacobian = true` for representative examples in the CI pipeline\r\n  - Add a prognostic EDMF GPU test with `use_dense_jacobian = true` as well, since it can now be compiled\r\n  - Reduce `t_end` for the \"AMIP Target EDOnly nonequil\" test with sparse autodiff from 30 mins to 10 mins, since using 30 mins causes the job to run for nearly an hour\r\n  - Mark the \"baroclinic wave moist check conservation float64\" test with sparse autodiff as a soft fail, pending @zhaoyi's fixes to saturation adjustment in `Thermodynamics.jl`\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-17T00:33:19Z",
+    "deletions": 190,
+    "labels": [],
+    "mergedAt": "2025-07-29T08:13:43Z",
+    "number": 3859,
+    "title": "Add AutoSparseJacobian algorithm for implicit solver"
+  }
+]

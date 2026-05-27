@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR makes 1 fix to ocean momentum fluxes:\r\n- divide momentum fluxes by rho0\r\n\r\nand 1 fix to sea ice radiative emission:\r\n- add `ConcentrationMaskedRadiativeEmission` so that we don't have radiative emission from sea ice where there is no sea ice (this was causing sea ice formation everywhere before)\r\n\r\n## To-do\r\n- [x] momentum flux fixes x1\r\n- [x] sea ice radiative emission fix x1\r\n- [x] add more Oceananigans diagnostics\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-16T19:38:07Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-01-21T18:16:51Z",
+    "number": 1669,
+    "title": "fix ocean momentum flux units, sea ice radiative emission"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nIn CMIP runs, we noticed grid imprinting on ocean velocities. This suggests that the momentum fluxes are not being correctly rotated when they're provided to the ocean (and sea ice). We have a function `_rotate_vector!` which calls `OC.Operators.intrinsic_vector`, but it doesn't seem like this would support the ClimaCore contravariant basis as an extrinsic basis ([docs](https://clima.github.io/OceananigansDocumentation/stable/appendix/library/#Oceananigans.Operators.intrinsic_vector-Tuple%7BAny,%20Any,%20Any,%20Oceananigans.Grids.AbstractGrid,%20Any,%20Any,%20Any%7D)).\r\n\r\n`intrinsic_vector` does support rotating from Cartesian coordinates to the Oceananigans coordinates (which in the case of a LatitudeLongitudeGrid are the same, but will not be the same for TripolarGrid). This PR converts the momentum fluxes from the contravariant basis to a Cartesian basis before rotating them onto the Oceananigans grid.\r\n\r\n## Cubed sphere grid imprinting in ocean velocities\r\n### Before this PR\r\nFrom [this build](https://buildkite.com/clima/climacoupler-ci/builds/7550#019b9eee-2eaf-49ee-b491-b6a29f4d0457): CMIP + integrated land + ClimaSeaIce\r\n<img width=\"1126\" height=\"766\" alt=\"Screenshot 2026-01-09 at 11 07 38\u202fAM\" src=\"https://github.com/user-attachments/assets/9612e1a8-26d9-4736-a4b3-511fbc57f057\" />\r\n\r\n### After this PR\r\nFrom [this build](https://buildkite.com/clima/climacoupler-ci/builds/7564#019ba353-2e3b-4cf9-aff4-4ba8c5ce82e8)\r\n<img width=\"1126\" height=\"766\" alt=\"Screenshot 2026-01-09 at 11 19 43\u202fAM\" src=\"https://github.com/user-attachments/assets/d90943af-93c0-4f78-8175-0866c743da27\" />\r\n\r\n## Content\r\n- [x] Add a function to convert from contravariant basis to UVVector (Cartesian basis)\r\n- [x] Use this function when providing momentum fluxes to Oceananigans and ClimaSeaIce models\r\n- [ ] Add temp fields to avoid allocations\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-08T22:18:19Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-01-21T22:03:23Z",
+    "number": 1652,
+    "title": "convert momentum fluxes to Cartesian basis for Oceananigans"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nFor some reason, the saturated land IC are not stable when regridded to the spherical shell used in coupled simulations. This also happens in offline simulations, though it takes later to develop.\r\n\r\nDue to this, this PR changes the IC back to our previous set\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-21T17:57:03Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-01-21T23:53:20Z",
+    "number": 1677,
+    "title": "revert IC"
+  }
+]

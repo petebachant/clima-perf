@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n- Replace `__init__` + `@eval` pattern with a direct `import` + compile-time method definition for `default_output_attributes`\n- Bump version to 0.4.7\n\n## Motivation\nThe `@eval` in `__init__` breaks incremental compilation on Julia 1.12 with the error:\n```\nEvaluation into the closed module `ClimaSeaIceNCDatasetsExt` breaks incremental compilation\nbecause the side effects will not be permanent.\n```\n\nThis caused `NumericalEarth` (and any package loading both ClimaSeaIce and NCDatasets) to fail precompilation.\n\n## Dependencies\nRequires **CliMA/Oceananigans.jl#5469** \u2014 which moves `default_output_attributes` from the NCDatasets extension to a stub in the main Oceananigans module, so downstream extensions can extend it at compile time.\n\n## Test plan\n- [ ] ClimaSeaIce precompiles on Julia 1.12\n- [ ] NumericalEarth precompiles successfully with ClimaSeaIce + NCDatasets\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-01T19:26:03Z",
+    "deletions": 52,
+    "labels": [],
+    "mergedAt": "2026-04-02T13:32:13Z",
+    "number": 127,
+    "title": "Fix NCDatasets extension for Julia 1.12"
+  }
+]

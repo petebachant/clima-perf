@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Replace `cpu_nodes[1:Nz+1]` with `view(cpu_nodes, 1:Nz+1)` in `cpu_face_constructor_r`\n- This avoids scalar indexing errors when grid data is stored on non-CPU architectures (e.g. Reactant's `ConcreteIFRTArray`)\n- Bump version to 0.105.4\n\n## Context\nWhen using `SplitExplicitFreeSurface` with a TripolarGrid on Reactant, the `materialize_free_surface` \u2192 `maybe_extend_halos` \u2192 `with_halo` call chain invokes `cpu_face_constructor_r`, which indexes into a `ConcreteIFRTArray` with `[1:Nz+1]`. This triggers Reactant's \"Scalar indexing is disallowed\" error. Using `view` avoids materializing the array.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-06T01:53:54Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-03-06T04:33:30Z",
+    "number": 5376,
+    "title": "Use view instead of indexing in cpu_face_constructor_r"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjEzNzk3OTAz",
+      "is_bot": false,
+      "login": "rafmudaf",
+      "name": "Rafael M Mudafort"
+    },
+    "body": "Currently, the `internal_tide_open_boundaries` example fails with:\r\n\r\n```\r\nArgumentError: Cannot specify bottom boundary condition FluxBoundaryCondition: Nothing on a field at nothing!\r\n```\r\n\r\nI think this is for two reasons:\r\n- `U` and `V` are not listed in the `assumed_field_location` mapping for boundary condition locations, so they fall through to the `Center(), Center(), Center()` default which is incorrect for a 2D field\r\n- ~Missing dispatch for validating boundary conditions on a `nothing` z-location, so this also falls through to a catch-all error~ Note: this was extra, I've removed it after review.\r\n\r\nThis pull request adds a mapping for `U` and `V`. I've also added missing references in a couple of places. The example runs with these changes, but I have not checked it for correctness.\r\n\r\nI'm very new to Oceananigans, so please double check and feel free to make any changes to this branch.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-06T16:19:56Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-03-06T17:58:07Z",
+    "number": 5378,
+    "title": "Fix `HydroStaticFreeSurfaceModel` init for open boundary conditions with `SplitExplicitFreeSurface`"
+  }
+]

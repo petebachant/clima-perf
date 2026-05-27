@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 100,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUse the recently-added ClimaLand convenience constructors to simplify setting up the integrated land model\r\n\r\nMost parameters remain unchanged now that we use the defaults, with the exception of:\r\n- `ac_canopy`: previously 2.5e3 --> now 2e3\r\n- `K_sat` (canopy): previously 5e-9 --> now 7e-8\r\n\r\nThe debug plots have changed slightly in this PR, which I expect is due to these parameter changes (see examples below). Specifically these variables have changed: canopy temperature, snow water equivalent, momentum fluxes, moisture flux, LHF.\r\n\r\nNote: We do _not_ update to use `LandSimulation` here - see #1479\r\n\r\n## Content\r\n- [x] use default `LandModel` constructor\r\n- [x] use `LandSimulation` object, and the setup contained in that constructor\r\n- [x] remove `stepper` argument to ClimaCoupler's `ClimaLandSimulation` since it was never overwritten\r\n- [x] update `step!` function to be compatible with ITime as well as float time\r\n\r\nCloses #1473\r\n\r\n\r\n## Debug plot changes in AMIP + ED only + integrated land\r\nI don't know why the plot titles are messed up :') \r\n\r\nNote the changes in canopy temperature (bottom left panel) and SWE (bottom right panel). The colorbars have also changed so direct comparisons are difficult.\r\n\r\n#### Before this PR ([build](https://buildkite.com/clima/climacoupler-ci/builds/6908#01991700-770f-4286-a92c-40218a2fa56b))\r\nLand fields\r\n<img width=\"1353\" height=\"725\" alt=\"Screenshot 2025-09-10 at 4 23 08\u202fPM\" src=\"https://github.com/user-attachments/assets/98a9f5f5-bbc4-446f-b6ee-8ef28f2a3447\" />\r\n\r\nCoupler fluxes\r\n<img width=\"1105\" height=\"200\" alt=\"Screenshot 2025-09-10 at 4 25 38\u202fPM\" src=\"https://github.com/user-attachments/assets/51496697-9aef-475f-a844-8cbe3b6336bc\" />\r\n<img width=\"1159\" height=\"200\" alt=\"Screenshot 2025-09-10 at 4 27 05\u202fPM\" src=\"https://github.com/user-attachments/assets/abf5f166-fc83-45ba-8dcf-2af932d9a8a9\" />\r\n72d-4826-99f4-f5d9239e159c\" />\r\n\r\n\r\n#### After this PR ([build](https://buildkite.com/clima/climacoupler-ci/builds/6919#019935b5-3729-48eb-8c42-52b16b43f40f))\r\nLand fields\r\n<img width=\"1285\" height=\"661\" alt=\"Screenshot 2025-09-10 at 4 24 06\u202fPM\" src=\"https://github.com/user-attachments/assets/9616cb63-a25b-43ad-b34c-a58835b983f5\" />\r\n\r\nCoupler fluxes\r\n<img width=\"1159\" height=\"200\" alt=\"Screenshot 2025-09-10 at 4 28 14\u202fPM\" src=\"https://github.com/user-attachments/assets/c9aca3f4-e3d1-42fb-a34e-0cfec6b482a5\" />\r\n<img width=\"1159\" height=\"200\" alt=\"Screenshot 2025-09-10 at 4 27 27\u202fPM\" src=\"https://github.com/user-attachments/assets/82505669-e0d1-427e-ada4-6bb08b3ead3e\" />\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7JvRtB",
+        "number": 1473,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1473"
+      }
+    ],
+    "createdAt": "2025-09-04T18:25:26Z",
+    "deletions": 235,
+    "labels": [],
+    "mergedAt": "2025-09-12T18:30:13Z",
+    "number": 1474,
+    "title": "use default land constructors"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 86,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Should run these benchmarks again once everything works on the GPU.\r\n\r\nNotes:\r\n1. Lat-lon grid seems slower than the single cubed sphere face, which is weird. Maybe the cost of computing the grid metrics on the fly is actually adding up to a significant overhead?\r\n2. Cubed sphere grid performs better than it should (less than 6x slower than 1 face), but allocates a lot of memory.\r\n3. Explicit vs. implicit free surface solver performance is problem-dependent so for the purposes of this benchmarks every implicit solver is forced to take 1 iteration.\r\n\r\n```\r\n                                                             Hydrostatic model benchmarks\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Architectures \u2502                   grid_types \u2502  free_surface_types \u2502       min \u2502    median \u2502      mean \u2502       max \u2502     memory \u2502  allocs \u2502 samples \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502           CPU \u2502       RegularRectilinearGrid \u2502 ExplicitFreeSurface \u2502  3.127 ms \u2502  3.632 ms \u2502  3.665 ms \u2502  4.225 ms \u2502 263.23 KiB \u2502    1726 \u2502      10 \u2502\r\n\u2502           CPU \u2502 RegularLatitudeLongitudeGrid \u2502 ExplicitFreeSurface \u2502  9.765 ms \u2502 10.370 ms \u2502 10.428 ms \u2502 11.847 ms \u2502 290.50 KiB \u2502    1984 \u2502      10 \u2502\r\n\u2502           CPU \u2502 ConformalCubedSphereFaceGrid \u2502 ExplicitFreeSurface \u2502  5.986 ms \u2502  9.676 ms \u2502 10.276 ms \u2502 16.990 ms \u2502 151.66 KiB \u2502    1994 \u2502      10 \u2502\r\n\u2502           CPU \u2502     ConformalCubedSphereGrid \u2502 ExplicitFreeSurface \u2502 24.817 ms \u2502 28.235 ms \u2502 30.393 ms \u2502 45.743 ms \u2502   2.12 MiB \u2502   41751 \u2502      10 \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502           CPU \u2502       RegularRectilinearGrid \u2502 ImplicitFreeSurface \u2502  6.418 ms \u2502  6.925 ms \u2502  7.147 ms \u2502  9.625 ms \u2502 578.41 KiB \u2502    3545 \u2502      10 \u2502\r\n\u2502           CPU \u2502 RegularLatitudeLongitudeGrid \u2502 ImplicitFreeSurface \u2502 15.913 ms \u2502 16.438 ms \u2502 17.028 ms \u2502 20.042 ms \u2502 656.92 KiB \u2502    4306 \u2502      10 \u2502\r\n\u2502           CPU \u2502 ConformalCubedSphereFaceGrid \u2502 ImplicitFreeSurface \u2502  9.899 ms \u2502 10.666 ms \u2502 10.976 ms \u2502 13.104 ms \u2502 412.36 KiB \u2502    4658 \u2502      10 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```\r\n\r\n```\r\nOceananigans v0.55.1\r\nJulia Version 1.5.3\r\nCommit 788b2c77c1 (2020-11-09 13:37 UTC)\r\nPlatform Info:\r\n  OS: Linux (x86_64-pc-linux-gnu)\r\n  CPU: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz\r\n  WORD_SIZE: 64\r\n  LIBM: libopenlibm\r\n  LLVM: libLLVM-9.0.1 (ORCJIT, skylake)\r\n```",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-22T18:43:03Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2021-04-22T20:22:40Z",
+    "number": 1604,
+    "title": "Hydrostatic model explicit vs. implicit free surface benchmarks + some small fixes"
+  },
+  {
+    "additions": 227,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "TODO:\r\n\r\n- [x] Add a test that `KernelComputedField` works with `ConformalCubedSphereGrid`.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-22T16:11:39Z",
+    "deletions": 180,
+    "labels": [],
+    "mergedAt": "2021-04-22T21:09:16Z",
+    "number": 1603,
+    "title": "KernelComputedField CubedSphere support plus internal CubedSpheres refactoring"
+  }
+]

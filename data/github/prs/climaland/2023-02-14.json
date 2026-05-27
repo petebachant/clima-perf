@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 485,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Background \r\n\r\nIn the current version of the repo, the Bucket model makes use of a `PrescribedAtmos` and `PrescribedRadiation` struct for storing the prescribed \"driver\" functions for running the bucket model in standalone mode. These contain the downwards LW and SW radiation, as functions of time, as well as precipitation, q_atmos, T_atmos, u_atmos, rho_atmos, and the height at which these quantities are measured.\r\n\r\nGiven this, the bucket model has everything it needs to compute turbulent surface fluxes and a net radiation (as the bucket model provides its own roughness lengths, albedo, and emissivity). These are computed by the functions `surface_fluxes` and `net_radiation`, which are called in `update_aux!` to update the stored values of p.bucket.turbulent_surface_fluxes, p.bucket.evaporation and p.bucket.R_n, which get used in the rhs function as boundary conditions. Note that `surface_fluxes` is a wrapper function - it broadcasts `surface_fluxes_at_a_point` over the input fields. Currently the same is true for `net_radiation`.\r\nE.g: https://github.com/CliMA/ClimaLSM.jl/blob/ff1212db13ad5aff7eff69d7cee6fbebcbfb2f1a/src/Bucket/Bucket.jl#L235, \r\nhttps://github.com/CliMA/ClimaLSM.jl/blob/ff1212db13ad5aff7eff69d7cee6fbebcbfb2f1a/src/Bucket/Bucket.jl#L552,\r\nE.g. https://github.com/CliMA/ClimaLSM.jl/blob/ff1212db13ad5aff7eff69d7cee6fbebcbfb2f1a/src/Bucket/Bucket.jl#L531,\r\nhttps://github.com/CliMA/ClimaLSM.jl/blob/ff1212db13ad5aff7eff69d7cee6fbebcbfb2f1a/src/Bucket/Bucket.jl#L731\r\n\r\nIf the first argument of the `net_radiation` and `surface_fluxes` is of type `Prescribed`, the land model computes its own fluxes. If the first argument is of type `Coupled`, the method will return the fields in `p` directly under the assumption that the coupler has already filled them in. For example, here is the code where the coupler extends the ClimaLSM method and adds a new `Coupled` type: https://github.com/CliMA/ClimaCoupler.jl/blob/4b17a28ad2e225d031990a5b43c1baa240b8d650/experiments/AMIP/moist_mpi_earth/bucket/bucket_init.jl#L41\r\nhttps://github.com/CliMA/ClimaCoupler.jl/blob/4b17a28ad2e225d031990a5b43c1baa240b8d650/experiments/AMIP/moist_mpi_earth/bucket/bucket_init.jl#L82\r\n\r\n## Purpose \r\n**Main file to review is src/SharedUtilties/Drivers.jl**\r\n\r\nThis PR moves all of this machinery from ClimaLSM.Bucket into a module stored in src/SharedUtilities/Drivers.jl, in the anticipation that the Snow model will want to run in standalone mode, as will the soil model, etc, and we dont want to redefine all of these surface flux computations etc for each model. It also anticipates that each model will have stored \"p.X.T_sfc, p.X.q_sfc, p.X.\\rho_sfc, p.X.alpha, p.X.epsilon\", where X is the name of the model. This seems generic enough - a model has to specify these to compute surface fluxes, though it is overkill to store a field of floats if e.g. emissivity is 1 everywhere. But in the long run, for a varied land surface, this makes sense.\r\n\r\nWe have changed the ordering of the arguments so that all of these methods get `(atmos, p, t)` or `(radiation, p, t)` first. This is a breaking change for the coupled runs. Those methods need to be redefined to take arguments `(atmos, p, t, _...)` and `(radiation,p,t,_...)`.\r\n\r\n## Questions \r\nShould we move the `coupled` methods and struct definitions to this Drivers.jl module? \r\nAfter chatting with @LenkaNovak we decided it made sense and worked well to keep them in the coupler repo.\r\n\r\n## Review checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5df9a0",
+        "number": 146,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/146"
+      }
+    ],
+    "createdAt": "2023-02-08T20:41:03Z",
+    "deletions": 544,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2023-02-14T19:04:03Z",
+    "number": 148,
+    "title": "Refactor climate drivers"
+  }
+]

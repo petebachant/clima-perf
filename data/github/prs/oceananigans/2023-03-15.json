@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR gets rid of the kwargs `computed_dependencies` and `parameters`. Instead we just have \"arguments\", which are varargs to the constructor:\r\n\r\n```julia\r\n    using Oceananigans.Operators: \u03b6\u2083\u1da0\u1da0\u1d9c # called with signature \u03b6\u2083\u1da0\u1da0\u1d9c(i, j, k, grid, u, v)\r\n\r\n    grid = model.grid\r\n    u, v, w = model.velocities\r\n\r\n    \u03b6_op = KernelFunctionOperation{Face, Face, Center}(\u03b6\u2083\u1da0\u1da0\u1d9c, grid, u, v)\r\n```\r\n\r\n`compute!` on `KernelFunctionOperation` calls `compute!` on all of the kernel arguments.\r\n\r\nI think this is a simpler and more intuitive interface leading to more understandable code.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-08T18:44:18Z",
+    "deletions": 114,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-03-15T14:05:44Z",
+    "number": 2964,
+    "title": "Simplify user interface for `KernelFunctionOperation`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc1ODEyMTAz",
+      "is_bot": false,
+      "login": "jbisits",
+      "name": "Josef Bisits"
+    },
+    "body": "There is an incorrect LaTeX string which produces an Undefined control sequence in `numerical_implementation/turbulence_closures.md` in the documentation. I used the symbol for the mean scalar gradient ``\\boldsymbol{\\nabla} \\overline{c}`` found in the display math a few lines below this which I think is what it should be?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-15T03:30:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-03-15T14:05:58Z",
+    "number": 2976,
+    "title": "Fix rendering in `numerical_implementation/turbulence_colsures.md`"
+  }
+]

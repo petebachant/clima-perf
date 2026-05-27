@@ -1,0 +1,36 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `Interpolations` package from `0.15.1` to `0.15.1, 0.16`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-16T14:08:02Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-19T22:12:59Z",
+    "number": 1157,
+    "title": "CompatHelper: bump compat for Interpolations to 0.16, (keep existing compat)"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nThis fixes the ~80 NaNs appearing in the soil long run, addressing an issue that occurs when the soil is frozen.\r\n\r\nSoil is composed of a soil matrix and pore space: the pore space can be filled with water, ice, or gases. The quantities are measured in terms of volumetric fractions: V_x/V_soil. The symbol nu represents the porosity (V_pores/V_soil), while theta_l and theta_i represent the volume of liquid water or ice relative to soil. Neglecting deformation in the soil matrix, the presence of ice, or changes in density, the maximum value of theta_l = nu. We also allow for a \"residual\" water fraction: theta_r. This is inaccessible water that cannot be frozen or lost, so we have \\theta_l \\in (theta_r, \\nu]. If we used values of theta_l outside this regime or == theta_r in many of our diagnostic functions, we would get domain errors.\r\n\r\nThe presence of ice adjusts this. In this case, the maximum volumetric fraction of water (neglecting again deformation in the matrix and compressiblity) is nu-theta_i, so \\theta_l \\in (theta_r, \\nu - \\theta_i], and we defined \\nu-\\theta_i as \\nu_effective.\r\n\r\nOne other note: our prognistic variable is the \"augmented\" liquid fraction, vartheta_l. This extends the definition of theta_l so that we can model, in some way, saturated soils, and vartheta_l can be larger than the non-deformed soil porosity nu.\r\n\r\nIn our code, we define theta_l as the volumetric liquid fraction:\r\n```\r\nif vartheta_l < nu_eff\r\n    theta_l = vartheta_l # if not saturated, volumetric = augmented liquid fraction\r\nelse\r\n    theta_l = nu_eff # if saturated, volumetric = saturation\r\nend\r\n```\r\nsince nu_eff < nu this should always give theta_l < nu, so our downstream diagnostic functions should be OK. But, I was seeing examples there vartheta_l > theta_r, but theta_l was not. it turns out that theta_i > nu-theta_r in these cases. I think this could happen because if you take saturated soil, and freeze nu-theta_r of it, the resulting ice will have a larger volume.\r\n\r\nSo, we need to also clip nu_eff > theta_r. I also do this in the effective saturation function, which must scales theta_l - theta_r by nu - theta_i - theta_r, and which must in (0, 1]",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-16T19:58:26Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-05-19T23:00:42Z",
+    "number": 1158,
+    "title": "Improve stability of soil model"
+  }
+]

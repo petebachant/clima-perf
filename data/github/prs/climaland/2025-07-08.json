@@ -1,0 +1,100 @@
+[
+  {
+    "additions": 1100,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Remove ModelSetup\r\n- move domain related things to Domains.jl, and spatial parameters to individual component folders\r\n- split up spatial parameter functions to return subsets relevant to individual parameterizations\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-07T22:37:30Z",
+    "deletions": 1032,
+    "labels": [],
+    "mergedAt": "2025-07-08T00:56:51Z",
+    "number": 1211,
+    "title": "split up parameters and remove ModelSetup"
+  },
+  {
+    "additions": 352,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR makes an initial pass at reworking our docs. Here's an overview of the changes, and a screenshot of the new pages\r\n\r\n#### Renamed/moved\r\n- rename: getting started -> running your first simulation\r\n- rename: ClimaLand structure -> repository structure\r\n- move: diagnostics, leaderboard -> analyzing model output\r\n  - combine these into one folder\r\n- move: time type, misc. utilities -> software utilities\r\n  - put into new page\r\n  - rename: timemanager.md -> itime.md\r\n- rename: restarts -> Restarting a Simulation\r\n\r\n#### New pages\r\n- new page: julia intro, briefly describing the following:\r\n  - repl, julia environments (project, manifest) and packages, revise\r\n  - and links to helpful resources\r\n- new page: model structure\r\n- new page: Running on GPU or with MPI\r\n- new page: Physical Units\r\n  - moved from landing page\r\n\r\n#### Other changes\r\n- restructured landing page\r\n  - add overview of docs pages and what's in each (do this last)\r\n  - move links to end\r\n- add to contributor guide\r\n\r\n\r\n## To-do\r\n- [x] remove TODOs (add links)\r\n- [x] check that links work\r\n- [x] proofread for typos\r\n\r\n\r\n## To do in separate PRs (later work) - see https://github.com/CliMA/ClimaLand.jl/issues/1212\r\n- add pages about: \r\n  - running with prescribed atmospheres\r\n  -  timestepping information, or at least pointer to CTS.jl (maybe timestepping.jl tutorial is sufficient, but it should be more visible)\r\n  - types of boundary conditions available\r\n  - ClimaLand domains, how to set up sims on each\r\n- update page: running your first simulation\r\n  - replace canopy GPP example with example setting up and running EnergyHydrology sim using default parameterizations and plotting, after KMD constructor is merged\r\n- update page: model structure - add information about simulations, once implemented/in use\r\n  - LandSimulation docstring has good info to start with, but we should keep docs consistent with what's currently used in tutorials/experiments\r\n- (other) use .buildkite env for docs too?\r\n\r\nWe can also consider the structure introduced in https://github.com/CliMA/ClimaLand.jl/pull/1146/files, and add some of the suggestions there if we want to.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-02T17:00:05Z",
+    "deletions": 110,
+    "labels": [],
+    "mergedAt": "2025-07-08T18:37:02Z",
+    "number": 1208,
+    "title": "update docs"
+  },
+  {
+    "additions": 170,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nMake model setup easier for soil models forced with atmospheric data. Our current constructor works well for simple cases, but when dealing with spatially varying parameters, and different parameterizations for albedo, etc, this helps expose that things that will change (the parameters, the parameterizations, the domain, the forcing), but hides that the things that will remain the same (how to setup the BC, create the model, sources, etc).\r\n\r\nThe thought is that this could be followed by a PR enacting something similar for snow, than canopy parameterizations, then canopy, and then land models\r\n\r\n## To-do\r\nBetter understand how to use this in simpler use cases. What about at a site where we know the soil type (clay) but not the parameters? \r\n\r\nWhat about if we want to pass scalar parameters for all (that should work as is) - can demo in another case\r\n\r\nadd roughness parameters?\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-04T22:10:43Z",
+    "deletions": 116,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-07-08T22:13:45Z",
+    "number": 1170,
+    "title": "Model setup of soil models"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe branch used in #1211 was based on a old version of main which did not have an important bug fix in the computation of the soil composition parameters. When I rebased, this was lost(and some NaNs reintroduced!). This PR makes our soil spatial parameters match what we had before.\r\n\r\n\r\n## To-do\r\nDouble check that NaNs are gone again\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-08T22:22:08Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-07-08T23:38:24Z",
+    "number": 1217,
+    "title": "Fix texture norm and reset means for soil parameters"
+  }
+]

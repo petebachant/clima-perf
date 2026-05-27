@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1348 \r\ncloses #1395\r\n\r\n`dt_save_state_to_disk` was unused. There is a ClimaAtmos option with this name, but we pass `checkpoint_dt` to it.\r\n\r\n`dt_save_to_sol` is parsed as `saveat` and used to save the state to `integrator.sol` periodically. We don't use this output anyway, since we have more robust checkpointing infrastructure these days. Here, the `dt_save_to_sol` option is removed, and `saveat` is set to save only at the start and end of the simulation. This will reduce the quantity of data output from our simulations.\r\n\r\n## To-do\r\n- [x] removed `dt_save_state_to_disk` for most runs (kept only for atmos-only configs, since those are passed to ClimaAtmos directly)\r\n- [x] removed `dt_save_to_sol`\r\n- [x] changed `checkpoint_dt` for integrated land longruns to monthly frequency, and other current \"target\" longruns to every 3 months so we can use these while debugging (most other runs will checkpoint just once at the end of the simulation)\r\n",
+    "changedFiles": 45,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc62QuE3",
+        "number": 1348,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1348"
+      },
+      {
+        "id": "I_kwDOEn8xDc65AYNz",
+        "number": 1395,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1395"
+      }
+    ],
+    "createdAt": "2025-05-30T17:43:24Z",
+    "deletions": 83,
+    "labels": [],
+    "mergedAt": "2025-06-02T16:47:53Z",
+    "number": 1394,
+    "title": "rm `dt_save_state_to_disk` and `dt_save_to_sol` options"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Affects: \r\n```\r\n            config/longrun_configs/amip_decaywithheight.yml\r\n            config/longrun_configs/amip_diagedmf_topo_integrated_land.yml\r\n            config/longrun_configs/amip_edonly_topo_integrated_land.yml\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-02T17:33:06Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-06-02T18:22:10Z",
+    "number": 1399,
+    "title": "Increase `t_end` for some longrun configs"
+  }
+]

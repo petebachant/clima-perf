@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "I don't necessarily understand how, but a test fails [here](https://github.com/CliMA/ClimaUtilities.jl/actions/runs/8792303663/job/24166749566). This runner is a ClimaUtilities \"downstream\" test: every time we push to ClimaUtilities, we can that it doesn't break ClimaAtmos and ClimaLand.\r\n\r\nSomehow, `eps(FT)` is smaller than most other cases in this test. Its value is `3.130974164378131e-17` instead of the usual `2.220446049250313e-16`. It might be machine/julia dependent. I increase the tolerance of that test so that it passes there, too.\r\n\r\nIt's not the best solution, but I don't have much better ideas.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-25T21:57:34Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-04-30T16:40:24Z",
+    "number": 590,
+    "title": "Increase tolerance for soil_test_3d"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Lately, we've often seen issues with the shared depot. This PR disables it. This comes at no cost to us or any other package since this shared depot is only used by ClimaLand at the moment.\r\n\r\nThis PR also adds a concurrency group to reduce conflicts between different init jobs.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-30T16:50:51Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-04-30T21:11:39Z",
+    "number": 604,
+    "title": "Remove compat_depot, add concurrency group"
+  }
+]

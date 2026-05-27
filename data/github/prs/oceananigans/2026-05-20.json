@@ -1,0 +1,126 @@
+[
+  {
+    "additions": 118,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "See https://github.com/NumericalEarth/Breeze.jl/pull/677#discussion_r3203077577",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-07T23:18:16Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-05-20T04:05:18Z",
+    "number": 5570,
+    "title": "Update Clock constructor to use grid's float type"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "on main the global reconstruction of an immersed boundary grid is bugged and apparently only supports a `GridFittedBottom`. This PR fixes it.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-11T08:04:53Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-05-20T08:50:39Z",
+    "number": 5571,
+    "title": "Bugfix distributed immersed boundary"
+  },
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR adds some style rules for claude to bring the coding closer to the pre-claude Oceananigans era. \r\nMain features are \r\n- No `_` in helper functions\r\n- No mixing math and verbose notation\r\n- No huge comment blocks",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-20T08:03:20Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-05-20T09:27:06Z",
+    "number": 5606,
+    "title": "Add some claude style rules"
+  },
+  {
+    "additions": 1900,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nImplements `ZarrWriter` as a new output writer backed by [Zarr.jl](https://github.com/JuliaIO/Zarr.jl), alongside `JLD2Writer` and `NetCDFWriter`. Lives in `OceananigansZarrExt`, triggered on `using Zarr`. Closes #3821.\n\nA `FieldTimeSeries` Zarr reader ships in the same PR, so written output round-trips via `FieldTimeSeries(\\\"out.zarr\\\", \\\"u\\\")`.\n\nThe design and decision rationale are documented in [`zarr_writer_plan.md`](./zarr_writer_plan.md) (~250 lines).\n\n## What's in scope (v1)\n\n- **Inputs** (same surface as `JLD2Writer`): `AbstractField`, `AbstractOperation`, `Reduction`, `WindowedTimeAverage`, function outputs (with a `dimensions` kwarg).\n- **On-disk layout**: lean-chunked, non-CF. Each output is a chunked Zarr array of shape `(spatial..., Nt)` growing along the time axis via `Zarr.append!`. `_ARRAY_DIMENSIONS` uses `trilocation_dim_name`-style names (reversed for C-order) \u2014 same dim-naming scheme as `NetCDFWriter`, so CF compliance is a purely-additive follow-up.\n- **Grid reconstruction**: JSON-encoded `constructor_arguments` in a `grid/` subgroup (or `grid_1/`, `grid_2/`, ... for multi-grid writers). Per-output `grid_index` attribute.\n- **File splitting**: `NoFileSplitting` / `FileSizeLimit` / `TimeInterval`, same machinery as JLD2/NetCDF.\n- **Append + restart**: opens an existing store and appends new timesteps. Validates on-disk dtype against requested `array_type`; mismatch errors clearly.\n- **Compression**: user-supplied `compressor` kwarg, default `Zarr.NoCompressor()` (matches NetCDF's deflate-off default).\n- **Stores** (write side): `DirectoryStore` (default), `DictStore`, `S3Store`. `ZipStore` is rejected with a clear error pointing at the `Zarr.writezip` finalize-to-zip workflow \u2014 `ZipStore` is read-only by design in Zarr.jl.\n- **Reader**: `FieldTimeSeries(path, name)` auto-detects `.zarr` (DirectoryStore) and `.zip` (ZipStore via `Zarr.writezip` output).\n- **MPI distributed writes**: per-axis GCD chunk default (so every chunk file is owned by exactly one rank, even under `Fractional` load-balanced partitions), rank-0-owned metadata + time writes, lock-free per-rank chunk-aligned data writes, rank-topology recorded in `.zattrs` for restart validation. `LagrangianParticles` rejected under MPI in v1.\n\n## What's deferred (not in this PR)\n\n- CF-compliant layout (shared dimension coordinate arrays, `units`/`long_name`, grid metric arrays). All additive on top of v1.\n- Closure / buoyancy / Coriolis / boundary-condition serialization. `Checkpointer` remains the canonical full-state-reload path.\n- Immersed-boundary reconstruction in the reader (the underlying grid round-trips; immersed boundary errors with a clear message).\n- Bitrounding / lossy compression in `fetch_and_convert_output` (writer-agnostic; would benefit JLD2/NetCDF/Zarr together).\n- `LagrangianParticles` under MPI (waits on distributed-particle support upstream).\n\n## Test plan\n\n### Serial (108 tests, in CI)\n\n`test/test_zarr_writer.jl` covers seven testsets:\n\n- [x] **Skeleton (15)**: construction + kwarg surface (NamedTuple/Dict inputs, all kwargs accepted, `show`/`summary` non-empty, `DictStore` works, `ZipStore`/missing-store errors).\n- [x] **Round-trip (28)**: write known field values \u2192 read back via raw `Zarr.zopen` \u2192 bytes match, `_ARRAY_DIMENSIONS` correctly reversed, time array grows as expected.\n- [x] **Operations / Reductions / Functions / WindowedTimeAverage (21)**: `Average`, `AbstractOperation`, scalar functions, vector-profile functions, `WindowedTimeAverage` over a field, missing-`dimensions` error path.\n- [x] **Grid reconstruction + multi-grid (17)**: single-grid `grid/` subgroup, multi-grid `grid_1/`/`grid_2/`, per-output `grid_index`, `reconstruct_zarr_grid` round-trips `RectilinearGrid` and friends.\n- [x] **FieldTimeSeries reader (10)**: `FieldTimeSeries(path, name)` recovers values + location + grid + times.\n- [x] **Append + restart (8)**: run, write, drop writer; construct new writer with `overwrite_existing=false` against same path; new writer appends; dtype-mismatch on restart errors.\n- [x] **Alternative stores (9)**: `DictStore` end-to-end, `ZipStore` reads after `Zarr.writezip` finalize, write-side `ZipStore` rejection.\n\n### Distributed / MPI (15 tests, separate `mpiexec`-driven driver)\n\n`test/test_distributed_zarr_writer.jl` invokes `mpiexec` against `test/distributed_zarr_writer_tests.jl` for:\n\n- [x] **Partition(x=2)** (2 ranks)\n- [x] **Partition(y=2)** (2 ranks)\n- [x] **Partition(x=2, y=2)** (4 ranks)\n\nEach verifies global field shape, rank topology in `.zattrs`, and that a serial `FieldTimeSeries` reader can rebuild the global field from the distributed-written store.\n\nThese tests are not wired into the standard `test_output_writers.jl` runner \u2014 they require an MPI environment and ~1m15s to run.\n\n### S3 / MinIO (manual)\n\n`test/manual/test_zarr_s3.jl` is gated on `OCEANANIGANS_TEST_S3=1` and a running local MinIO. Not in CI.\n\n### Comparative benchmarks (manual)\n\n`benchmark/zarr_writer/` ships scripts comparing ZarrWriter, JLD2Writer, NetCDFWriter on CPU (serial single-output, serial multi-output, compressed-Zarr). Not run in CI; intended for the PR author to run locally and paste a table into the PR description.\n\n## Files\n\n- **Core**: `src/OutputWriters/zarr_writer.jl` (struct + docstring + error stub), `src/OutputReaders/{OutputReaders, field_time_series, set_field_time_series}.jl` (`ZarrPath` dispatch + extension hooks), `src/Simulations/simulation.jl` (Simulation forwarder), `src/Oceananigans.jl` + `src/OutputWriters/OutputWriters.jl` (exports).\n- **Extension**: `ext/OceananigansZarrExt/{OceananigansZarrExt, zarr_writer, output_readers}.jl`.\n- **Tests**: `test/test_zarr_writer.jl`, `test/test_distributed_zarr_writer.jl`, `test/distributed_zarr_writer_tests.jl`, `test/manual/test_zarr_s3.jl`.\n- **Benchmarks**: `benchmark/zarr_writer/*.jl`.\n- **Docs**: `zarr_writer_plan.md` (design + status table).\n- **Project**: `Project.toml` and `test/Project.toml` updated (Zarr in weakdeps / deps).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 19,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6Y9yvb",
+        "number": 3821,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3821"
+      }
+    ],
+    "createdAt": "2026-05-19T14:55:22Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-05-20T18:28:32Z",
+    "number": 5605,
+    "title": "Add ZarrWriter and FieldTimeSeries Zarr reader"
+  },
+  {
+    "additions": 220,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nMakes `set!(u::Field, v::Field)` \"just work\" when `u` and `v` differ in size or in staggered location, by routing through `interpolate!` automatically. Same-size + same-location calls keep their existing fast copy path.\n\n## Motivation\n\nToday `set_to_field!` does `parent(u) .= parent(v)` (with an interior-only fallback), which requires shapes to match exactly. This means:\n\n- `set!` across grids of different resolution errors with `DimensionMismatch`.\n- `set!` between same-size fields at *different* staggered locations (e.g. `XFaceField` \u2190 `CenterField` on a `Periodic` grid where `Nx_face == Nx_center`) silently miscopies values across locations instead of remapping.\n\nWe already have `interpolate!(u::Field, v::AbstractField)` for trilinear point-sample interpolation. This PR uses it as the fallback inside `set!` rather than asking users to remember to call it manually.\n\n## Behavior\n\n```julia\nset!(u, v)  # if size(u) == size(v) && location(u) == location(v)\n            #     -> direct copy (current behavior, halos preserved when shapes align)\n            # else\n            #     -> migrate v to u's architecture if needed, then interpolate!(u, v)\n```\n\nConservative remapping (`regrid!`) is **not** wired in. Callers who want volume-conserving remapping should keep invoking `regrid!` explicitly. We didn't want to bake \"regrid\" into the default because it integrates volumes, which is wrong for non-tracer fields.\n\n## Implementation\n\n**`src/Fields/set!.jl`**\n- `set_to_field!` becomes a router. Size+location match \u2192 `copy_to_field!` (the previous body, unchanged). Otherwise \u2192 `migrate_to_architecture` + `interpolate!`.\n- `migrate_to_architecture(u, v)` is a no-op when `child_architecture(u) === child_architecture(v)`; otherwise it builds a `Field` on `u`'s architecture and copies `v.data` over. This satisfies `interpolate!`'s same-arch requirement.\n- Added a docstring to `set!(::Field, ::Field)`.\n\n**`ext/OceananigansReactantExt/Fields.jl`**\n- The `ReactantField` override gains an interpolation branch. Because `interpolate!`'s KA `@kernel` does not currently trace under Reactant (Reactant.jl#2364), the branch hops to CPU and copies the result back \u2014 same pattern as `set_to_function!`.\n\n**`test/test_field.jl`**\n- Adds cases in the \"Setting fields\" testset covering: differing sizes (auto-interpolation), same size + different location (auto-interpolation, fixes the latent miscopy), and cross-architecture (GPU\u2194CPU) interpolation. Existing same-size/big-halo and small-halo tests are preserved.\n\n## Smoke tests\n\n```\nauto-interpolate matches interpolate!: true\nstaggered location auto-interpolate matches: true\nsame shape preserves halos: true\nTest Summary:       | Pass  Total  Time\nset! field-to-field |    4      4  3.9s\n```\n\n## Out of scope\n\n- `regrid!` integration / a `flavor`/`method` kwarg for picking strategy. Possible follow-up if a clear use case emerges.\n- A native distributed `interpolate!` that handles halos across subdomain boundaries. The existing distributed `set!(::DistributedField, ::Field)` will now route through `interpolate!` when global-size doesn't match; this should work in the common same-child-arch case but the more exotic distributed combinations are not specifically tested here.\n- In-trace Reactant interpolation (blocked on Reactant.jl#2364). The CPU fallback works out-of-trace.\n\n## Latent bug this fixes\n\n```julia\n# On Periodic-Periodic-Bounded grid where Nx_face == Nx_center:\ncf = CenterField(grid); set!(cf, (x,y,z) -> x+2y+3z)\nxf = XFaceField(grid);  set!(xf, cf)\n# Before: silently copies values across staggered locations (wrong).\n# After:  routes through interpolate!, samples cf at xf's nodes (correct).\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-14T17:34:45Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-05-20T18:58:11Z",
+    "number": 5586,
+    "title": "Auto-interpolate in `set!(::Field, ::Field)` on size/location mismatch"
+  }
+]

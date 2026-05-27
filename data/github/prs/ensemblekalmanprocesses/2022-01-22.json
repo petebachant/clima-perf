@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 509,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "Updates module names to follow the convention of module having the same name as the file where it is stored.\r\n\r\nAlso eliminates the EnsembleKalmanProcess module and structures the EnsembleKalmanProcess tests.",
+    "changedFiles": 35,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MjE4ODIwMjI=",
+        "number": 6,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/6"
+      }
+    ],
+    "createdAt": "2022-01-19T21:39:35Z",
+    "deletions": 523,
+    "labels": [
+      {
+        "color": "bfd4f2",
+        "description": "",
+        "id": "LA_kwDOEreD587MnnBA",
+        "name": "package"
+      }
+    ],
+    "mergedAt": "2022-01-22T01:12:51Z",
+    "number": 93,
+    "title": "Udpdate module names to new convention."
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDg1OTUz",
+      "is_bot": false,
+      "login": "ilopezgp",
+      "name": "Ignacio Lopez-Gomez"
+    },
+    "body": "",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-20T05:31:34Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2022-01-22T01:43:19Z",
+    "number": 94,
+    "title": "Update julia tests to 1.7"
+  },
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "This is a rebase and squash of the feature branch for PR #81 and contains no new commits. The PR message for #81 is reproduced below.\r\n<hr>\r\nThe motivation for this PR comes from CliMA/CalibrateEmulateSample.jl#121; see discussion there. \r\n\r\nIn order to have reproducible tests involving randomness, it's not sufficient to set the global seed for the default RNG: the default RNG algorithm used by Julia was [changed](https://julialang.org/blog/2021/11/julia-1.7-highlights/#new_rng_reproducible_rng_in_tasks) in version 1.7, and the [docs](https://docs.julialang.org/en/v1/stdlib/Random/#Reproducibility) for the Random package note that the same seed may give different random values in different versions. For this reason, [recommended practice](https://discourse.julialang.org/t/set-the-state-of-the-global-rng/12599/3) for reproducible tests is to pass an RNG object explicitly to all methods which need it. Julia convention is that the RNG is an optional first positional argument in functions which require it (see e.g. Random, StatsBase, Turning.jl...), and this is done here.\r\n\r\nThis PR implements that change; in brief\r\n- An `rng` field is added to `EnsembleKalmanProcesses` (i.e. independent of `Process`, for all implementations).\r\n- An optional `rng` kwarg is added to `construct_initial_ensemble()`, used in lieu of `rng_seed` if provided.\r\n- An additional method for `construct_initial_ensemble()` takes the rng as the first argument, causing kwargs to be ignored.\r\n- All methods for `sample_distribution()` now accept an rng as an optional first argument.\r\n\r\nIn all of the cases above, `Random.GLOBAL_RNG` is used by default if an RNG is not given: this PR is fully backwards compatible with `main`. In particular, tests are updated to use an explicit rng, but examples have been left unchanged. It may be desirable to update them as well.\r\n\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD58474zxV",
+        "number": 55,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/55"
+      }
+    ],
+    "createdAt": "2022-01-22T20:05:51Z",
+    "deletions": 52,
+    "labels": [],
+    "mergedAt": "2022-01-22T23:49:12Z",
+    "number": 95,
+    "title": "Pass explicit RNG object to methods involving stochasticity"
+  }
+]

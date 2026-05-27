@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 79,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Following discoveries in #4705 it seems like there is some difference in the AB2 and the RK3 timestepper for the hydrostatic free surface model regarding implicit timestepping. This PR is here to try to fix the (possibly) bug in the RK3 timestepper with implicit diffusion\r\n\r\nThis is a chance to add also dynamics tests for the hydrostatic RK3 timestepper which were lacking.\r\n\r\nEDIT: Indeed, the implicit-explicit timestepping was not correctly implemented with RK3. The implicit timestep needs to be applied to the \"Forward Euler\" evolved variables before averaging, not to the averaged variables that include previous time-step information.\r\n\r\nAs part of this PR, I also remove the warning on the implicit - explicit stepping with split RK3 since it is tested",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-12T08:13:30Z",
+    "deletions": 49,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-08-12T13:51:18Z",
+    "number": 4710,
+    "title": "Correct the implicit Split-RK3 diffusion implementation"
+  }
+]

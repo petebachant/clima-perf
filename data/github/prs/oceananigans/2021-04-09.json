@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 132,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR fixes a bug in the `FourierTridiagonalPoissonSolver` that almost certainly meant it produced incorrect answers. There were two concurrent bugs that cancelled each other out, which allowed tests to pass:\r\n\r\n1. The Laplacian operator (previously called `\u2207\u00b2`, now called `\u2207\u00b2\u1d9c\u1d9c\u1d9c`) was incorrect, because \"Face\" and \"Center\" superscripts were swapped. In other words, the Laplacian operator was correct for an object located at `(Face, Face, Face)`, rather than `(Center, Center, Center)` as it was being applied.\r\n2. `\u0394zF` and `\u0394zC` were also swapped in derivation of the `FourierTridiagonalPoissonSolver`. This means that both the docs and the code were incorrect.\r\n\r\nThe tests passed because these two bugs effectively cancel each other out. This PR fixes both bugs. There still may be a lingering issue however, because the docs multiply the entire Poisson equation by the vertical grid spacing (which in the docs is written `\u0394zC`, but should be `\u0394zF`), including the source term. I didn't see immediately where to replace `\u0394zC` with `\u0394zF` in `solve_poisson_equation!`. The tests may pass anyways because there is no test that incompressibility is maintained on a stretched grid.\r\n\r\nI also cleaned up the Laplacian operators a bit, and the grid spacing operators, and added a convenience function `set_source_term!` so that users don't have to know about the special formulation that `FourierTridiagonalPoissonSolver` uses.\r\n\r\nTODO:\r\n\r\n- [x] Update the docs\r\n- [x] Test incompressibility on a stretched grid",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-03T02:41:24Z",
+    "deletions": 91,
+    "labels": [],
+    "mergedAt": "2021-04-09T14:42:09Z",
+    "number": 1541,
+    "title": "Fixes bug in FourierTridiagonalPoissonSolver that swapped `\u0394zF` and `\u0394zC`"
+  },
+  {
+    "additions": 211,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the surface displacement in `HydrostaticFreeSurfaceModel` to a `ReducedField` rather than full `Field`.\r\n\r\ncc @christophernhill ",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-02T19:35:13Z",
+    "deletions": 184,
+    "labels": [],
+    "mergedAt": "2021-04-09T16:51:17Z",
+    "number": 1540,
+    "title": "ReducedField surface displacement"
+  }
+]

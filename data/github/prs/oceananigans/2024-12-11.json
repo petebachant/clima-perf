@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 545,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Since the Zstar PR (#3956) is very long and requires quite some refactor, I am opening this PR just to perform the refactor that will allow us to add the Zstar seamlessly. \r\n\r\nThis PR reworks the grids to have just one `z` field that (for the moment) is a `StaticVerticalCoordinate` containing the vertical grid information (one-dimensional nodes and the spacings).\r\n\r\nTo distinguish between the physical `z` coordinate and the reference generalized vertical coordinate, this PR introduces new spacings and nodes that refer to the generalized vertical coordinate. At the moment the vertical coordinate is `r` (we already had the notion of `rnodes` and `rnode` in the src) following the nomenclature of Adcroft & Campin 2004, but I am happy to hear everyone's thoughts on this. \r\n\r\nI think @ali-ramadhan was not convinced about `r` because people could think it might refer to a deep atmosphere with horizontal areas increasing with `r`.\r\n\r\nLet me know what you think @ali-ramadhan @glwagner @tomchor @navidcy @jm-c \r\n\r\nI would like to merge #3955 before this because it also refactors a bit the spacings\r\n",
+    "changedFiles": 44,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-04T11:28:59Z",
+    "deletions": 454,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2024-12-11T07:46:36Z",
+    "number": 3974,
+    "title": "(0.95.0) Refactor grids to allow generalized vertical coordinate"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "closes #3967 \r\n\r\nAlso, the default tendencies in the timestepper constructor should be a copy of the prognostic fields because the very definition of a prognostic field is a field that is evolved in time (requiring a tendency). \r\nWe have no more use for the `TendencyFields` function.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6hvpuA",
+        "number": 3967,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3967"
+      }
+    ],
+    "createdAt": "2024-12-03T07:46:13Z",
+    "deletions": 88,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2024-12-11T07:49:03Z",
+    "number": 3969,
+    "title": "Some corrections in the timestepper constructors"
+  }
+]

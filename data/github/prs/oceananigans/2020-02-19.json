@@ -1,0 +1,85 @@
+[
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Note: This PR branches off from #621.\r\n\r\nResolves #566 \r\nResolves #633",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MzY5ODI1NTc=",
+        "number": 566,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/566"
+      },
+      {
+        "id": "MDU6SXNzdWU1NjcxNTYyNDE=",
+        "number": 633,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/633"
+      }
+    ],
+    "createdAt": "2020-02-15T18:13:07Z",
+    "deletions": 99,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2020-02-19T16:18:49Z",
+    "number": 626,
+    "title": "Rename Model to IncompressibleModel"
+  },
+  {
+    "additions": 259,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is part 1/3 of making boundary conditions a field property.\r\n\r\nI was refactoring the fields module, and in doing so I added optional kwargs to allow for data arrays to be passed.\r\n\r\nThis allows the checkpointer to be simplified as it no longer has to keep track of array references, and makes restoring/checkpointing large models possible. I will address this in part 2.\r\n\r\nChanges:\r\n\r\n1. `AbstractLocatedField` has been removed. Now there is only `AbstractField`.\r\n\r\n2. Fields can now be initialized with a data array. This will make restoring/checkpointing large models possible.\r\n\r\n    Right now `field.data` can store anything. We could check to make sure that `field.data` has the same size as the grid, but this is extra code and could limit flexibility in the future so I did not add a check for this.\r\n\r\n3. Field tuple initializers (`VelocityFields`, `TracerFields`, etc.) can now accept data arrays through keyword arguments.\r\n\r\n4. `FaceFieldX` has been renamed to `XFaceField`, and same for y and z.\r\n\r\nNote: This PR branches off #626.",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-02-16T02:59:28Z",
+    "deletions": 250,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2020-02-19T19:09:08Z",
+    "number": 627,
+    "title": "Ability to construct field tuples with non-zero data"
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 403,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRemove Diagnostics module in favor of ClimaDiagnostics and ClimaAnalysis\r\n\r\ncloses #954\r\n\r\nwill supersede https://github.com/CliMA/ClimaCoupler.jl/issues/875 and https://github.com/CliMA/ClimaCoupler.jl/issues/517\r\n\r\n## Content\r\nThis PR touches a lot of files, but most of it is just propagating a few main changes:\r\n- delete the ClimaCoupler Diagnostics module, tests, docs\r\n- use ClimaAtmos.Diagnostics to output atmos diagnostics, and ClimaDiagnostics to output coupler diagnostics\r\n  - coupler diagnostics are defined in `user_io/amip_diagnostics.jl`\r\n  - the diagnostics handler is added to our `CoupledSimulation` object, which results in changes in many files\r\n- add default AMIP diagnostics in driver\r\n- `user_io/ci_plots.jl` is generalized to meet the needs of our updated diagnostic plotting\r\n- artifacts are now output to a subdirectory of the run name, i.e. `run_name/artifacts/`, rather than an adjacent directory `run_name_artifacts/`\r\n  - this isn't necessary for the other changes of the PR, but I found that it made more sense as I was looking at run outputs\r\n\r\n## To-do\r\n- [x] generalize `make_ci_plots` to work for AMIP plots as well; update amip_paperplots function to use this\r\n- [x] recreate AMIP paperplots using existing ClimaAtmos diagnostics defined in https://github.com/CliMA/ClimaAtmos.jl/blob/main/src/diagnostics/core_diagnostics.jl\r\n  - coupler symbol -> atmos symbol:\r\n  - \":T\" -> \"ta\"\r\n  - \":u\" -> \"ua\"\r\n  - \":q_tot\" -> \"hus\"\r\n  - \":q_liq_ice\" -> \"clw\"\r\n  - \":precipitation_rate\" -> \"pr\"\r\n  - \":T_sfc\" -> \"ts\"\r\n- [x] remove output_short_name, output_long_name\r\n- [x] for the few quantities that aren't already computed in ClimaAtmos diagnostics, add new variables in `climaatmos_extra_diags.jl`\r\n  - \":toa_fluxes\": sum fluxes that can be accessed from atmos cache\r\n  - \":turbulent_energy_fluxes\": access calculated value from CoupledSimulation (requires extending ClimaDiagnostics functions)\r\n- [x] remove `amip_visualizer.jl`\r\n- [x] remove diagnostics from CoupledSimulation object\r\n- [x] remove `use_coupler_diagnostics` flag\r\n- [x] remove Diagnostics module and tests\r\n\r\n### Output checks\r\n- [x] check `slabplanet_atmos_diags` now outputs `toa_fluxes_net`, previous coupler-added atmos diagnostics, and default diagnostics from atmos\r\n- [x] check all amip runs output `F_turb_energy`\r\n- [x] check plots are created for amip runs\r\n  - atmos and coupled diagnostics\r\n\r\n\r\n### Previous output: AMIP paperplots\r\n![image](https://github.com/user-attachments/assets/6a69367d-a91b-4ded-8516-85f61b80b348)\r\n\r\n### New output:\r\n#### `atmos_summary_2D.pdf`\r\n<img width=\"998\" alt=\"Screenshot 2024-10-14 at 3 22 15\u202fPM\" src=\"https://github.com/user-attachments/assets/f90a6781-644b-4b65-9f69-4938fe4f69d7\">\r\n\r\n#### `atmos_summary_3D.pdf` (averaged over lon)\r\n<img width=\"756\" alt=\"Screenshot 2024-10-14 at 3 23 43\u202fPM\" src=\"https://github.com/user-attachments/assets/d18ba929-eea7-400e-8f4a-54dfec760b72\">\r\n<img width=\"758\" alt=\"Screenshot 2024-10-14 at 3 23 55\u202fPM\" src=\"https://github.com/user-attachments/assets/84809e8f-2253-4a6e-82a9-ab0b0a9d0e94\">\r\n\r\n#### `coupler_summary_2D.pdf`\r\n<img width=\"1480\" alt=\"Screenshot 2024-10-14 at 3 24 04\u202fPM\" src=\"https://github.com/user-attachments/assets/1ab0a4f3-62a4-464d-813a-28906772bf3d\">\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 37,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6Wvc05",
+        "number": 954,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/954"
+      }
+    ],
+    "createdAt": "2024-09-13T23:30:22Z",
+    "deletions": 991,
+    "labels": [],
+    "mergedAt": "2024-10-16T01:35:34Z",
+    "number": 953,
+    "title": "remove Diagnostics module"
+  },
+  {
+    "additions": 91,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAfter updating our diagnostics to use ClimaDiagnostics.jl and ClimaAnalysis.jl in #954, we don't need our PostProcessor module anymore\r\n\r\ncloses #991\r\n\r\n## Content\r\n- [x] delete PostProcessor module\r\n- [x] code in `plot_helper.jl` is only used in `debug_plots.jl`, so this PR moves it into that file\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6Y5V-1",
+        "number": 991,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/991"
+      }
+    ],
+    "createdAt": "2024-10-16T16:21:21Z",
+    "deletions": 320,
+    "labels": [],
+    "mergedAt": "2024-10-16T20:29:27Z",
+    "number": 1022,
+    "title": "delete PostProcessor module"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR updates to the new release of JuliaFormatter v2 and applies the updated formatter. Anyone who is working locally needs to also use v2. If not, your local formatting changes wont match the CI formatting changes, and CI will fail. This will be enforced by the updated compat.\r\n\r\n\r\n## To-do\r\n- [x] update JuliaFormatter compat\r\n- [x] apply updated formatter\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-16T20:36:56Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2024-10-16T21:38:46Z",
+    "number": 1024,
+    "title": "use JuliaFormatter v2"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nReduce usage of ArtifactWrapper\r\nCloses #997 \r\nRelates to ClimaArtifact [PR 51](https://github.com/CliMA/ClimaArtifacts/pull/51)\r\n\r\n\r\n## To-do\r\n- Check that this does not change results of run_amip.jl \r\n\r\n\r\n## Content\r\n- Replace ArtifactWrapper in co2_dataset_path with a clima artifact\r\n- The new co2 artifact contains a text file with co2 monthly means and a text file with daily means\r\n- The old co2 artifact was a NetCDF file generated from the monthly means text file\r\n- run_amip.jl now uses the monthly txt file and parses it into a TimeVaryingInput. \r\nThere are several differences between the old data in the artifact and the new data. First,\r\nthe new data does not have lat/lon, but the old Netcdf file did not vary in space even though the dimensions existed.\r\nSecond, the dates in the new file all fall exactly on the 15th of the month, while the old file varied by a few hours in each direction.  Third the mean co2 is very slightly off (greatest diff is .01%) due to floating points during unit conversion, but this also seems like an issue in the old data file. \r\n- Change truncate test to not rely on old NetCDF file\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6ZQF8V",
+        "number": 997,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/997"
+      }
+    ],
+    "createdAt": "2024-10-11T23:18:20Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2024-10-16T23:34:13Z",
+    "number": 1014,
+    "title": "Tr/move co2 to clima artifacts"
+  }
+]

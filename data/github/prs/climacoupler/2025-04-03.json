@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 205,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit introduces more structure in ClimaEarth. It splits `setup_and_run` in three functions:\r\n- `setup`, which produces a `CoupledSimulation` (hence, it was renamed to be `CoupledSimulation`, since it is just a constructor)\r\n- `run!`, which runs the simulation. This is supported by the introduction of `step!`, to take one single coupling step. This is particularly useful in debugging\r\n- `postprocess`, to make plots\r\n\r\nThe advantage of this separation is that one can now construct a simulation without running it, and step a simulation one step at a time. Both of these are particularly useful in interactive work and debugging.\r\n\r\nThis commit also renames `calendar_dt` to `diag_calendar_dt` to make it clearer that it refers to diagnostics.\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n- **New Features**\n  - Introduced a modular simulation lifecycle that separates initialization, execution, iterative stepping, and postprocessing.\n  - Enhanced simulation output handling now provides clearer performance reporting and robust result validation.\n\n- **Refactor**\n  - Streamlined the simulation workflow for improved clarity and consistency in diagnostic scheduling and time management.\n  - Maintained legacy functionality while transitioning to a more organized and flexible execution approach.\n  - Updated variable naming for better clarity regarding diagnostic periods, including the renaming of `calendar_dt` to `diagnostics_dt`.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-01T17:35:22Z",
+    "deletions": 141,
+    "labels": [],
+    "mergedAt": "2025-04-03T22:36:08Z",
+    "number": 1251,
+    "title": "Split `setup_and_run` in multiple steps"
+  }
+]

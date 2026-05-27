@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This draft PR introduces a few enhancements to `RiBasedVerticalDiffusivity`.\r\n\r\n`RiBasedVerticalDiffusivity` imposes viscosities and diffusivities of the form\r\n\r\n```\r\n\u03bd\u2080 * tapering(Ri, Ri_c, Ri_d)\r\n```\r\n\r\nwhere `Ri_c` is a \"critical\" Richardson number where tapering starts and `Ri_d` is the width of the tapering function.\r\n\r\nWe have piecewise-linear tapering\r\n\r\n```julia\r\npiecewise_linear_tapering = 1 - min(1, max(0, (Ri - Ri_c) / Ri_d))\r\n```\r\n\r\nThis PR introduces an exponential tapering\r\n\r\n```julia\r\nexponential_tapering = exp(- max(0, (Ri - Ri_c) / Ri_d))\r\n```\r\n\r\nand hyperbolic tangent tapering\r\n\r\n```julia\r\nhyperbolic_tangent_tapering = (1 - tanh((x - x\u2080) / \u03b4)) / 2\r\n```\r\n\r\n(which I haven't tested yet).\r\n\r\nI calibrated the piecewise linear case and exponential case using https://github.com/glwagner/LocalOceanClosureCalibration. \r\nNeither is perfect but the exponential results look a bit better, so I'm making them default. Here's some results from an EKI calibration algorithm, calibrating the closure to the [\"LESbrary 1.0\"]:\r\n\r\n![multi_case_model_observation_comparison_iteration_220](https://user-images.githubusercontent.com/15271942/162448303-7dfa75eb-f1bf-4fdb-8d7f-e34c4b288d31.png)\r\n\r\napologies for no plot labels... every row is a different LES \"truth\" case ranging from convection to pure shear with no rotation. The parameters are\r\n\r\n```\r\nlatest_summary = IterationSummary for 4000 particles and 6 parameters at iteration 220\r\n                              \u03bd\u2080 |         \u03ba\u2080 |       Ri\u2080\u03bd |       Ri\u2080\u03ba |       Ri\u1d5f\u03bd |       Ri\u1d5f\u03ba |\r\n       ensemble_mean:  8.760e-01 |  2.089e-01 | -1.241e+00 | -3.919e-01 |  5.919e-01 |  6.570e-01 |\r\n       best particle:  9.243e-01 |  1.779e-01 | -1.342e+00 | -1.252e-01 |  6.104e-01 |  5.959e-01 | error = 3.728775e-01\r\n      worst particle:  9.677e-01 |  2.479e-01 | -2.920e+00 | -1.969e-01 |  6.291e-01 |  4.083e-01 | error = 9.724616e-01\r\n             minimum:  2.634e-02 |  3.839e-02 | -3.590e+00 | -2.641e+00 |  1.856e-02 |  7.557e-02 |\r\n             maximum:  9.973e-01 |  9.938e-01 |  2.362e+00 |  1.775e+00 |  8.018e+00 |  2.498e+00 |\r\n   ensemble_variance:  4.043e-03 |  2.982e-03 |  1.173e-01 |  1.078e-01 |  7.889e-03 |  8.798e-03 |\r\n```\r\n\r\n(https://github.com/CliMA/OceananigansArtifacts.jl/pull/14). Everything is preliminary because we still need to upgrade to LESbrary 2.0 (with Stokes drift and more cases). ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-08T13:40:38Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2022-04-21T06:47:43Z",
+    "number": 2423,
+    "title": "Enhancements to `RiBasedVerticalDiffusivity`"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-21T02:35:11Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2022-04-21T10:10:51Z",
+    "number": 2451,
+    "title": "Fix typos in Docs/Numerics/Poisson solvers"
+  },
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Part of CATKE's numerics overhaul along with #2426.\r\n\r\n@simone-silvestri hope this also improves (CA)TKE + mass flux!",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-20T16:39:01Z",
+    "deletions": 61,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2022-04-21T15:27:25Z",
+    "number": 2449,
+    "title": "Move CATKE diffusivities to vertical cell interfaces"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjg1OTcyMTE5",
+      "is_bot": false,
+      "login": "fadaie91",
+      "name": " Fadaie"
+    },
+    "body": "Fixing the typo on defining the nodes for deltaz (c,c,c).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-21T19:11:52Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-04-21T23:13:49Z",
+    "number": 2456,
+    "title": "Fjp/partial cell immersed boundaries"
+  }
+]

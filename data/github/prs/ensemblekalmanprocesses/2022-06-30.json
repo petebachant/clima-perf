@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 622,
+    "author": {
+      "id": "MDQ6VXNlcjEwMzMyNDMz",
+      "is_bot": false,
+      "login": "tsj5",
+      "name": "Tom Jackson"
+    },
+    "body": "It's desirable to streamline the UI for specifying parameter priors, in particular those for parameters that live on a constrained domain and hence need a nontrivial Constraint().\r\n\r\nThis PR does this by adding a new constructor, ~~bounded_gaussian~~ `constrained_gaussian`, for ParameterizedDistribution. The unconstrained distribution is a Gaussian, with parameters (\u03bc_u, \u03c3_u) selected to reproduce user-required statistics in the constrained space [currently only (mean, standard deviation) are supported]. This therefore includes the [lognormal](https://en.wikipedia.org/wiki/Log-normal_distribution) and [logit-normal](https://en.wikipedia.org/wiki/Logit-normal_distribution) distributions as special cases.\r\n\r\nIn the cases where the constraint interval is infinite or semi-infinite, closed-form expressions are used for (\u03bc_u, \u03c3_u). When the interval is finite, no closed-form solution exists, and (\u03bc_u, \u03c3_u) are optimized numerically via the simplex method. This is still less reliable than it should be for large |\u03bc_u| or \u03c3_u: for these cases the distribution becomes concentrated near one or both interval endpoints, causing instabilities for both numerical integration and optimization (since parameter changes have minimal effect on the objective function).\r\n\r\nThis PR fixes a sign error in bounded_above() which caused its Jacobian to be negative.\r\n\r\nTasks remaining as of this writing:\r\n- constructor for distributions given as Cartesian products of the 1D case currently implemented.\r\n- interface for using `constrained_gaussian` to specify priors from parameter file conventions.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-17T07:43:14Z",
+    "deletions": 180,
+    "labels": [],
+    "mergedAt": "2022-06-30T04:59:21Z",
+    "number": 161,
+    "title": "Constructors for Gaussian priors with constraints"
+  }
+]

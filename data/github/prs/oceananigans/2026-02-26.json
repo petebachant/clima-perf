@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 216,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\r\n\r\nExtends `PerturbationAdvection` with two optional keyword arguments for models with density-weighted prognostic variables (e.g., anelastic atmospheric models):\r\n\r\n- **`density`**: when provided, converts density-weighted fields (\u03c1\u03c8) to intensive fields (\u03c8) before radiation and back after. Fixes the dimensional inconsistency when applying `PerturbationAdvection` directly to prognostic variables like \u03c1u, \u03c1\u03b8, \u03c1q.\r\n\r\n- **`gravity_wave_speed`**: additional phase speed added to the advective velocity, following Klemp & Wilhelmson (1978). Useful for momentum fields where gravity waves propagate faster than the mean flow.\r\n\r\nBoth default to `nothing` and `0` respectively, so this is **fully backward compatible**.\r\n\r\nAlso adds `_fill_*_halo!` methods for `Center`-located fields, enabling `PerturbationAdvection` to be used on scalar fields (tracers, \u03c1\u03b8, etc.) in addition to `Face`-located velocity/momentum fields.\r\n\r\n## Motivation\r\n\r\nThis is motivated by [NumericalEarth/Breeze.jl#494](https://github.com/NumericalEarth/Breeze.jl/pull/494), which would otherwise have to maintain a separate `PerturbationMomentumAdvection` scheme with ~270 lines of duplicated radiation logic. With this upstream change, Breeze can use `PerturbationAdvection` directly and delete the duplicate code.\r\n\r\n## Test plan\r\n\r\n- [x] Existing `PerturbationAdvection` API is unchanged (new kwargs have defaults)\r\n- [x] Existing boundary condition integration tests pass\r\n- [x] Test with density-weighted fields in Breeze.jl\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-20T02:25:21Z",
+    "deletions": 88,
+    "labels": [],
+    "mergedAt": "2026-02-26T09:46:38Z",
+    "number": 5314,
+    "title": "(0.105.1) Add density and gravity_wave_speed to PerturbationAdvection"
+  }
+]

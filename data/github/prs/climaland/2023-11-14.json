@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 5757,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nfixes #327, #229\r\n\r\n### Notes\r\n- code extending tests to cover Float32 and Float64 is on branch js/float32-tests - will need to cherry pick these changes onto this branch\r\n  - tests won't pass until other changes are made (`t::FT` and `eltype(t)`) - make those changes first\r\n- idea: it may be helpful to add a flag that checks that our t_start/dt/t_end/FT setup won't exceed the FT's precision - if it does, give warning to user\r\n\r\n## To-do\r\n- [x] remove `t::FT` type annotations\r\n- [x] remove `eltype(t)(...)` usage\r\n  - ex https://github.com/CliMA/ClimaLSM.jl/blob/main/docs/tutorials/Bucket/bucket_tutorial.jl#L229-L230\r\n  - in tests, this can be replaced by `FT(...)`\r\n  - [x] functions of time that return `eltype(t)(result)` --> instead convert to FT where function called from\r\n  - [x] boundary conditions, PrescribedAtmosphere, PrescribedRadiativeFluxes, canopy prescribed soil moisture, canopy transpiration\r\n- [x] make sure tests cover Float64 and Float32\r\n- [ ] make sure simulations try Float64 and Float32 - this will be a separate PR #384\r\n  - idea: loop over `(FT, t_end)`, run Float32 only for a couple steps. At end of sim, if statement for FT which tests final type for both and makes plots for Float64\r\n  - alt idea: loop over `FT`, run `solve` for Float64 and `step` for Float32. At end of sim, if statement for FT which tests final type for both and makes plots for Float64\r\n- [x] add documentation for how to maintain Float32 and Float64 compatibility (in [wiki](https://github.com/CliMA/ClimaLSM.jl/wiki/Floating-point-precision-issues))\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 64,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5wiIEh",
+        "number": 327,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/327"
+      }
+    ],
+    "createdAt": "2023-10-12T18:48:34Z",
+    "deletions": 5555,
+    "labels": [],
+    "mergedAt": "2023-11-14T19:02:33Z",
+    "number": 353,
+    "title": "restore Float32 compatibility"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "remove bors :(\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-14T22:22:17Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2023-11-14T23:02:47Z",
+    "number": 386,
+    "title": "remove bors from README.md"
+  }
+]

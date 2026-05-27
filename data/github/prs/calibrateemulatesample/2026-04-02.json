@@ -1,0 +1,60 @@
+[
+  {
+    "additions": 791,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "Co-authored by @ArneBouillon \r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- Closes #400 \r\n- Closes #380\r\n- Closes #372\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- For the `predict()` for both `Emulator` and `ForwardMapWrapper`\r\n  - Added deprecation notice to `transform_to_real=false` kwarg. Removed this from all tests (except to test the deprecation message)\r\n  - Added `add_obs_noise_cov=false` kwarg to predict. when set true, this adds the regularization to the machine learning tool\r\n  - Added `encode=nothing` to the predict method, when set to `\"in\", \"out\", \"in_and_out\"` it will take in / push out encoded/decoded outputs.\r\n  - When encoding inputs, with `ForwardMapWrapper`, samples are decoded into the output space before application\r\n  \r\nAPI is now improved for user experience\r\n```julia\r\n# (User) typical to predict at new points:\r\ny_pred, y_pred_cov = predict(em_or_fmw, new_inputs) \r\n\r\n# (Internal) call within encoded MCMC, with full uncertainty\r\ng_pred, g_pred_cov = predict(em_or_fmw, new_inputs, encode=\"in_and_out\", add_obs_noise_cov=true) \r\n```\r\n  \r\n\r\n- When retrieving MCMC posterior, if a sufficiently lossy encoder is used noise is injected into the null space from the prior (and correlation-aware). This is separated so one can precompute quantities, stored in `NoiseInjector` and then use `decode_and_add_noise(noise_injector, samples)` to apply the decoding. Users can also set\r\n  - `noise_injector_threshold` (to determine how lossy before injection)\r\n  - `noise_injector_scaling` (in case the injection results in instability due to Gaussian assumptions)\r\n- Added utility `get_encoder_from_schedule` to return `E,b` from an `encoder_schedule` defining an affine encoding `Ex + b`\r\n- Added new docstrings and improved existing docstrings\r\n- Full unit testing. \r\n \r\n\r\n## Misc\r\n- example testing. Works on `Sinusoid` example, [now testing on Darcy...]\r\n- Bugfix for arguments of `_predict` , `,` -> `;`\r\n- Create issue for removing transform_to_real from docs/examples #411\r\n\r\n## Detail on current encoding setup\r\nCurrent settings: full (F) vs reduced (R) space\r\n- Emulator space (R)\r\n- MCMC: initial conditions (R)\r\n- MCMC: computing likelihood (R)\r\n- MCMC: stored encoded prior distribution (R)\r\n- MCMC: computing logpdf(encoded_prior,x) (R)  \r\n- MCMC: output posterior samples (F) (decoding each posterior sample + add correlated noise in null space from the prior)\r\n- ForwardMapWrapper: predict, (F)  (decoding each posterior sample + add correlated noise in null space from the prior)\r\n## Darcy example - [updated since review]\r\nWe compare, lossless encoding. Lossy encoding  without inflation, Lossy encoding (retain 99.5%var) with inflation, and the truth. We look for the lossy encoding to by increased by using the prior variance. The D utility indicates the amount of contraction from prior to posterior (by comparison of determinants)\r\n\r\n`Lossless` - (20D->50D), D utility O(10^11)\r\n<img width=\"1500\" height=\"400\" alt=\"GP_posterior_pointwise_uq_noloss\" src=\"https://github.com/user-attachments/assets/e7166e05-3f92-4019-a0c5-1d0ba7418897\" />\r\n`Lossy - inflate` - (19D->15D), D utility O(10^11)\r\n<img width=\"1500\" height=\"400\" alt=\"GP_posterior_pointwise_uq_inflated\" src=\"https://github.com/user-attachments/assets/81c5c498-d62e-455a-9046-39ab0b86025d\" />\r\n`Lossy - no inflate` - (19D->15D), D utility O(10^29)\r\n<img width=\"1500\" height=\"400\" alt=\"GP_posterior_pointwise_uq_non_inflate\" src=\"https://github.com/user-attachments/assets/1881a0c0-c7b8-420a-b02f-6bd79b57dd59\" />\r\n`true`\r\n<img width=\"1000\" height=\"400\" alt=\"output_true\" src=\"https://github.com/user-attachments/assets/6c901a40-733b-4426-885e-b716174601d7\" />\r\n\r\n## Sinusoid example\r\nEncoding truncates to ignore one of the (independent) parameters. So null space of the encoder means one samples the prior. Here we compare inflation with scaling 1, 0.2, and no inflation.\r\n`With inflation (GP, RF, ForwardMap)`\r\n<img width=\"200\" alt=\"sinusoid_MCMC_hist_GP_inflate\" src=\"https://github.com/user-attachments/assets/417b7d4b-3b8f-4a53-94e4-f158be968af3\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_RF_inflate\" src=\"https://github.com/user-attachments/assets/cfc421dd-3bc9-4b26-82d0-e8c01a440936\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_FM_inflate\" src=\"https://github.com/user-attachments/assets/2c3b16ac-7cce-4744-95e2-320df619f019\" />\r\n`With inflation scaled by 0.2 (GP, RF, ForwardMap)`\r\n\r\n<img width=\"200\" alt=\"sinusoid_MCMC_hist_GP\" src=\"https://github.com/user-attachments/assets/07028b41-7892-4063-a173-8ae5a06fa62d\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_RF\" src=\"https://github.com/user-attachments/assets/260fb603-7c1f-4c0d-b40e-367cc2edf069\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_FM\" src=\"https://github.com/user-attachments/assets/871ebc27-ca27-4799-8d07-9936084f616b\" />\r\n`Without inflation (GP, RF, ForwardMap)`\r\n<img width=\"200\" alt=\"sinusoid_MCMC_hist_GP\" src=\"https://github.com/user-attachments/assets/412eef98-aaec-43f4-a6f7-a4a9a38ce38a\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_RF\" src=\"https://github.com/user-attachments/assets/8163347f-d844-4aa3-a02d-bdc1391cea02\" /> <img width=\"200\" alt=\"sinusoid_MCMC_hist_FM\" src=\"https://github.com/user-attachments/assets/a2f706a9-6870-4d2a-8039-6c2a6c9206f2\" />\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN86_jb_p",
+        "number": 372,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/372"
+      },
+      {
+        "id": "I_kwDOCrQRN87Sm8u4",
+        "number": 380,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/380"
+      },
+      {
+        "id": "I_kwDOCrQRN87qcjvl",
+        "number": 400,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/400"
+      }
+    ],
+    "createdAt": "2026-03-06T20:08:29Z",
+    "deletions": 132,
+    "labels": [],
+    "mergedAt": "2026-04-02T21:57:35Z",
+    "number": 404,
+    "title": "new predict method API, and reduced sampling in input space"
+  }
+]

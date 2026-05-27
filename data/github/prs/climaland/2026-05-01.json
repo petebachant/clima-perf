@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 2026,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\r\n\r\nOverhauls the soil biogeochemistry / ecosystem-respiration pathway: fixes NaNs in global SoilCO2 runs, switches to Henry's-law air\u2013water partitioning, initialize SOC with SoilGrids data, recalibrates against GPP + ER + NEE + LHF, and adds ER and NEE to the leaderboard.\r\n\r\n## Highlights\r\n\r\n- **No more NaNs** \u2014 `O2_f` clamped to [0, 0.21] each step + CFL-aware tendency limiter when `\u0394t > 0`. `\u0394t` is now a required positional arg on `SoilCO2Model{FT}` so the limiter can't be silently skipped.\r\n- **Henry's-law air\u2013water partitioning** (Sander 2015) for CO2 and O2: `\u03b8_eff = max(\u03b8_a + \u03b2\u00b7\u03b8_l, \u03b8_eff,min)` stays bounded as the soil saturates.\r\n- **DAMM Arrhenius in centered form** \u2014 `V_ref` and `Ea` are orthogonal under calibration; T response reduces to a slope (~Q10) + intercept.\r\n- **SOC from SoilGrids** instead of uniform constant; pool held fixed in time but kept prognostic for future dynamic SOC.\r\n- **CO2 IC** in equilibrium with atmospheric `c_co2` via Henry's law; **O2 IC** exponential profile (0.21 surface \u2192 0.15 at -1 m).\r\n- **New calibration config** `gpp_er_nee_lhf.jl` (11 parameters). Defaults in `toml/default_parameters.toml` updated to the latest 8th-iteration posterior mean.\r\n- **Leaderboard** now includes ILAMB FLUXCOM ER and NEE.\r\n- **[Updated docs](https://clima.github.io/ClimaLand.jl/previews/PR1714/standalone/pages/soil/biogeochemistry/DAMM_model/)**.\r\n\r\n## Next PR\r\n\r\nCalibrate against a NEE dataset reproducing atmospheric CO2 (inversion dataset?), with a loss capturing (1) seasonality, (2) inter-annual variability, and (3) the decadal trend (land sink keeping up with rising emissions). Relies on human emissions and ocean sinks being known.\r\n\r\n---\r\n\r\n<img width=\"2400\" height=\"2400\" alt=\"cfluxes\" src=\"https://github.com/user-attachments/assets/ce945832-1b14-4617-8293-1a3a3e9e3540\" />\r\n<img width=\"2400\" height=\"3200\" alt=\"er_energy_2\" src=\"https://github.com/user-attachments/assets/ed8b1fac-1bf3-4d17-af8d-408addf40ed2\" />\r\n<img width=\"12000\" height=\"1000\" alt=\"cfluxes_errors\" src=\"https://github.com/user-attachments/assets/a0b0742e-7fb9-42d6-955b-311ee5990b5c\" />",
+    "changedFiles": 49,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-10T16:57:17Z",
+    "deletions": 315,
+    "labels": [],
+    "mergedAt": "2026-05-01T02:46:06Z",
+    "number": 1714,
+    "title": "Respiration update"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This commit also updates the ClimaAnalysis version, because `make_ocean_masked_annual_timeseries` uses functionality that is not in ClimaAnalysis v0.5.17.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-28T23:47:17Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-05-01T15:11:56Z",
+    "number": 1734,
+    "title": "Check for monthly data in annual time series"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaLand.jl/issues/1737\r\n\r\nThis PR is identical to https://github.com/CliMA/ClimaCoupler.jl/pull/1722 and https://github.com/CliMA/ClimaAtmos.jl/pull/4287. There is a concurrency limit of 5 MacOS runners for the entire organization.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABA_KsFg",
+        "number": 1737,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1737"
+      }
+    ],
+    "createdAt": "2026-04-30T23:40:30Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-01T22:05:53Z",
+    "number": 1738,
+    "title": "Use MacOS runners only on PR merges"
+  }
+]

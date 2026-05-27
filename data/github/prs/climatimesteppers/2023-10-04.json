@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 87,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I think [the ClimaAtmos branch](https://github.com/CliMA/ClimaAtmos.jl/pull/2175) is getting close to covering all of the edge cases, so I think it's a good time to start incorporating the post-callback fixes into ClimaTimeSteppers. The edge cases that we missed included:\r\n\r\n - Accounting for when `!isnothing(T_imp!) && !iszero(a_imp[i, i])` is false\r\n - Krylov evaluations of `f!` (`T_imp!`) with something other than `U`/`x`-- which requires an additional `post_implicit!` call\r\n - Calling `post_explicit!(U, p, t_imp)` instead of `post_explicit!(U, p, t_exp)`, and doing this _after_ `temp` is computed (to preserve the existing behavior).\r\n - Finally, computing `T_imp` using the `U` from _before_ the `post_implicit!` call, which requires injecting this into the callback (we add two closures to avoid unnecessary additional assignments).\r\n\r\nLatest build, with (I think) all of these fixes is here:\r\n\r\nhttps://buildkite.com/clima/climaatmos-ci/builds/13544",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-04T00:10:03Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2023-10-04T04:01:04Z",
+    "number": 222,
+    "title": "Callback fixes"
+  },
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Adds `post_explicit!` calls to end of step\r\n - Removes nvtx range macros, since they seem to be blowing up memory requirements (example build here: https://buildkite.com/clima/climaatmos-ci/builds/13552)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-04T14:46:17Z",
+    "deletions": 132,
+    "labels": [],
+    "mergedAt": "2023-10-04T16:15:00Z",
+    "number": 223,
+    "title": "Add `post_explicit!` call to end of step, rm nvtx range macros"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Re-simplify dispatch",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-04T20:09:27Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2023-10-04T21:50:09Z",
+    "number": 226,
+    "title": "Re-simplify dispatch, remove hard coded ARS"
+  }
+]

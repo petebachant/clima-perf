@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 139,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR extends the capability of the \"implicit diffusion solver\" to handle an \"additional linear term\". This feature is then used to treat the TKE dissipation term semi-implicitly in attempt to alleviate CATKE's time-step restrictions.\r\n\r\nI use quotes because it's not exactly a \"diffusion solver\" anymore. So a little name shuffling might be in order if this turns out to work well.\r\n\r\nThanks to @yairchn for help in formulating this potential solution for CATKE's inclination toward instability.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-09T00:30:33Z",
+    "deletions": 75,
+    "labels": [],
+    "mergedAt": "2022-04-15T16:25:21Z",
+    "number": 2426,
+    "title": "Semi-implicit treatment of TKE dissipation for CATKE"
+  },
+  {
+    "additions": 160,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "@tomchor and @whitleyv this PR adds a script that we can use to _estimate_ the relative effect of bottom drag vs form drag in buoyancy-stratified simulations over hilly bathymetry. This script only produces an estimate, because the bottom drag is implemented in a flat bottom setup, while form drag requires bathymetry. I'd hypothesis that we get more drag when there are both hills and bottom drag, because 1) greater shear at the bottom and 2) stronger downwards mixing of momentum due to strong turbulence.\r\n\r\nWe could use #2275 to extend the results obtained here to cases with both drag and hills.\r\n\r\nI think it'll also be interesting if more accurate bathymetry representations like the one in #2306 lead to a reduction in form drag (cc @francispoulin). Possibly the spurious form drag is a nice metric to use to judge developments in our representation of bathymetry...\r\n\r\nI'll run these simulations at high resolution and report some results, hopefully soon.\r\n\r\nSide note: it's annoying that we don't serialized the immersed boundary so I might try to fix that here too...",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-31T16:24:34Z",
+    "deletions": 857,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2022-04-15T17:50:08Z",
+    "number": 2402,
+    "title": "Adds flow_over_hills validation case"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjU3OTc3Mjc=",
+      "is_bot": false,
+      "login": "iuryt",
+      "name": "Iury Simoes-Sousa"
+    },
+    "body": "This solves #2438 \r\n\r\nI tested with the following code and it is working\r\n\r\n```julia\r\nusing Oceananigans\r\ngrid = RectilinearGrid(size=(1, 1, 1), extent=(1, 1, 1))\r\nb = CenterField(grid)\r\nlocation(b)\r\n```\r\n\r\nReturns:\r\n```julia\r\n(Center, Center, Center)\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-15T16:21:33Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-04-15T20:50:19Z",
+    "number": 2439,
+    "title": "Add location to export list"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR tries to make the script a bit easier to run based on my experiences with it. For example `Benchmark` and `@gpu_sync` aren't needed in this case and we can delete it.\r\n\r\nSo far I've only been able to run this with one core (see https://github.com/CliMA/Oceananigans.jl/issues/2433).\r\n\r\nCloses https://github.com/CliMA/Oceananigans.jl/issues/2433",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5HrNDT",
+        "number": 2433,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2433"
+      }
+    ],
+    "createdAt": "2022-04-12T22:58:54Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2022-04-15T23:53:05Z",
+    "number": 2432,
+    "title": "Updates `distributed_nonhydrostatic_model_mpi.jl`"
+  }
+]

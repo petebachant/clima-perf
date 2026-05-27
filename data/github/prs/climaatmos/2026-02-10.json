@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "From https://docs.github.com/en/actions/reference/limits#job-concurrency-limits-for-github-hosted-runners, the concurrency limit for MacOS is 5 across the entire organization. This PR limits CI testing for MacOS to only PR merges.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-09T21:54:51Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-02-10T19:29:43Z",
+    "number": 4287,
+    "title": "Use MacOS runners only on PR merges"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds diagnostics in pressure coordinates. This PR requires merging https://github.com/CliMA/ClimaCore.jl/pull/2422, https://github.com/CliMA/ClimaDiagnostics.jl/pull/155, and https://github.com/CliMA/ClimaAnalysis.jl/pull/362 and making releases for each of the packages.\r\n\r\nAn example of a name of a NetCDF file of a variable in pressure coordinates is `hus_1d_inst_pressure.nc`. By default, the pressure interpolation uses constant boundary conditions and the pressure levels are the same as those from ERA5 (see [here](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)). \r\n\r\nHere is the output of `ncdump` on a NetCDF file of a variable in pressure coordinates:\r\n\r\n<details><summary>ncdump result</summary>\r\n<p>\r\n\r\n```\r\noutput/baroclinic_wave_equil/output_0025/hus_1d_inst_pressure.nc\r\nnetcdf hus_1d_inst_pressure {\r\ndimensions:\r\n        time = UNLIMITED ; // (11 currently)\r\n        lon = 72 ;\r\n        lat = 36 ;\r\n        pressure_level = 37 ;\r\n        nv = 2 ;\r\nvariables:\r\n        float time(time) ;\r\n                time:units = \"s\" ;\r\n                time:axis = \"T\" ;\r\n                time:standard_name = \"time\" ;\r\n                time:long_name = \"Time\" ;\r\n                time:bounds = \"time_bnds\" ;\r\n        float lon(lon) ;\r\n                lon:units = \"degrees_east\" ;\r\n                lon:axis = \"X\" ;\r\n                lon:standard_name = \"longitude\" ;\r\n                lon:long_name = \"Longitude\" ;\r\n        float lat(lat) ;\r\n                lat:units = \"degrees_north\" ;\r\n                lat:axis = \"Y\" ;\r\n                lat:standard_name = \"latitude\" ;\r\n                lat:long_name = \"Latitude\" ;\r\n        float pressure_level(pressure_level) ;\r\n                pressure_level:long_name = \"pressure\" ;\r\n                pressure_level:units = \"Pa\" ;\r\n                pressure_level:stored_direction = \"increasing\" ;\r\n                pressure_level:standard_name = \"air_pressure\" ;\r\n        float time_bnds(time, nv) ;\r\n                time_bnds:comments = \"time bounds for each time value\" ;\r\n                time_bnds:units = \"s\" ;\r\n        double date(time) ;\r\n                date:units = \"seconds since 2010-01-01T00:00:00\" ;\r\n                date:bounds = \"date_bnds\" ;\r\n        double date_bnds(time, nv) ;\r\n                date_bnds:comments = \"date bounds for each date value\" ;\r\n                date_bnds:units = \"seconds since 2010-01-01T00:00:00\" ;\r\n        float hus(pressure_level, lat, lon, time) ;\r\n                hus:short_name = \"hus\" ;\r\n                hus:long_name = \"Specific Humidity, Instantaneous\" ;\r\n                hus:units = \"kg kg^-1\" ;\r\n                hus:comments = \"Mass of all water phases per mass of air\" ;\r\n                hus:start_date = \"2010-01-01T00:00:00\" ;\r\n```\r\n\r\n</p>\r\n</details> \r\n\r\nTODO\r\n\r\n- [x] Run AMIP for a year from ClimaCoupler and produce diagnostics in pressure coordinates of `ta`, `hur`, `hus`, `ua`, and `pfull`",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-30T18:56:14Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-02-10T20:21:58Z",
+    "number": 4252,
+    "title": "Add diagnostics in pressure coordinates"
+  }
+]

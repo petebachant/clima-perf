@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 397,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR makes `node` and `nodes` return the native coordinates of the grid. It changes the behavior of `x/ynode(s)`. Now `x/ynode(s)` _always_  returns `x/y` distances. The PR also introduces `\u03bb/\u03c6node(s)` for curvilinear grids.\r\n\r\nThis way, now `node(s)` behaviour didn't change. But now they return:\r\n\r\n- `(xnode(s), ynode(s), znode(s))` for RectilinearGrid\r\n- `(\u03bbnode(s), \u03c6node(s), znode(s))` for CurvilinearGrids\r\n\r\nNote that still there are `x/y/znode(s)` methods _for all grids_ and those methods actually return distances (in meters). Before this PR when `ynode` called on, e.g., a LatitudeLongitude grid would return latitude in degrees and this was tad confusing.\r\n\r\nCloses #2978",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5g7GDV",
+        "number": 2978,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2978"
+      }
+    ],
+    "createdAt": "2023-03-16T00:29:01Z",
+    "deletions": 217,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-04-06T00:36:32Z",
+    "number": 2979,
+    "title": "(v0.81.0) `node(s)` return native coordinates for grids + `x/y/znode(s)` -> distances & `\u03bb/\u03c6node(s)` -> degrees"
+  }
+]

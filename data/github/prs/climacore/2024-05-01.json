@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "add a reproducer for #1684 \r\ntrying to recreate failure from land implicit solver\r\n\r\n- without extending `adapt_structure` for all operators and BCs, we get an error that something is not isbits because the space is not removed as an operator is applied ([here](https://buildkite.com/clima/climacore-ci/builds/3497#_))\r\n- after adding in the `adapt_structure` methods from #1684 for testing, we see this error:\r\n```julia\r\nERROR: LoadError: InvalidIRError: compiling MethodInstance for ClimaCoreCUDAExt.copyto_stencil_kernel!(::ClimaCore.Fields.Field{\u2026}, ::ClimaCore.Operators.StencilBroadcasted{\u2026}, ::ClimaCore.Spaces.FiniteDifferenceSpace{\u2026}, ::NTuple{\u2026}, ::Int64, ::Int64, ::Int64) resulted in invalid LLVM IR\r\nReason: unsupported call to an unknown function (call to julia.new_gc_frame)\r\nReason: unsupported call to an unknown function (call to julia.push_gc_frame)\r\nReason: unsupported call to an unknown function (call to julia.get_gc_frame_slot)\r\nReason: unsupported dynamic function invocation (call to map(f, t::Tuple{Any, Any}) @ Base tuple.jl:292)\r\nStacktrace:\r\n [1] multiply_matrix_at_index\r\n   @ ~/ClimaCore.jl/src/MatrixFields/matrix_multiplication.jl:378\r\n [2] stencil_left_boundary\r\n   @ ~/ClimaCore.jl/src/MatrixFields/matrix_multiplication.jl:449\r\n [3] getidx\r\n   @ ~/ClimaCore.jl/src/Operators/finitedifference.jl:3059\r\n [4] copyto_stencil_kernel!\r\n   @ ~/ClimaCore.jl/ext/cuda/operators_finite_difference.jl:67\r\n```\r\n\r\nThis is the error we aim to fix in #1684 , so the reproducer is correct",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-29T22:29:43Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-05-01T10:51:40Z",
+    "number": 1699,
+    "title": "add matrix multiplication recursion reproducer"
+  },
+  {
+    "additions": 646,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR combines the environments into a buildkite env. Closes #1692.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6Gy3gw",
+        "number": 1692,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1692"
+      }
+    ],
+    "createdAt": "2024-04-29T17:55:07Z",
+    "deletions": 6087,
+    "labels": [],
+    "mergedAt": "2024-05-01T11:43:32Z",
+    "number": 1696,
+    "title": "Update environments"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This was a skew-symmetric error between #1696 and #1699.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-01T19:13:28Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-05-01T19:13:35Z",
+    "number": 1701,
+    "title": "Fix buildkite envs"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "A couple of fixes are needed for GPU compatibility of the land implicit solver using the updated interface: https://github.com/CliMA/ClimaLand.jl/pull/542\r\n\r\npassing build in ClimaAtmos using this branch: https://buildkite.com/clima/climaatmos-ci/builds/18472#_\r\n\r\n## Content\r\n- [x] extend `adapt_structure` for all operator and boundary condition types\r\n- [x] use `unrolled_map` in `multiply_matrix_at_index` to avoid the recursive inference limit when compiling nested matrix operations",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-18T22:55:38Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2024-05-01T20:20:48Z",
+    "number": 1684,
+    "title": "fixes for land implicit solver"
+  }
+]

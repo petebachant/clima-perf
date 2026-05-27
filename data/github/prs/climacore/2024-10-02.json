@@ -1,0 +1,119 @@
+[
+  {
+    "additions": 139,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a broken test to reproduce https://github.com/CliMA/ClimaCore.jl/issues/2019.\r\n\r\nAuthored by @juliasloan25 and co-authored by @charleskawczynski.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-01T20:05:34Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-10-02T01:07:40Z",
+    "number": 2020,
+    "title": "Add multiple field solve reproducer"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I forgot to update the news on the last release, thanks for catching this @Julians42!",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-27T20:42:17Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "4F20B9",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABwKglGw",
+        "name": "NEWS \ud83d\udcf0"
+      }
+    ],
+    "mergedAt": "2024-10-02T13:38:55Z",
+    "number": 2015,
+    "title": "Update the news"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Peeled off from https://github.com/CliMA/ClimaCore.jl/pull/2016.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-02T17:29:27Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-10-02T18:07:59Z",
+    "number": 2023,
+    "title": "Fix typo for printing error message"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "It turns out that #2016 effectively does fix the issue for the land, but doesn't fix the multiple field solve reproducer because #2016 results in dispatch to the `single_field_solve!` method (not the internal `_single_field_solve!` method for the gpu). So, this PR adjusts the reproducer to be more faithful to where dispatch sends flow control.\r\n\r\nThe missing implementation, which is caught in this case in `src/` is:\r\n\r\n```julia\r\nfunction single_field_solve_diag_matrix_row!(\r\n    cache,\r\n    x,\r\n    A::ColumnwiseBandMatrixField,\r\n    b,\r\n)\r\n    A\u2c7cs = unzip_tuple_field_values(Fields.field_values(A.entries))\r\n    b_vals = Fields.field_values(b)\r\n    x_vals = Fields.field_values(x)\r\n    (A\u2080,) = A\u2c7cs\r\n    @. x_vals = inv(A\u2080) \u22a0 b_vals\r\nend\r\nsingle_field_solve!(_, x, A::UniformScaling, b) = x .= inv(A.\u03bb) .* b\r\nfunction single_field_solve!(cache, x, A::ColumnwiseBandMatrixField, b)\r\n    if eltype(A) <: MatrixFields.DiagonalMatrixRow\r\n        single_field_solve_diag_matrix_row!(cache, x, A, b)\r\n    else\r\n        single_field_solve!(ClimaComms.device(axes(A)), cache, x, A, b)\r\n    end\r\nend\r\n```\r\nAnd based on this, we may want to keep dispatch how it was, since `@. x_vals = inv(A\u2080) \u22a0 b_vals` is just as parallelizeable as the UniformScaling case. So we can update that logic accordingly.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-02T19:11:03Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-10-02T19:25:26Z",
+    "number": 2024,
+    "title": "Fix multiple field solve reproducer"
+  },
+  {
+    "additions": 98,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This commit adds some information that was lost in saving to a checkpoint: the `deep` option. It also adds tests for types too, making the tests more stringent.\r\n\r\nThis also fixes an issue with `rcompare` for different types of FieldVectors.\r\n\r\nCloses #2022 ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-01T21:38:39Z",
+    "deletions": 55,
+    "labels": [],
+    "mergedAt": "2024-10-02T19:50:08Z",
+    "number": 2021,
+    "title": "Add information about deep grid in restart files"
+  }
+]

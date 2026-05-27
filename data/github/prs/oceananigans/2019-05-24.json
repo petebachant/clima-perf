@@ -1,0 +1,175 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-24T00:18:35Z",
+    "deletions": 108,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-05-24T00:40:49Z",
+    "number": 230,
+    "title": "Cut down the examples. Moved stuff into a sandbox."
+  },
+  {
+    "additions": 108,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts climate-machine/Oceananigans.jl#230",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-24T00:42:53Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2019-05-24T00:43:08Z",
+    "number": 231,
+    "title": "Revert \"Cut down the examples. Moved stuff into a sandbox.\""
+  },
+  {
+    "additions": 284,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Looks like the velocity field is now fully incompressible over time but we need better tests to show this. Will merge once tests are implemented.\r\n\r\nFully resolves #161\r\n\r\ncc @sandreza ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0Mjg0NzIxMTY=",
+        "number": 161,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/161"
+      }
+    ],
+    "createdAt": "2019-05-23T21:22:50Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-05-24T00:43:39Z",
+    "number": 229,
+    "title": "Recompute w from continuity to enforce incompressibility."
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts climate-machine/Oceananigans.jl#231",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-24T00:45:29Z",
+    "deletions": 108,
+    "labels": [],
+    "mergedAt": "2019-05-24T00:45:35Z",
+    "number": 232,
+    "title": "Revert \"Revert \"Cut down the examples. Moved stuff into a sandbox.\"\""
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Now that the velocity field is truly incompressible in time.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-24T00:50:12Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2019-05-24T11:24:13Z",
+    "number": 233,
+    "title": "Update thermal bubble golden master output."
+  },
+  {
+    "additions": 1141,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a `TurbulenceClosures` module to `Oceananigans`.\r\n\r\nAt the moment nothing in the `Oceananigans` algorithm is touched --- the module is simply loaded and exported. I suggest that we keep it this way, given the size of this PR, and work on integrating the code into `Oceananigans` in a future PR. A simple incremental test in that future PR will be to replace the diffusive operators with the ones here and ensure that the regression tests still pass.\r\n\r\nUltimately `TurbulenceClosures` will provide code for all the different diffusive terms we want to provide for `Oceananigans` users. The current design is that a 'closure' must provide a diffusive flux divergence term for `Oceananigans`. These diffusive flux terms are\r\n\r\n* `\u2207_\u03ba_\u2207\u03d5(i, j, k, grid, \u03d5, closure, u, v, w, T, S)` for a scalar `\u03d5`\r\n* `\u2202\u2c7c_2\u03bd_\u03a3\u2081\u2c7c(i, j, k, grid, closure, u, v, w, T, S)` for x momentum\r\n* `\u2202\u2c7c_2\u03bd_\u03a3\u2082\u2c7c(i, j, k, grid, closure, u, v, w, T, S)` for y momentum\r\n* `\u2202\u2c7c_2\u03bd_\u03a3\u2083\u2c7c(i, j, k, grid, closure, u, v, w, T, S)` for z momentum\r\n\r\nThis will have to be generalized if we wish to provide more sophisticated turbulence closures with, for example, backscatter. I am open to changing the name of the diffusive flux divergences.\r\n\r\nThis PR introduces the closures:\r\n\r\n* `ConstantSmagorinsky` (with no buoyancy modification --- yet)\r\n* `ConstantIsotropicDiffusivity`\r\n* `DirectionalDiffusivity` (with different horizontal and vertical diffusivities --- for lack of a better term).\r\n\r\nThere is also an abstraction --- we have `ScalarDiffusivity`s and `TensorDiffusivity`s. The `DirectionalDiffusivity` is an example of a tensor diffusivity.\r\n\r\nI would like to add docs before merging. Please review the code and let me know what can be improved while I work on docs, and suggest improvements to the doc strings.\r\n\r\nThere are some unit tests included in this PR. Please take a look and suggest new ones.\r\n\r\nThere is significant notation associated with this PR. I don't think we need to finalize the notation here, but comments are welcome.\r\n\r\nThis PR makes a significant contribution to `Oceananigans`' suite of operators: we introduce difference and interpolation operators that act on functions, thereby permitting the *composition* of such operations. The notation for a difference operator denoted by `\u03b4` would be\r\n\r\n`\u03b4x_caa` or `\u03b4x_faa` \r\n\r\nwhere the three letters `caa` denote that differencing is performed at the location \"x cell, any y location, any z location\". The three letter format is an unambiguous specification of the location of a field in three dimensions on a staggered grid. Note that in this PR I have only defined partial derivative operators in this format, rather than difference operators, as we currently only accommodate regular grids.\r\n\r\nAn interpolation operator is denoted by \"blacktriangleright\", so that\r\n\r\n`\u25b6x_caa`\r\n\r\ndenotes the interpolation of a field from `caa` to `faa`. Note that the destination of the operation is implied.\r\n\r\nUsing composition, we also define double interpolations, such as\r\n\r\n`\u25b6xy_ffa`,\r\n\r\nwhich interpolates a field located at `ffa` (x face, y face, and any z location) to `cca`. \r\n\r\nThere are 12 such double interpolation operators and they are essential for specifying eddy diffusivity closures based on strain rate.\r\n\r\nI think that using composition to its fullest will ultimately reduce the code length, make the code easier to maintain, and will probably make the code more robust by reducing the number of possible bugs. I think these should eventually be moved into `/src/operators/`, but I also think this should wait for a future PR. Ultimately I believe all the operators should be overhauled to match the pattern introduced in this PR.\r\n\r\nThis PR partially partially solves #217 and will replace #218.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-24T03:04:38Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2019-05-24T22:49:08Z",
+    "number": 234,
+    "title": "Turbulence closures --- wow!"
+  }
+]

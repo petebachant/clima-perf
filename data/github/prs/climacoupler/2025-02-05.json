@@ -1,0 +1,124 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n`DecayWithHeightDiffusion` is what we currently use in ClimaAtmos for non-EDMF runs.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-04T22:36:11Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-02-05T01:58:24Z",
+    "number": 1171,
+    "title": "change FriersonDiffusion to DecayWithHeightDiffusion"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "With the release of v0.8.2 for ClimaTimeSteppers, you cannot use a number for `saveat`.\r\n\r\n- [X] Verify nightly coarse AMIP can enter the time stepping loop (see this [buildkite](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/246#_))",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-04T18:42:34Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2025-02-05T02:00:59Z",
+    "number": 1167,
+    "title": "Pass in arrays for saveat."
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nI missed this in #1164 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-05T05:00:05Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-02-05T05:28:27Z",
+    "number": 1173,
+    "title": "modify default land albedo code comment"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe MPI AMIP CI run has not been running on our CPU reservation, but this has led to very long buildkite wait times just because of this one job. This PR makes a couple of changes to its config and the memory requested for this job with the goal of making it small enough to reasonably run on the CPU reservation.\r\n\r\nThis PR makes the following changes to the MPI AMIP config (`amip_coarse_mpi.yml`) with the intention of decreasing its memory footprint:\r\n- increase `dt_save_to_sol` from 1 days to 10 days\r\n- decreate `h_elem` from 6 to 4\r\n\r\nNote: before this PR, the MPI AMIP job was using the following amount of resources:\r\n```\r\n[jsloan@login3 ~]$ seff 47086121\r\nJob ID: 47086121\r\nCluster: central\r\nUser/Group: esmbuild/club\r\nState: COMPLETED (exit code 0)\r\nNodes: 1\r\nCores per node: 4\r\nCPU Utilized: 00:59:35\r\nCPU Efficiency: 95.38% of 01:02:28 core-walltime\r\nJob Wall-clock time: 00:15:37\r\nMemory Utilized: 36.57 GB (estimated maximum)\r\nMemory Efficiency: 76.18% of 48.00 GB (48.00 GB/node)\r\n```\r\nThis PR changes the pipeline to request only 4x8GB for this run, so hopefully 32GB will be enough for it now",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-05T21:49:49Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-02-05T22:43:00Z",
+    "number": 1174,
+    "title": "run MPI AMIP on CPU reservation"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe ClimaAtmos-only benchmark runs have been [failing](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/220#_) because the test environment compat wasn't updated correctly when we updated to ClimaTimeSteppers v0.8. This PR fixes the test compat so the test environment can use the latest Atmos and CTS versions",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-04T18:48:49Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-02-05T22:44:05Z",
+    "number": 1168,
+    "title": "update test compat"
+  },
+  {
+    "additions": 82,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRemove all uses of `sim_mode` after initialization, which was mostly in postprocessing/diagnostics. Note that now _all_ available diagnostics will be plotted at the end of the simulation, where before we specified a subset to plot based on the simulation type.\r\n\r\ncloses #1138\r\n\r\n## To-do\r\n- [x] check CI output diagnostics\r\n\r\n\r\n## Content\r\n- [x] shared postprocessing for slabplanet and AMIP simulation types\r\n- [x] rename `amip_diags_handler` -> `diags_handler`\r\n- [x] delete `plot_diagnostics` config option (redundant with `use_coupler_diagnostics`)\r\n- [x] remove `mode_specifics` from `CoupledSimulation` altogether\r\n- [x] rename `amip_diagnostics_setup` to `coupler_diagnostics_setup`\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6mNoGD",
+        "number": 1138,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1138"
+      }
+    ],
+    "createdAt": "2025-01-28T23:14:16Z",
+    "deletions": 147,
+    "labels": [],
+    "mergedAt": "2025-02-05T23:39:58Z",
+    "number": 1153,
+    "title": "use `sim_mode` only in init"
+  }
+]

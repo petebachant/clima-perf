@@ -1,0 +1,89 @@
+[
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I thought that #3432 updated ClimaCore, but it turned out that we were held back by our BlockArrays dependency/compat, which was added ages ago. We don't actually need it, so this PR removes BlockArrays and Colors as direct dependencies, and updates the manifest files.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T19:03:47Z",
+    "deletions": 80,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2024-11-14T04:43:02Z",
+    "number": 3436,
+    "title": "Update compats and dependencies"
+  },
+  {
+    "additions": 149,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds some unit tests for the reproducibility infrastructure, and attempts to improve the documentation.\r\n\r\nThanks for suggesting this, @Sbozzolo.\r\n\r\nOne downside of this PR is that I've removed this check:\r\n\r\n```julia\r\n    ref_counters_main = map(read_ref_counter, ref_counter_files_main)\r\n    if all(rc -> ref_counter_PR == rc + 1, ref_counters_main) # new reference\r\n        @warn \"`ref_counter.jl` incremented, assuming no comparable references\"\r\n        @info \"Ref counters main: $ref_counters_main.\"\r\n        @info \"Please review output results before merging.\"\r\n        return String[]\r\n    elseif all(rc -> ref_counter_PR == rc, ref_counters_main) # unchanged reference\r\n        @info \"Ref counters main: $ref_counters_main.\"\r\n        @info \"Comparing results against main path:$paths\"\r\n    else\r\n        error(\r\n            \"Unexpected reference. Please open an issue pointing to this build.\",\r\n        )\r\n    end\r\n```\r\nBut I think it no longer makes sense in the context of `latest_comparable_paths` returning comparable paths, because the path must contain the same ref counter as the main branch (which is now specified as a function argument).\r\n\r\nAm I missing any edge cases that could happen?",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T22:07:35Z",
+    "deletions": 64,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      },
+      {
+        "color": "6F8DE9",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABStXt9A",
+        "name": "Reproducibility tests \ud83c\udfb2"
+      }
+    ],
+    "mergedAt": "2024-11-14T15:17:50Z",
+    "number": 3437,
+    "title": "Add unit tests for some reproducibility infrastructure"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR renames a file, and moves some functions, in preparation for adding more reproducibility unit tests.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-14T15:27:01Z",
+    "deletions": 61,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      },
+      {
+        "color": "6F8DE9",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABStXt9A",
+        "name": "Reproducibility tests \ud83c\udfb2"
+      }
+    ],
+    "mergedAt": "2024-11-14T16:52:59Z",
+    "number": 3438,
+    "title": "Improve names, prep for more repro unit tests"
+  }
+]

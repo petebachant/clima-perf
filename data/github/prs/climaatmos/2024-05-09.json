@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 384,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Attempt to close #2651.\r\n\r\nThis PR:\r\n - Merges `config/default_configs/default_edmf_config.yml` into `config/default_configs/default_config.yml`, so that there is a single default (and still over-ridable) config yaml.\r\n - Removes `job_id` from the toml files\r\n - `job_id` was added to the parsed args, so that we can fully control the output folder in the buildkite pipeline. The attempt to guess the job ID in #2986 still required additional special casing (the same `config_id` and resources could be used for a driver example and a performance script, resulting in `job_id` collisions).\r\n - Added `config_files` to `AtmosConfig`. `config_files` is now _required_ for all jobs, and has the same fallback as before. The main difference is that we can inspect `(::AtmosConfig).config_files` to see where the parameters came from.\r\n - I've made `config_path` and `default_config_file` constants, so that they can be reused in a few places\r\n - `configs_per_job_id` was renamed to `configs_per_config_id`, and the values of that returned dict is now a NamedTuple: `(; config, config_file)`, so that, again, we can trace where parameters are coming from\r\n\r\nTo make a config, the driver now uses:\r\n```julia\r\n    (; config_file, job_id) = CA.commandline_kwargs()\r\n    config = CA.AtmosConfig(config_file; job_id)\r\n```\r\nI think that explicitly specifying the config improves the clarity. If those arguments are not passed, we have a fallback to use `config_file::String = default_config_file` and `job_id = config_id_from_config_file(config_file)`.\r\n\r\nThis is technically breaking because `CA.AtmosConfig()` no longer does arg parsing (and depending on what was available would use given or the default config), which I think was very confusing. Now, that logic is isolated to `(; config_file, job_id) = CA.commandline_kwargs()`, which simply has defaults.\r\n\r\nI've not yet removed the duplicate yaml files, but I think this should make doing so much easier.\r\n\r\nSupersedes #2986, #2981",
+    "changedFiles": 152,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5-tGR0",
+        "number": 2651,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2651"
+      }
+    ],
+    "createdAt": "2024-05-08T18:17:32Z",
+    "deletions": 391,
+    "labels": [
+      {
+        "color": "83243D",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABRQnXow",
+        "name": "Breaking :boom:"
+      }
+    ],
+    "mergedAt": "2024-05-09T20:52:54Z",
+    "number": 2994,
+    "title": "Revamp `job_id`, take 2"
+  }
+]

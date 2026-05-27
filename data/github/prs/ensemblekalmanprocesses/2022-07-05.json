@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 299,
+    "author": {
+      "id": "MDQ6VXNlcjczMjA2NQ==",
+      "is_bot": false,
+      "login": "eviatarbach",
+      "name": "Eviatar Escolar Bach"
+    },
+    "body": "This adds two localization methods based on sampling error correction (SEC). The currently implemented localization methods, except Bernoulli, assume some sort of distance being defined between parameters (see Eq. 3.2 in Tong and Morzfeld, 2022), which is only easy to do when the parameters have an inherent spatial structure. The localization methods in this PR do not make this assumption, and instead work by shrinking small cross-correlations which may be spurious.\r\n\r\nThe first method, `SEC`, from Lee (2021), simply shrinks the sample cross-correlations `r` by a factor `|r|^alpha`, where `alpha` is a tunable parameter. The second, `SECFisher`, from Flowerdew (2015), tries to compute an optimal shrinking factor using the sample cross-correlation and ensemble size. Interestingly, Lee (2021) seems to work better for the problems I've tested.\r\n\r\nImplementing these methods required changing the localization module to use arbitrary localization functions, instead of only Schur products with matrices. Additionally, the localization functions take the full covariance matrix of [u, G(u)] as input, and localization can now be applied to both the u\u2013G(u) as well as the G(u)\u2013G(u) blocks.\r\n\r\n**References**\r\n\r\nFlowerdew, J. (2015). Towards a theory of optimal localisation. Tellus A: Dynamic Meteorology and Oceanography, 67(1), 25257. https://doi.org/10.3402/tellusa.v67.25257\r\nLee, Y. (2021). Sampling error correction in ensemble Kalman inversion. arXiv:2105.11341 [cs, math]. http://arxiv.org/abs/2105.11341\r\nTong, X. T., & Morzfeld, M. (2022). Localization in Ensemble Kalman inversion. arXiv:2201.10821 [cs, math, stat]. http://arxiv.org/abs/2201.10821",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-06-03T22:35:21Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2022-07-05T19:17:35Z",
+    "number": 165,
+    "title": "Localization using sampling error correction"
+  }
+]

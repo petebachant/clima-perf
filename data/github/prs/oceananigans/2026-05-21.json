@@ -1,0 +1,142 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Removed a reference to a paper on deploying machine learning components with OASIS3-MCT and Eophis.\r\nThey don't use Oceananigans; only cite it.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T00:34:00Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-05-21T00:41:10Z",
+    "number": 5611,
+    "title": "Remove reference to machine learning deployment paper"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T00:47:07Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-05-21T01:23:03Z",
+    "number": 5612,
+    "title": "Update DJ4Earth reference"
+  },
+  {
+    "additions": 1310,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Towards #4332.\n\nThis PR adds `NetCDFWriter` support for `OrthogonalSphericalShellGrid` and lays the plumbing for `MutableVerticalDiscretization` (z-star). Since `TripolarGrid`, `RotatedLatitudeLongitudeGrid`, and `ConformalCubedSpherePanelGrid` are all type aliases of `OrthogonalSphericalShellGrid`, supporting OSSG covers all three.\n\ncc @simone-silvestri @vopikamm \u2014 would value your eyes on this, especially:\n- the staggered-name conventions for the 2D `\u03bb`/`\u03c6` aux coords,\n- the `r` vs `z` naming choice for the reference vertical coord on MVD grids,\n- the best-effort `constructor_arguments` for `RotatedLatitudeLongitudeGrid`.\n\n## Approach: CF \u00a75.2 auxiliary coordinates\n\nFor OSSG, this PR writes:\n\n- **Bare logical-index dimensions** `i_caa`/`i_faa`/`j_aca`/`j_afa` (created by `defDim` only; no coordinate variable on them \u2014 matches MOM6/NEMO conventions).\n- **Eight 2D auxiliary coordinate variables** `\u03bb_cca`/`\u03bb_fca`/`\u03bb_cfa`/`\u03bb_ffa` and `\u03c6_*` at every Arakawa-C stagger location, each dimensioned `(i_*, j_*)`.\n- **Per-field `coordinates` attribute**: every data field gets `coordinates = \"\u03bb_** \u03c6_** z_aac\"` so xarray, ncview, Panoply, CDO etc. pick up the right lat/lon pair.\n\nExample tracer field on a TripolarGrid:\n\n```\nT(i_caa, j_aca, z_aac, time) ;\n  T:coordinates = \"\u03bb_cca \u03c6_cca z_aac\" ;\n```\n\n## MVD: `r` for the reference coord\n\nFor `MutableVerticalDiscretization` (z-star), the on-disk 1D vertical coordinate is `r_aac`/`r_aaf` (Lagrangian reference). The physical `z = z(r, \u03b7, \u2026)` is reconstructible from `r` and the time-varying free surface `\u03b7` at read time.\n\n`StaticVerticalDiscretization` is unaffected \u2014 it keeps writing `z_aac`/`z_aaf` exactly as before.\n\nPlumbed through a tiny new helper:\n\n```julia\nvertical_coordinate_name(::StaticVerticalDiscretization)  = \"z\"\nvertical_coordinate_name(::MutableVerticalDiscretization) = \"r\"\n```\n\n\u2026called at every site in `dimensions.jl` that previously hardcoded `\"z\"`.\n\n## Architectural changes (touch all grids, all gated to be no-ops for existing grids)\n\n1. **`create_spatial_dimensions!` accepts `(array, dims)` namedtuples.** This is what unlocks 2D aux coords sitting on bare 1D dimensions. The 1D coord-variable case (Rectilinear, LatitudeLongitudeGrid, all vertical) is auto-wrapped via a `nc_variable` helper and behaves identically.\n2. **`create_field_dimensions!` short-circuits if dims already exist.** During the normal `initialize_nc_file` flow `gather_dimensions` has already created everything, so we just look up names instead of trying (and failing) to re-zip 2D `\u03bb`/`\u03c6` arrays against bare 1D dim names.\n\n## What's not in this PR (will iterate)\n\n- Time-varying \u03b7 output for MVD (the metric lifecycle \u2014 needs `write_output!` extension)\n- OSSG grid metrics (`\u0394x_**`, `\u0394y_**`, `Az_**`) \u2014 only the eight coord aux vars are written so far\n- FieldTimeSeries round-trip tests for OSSG\n- Tests in `test/test_netcdf_writer.jl` covering the new grids\n- Formal CF `formula_terms` on `r_aac` for z-star\n\nThese will land as follow-up commits on this branch before merge.\n\n## Smoke validation (local)\n\n- TripolarGrid write produces correct dim names and `coordinates` attributes.\n- Non-rotated `RotatedLatitudeLongitudeGrid` produces field values **identical** to the equivalent `LatitudeLongitudeGrid` and coord arrays matching to roundoff \u2014 the cross-validation linchpin from the design plan.\n- Rectilinear and LatLon regression: no behavior change in file structure.\n\nThe cross-validation result:\n\n```\nLLG  \u03bb_caa: [11.25, 33.75, 56.25, 78.75, 101.25]\nRLLG \u03bb_cca[:,1]: [11.249999999999998, 33.75, 56.25, 78.75, 101.25]\nLLG  T[8,6,2,end]: 0.6846098\nRLLG T[8,6,2,end]: 0.6846098\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-13T16:29:31Z",
+    "deletions": 59,
+    "labels": [],
+    "mergedAt": "2026-05-21T04:53:52Z",
+    "number": 5581,
+    "title": "Support OrthogonalSphericalShellGrid in NetCDFWriter (CF \u00a75.2 + MutableVerticalDiscretization plumbing)"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "At the moment we are missing a `set!` function to support loading chunked memory from split file paths. This PR introduces it.  MWE (which works on this branch and fails on main):\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.OutputReaders: SplitFilePath\r\n\r\ngrid = RectilinearGrid(size=(2, 2, 2), extent=(1, 1, 1))\r\nmodel = HydrostaticFreeSurfaceModel(grid; tracers=:c, buoyancy=nothing)\r\n\r\nset_tracer_to_iteration(sim) = fill!(parent(sim.model.tracers.c), sim.model.clock.iteration)\r\nsimulation = Simulation(model, \u0394t=1, stop_iteration=10, verbose=false)\r\nadd_callback!(simulation, set_tracer_to_iteration, IterationInterval(1))\r\n\r\nsimulation.output_writers[:c] = JLD2Writer(model, model.tracers;\r\n                                           filename = \"split_mwe\",\r\n                                           schedule = IterationInterval(1),\r\n                                           file_splitting = TimeInterval(3),\r\n                                           overwrite_existing = true)\r\nrun!(simulation)\r\nfull   = FieldTimeSeries(\"split_mwe.jld2\", \"c\")\r\npartly = FieldTimeSeries(\"split_mwe.jld2\", \"c\"; backend=InMemory(2))\r\n\r\nfor n in 1:length(partly.times)\r\n    a = interior(full[n])[1, 1, 1]\r\n    b = interior(partly[n])[1, 1, 1]\r\n    @test a == b\r\nend\r\n```\r\non main returns:\r\n```julia\r\n\u250c Warning: No data found for time 2.0e+00 and time index 3\r\n\u2502 for field /Users/simonesilvestri/development/Oceananigans.jl/split_mwe_part4.jld2 at path c\r\n\u2514 @ Oceananigans.OutputReaders ~/development/Oceananigans.jl/src/OutputReaders/set_field_time_series.jl:67\r\n\u250c Warning: No data found for time 3.0e+00 and time index 4\r\n\u2502 for field /Users/simonesilvestri/development/Oceananigans.jl/split_mwe_part4.jld2 at path c\r\n\u2514 @ Oceananigans.OutputReaders ~/development/Oceananigans.jl/src/OutputReaders/set_field_time_series.jl:67\r\nTest Failed at REPL[14]:4\r\n  Expression: a == b\r\n   Evaluated: 2.0 == 0.0\r\n\r\nERROR: There was an error during testing\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-20T10:36:10Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-05-21T10:52:49Z",
+    "number": 5607,
+    "title": "Support `InMemory(N)` with split timeseries"
+  },
+  {
+    "additions": 129,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\nThree issues blocked the `LagrangianAveragedDynamicSmagorinsky` regression test from running correctly:\n\n1. **Duplicate `for` loop** in `test_nonhydrostatic_regression.jl` \u2014 outer loop bindings were shadowed by an inner loop with identical content (each closure tested 16\u00d7 instead of 4\u00d7). Collapsed to one loop.\n\n2. **State restored via direct `.=` instead of `set!`** in `ocean_large_eddy_simulation_regression_test.jl` \u2014 bypassed `initialize_closure_fields!`, leaving `\ud835\udca5\u1d39\u1d39 = 0` and permanently disabling the Lagrangian closure. Now uses `set!(...; enforce_incompressibility=false)` and explicitly restores `closure_fields` from the checkpoint.\n\n3. **`previous_compute_time::Ref` not restored** \u2014 the closure-restoration loop only handled `Field` leaves, leaving the `Ref` at the model's initial `clock.time = 0`. The first time step computed `\u0394t_lagrangian = clock.time - 0 = 20000` instead of `\u0394t = 2`, which drove `\u03f5 \u2248 1` in `_lagrangian_average_LM_MM!` and effectively discarded the carefully-restored \ud835\udca5 history. The loop now copies `Base.RefValue` leaves alongside `Field` leaves.\n\nPlus supporting loader changes: auto-detect new (`simulation/model/...`) vs legacy checkpoint paths, and a `load_interior(data, target_size)` helper that auto-detects how many halo layers are saved and unwraps `OffsetArray`s.\n\nWith all three in place, the regression matches the reference at iteration 10010 to machine epsilon (~1e-15) across all four closures (AMD, SmagorinskyLilly, DirectionalDynamicSmagorinsky, LagrangianDynamicSmagorinsky).\n\n## Notes\n\nCI will fail on `LagrangianDynamicSmagorinsky` until the companion artifacts PR is merged \u2014 the previously-committed reference data was incompatible with the fixed closure code.\n\n**Companion artifacts PR**: glwagner/OceananigansArtifacts.jl#7\n\n## Test plan\n\n- [x] `nonhydrostatic_regression` group passes locally with all four closures (\u0394 at machine epsilon)\n- [x] CI passes after glwagner/OceananigansArtifacts.jl#7 is merged\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-15T15:37:55Z",
+    "deletions": 57,
+    "labels": [],
+    "mergedAt": "2026-05-21T11:21:06Z",
+    "number": 5506,
+    "title": "Fix broken LagrangianAveraged DynamicSmagorinsky regression tests"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\n`PerturbationAdvection` previously had no custom display method, so it fell back to Julia's default struct printing:\n\n```julia\nPerturbationAdvection{Float64, Nothing}(1.0, 10.0, 0.0, nothing)\n```\n\nThis is hard to read \u2014 the four positional values give no hint of which field is which.\n\nThis PR adds `Base.summary` and a tree-style `Base.show`, modeled on the existing `RiBasedVerticalDiffusivity` show method:\n\n```julia\nPerturbationAdvection{Float64}\n\u251c\u2500\u2500 inflow_timescale: 1.0\n\u251c\u2500\u2500 outflow_timescale: 10.0\n\u251c\u2500\u2500 gravity_wave_speed: 0.0\n\u2514\u2500\u2500 density: Nothing\n```\n\n## Changes\n\n- `src/BoundaryConditions/perturbation_advection.jl`: add `Base.summary` and `Base.show`, plus an explicit `using Oceananigans.Utils: prettysummary` import.\n- `docs/src/models/boundary_conditions.md`: update the existing `jldoctest` output to match the new display.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T11:53:12Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-21T14:42:40Z",
+    "number": 5616,
+    "title": "Add `show` method for `PerturbationAdvection`"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "#5586 routed `set_to_field!` through `on_architecture(child_architecture(u), v)`\r\n+ `fill_halo_regions!(v_on_u)` + `interpolate!` whenever `matching_field_discretization` is false. On distributed fields that path is broken in two ways:\r\n\r\n1. `indices(u) == indices(v)` rejects equivalent windows like `(:, :, :)` vs `(1:Nx, 1:Ny, 1:Nz)`, sending well-formed `set!` calls down the else branch unnecessarily. `TransposableField` constructs zfield/yfield/xfield with explicit unit-range indices, so `set!(\u03a6.zfield, \u03d5)` in `test_distributed_transpose.jl` always falls through.\r\n\r\n2. `on_architecture(child_architecture(u), v)` strips `Distributed{CPU}` to `CPU` on the grid but leaves the `DistributedCommunicationBoundaryCondition`s (and the precompiled `DistributedFillHalo` kernels) intact. The subsequent `fill_halo_regions!(v_on_u)` then dispatches to the non-distributed path and invokes `DistributedFillHalo{WestAndEast}` with 6 args via the inlined `fill_halo_event!`, when the only method takes 7 (`c, bc1, bc2, loc, grid, arch, buffers`) \u2014 MethodError.\r\n\r\nFixes:\r\n\r\n* `matching_field_discretization` now treats `Colon` and the equivalent full `UnitRange` as the same window (per-dimension, parameterized by size). Same size + same location + equivalent windows now correctly takes the cheap copy path.\r\n\r\n* `set_to_field!` fills halos on `v`'s native architecture before migrating, so distributed dispatch is used when `v` is distributed. The post-migration `interpolate!` then samples a field whose halos are already populated.\r\n\r\nRepros via `test/test_distributed_transpose.jl` (passed at parent of #5586, failed at the merge of #5586).\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T20:02:43Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-05-21T21:51:27Z",
+    "number": 5619,
+    "title": "Fix `set!(::DistributedField, ::Field)` regression from #5586"
+  }
+]

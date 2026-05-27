@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1199,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Refactoring\r\n\r\nFollowing #3411 it is clear that the grids require some refactor to allow ZStar. \r\nThis PR implements another proposal for ZStar which hinges on changing the grids to have just one `z` field.\r\nThe case of a static z (the only allowed in Oceananigans at the moment) is covered with a `StaticVerticalCoordinate` type that contains all the specifications that were in the grid before:\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/Grids/vertical_coordinate.jl#L14-L19\r\nThis refactor should change nothing in the user interface nor the internals of the code, since the whole API should depend on `znode` and `\u0394z`, but just reorganizes the vertical coordinate in a compact type that can be modified.\r\n\r\n## ZStar Implementation\r\n\r\nWith this refactor, a ZStar coordinate is implemented through a `ZStarVerticalCoordinate` type\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/Grids/vertical_coordinate.jl#L36-L48\r\n`e\u2083` is the vertical scaling of the grid spacing defined as \r\n```math\r\n\\frac{\\partial z}{\\partial r} = \\frac{H + \\eta}{H}\r\n```\r\nwith $z$ the actual spatial coordinate (moving with the free surface) and $r$ is the reference vertical coordinate also called $z^\\star$ (equivalent to a static coordinate, or $z$ when $\\eta = 0$).\r\n`\u03b7\u207f` is the value of the free surface at the current time step, needed to calculate `znodes` \r\n```math\r\nz = r \\cdot e_3 + \\eta \\ .\r\n```\r\nFinally $H$ is the output of `static_column_depth`.\r\nAs a consequence of the definitions, all $z$ properties (`znodes`, `zspacings`, `\u0394z`, etc...) are replaced with $r$ (`rnodes`, `rspacings`,`\u0394r`, etc...) and the $z$ properties for a zstar vertical coordinate are calculated appropriately in the Operators module (https://github.com/CliMA/Oceananigans.jl/blob/ss/new-zstar/src/Operators/variable_grid_operators.jl)\r\n\r\nAn example of the proposed user interface is shown in the `validation/z_star_coordinate` examples\r\n\r\n## Changes in the model timestepping\r\n\r\nAnother requirement is changing the internals of the `HydrostaticFreeSurfaceModel` to solve the correct equations, in particular, the notable changes are:\r\n\r\n(1) Updating the grid at each timestep in the `update_state!` step\r\n\r\n(2) including the gradient of the grid in the momentum equations, calculated as:\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/Models/HydrostaticFreeSurfaceModels/z_star_vertical_spacing.jl#L85-L100\r\n\r\n(3) Changing the computation of the vertical velocity to include the movement of the grid\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/Models/HydrostaticFreeSurfaceModels/compute_w_from_continuity.jl#L22-L35\r\n\r\n(4) Advancing $e_3\\theta$ instead of $\\theta$ in the tracer equations and subsequently unscale it back after the grid scaling factor at the new time step $e_3^{n+1}$ is known\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/Models/HydrostaticFreeSurfaceModels/hydrostatic_free_surface_ab2_step.jl#L111-L128\r\n\r\n(5) Adding a non-linear free surface by changing the `static_column_depth` in the split explicit free surface implementation to a `dynamic_column_depth` defined as\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/9e05e21921affdf3c8bdeb5a1f58da926550e907/src/ImmersedBoundaries/zstar_immersed_grid.jl#L14-L17\r\n\r\n#### Note: these changes are valid only for the QuasiAdamsBashort2 timestepper. Support for the SplitRungeKutta3 timestepper requires a bit more work and can be done when all the infrastructure is in place\r\n\r\n## OutputWriters?\r\n\r\nThe last piece of the puzzle (not implemented in this PR) would be to change the `OutputWriters` to include by default the variable grid properties in the `timeseries` field of the jld2 / netcdf writer.\r\n\r\n## Possibility for improvements\r\n\r\nI got a bit carried away and completed a working implementation to make sure it could be done this way, but I am happy to change just about everything in here. I would like to know what people think about this implementation and what people suggest especially in terms of \r\n(1) Implementation\r\n(2) Variable naming\r\n\r\nI can also split this PR in a couple of ones, probably one that includes the refactor to the grids (implementation of a `StaticVerticalCoordinate`) and one that implements a working version of a `ZStarVerticalCoordinate`.",
+    "changedFiles": 38,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-25T11:38:19Z",
+    "deletions": 220,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2025-01-18T04:17:35Z",
+    "number": 3956,
+    "title": "(0.95.7) Yet another ZStar implementation"
+  }
+]

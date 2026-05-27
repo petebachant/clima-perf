@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 952,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Purpose \r\n\r\nRefactor the adiabatic parcel code to get rid of convoluted if/else logic that frew on us\r\n\r\n## Content\r\n\r\nThe parcel model code is now structured into\r\n- `Parcel.jl` - includes all the files. Needs to be included in all examples\r\n- `ParcelCommon.jl` - defines some functions that are reused when computing initial conditions, etc.\r\n- `ParcelDistributions.jl` - computes the mean radius, area and volume for particles for monodisperse, Gamma and Lambda distributions\r\n- `ParcelModel.jl` - defines the parcel problem for ODE solver\r\n- `ParcelParameters.jl` - creates structs with parameters that will be used to dispatch over different parameterizations\r\n- `ParcelTendencies.jl` - defines different ice nucleation and growth tendencies. Note that for each of them the first argument is a parameter struct that serves as type for dispatching.\r\n\r\n## To-do\r\n\r\nCouple of problems that I noticed while coding\r\n\r\n- I think there is something wrong with the `Lognormal` distribution. It seems like it is not connected at all with the predicted `ql` and `Nl`. Is it meant to be used only for background aerosol?\r\n- In a couple of places we were using <r>^3 instead of <r^3>. For example [here]( https://github.com/CliMA/CloudMicrophysics.jl/blob/7fbe3443c5cd4f5afec594601dfdf8e86e433667/parcel/parcel.jl#L132). This should be fixed now thanks to the `ParcelDistributions`\r\n- The `Jensen` example gives different results than before. I think it is because of the issues with the `Lognormal` size distribution. \r\n\r\n\r\n\r\n\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-21T08:13:15Z",
+    "deletions": 920,
+    "labels": [
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      }
+    ],
+    "mergedAt": "2024-02-24T01:23:02Z",
+    "number": 331,
+    "title": "Refactor parcel"
+  }
+]

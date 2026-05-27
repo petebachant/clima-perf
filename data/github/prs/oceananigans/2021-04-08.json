@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-08T14:15:18Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2021-04-08T15:02:20Z",
+    "number": 1557,
+    "title": "Adding norm for fields with some tests."
+  },
+  {
+    "additions": 159,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a new function `accurate_cell_advection_timescale` that is used to compute CFL at every grid point then reduced to find the maximum (which is the correct way as discussed in #1201).\r\n\r\nIt will allow us to use the `TimeStepWizard` for adaptive time-stepping on all grids. I'll also extend it to `ShallowWaterModel` before merging.\r\n\r\nSo it works great and scales well on the CPU but not so well on the GPU (see below). At 256^3, `cfl(model)` takes as long as ~5 time steps.\r\n\r\nIs this something we want to merge? If we don't want to slow down adaptive time-stepping for existing models we could just export `accurate_cell_advection_timescale` so that adaptive time-stepping with accurate CFL is opt-in, e.g. via an `AccurateTimeStepWizard` or something.\r\n\r\nMotivation for using Tullio.jl:\r\n\r\nOriginally I tried just using `mapreduce` but couldn't get it to work without a nested `mapreduce` which would trigger tons of kernel launches: https://discourse.julialang.org/t/is-it-possible-to-do-a-mapreduce-with-multiple-arrays-while-broadcasting-over-so/57433\r\n\r\nThen I found out about Tullio.jl (super neat package we might want to use more) which allows us to compute CFL and reduce it down elegantly, however, reducing to one scalar does not currently work so I have to reduce the 3D CFL calculation to a 1D vector: https://github.com/mcabbott/Tullio.jl/issues/91\r\n\r\nApparently optimizing reductions on the GPU is non-trivial but can be done: https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_website/projects/reduction/doc/reduction.pdf Not sure if an optimized reduction kernel is available in Julia/CUDA.jl but maybe they will be in the future. @maleadt or @vchuravy might know...\r\n\r\n```\r\njulia> model.architecture\r\nCPU()\r\n\r\njulia> size(grid)\r\n(32, 32, 32)\r\n\r\njulia> @btime time_step!(model, 1)\r\n  5.977 ms (2090 allocations: 343.97 KiB)\r\n\r\njulia> @btime cfl(model)\r\n  127.870 \u03bcs (10 allocations: 2.36 KiB)\r\n```\r\n\r\n```\r\njulia> model.architecture\r\nGPU()\r\n\r\njulia> size(grid)\r\n(32, 32, 32)\r\n\r\njulia> @btime time_step!(model, 1)\r\n  2.632 ms (7058 allocations: 820.19 KiB)\r\n\r\njulia> @btime cfl(model)\r\n  1.294 ms (257 allocations: 25.36 KiB)\r\n```\r\n\r\n```\r\njulia> model.architecture\r\nCPU()\r\n\r\njulia> size(grid)\r\n(256, 256, 256)\r\n\r\njulia> @btime time_step!(model, 1)\r\n  3.378 s (2090 allocations: 343.97 KiB)\r\n\r\njulia> @btime cfl(model)\r\n  134.737 ms (10 allocations: 4.16 KiB)\r\n```\r\n\r\n```\r\njulia> model.architecture\r\nGPU()\r\n\r\njulia> size(grid)\r\n(256, 256, 256)\r\n\r\njulia> @btime time_step!(model, 1)\r\n  22.507 ms (7066 allocations: 1.09 MiB)\r\n\r\njulia> @btime cfl(model)\r\n  128.361 ms (257 allocations: 41.53 KiB)\r\n```\r\n\r\nResolves #1201\r\nResolves #1447\r\n\r\nX-Ref: #1422",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NDk2NzM2NDk=",
+        "number": 1201,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1201"
+      },
+      {
+        "id": "MDU6SXNzdWU4MjYzMDk4OTA=",
+        "number": 1447,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1447"
+      }
+    ],
+    "createdAt": "2021-03-18T22:17:17Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2021-04-08T20:38:32Z",
+    "number": 1497,
+    "title": "Adaptive time-stepping on all grids"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts CliMA/Oceananigans.jl#1557\r\n\r\nSee https://github.com/CliMA/Oceananigans.jl/pull/1559#issuecomment-816169253",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-08T20:56:13Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2021-04-08T22:05:50Z",
+    "number": 1562,
+    "title": "Revert \"Adding norm for fields with some tests.\""
+  }
+]

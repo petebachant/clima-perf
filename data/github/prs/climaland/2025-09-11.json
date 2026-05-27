@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR updates to ClimaParams v1 and updates SurfaceFluxes, Thermodynamics, and Insolation for compatibility.\r\nThe only breaking change in v1 was the removal of the `AbstractTOMLDict` type, which I have replaced with dispatch to `ParamDict`.",
+    "changedFiles": 28,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-09T22:36:14Z",
+    "deletions": 121,
+    "labels": [],
+    "mergedAt": "2025-09-11T01:27:26Z",
+    "number": 1406,
+    "title": "Update to ClimaParams v1"
+  },
+  {
+    "additions": 802,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe have 3 runoff models, which result in different runoff variables being added to the model:\r\n- `NoRunoff`: -\r\n- `SurfaceRunoff`: R_s\r\n- `TOPMODELRunoff`: R_s, R_ss\r\n\r\nRight now, we always access `p.soil.R_s` and `p.soil.R_ss` in the diagnostic compute functions, but this errors in the cases where the variable does not exist. We need to instead dispatch on the runoff model type in the compute function, and decide what to return if the variable does not exist.\r\n\r\nCloses #1305\r\n\r\nMore broadly, we need a way to conditionally add diagnostics based on the parameterizations in the model setup. This PR generalizes how we determine which diagnostics are available for the provided model.\r\n\r\n## Content\r\n- Add `get_possible_diagnostics` methods for each standalone model type\r\n- Construct `get_possible_diagnostics` for integrated models based on standalone methods\r\n- Add methods that dispatch on soil top BC and runoff types, to correctly add diagnostics based on what's available\r\n- Increase lower compat of ClimaTimeSteppers to 0.8.2 and ClimaDiagnostics to 0.2.13 for ITime compatibility\r\n- Remove diagnostic frequency methods written for a single diagnostic (these are unused and unneeded)\r\n\r\n## Todo\r\n- Add dispatch methods for canopy photosynthesis/conductance\r\n  - Actually we may not need this - Right now accessing variables from different places in each model is handled by functions like `get_GPP_canopy`, `get_Vcmax25_leaf`, etc. We will only need to add new methods using dispatch if we want to output a diagnostic that exists in one model but not the other (e.g. optimality variables).\r\n\r\nOne thing to keep in mind:\r\n- Now integrated model available diagnostics are built up from what's available for component models, but the compute methods still need to be defined for the integrated model type. We need to make sure we still write the compute methods for integrated models since they aren't inherited from the standalone models.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7FBgGI",
+        "number": 1305,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1305"
+      }
+    ],
+    "createdAt": "2025-08-19T21:10:40Z",
+    "deletions": 519,
+    "labels": [],
+    "mergedAt": "2025-09-11T22:06:16Z",
+    "number": 1350,
+    "title": "compute runoff diagnostics based on model being used "
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Let's see if this works...",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-06T07:58:16Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "c5def5",
+        "description": "Add this label to built the docs in a PR",
+        "id": "LA_kwDOIOi2Ys8AAAABr9hy2w",
+        "name": "build docs"
+      }
+    ],
+    "mergedAt": "2025-11-12T09:28:19Z",
+    "number": 670,
+    "title": "Build examples on julia 1.12"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "This PR does 2 things:\r\n- Switch the queue from `new-central` to `central`. Caltech's hpc cluster is switching to a new filesystem soon. As part of the update to the new system, we renamed the queue to central. It has to be updated here or the pipeline will stop working in December.\r\n- Add a depot to the pipeline, which should help decrease initialization time (currently 45-50 minutes). The concurrency group limits one build to be able to initialize at a time, which avoids race conditions in accessing/modifying the cache.\r\n\r\nIf you ever need to clear the depot (e.g. if some packages get corrupted and can't be correctly accessed), you can go to the [Clear Depot pipeline](https://buildkite.com/clima/clear-depot), click \"new build\", and put your pipeline's name as the value for the environment variable `SLUG`, i.e. `slug=climaocean-ci` for this pipeline).\r\n\r\n### Depot speedup\r\n[First time using depot](https://buildkite.com/clima/climaocean-ci/builds/5054) (initializing full environment): 49 minutes\r\n[Second time using depot](https://buildkite.com/clima/climaocean-ci/builds/5055) (cache hit): 22 minutes",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-08T00:12:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-11-12T20:10:28Z",
+    "number": 671,
+    "title": "add depot to CI; use central queue"
+  }
+]

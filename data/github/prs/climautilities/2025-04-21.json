@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 105,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "regrid! stores the regridded data in a pre\r\nallocated ClimaCore field. It also uses\r\ninterpolate! instead of interpolate. This still\r\nallocates, but much less. It also may\r\nmodify the data passed in, but it does not\r\nseem like that happens when using gridded\r\ninterpolation. The function also\r\nrequires that the base element type of\r\nthe passed in dimensions, undertype of the target space, and eltype of the output field all be the same\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nCloses #156 \r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n```\r\ninfil> @benchmark Regridders.regrid($reg_horz, $data_lon2D, $dimensions2D)\r\nBenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.\r\n Range (min \u2026 max):  104.167 \u03bcs \u2026  10.438 ms  \u250a GC (min \u2026 max): 0.00% \u2026 98.75%\r\n Time  (median):     122.667 \u03bcs               \u250a GC (median):    0.00%\r\n Time  (mean \u00b1 \u03c3):   135.574 \u03bcs \u00b1 248.607 \u03bcs  \u250a GC (mean \u00b1 \u03c3):  9.17% \u00b1  5.12%\r\n\r\n                            \u2583\u2587\u2588\u2588\u2586\u2584\u2581                              \r\n  \u2581\u2581\u2581\u2581\u2582\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2582\u2583\u2587\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2587\u2585\u2584\u2583\u2582\u2582\u2582\u2582\u2582\u2582\u2582\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581 \u2582\r\n  104 \u03bcs           Histogram: frequency by time          142 \u03bcs <\r\n\r\n Memory estimate: 535.33 KiB, allocs estimate: 54.\r\n\r\ninfil> @benchmark Regridders.regrid!(\r\n                          $in_place_regridded_lon,\r\n                          $reg_horz,\r\n                          $data_lon2D,\r\n                          $dimensions2D,\r\n                      )\r\nBenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.\r\n Range (min \u2026 max):   93.250 \u03bcs \u2026   7.032 ms  \u250a GC (min \u2026 max): 0.00% \u2026 98.17%\r\n Time  (median):     102.958 \u03bcs               \u250a GC (median):    0.00%\r\n Time  (mean \u00b1 \u03c3):   111.098 \u03bcs \u00b1 203.899 \u03bcs  \u250a GC (mean \u00b1 \u03c3):  6.82% \u00b1  3.66%\r\n\r\n                  \u2581\u2583\u2585\u2586\u2587\u2587\u2588\u2588\u2588\u2587\u2587\u2587\u2586\u2585\u2585\u2584\u2584\u2583\u2583\u2582\u2582\u2581\u2581\u2581\u2581                     \u2583\r\n  \u2582\u2583\u2585\u2586\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2587\u2585\u2585\u2586\u2587\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2587\u2588\u2588\u2587\u2587\u2588\u2587\u2586\u2586\u2586\u2586\u2585\u2586\u2586\u2586\u2586\u2586 \u2588\r\n  93.2 \u03bcs       Histogram: log(frequency) by time        117 \u03bcs <\r\n\r\n Memory estimate: 270.70 KiB, allocs estimate: 31.\r\n```\r\n\r\n### the `regrid!` that uses `interpolate!` instead of `interpolate`\r\n\r\n```\r\n\r\ninfil> @benchmark Regridders.regrid!(\r\n                   $in_place_regridded_lon,\r\n                   $reg_horz,\r\n                   $data_lon2D,\r\n                   $dimensions2D,\r\n               )\r\nBenchmarkTools.Trial: 10000 samples with 1 evaluation per sample.\r\n Range (min \u2026 max):  86.750 \u03bcs \u2026 131.125 \u03bcs  \u250a GC (min \u2026 max): 0.00% \u2026 0.00%\r\n Time  (median):     88.125 \u03bcs               \u250a GC (median):    0.00%\r\n Time  (mean \u00b1 \u03c3):   89.018 \u03bcs \u00b1   2.614 \u03bcs  \u250a GC (mean \u00b1 \u03c3):  0.00% \u00b1 0.00%\r\n\r\n     \u2582\u2588\u2586\u2583\u2582\u2584                                                     \r\n  \u2581\u2583\u2586\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2586\u2583\u2583\u2582\u2582\u2582\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2582\u2583\u2583\u2583\u2583\u2582\u2582\u2582\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581 \u2582\r\n  86.8 \u03bcs         Histogram: frequency by time         98.6 \u03bcs <\r\n\r\n Memory estimate: 15.41 KiB, allocs estimate: 29.\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6rFArV",
+        "number": 156,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/156"
+      }
+    ],
+    "createdAt": "2025-03-21T21:19:04Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-04-21T15:52:06Z",
+    "number": 163,
+    "title": "Add regrid! to InterpolationsRegridder"
+  }
+]

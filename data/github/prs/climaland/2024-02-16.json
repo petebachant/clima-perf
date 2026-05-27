@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 142,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Peel off from #481 \r\n\r\nA few notes\r\n- Thermodynamics, SurfaceFluxes, ClimaParameters, ClimaCore and Insolation all have updated compat\r\n- Thermodynamics had breaking changes, and we need to ensure FT-correctness in a few places\r\n- I have removed a few repeated compat entries from `Project.toml`s that dev ClimaLand. For example, since ClimaLand already enforces Insolation = 0.9, the experiments Project does not need its own compat for Insolation.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-14T21:00:43Z",
+    "deletions": 136,
+    "labels": [],
+    "mergedAt": "2024-02-16T03:13:10Z",
+    "number": 501,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 642,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd global bucket experiments using albedo as a static map and as a temporal map. Run these on CPU and GPU in CI pipeline. This will test if our current static and temporal albedo types can be used globally on GPU.\r\n\r\nThese runs are copied almost directly from the functional albedo global bucket run, but the albedo types are changed, and the simulation runtime is increased in the temporal map case to exercise the code path used when reading in the next data from a file.\r\n\r\nfollows #469\r\ncloses https://github.com/CliMA/ClimaLand.jl/issues/477\r\n\r\n## Content\r\n- [x] add 2 new experiments: global bucket with static map albedo, global bucket with temporal map albedo\r\n- [x] add experiments to buildkite pipeline on CPU and GPU\r\n- [x] modify Regridder so we can use same input file with different float types in different runs\r\n- [x] add new temporal albedo dataset with NaN converted to 1, update artifact path\r\n- [x] use NCDatasets' `nomissing` function to convert `Union{Missing, FT}` type to `FT` when reading  from input datasets\r\n  - fixes `ERROR: cannot convert `Missing` to `Float64` which occasionally pops up on buildkite\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5-IR_-",
+        "number": 477,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/477"
+      }
+    ],
+    "createdAt": "2024-02-06T01:00:41Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2024-02-16T18:57:45Z",
+    "number": 482,
+    "title": "add bucket albedo map experiments"
+  },
+  {
+    "additions": 731,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdds a \"SpaceVaryingInput\" function which has the following methods\r\n- 2D - returns a regridded field\r\n- 1D - returns a regridded field\r\n- 1D - returns a field of structs with the regridded values\r\n- analytic. Takes in a function of (coords) and can return whatever you like\r\n\r\nFuture extensions could be for depth resolved global data (3D), or to extend the struct case to the 2D case if needed\r\n\r\nFor the struct case, this is because: some parameters get packaged into a struct which we then dispatch on. For example, the soil retention model (vanGenuchten, BrooksCorey). Each has a few parameters which will spatially vary. If we have a field of structs, we can still use dispatch +broadcasting. Im not sure if this is also needed for the BucketModel and for the Canopy Model subparameterizations. If it is very niche, we can put these methods in the Soil module. This may also lead to performance issues as per @Sbozzolo \r\n\r\nThe goal is to unify the way we handle parameters for spatially varying parameters regardless of the simulation domain.  Note that non-spatially varying parameters are scalars and do not use the `SpaceVaryingInput` function.\r\n\r\n## To-do\r\n- Write more tests?\r\n- see discussion point below\r\n## Content\r\n- add SpaceVaryingInputs module\r\n- defined linear interpolation function, moved to `general_utilities`. Now Space and Time VaryingInputs share this. Slightly modified to account for edge case (double check if needed)\r\n- generalize Richards and EnergyHydrology parameters struct to allow for FT or Fields as arguments\r\n- BucketAlbedoStatic and Function use SpaceVaryingInput under the hood now.\r\n- 1D case is in the layered soil tutorial experiment\r\n- update soil boundary condition functions to use some helper functions (extract the top or bottom level of a center field, put onto the corresponding 2D face field). \r\n- extract the top or bottom level ^^ as described above for the parameters if they are fields vs scalars. *Discussion*: if they are passed into the constructor as scalars, should we create a field of constant value? then we would not need this if statement (or method).\r\n\r\nNote that many files have changed for two reasons which are seemingly unrelated to this PR:\r\n- `RichardsParameters{FT, typeof(hcm)}() -> RichardsParameters()`. Before we had scalars (FT) and a scalar struct (hcm). Now we can support scalars or fields. we could do `typeof(field_parameter), typeof(hcm)`, but Im not sure what we are gaining from this, so I ended up just removing it. We may want to do the same for other parameter structs. For EnergyHydrology, I kept the `{FT}`, since there are some default global scalar parameters in that struct. in the long term, I think this will need to update too. But im a little unsure on all of this. \r\n- I had to add in a parametric type to `vanGenuchten{FT}`'s inner constructor. Im not sure, but without it, the SpaceVaryingInput call in the 1D case does not have an inferrable eltype.\r\n## Future PRs\r\n1. simplify BulkAlbedoFunction and BulkAlbedoStatic to be PrescribedBaregroundAlbedo, and we can compute the bareground albedo in the driver using the \"SpaceVaryingInput\" function.\r\n2. test 1D depth varying input with energy hydrology model - update parametric type in that model's parameter struct too\r\n3. set up global soil run using mask + soil parameters from a file, add in 3D case\r\n4. propagate to canopy..\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-07T01:27:50Z",
+    "deletions": 206,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      },
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2024-02-16T22:35:51Z",
+    "number": 485,
+    "title": "SpaceVaryingInput"
+  }
+]

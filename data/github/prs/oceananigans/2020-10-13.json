@@ -1,0 +1,188 @@
+[
+  {
+    "additions": 1357,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a property to `IncompressibleModel` called `background_fields`.\r\n\r\n`background_fields.velocities` contains background velocity fields; `background_fields.tracers` contains background tracer fields.\r\n\r\nBackground fields are specified with a `NamedTuple` similar to forcing functions and boundary conditions:\r\n\r\n```julia\r\nbackground_u(x, y, z, t) = z * sin(t)\r\n\r\nmodel = IncompressibleModel(grid=grid, background_fields=(u,), ...)\r\n```\r\n\r\nBackground fields are neglected in all tendency terms _except_ the advection terms. This restricts their use, but greatly simplifies their implementation.\r\n\r\nTodo:\r\n\r\n- [x] update physics docs to include background fields in model equations\r\n- [x] update model setup docs\r\n- [x] tests\r\n- [x] update `eady_turbulence.jl` and `internal_wave.jl` example to use `background_fields`\r\n- [x] extend implementation of `FunctionField` to take parameters and add a special constructor for background `FunctionFields`\r\n\r\nResolves #960 ",
+    "changedFiles": 32,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDQ0ODU5OTI=",
+        "number": 960,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/960"
+      }
+    ],
+    "createdAt": "2020-09-30T23:04:42Z",
+    "deletions": 614,
+    "labels": [],
+    "mergedAt": "2020-10-13T00:52:07Z",
+    "number": 1014,
+    "title": "Prescribed background velocity and tracer fields"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "For the ultimate in bike-shedding PRs.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-09T13:07:38Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2020-10-13T09:46:12Z",
+    "number": 1033,
+    "title": "Teach Oceananigans about plural nouns"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Was accidently running on the Caltech cluster. Also, now it only downloads Julia if the server version is newer than an existing local file (`wget -N`).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-13T09:50:13Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-10-13T12:57:00Z",
+    "number": 1038,
+    "title": "Run Buildkite cleanup step on Tartarus"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Checkpointer was failing due to an upstream bug in JLD2.jl that has now been fixed: https://github.com/JuliaIO/JLD2.jl/issues/247",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTg5NDM3ODA=",
+        "number": 247,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODQ1ODk5MQ==",
+          "name": "JLD2.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjExNDg5MzI0",
+            "login": "JuliaIO"
+          }
+        },
+        "url": "https://github.com/JuliaIO/JLD2.jl/issues/247"
+      }
+    ],
+    "createdAt": "2020-10-13T09:51:15Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2020-10-13T12:57:13Z",
+    "number": 1039,
+    "title": "Update JLD2 to v0.2.4"
+  },
+  {
+    "additions": 173,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-13T14:50:21Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2020-10-13T17:39:37Z",
+    "number": 1047,
+    "title": "Updates buildkite pipeline"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Array conversions when fetching output trigger `copyto!` and then `getindex`, which is in turn disallowed.\r\n\r\nThis PR fixes an issue with output on the GPU on master.\r\n\r\nI'm a bit perplexed why the `jld2_field_output` test didn't pick this up.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-06T03:53:26Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-10-13T19:03:12Z",
+    "number": 1025,
+    "title": "Use allowscalar when converting output"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #1049 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MjA2Mjk5Mjk=",
+        "number": 1049,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1049"
+      }
+    ],
+    "createdAt": "2020-10-13T18:49:09Z",
+    "deletions": 54,
+    "labels": [],
+    "mergedAt": "2020-10-13T19:29:41Z",
+    "number": 1054,
+    "title": "Stop testing on GitLab CI"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-13T21:00:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-10-13T22:02:11Z",
+    "number": 1058,
+    "title": "Reduce the size of the eady_turbulence.jl script test"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 515,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nThis PR splits the API docs up to reduce html file size and loading times. \r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-20T23:22:21Z",
+    "deletions": 419,
+    "labels": [],
+    "mergedAt": "2025-05-21T00:19:22Z",
+    "number": 2334,
+    "title": "Split API docs up"
+  },
+  {
+    "additions": 259,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Alternative to #2332.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-21T13:47:32Z",
+    "deletions": 239,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      }
+    ],
+    "mergedAt": "2025-05-21T22:37:39Z",
+    "number": 2335,
+    "title": "Allow for more flexibly constructed LocalGeometry"
+  },
+  {
+    "additions": 99,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR fixes a bug that was discovered while working on CliMA/ClimaAtmos.jl#2730:\r\n- Materializing `Fields.column(lazy.(<extruded_field_broadcast>), indices...)` allocates an extruded field instead of a column field\r\n- Materializing `Fields.column(lazy.(<horizontal_field_broadcast>), indices...)` allocates a horizontal field instead of a point field\r\n\r\nThis is fixed by extending `DataColumnStyle` to horizontal layouts and defining a new `FieldColumnStyle`, which is used in place of the original `FieldStyle`. The same bug also exists for `Fields.slab`, so I've similarly added a `DataSlabStyle` and `FieldSlabStyle`. There was another bug for `Fields.slab` where lazy broadcasts that were sliced with a single index instead of two indices threw an error, so I've generalized `Fields.column` and `Fields.slab` for lazy broadcasts to handle arbitrary numbers of indices.\r\n\r\nThe unit tests for `Fields.column` have been extended to check lazy broadcasts and extruded spaces, and similar unit tests have been added for `Fields.slab`. While all of these tests pass on CPUs, some of the tests for `Fields.slab` fail on GPUs. It's not clear why this would be the case, but, since `Fields.slab` is not required for ClimaAtmos development, I'll just mark those tests as broken for now.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-20T02:02:01Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2025-05-21T22:53:11Z",
+    "number": 2331,
+    "title": "Fix slicing of lazy Field broadcasts"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 6588,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDgzMzM0",
+      "is_bot": false,
+      "login": "LenkaNovak",
+      "name": ""
+    },
+    "body": "- will address stage 2 and 3 of #39 \r\n\r\n## TODO\r\n- [x] automate copying in ClimaAtmos driver + writing wrappers\r\n- [x] implement MPI init in coupler\r\n- [x] couple slab\r\n- clean up code (e.g., \"the same Space type but not the same instance\" error) https://github.com/CliMA/ClimaCoupler.jl/issues/45 - found a work around, so not needed\r\n- [x]   merge CA PRs for BCs https://github.com/CliMA/ClimaAtmos.jl/pull/257\r\n- [x]   merge CC PR for spatially varying BC specification\r\n- [x]   merge CC PR for TempestRemap online application #CC604\r\n- [x]  include the new (ClimaSimulations-excluding) ClimaAtmos interface\r\n- [x] implement correct  surface drag\r\n- [x] conservation checks\r\n<img width=\"595\" alt=\"Screen Shot 2022-05-19 at 8 56 55 PM\" src=\"https://user-images.githubusercontent.com/38083334/169447581-28afde5d-ac1b-4849-bd93-6055937bd8c7.png\">\r\n\r\n- [x] peformance checks\r\n    - ctrl setup: `h_elem = 4, z_elem = 10, nq = 5, time_end = 1e4, dt = 1e2` (all time quoted in secs)\r\n    - MacOS: \r\n        - atmos only `solve!`: 77.5s (as in ClimaAtmos) [no output save]\r\n        - atmos only `step!`:   90.7s [output saved at every dt]\r\n        - coupled `step!`:   90.9s [output saved at every dt]\r\n        - coupled `step!`:   74,4s [no output save]\r\n    - HPC cluster with MPI: \r\n<img width=\"410\" alt=\"Screen Shot 2022-05-17 at 10 21 57 PM\" src=\"https://user-images.githubusercontent.com/38083334/168963056-ae178746-5817-4a8c-9e8a-597c1f69e9a4.png\">\r\n\r\n- [x] physical checks (crashes at day 17d, even without the additional heating blob, but good enough for now, drag also checked)\r\n<img width=\"1203\" alt=\"Screen Shot 2022-05-18 at 8 04 55 AM\" src=\"https://user-images.githubusercontent.com/38083334/169075712-7d68c07f-861d-4f3f-b705-3feebbd3df24.png\">\r\n    - comparison between runs of different drag coefficient values (Cd) looks reasonable (NB: drag values are difficult to check due to a field type conversion issue)\r\n<img width=\"1192\" alt=\"Screen Shot 2022-05-19 at 8 47 28 PM\" src=\"https://user-images.githubusercontent.com/38083334/169446644-a2257b7a-f7dc-47d5-b22f-c7f87e8d4c9e.png\">\r\n    - (comparison with literature of the uncouple case is in ClimaAtmos)\r\n\r\n## The clean-up PR will include\r\n- introduce coupler-specific interface abstractions https://github.com/CliMA/ClimaCoupler.jl/issues/44\r\n- substitute the latest version of ClimaAtmos interface (TC.jl, limiters, perf improvements etc)\r\n- buildkite hook\r\n- find in literature / produce using existing models coupled cases to compare\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-05T05:53:50Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-05-20T05:06:46Z",
+    "number": 48,
+    "title": "Moist BC wave + slab + MPI"
+  }
+]

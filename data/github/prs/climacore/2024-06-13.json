@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 357,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an alternative to #1340.\r\n\r\nOne thing I found from this is that we are currently running `test/Spaces/spaces.jl`, and one other test, twice.\r\n\r\nIterating over all the tests has a few nice advantages:\r\n - We can ensure we're not doing duplicate work\r\n - We can tabulate the results, to make it easier to see which tests are expensive\r\n - We could search for all tests in `test/` starting with `unit_` to see if we're missing any\r\n\r\nAnother thing I did was, I added a flag: `prevent_leaky_tests`, which allows us to toggle on and off (effectively) using `@safetestset`. We could even make this `true` on GHA, and `false` locally, so that running unit tests locally is much faster, but CI could still catch leaky test situations (which will happen anyway on buildkite).\r\n\r\nI think this might be a bit simpler/declarative than #1340, so I'm inclined to favor this PR over #1340. Thoughts?\r\n\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-12T16:01:11Z",
+    "deletions": 157,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-06-13T20:58:24Z",
+    "number": 1800,
+    "title": "Iterate over unit tests, tabulate sorted timings"
+  }
+]

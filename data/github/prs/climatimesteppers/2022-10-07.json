@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 475,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR upgrades to use Julia 1.8",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-07T18:03:39Z",
+    "deletions": 322,
+    "labels": [],
+    "mergedAt": "2022-10-07T03:22:19Z",
+    "number": 55,
+    "title": "Upgrade to julia 1.8"
+  },
+  {
+    "additions": 260,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds an up-deps script for easing the update of the checked-in manifest files. This script can be run with `julia .dev/up_deps.jl`",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-07T18:36:29Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2022-10-07T19:05:57Z",
+    "number": 70,
+    "title": "Add and apply up_deps script"
+  },
+  {
+    "additions": 440,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "# PULL REQUEST\r\n\r\n## Purpose and Content\r\nThis PR adds support for `DiffEqBase.add_tstop!` and `DiffEqBase.reinit!` to ClimaTimeSteppers (see their documentation [here](https://diffeq.sciml.ai/stable/basics/integrator/)). More generally, it matches the saving behavior of OrdinaryDiffEq as closely as possible, and it includes a detailed set of unit tests to verify this.\r\n\r\nHere is a list of the changes in this PR:\r\n- Allow users to specify `tstops` and `saveat` to set up an integrator. These are converted into min/max heaps (depending on the direction of integration) and stored in `integrator.tstops` and `integrator.saveat`. The original user-specified values are stored in `integrator._tstops` and `integrator._saveat`; these are used to obtain default arguments for `reinit!`.\r\n- Remove `integrator.tdir`, since the direction of integration is encoded in the min/max heaps.\r\n- Remove `integrator.prob`, since that value is stored in `integrator.sol.prob` (this counts for most of the changed files).\r\n- Replace `integrator.adjustfinal` with `integrator.dtchangeable`, since the corresponding behavior should apply to all `tstops` (instead of only the final one), and since OrdinaryDiffEq's integrator also has a `dtchangeable` field (though this field is for internal use only). Change the default for this value from `false` to `true`.\r\n- Change the default saving behavior to save at the initial and final times, and ensure that the final time is saved when `saveat isa Number`.\r\n- Add method for `reinit!`, which works just as OrdinaryDiffEq's, except that it doesn't support `reinit_cache`, since reallocating our integrator's cache would serve no purpose (it also does not support `d_discontinuities` or `reset_dt`, since we do not have the corresponding features).\r\n- Add methods for `add_tstop!` and `add_saveat!`, which work just as OrdinaryDiffEq's.\r\n- Rename `adjust_dt!` to `set_dt!`.\r\n- Fix type instability by ensuring that every integrator field has a concrete type.\r\n- Fix floating point precision issues by rounding `integrator.t` to the nearest `tstop` if the two values are sufficiently close, just like OrdinaryDiffEq does.\r\n\r\n## Benefits and Risks\r\nThis PR will allow ClimaCoupler to use ClimaTimeSteppers, and it will facilitate comparisons to OrdinaryDiffEq by giving us similar saving behavior.\r\n\r\n## Linked Issues\r\n- Closes #65 \r\n\r\n## PR Checklist\r\n- [x] This PR has a corresponding issue OR is linked to an SDI.\r\n- [x] I have followed CliMA's codebase [contribution](https://clima.github.io/ClimateMachine.jl/latest/Contributing/) and [style](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) guidelines OR N/A.\r\n- [x] I have followed CliMA's [documentation policy](https://github.com/CliMA/policies/wiki/Documentation-Policy).\r\n- [x] I have checked all issues and PRs and I certify that this PR does not duplicate an open PR.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code used in an integration test OR N/A.\r\n- [x] All tests ran successfully on my local machine OR N/A.\r\n- [x] All classes, modules, and function contain appropriate docstrings OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 22,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEDQfX85Swrd3",
+        "number": 65,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNzE4NTEzNTk=",
+          "name": "ClimaTimeSteppers.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaTimeSteppers.jl/issues/65"
+      }
+    ],
+    "createdAt": "2022-10-05T01:31:27Z",
+    "deletions": 161,
+    "labels": [],
+    "mergedAt": "2022-10-07T23:47:06Z",
+    "number": 67,
+    "title": "Add tstops/reinit and match saving behavior to OrdinaryDiffEq"
+  }
+]

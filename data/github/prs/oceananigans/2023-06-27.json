@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 988,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In 3D simulations, we now have the option to upwind both the divergence and the vorticity to allow dissipation of gridscale noise coming from divergent and rotational motions alike.\r\nUpwinding the divergence `\u03b4` is not like upwinding the vorticity `\u03b6`. \r\n\r\nFor the latter, u is transporting `\u03b6`, while for the former, `u` is the transported quantity since `\u03b4` derives from the advecting velocity (`w`) . \r\n\r\nFor this reason, the divergence (`\u03b4`) must be multiplied by the area in z to account for the flux of `w` (as done for the other advecting velocities). \r\n\r\nThis small change makes a **_huge_** difference. An example is the solution of a baroclinic adjustment problem on a latlong grid between -60 south and -40 south. The video below shows the surface vorticity as calculated by the main branch (left) and on this PR (right).\r\n\r\nhttps://user-images.githubusercontent.com/33547697/235322131-8b58fbea-acfb-4b89-ba3d-535e99852436.mp4\r\n\r\n## Changes of this PR\r\n- **Breaking change** Rework of the `VectorInvariant` advection scheme. Now the constructor accepts a `vorticity_scheme`, a `vertical_scheme` and an `upwinding` keyword argument which specifies what implementation will be used. The choice is between `OnlySelfUpwinding`, `CrossAndSelfUpwinding` and `VelocityUpwinding` (see documentation)\r\n- Implementation of a 5th order centered WENO scheme to be used for truly multi-dimensional reconstructions\r\n- Implementation of the flux-form advection scheme for `LatitudeLongitudeGrid`s\r\n",
+    "changedFiles": 31,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-29T20:05:05Z",
+    "deletions": 365,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2023-06-27T15:28:38Z",
+    "number": 3091,
+    "title": "(0.84.0) Improvement of vector invariant advection + various new implementations"
+  }
+]

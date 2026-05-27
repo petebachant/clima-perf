@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 783,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is the first of a series of PR that is required to compute diagnostics in the ocean. The first feature we need is the ability to separate different ocean basins. \r\nThis implementation uses the same tech used to inpaint the bathymetry to label out different basins and take the ones that are associated with some known seed_points.\r\n\r\nThis example shows\r\n```julia\r\nunderlying_grid = TripolarGrid(arch; size = (720, 360, 100), z = (-6000, 0))\r\nbottom_height = regrid_bathymetry(underlying_grid)\r\ngrid = ImmersedBoundaryGrid(underlying_grid, GridFittedBottom(bottom_height))\r\n\r\natlantic = atlantic_ocean_mask(grid)\r\nindian_ocean = indian_ocean_mask(grid)\r\nsouthern_ocean = southern_ocean_mask(grid)\r\n\r\nfig = Figure(size=(1000, 500))\r\nax1 = Axis(fig[1, 1], title = \"Atlantic Ocean Mask on Tripolar Grid\")\r\nax2 = Axis(fig[1, 2], title = \"Indian Ocean Mask on Tripolar Grid\")\r\nax3 = Axis(fig[1, 3], title = \"Indian Ocean Mask on Tripolar Grid\")\r\nheatmap!(ax1, interior(atlantic.mask, :, :, 1), colormap = [:white, :steelblue], colorrange = (0, 1))\r\nheatmap!(ax2, interior(indian_ocean.mask, :, :, 1), colormap = [:white, :steelblue], colorrange = (0, 1))\r\nheatmap!(ax3, interior(southern_ocean.mask, :, :, 1), colormap = [:white, :steelblue], colorrange = (0, 1))\r\n```\r\n<img width=\"1225\" height=\"402\" alt=\"image\" src=\"https://github.com/user-attachments/assets/c1e23753-9e67-4330-9132-22808e9450b2\" />\r\n\r\nThis mask can be used to compute meridional circulation or just averages within one basin.\r\nI need to figure out how to implement the pacific ocean though. I think it requires two seed since it might be that the pacific ocean is split by the grid.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-11T21:32:09Z",
+    "deletions": 96,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOIOi2Ys8AAAABFpJxeQ",
+        "name": "enhancement"
+      },
+      {
+        "color": "934950",
+        "description": "When things aren't as smooth as expected",
+        "id": "LA_kwDOIOi2Ys8AAAABTTpmuQ",
+        "name": "bathymetry \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-01-28T15:24:53Z",
+    "number": 722,
+    "title": "Framework for computing Ocean basin masks"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 278,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR simplifies the function signatures for boundary condition functions and forcing functions. \r\nIt also nukes the `model.parameters` field in favor of more local \"parameters\" functionality, and adds `ParameterizedForcing` and `ParameterizedBoundaryCondition` convenience types and functions.\r\n\r\nThe new forcing function signature is\r\n\r\n```julia\r\nF(i, j, k, grid, clock, state)\r\n```\r\n\r\nwhile the new boundary condition function signature is\r\n\r\n```julia\r\nbc(i, j, grid, clock, state)\r\n```\r\n\r\nwhere `i, j` are indices along the boundary.\r\n\r\n`state` is a `NamedTuple` with fields `:velocities`, `:tracers`, and `:diffusivities`, each corresponding to an `OffsetArray` that references the data associated with each field.\r\n\r\nIn the future, if we make substantial changes to `model`, the hope is that we can modify/extend `state` appropriately and thus leave user code unbroken.\r\n\r\nWe should probably release a new minor version when this is merged.\r\n\r\nResolves #682 .",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NzY2NDMyNzk=",
+        "number": 682,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/682"
+      }
+    ],
+    "createdAt": "2020-03-14T02:02:18Z",
+    "deletions": 177,
+    "labels": [],
+    "mergedAt": "2020-03-15T12:20:51Z",
+    "number": 697,
+    "title": "Simpler boundary condition functions and forcing functions"
+  }
+]

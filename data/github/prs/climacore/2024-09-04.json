@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the `window` variable in `copyto_stencil_kernel!`, and instead, uses different windows depending on `gid`.\r\n\r\nI'm actually not sure how the gpu even allows this block of code:\r\n\r\n```julia\r\n            (v, i, j, h) = cart_ind((Nv, Nq, Nq, Nh), gid).I\r\n            hidx = (i, j, h)\r\n            idx = v - 1 + li\r\n            window =\r\n                idx < lw ?\r\n                LeftBoundaryWindow{Spaces.left_boundary_name(space)}() :\r\n                (\r\n                    idx > rw ?\r\n                    RightBoundaryWindow{Spaces.right_boundary_name(space)}() :\r\n                    Interior()\r\n                )\r\n            setidx!(\r\n                space,\r\n                out,\r\n                idx,\r\n                hidx,\r\n                Operators.getidx(space, bc, window, idx, hidx),\r\n            )\r\n```\r\nbecause\r\n\r\n - the type of `window` depends on the value of `idx`\r\n - the value of `idx` depends on the value of `v`\r\n - the value of `v` depends on the value of `gid`\r\n - the value of `gid` depends on the individual thread, which is most definitely non-deterministic\r\n\r\nThe only way I could see this being type stable is if the compiler can determine that all three branches result in the same return type, and that, then, it doesn't matter what the value of `window` will be within the scope of `copyto_stencil_kernel!`.\r\n\r\nThis is surprising to me. Any insights @vchuravy?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-28T12:44:04Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2024-09-04T15:08:01Z",
+    "number": 1850,
+    "title": "Fix type instability in `copyto_stencil_kernel!`"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes the fill benchmark (I noticed that there's a bw efficiency that is above 100% in https://github.com/CliMA/ClimaCore.jl/pull/1969#issue-2505978367).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-04T18:52:36Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-09-04T19:26:38Z",
+    "number": 1970,
+    "title": "Fix fill benchmark n-reads-writes"
+  }
+]

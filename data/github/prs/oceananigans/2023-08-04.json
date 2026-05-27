@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR toggles conditional differences with `immersed_inactive_node`, rather than `inactive_node`. The difference is that `inactive_node` returns `true` if the node is outside the domain (either immersed _or_ outside the domain in a `Bounded` direction). `immersed_inactive_node` only returns true if the node is within the immersed boundary:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/f7acd8d0bd30dbe1ccb72854b6ea0ccab1eae0b5/src/ImmersedBoundaries/ImmersedBoundaries.jl#L220-L221\r\n\r\nThis matters for applying `ValueBoundaryCondition` or `GradientBoundaryCondition` across non-immersed boundaries, on `ImmersedBoundaryGrid`, because both of these are enforced by filling the halo regions on the other side of a `Bounded` direction. Thus we have to be able to correctly evaluate differences / interpolate across non-immersed `Bounded` boundaries.\r\n\r\nCloses #3208 \r\n\r\nWe might want to add a test so this doesn't break in the future. It'd also be great to make this code more understandable (suggestions welcome...)\r\n\r\n@hdrake",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5tFehP",
+        "number": 3208,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3208"
+      }
+    ],
+    "createdAt": "2023-08-01T11:30:03Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2023-08-04T17:23:00Z",
+    "number": 3209,
+    "title": "Toggle immersed differences with immersed_inactive_node"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is a peel off from #1358.\r\n\r\nThis PR adds `temp1` and `temp2` to `SchurComplementW`, and defines\r\n```julia\r\nlinsolve!(::Type{Val{:init}}, f, u0; kwargs...) = _linsolve!\r\n_linsolve!(x, A, b, update_matrix = false; kwargs...) =\r\n    LinearAlgebra.ldiv!(x, A, b)\r\n\r\n# Function required by Krylov.jl (x and b can be AbstractVectors)\r\n# See https://github.com/JuliaSmoothOptimizers/Krylov.jl/issues/605 for a\r\n# related issue that requires the same workaround.\r\nfunction LinearAlgebra.ldiv!(x, A::SchurComplementW, b)\r\n    A.temp1 .= b\r\n    LinearAlgebra.ldiv!(A.temp2, A, A.temp1)\r\n    x .= A.temp2\r\nend\r\n```\r\nand the original `_linsolve` contents are in\r\n```julia\r\nfunction LinearAlgebra.ldiv!(\r\n    x::Fields.FieldVector,\r\n    A::SchurComplementW,\r\n    b::Fields.FieldVector,\r\n)\r\n```\r\n\r\n(the pattern used in ClimaAtmos). It also renames `_linsolve!` to `test_linsolve!` to avoid a name collision in the test suite.\r\n\r\nIt's a much smaller PR than it appears, due to indenting.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-11T18:41:07Z",
+    "deletions": 86,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      }
+    ],
+    "mergedAt": "2023-07-14T19:46:39Z",
+    "number": 1364,
+    "title": "Refactor SchurComplementW for ClimaTimesteppers"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is a peel off from #1358.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-14T20:26:38Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      }
+    ],
+    "mergedAt": "2023-07-14T21:29:30Z",
+    "number": 1373,
+    "title": "Use FieldVector in shallow water gpu example"
+  }
+]

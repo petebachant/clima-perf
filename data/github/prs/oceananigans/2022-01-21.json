@@ -1,0 +1,72 @@
+[
+  {
+    "additions": 119,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a step in the outer `Field` constructor that validates boundary conditions. We check three things:\r\n\r\n1. That boundary conditions are compatible with the topology. Namely, we are restricted to default choices in `Periodic` or `Flat` directions; anything but default throws an error.\r\n\r\n2. If a topology is `Bounded`, we check that boundary conditions are compatible with field location. Mostly we cannot support flux, value, or gradient boundary conditions for fields at faces, and we only support `nothing` for fields in `Flat` directions.\r\n\r\n3. That boundary condition arrays are on the right architecture.\r\n\r\nTODO:\r\n\r\n- [x] Test\r\n\r\nResolves #419\r\nResolves #890\r\n\r\nSupercedes #1732",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0OTUzMjE3MjY=",
+        "number": 419,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/419"
+      },
+      {
+        "id": "MDU6SXNzdWU2ODk0OTY2NjE=",
+        "number": 890,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/890"
+      }
+    ],
+    "createdAt": "2022-01-20T15:30:39Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2022-01-21T22:05:44Z",
+    "number": 2163,
+    "title": "Validate boundary conditions on Fields"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds `OneField` and `ConstantField` and generalizes `ZeroField` to be capable of producing zeros of any type. In particular it may be useful to use a `ZeroField(Bool)` since `false` is a \"strong\" zero.\r\n\r\n@simone-silvestri you may find `OneField` useful for estimating lengths efficiently, along with `ConditionalOperation`.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-21T18:33:03Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-01-21T23:41:49Z",
+    "number": 2171,
+    "title": "`OneField`, `ConstantField`, and generalized `ZeroField`"
+  }
+]

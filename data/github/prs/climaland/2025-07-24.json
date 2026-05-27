@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe prefer to write a function with a type parameter over passing the type as a regular function argument because the method with a parametric type will always be specialized by the compiler. When the type is passed as an argument, the compiler will specialize if the type is used within the function body, but not if it's only passed to other functions. See the [relevant section of the Julia manual](https://docs.julialang.org/en/v1/manual/performance-tips/#Be-aware-of-when-Julia-avoids-specializing) for more details.\r\n\r\nBecause our types are large and complex, and because we often pass FT around without using it within a function (e.g. for constructors), we do want to force specialization and therefore type inference. This PR changes constructors to uniformly take FT as a type parameter.\r\n\r\n### Examples\r\nThese will specialize:\r\n```julia\r\n# used by model constructors\r\nfunction f{FT}() where {FT}\r\nend\r\n\r\n# used by parameter constructors\r\nfunction f(::Type{FT}) where {FT}\r\nend\r\n```\r\nbut these won't:\r\n```julia\r\n# removed in this PR\r\nfunction f(FT)\r\nend\r\n\r\nfunction f(::Type)\r\nend\r\n```\r\n\r\n## To-do\r\n- [x] PrescribedGroundConditions constructor\r\n- [x] EnergyHydrology constructor\r\n- [x] RichardsModel constructor\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-23T19:17:57Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2025-07-24T17:43:57Z",
+    "number": 1257,
+    "title": "force type specialization in constructors"
+  },
+  {
+    "additions": 1034,
+    "author": {
+      "id": "MDQ6VXNlcjE1Njk4MDA4",
+      "is_bot": false,
+      "login": "ychnli",
+      "name": "Yuchen Li"
+    },
+    "body": "This is a duplicated PR of #1198 because git history complications made it very cumbersome to rebase. See #1198 for previous discussion. The description is copied here (and updated with latest names) for convenience: \r\n\r\n> This implements of the core P-model computations in the function `compute_full_pmodel_outputs` (#1197). \r\n> \r\n> ## To-do\r\n> <!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n> - Proposed task\r\n> -->\r\n> - still need to write `update_photosynthesis!` in `pmodel.jl` with appropriate subdaily timestepping equations \r\n> - still need to make sure that stomatal conductance is appropriately updated, since P-model predicts it jointly from the optimality criteria \r\n> \r\n> ## Content\r\n> <!---  specific tasks that are currently complete \r\n> - Solution implemented\r\n> -->\r\n> - `compute_full_pmodel_outputs` and associated helper functions in `pmodel.jl` and `canopy_parameterizations.jl` \r\n> - `test_pmodel.jl` unit tests and test files on ClimaArtifacts \r\n\r\n## Important note\r\n in this PR, the PModel cannot be used yet in the canopy model because subdaily GPP variability is not explicitly separated from longer timescale acclimatized GPP. Instead `compute_full_pmodel_outputs` should be used as a ClimaLand implementation of the [rpmodel package](https://github.com/geco-bern/rpmodel) that models GPP variability assuming adjustment to optimality on weekly timescales. ",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-10T23:30:15Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2025-07-24T20:30:40Z",
+    "number": 1223,
+    "title": "Implement `compute_full_pmodel_outputs` and unit tests"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd a template for the FluxnetSimulations extension, so that multiple people can start adding to it in parallel.\r\n\r\nI chose to organize the extension by having a file for each site we test. That way, we can add anything site-specific in one file and see them in one place (I expect these will only be the `get_parameters` and `get_domain_info` functions). The extension will also have functions in new files for data cleaning, running a simulation, etc - see #1238\r\n\r\n\r\n## To-do\r\n- [x] add ext/FluxnetSimulations.jl file\r\n- [x] add extension to ClimaLand.jl project\r\n- [x] add template files for each site we test, and a generic site for fallback/default methods\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-24T00:01:15Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2025-07-24T22:26:50Z",
+    "number": 1259,
+    "title": "add FluxnetSimulations ext"
+  }
+]

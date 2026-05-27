@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 349,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #483 \r\nCloses #488\r\nAlso relates to the plotting in #476 \r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Bugfix for producing NaNs when computing an error with NaN outputs (even with successful failure handling)\r\n\r\n- Add new metrics, that are weighted by the dimension:\r\n  1. `compute_loss_at_mean` (current logic from `compute_error!` )\r\n  2. `compute_unweighted_loss_at_mean` (g_mean- y)' (g_mean - y)\r\n  3. `compute_average_rmse` (average of cov-weighted rmse taken across the ensemble)\r\n  4. `compute_average_unweighted_rmse` (average of unweighted rmse taken across the ensemble)\r\n  5. `compute_bayesian_loss_at_mean` (loss at mean + prior contribution (from provided prior or estimated from initial ensemble)\r\n  6. `compute_crps` (Gaussian-approximated continuous rank probability score for ensemble vs observation)\r\n  \r\n- UKI/UTKI variants have an equivalent metric, based on RMSEs at the mean output\r\n- Improved docstrings for each error metric\r\n- Errors stored in a Dict(String => Vector), and the each key stores a vector of the loss over iterations for easy plotting. users can use `get_error_metrics(ekp)` to access it.\r\n- `get_error(ekp)` is partially back-compatible. In that it provides a scalar error representing the loss. It is also however improved, as it forwards to  correct loss given the EKP setting \r\n  - `get_error_metrics(ekp)[\"loss\"]` when a prior is not given to the `process` (e.g. finite-time EKI/ETKI) and \r\n  - `get_error_metrics(ekp)[\"bayes_loss\"]` when a prior is given to the `process` (e.g. infinite-time EKI/ETKI).\r\n\r\n## Misc\r\n- Discovered and fixed a bug in computing perturbations for CRPS for UKI/UTKI\r\n\r\n## Example `example/Sinusoid`\r\n1. Using `process=Inversion()`, 13 iterations. This process should reduce `\"loss\"`\r\n```julia\r\njulia> include(\"sinusoid_example.jl\")\r\n\r\njulia> get_error_metrics(ensemble_kalman_process)\r\nDict{String, Vector{Float64}} with 6 entries:\r\n  \"unweighted_loss\"     => [69.1456, 49.6655, 33.0124, 20.4544, 11.7644, 5.91676, 2.60022, 1.04942, 0.417976, 0.213258, 0.181816, 0.161086, 0.118961]\r\n  \"crps\"                => [6.47563, 5.7199, 4.86653, 3.91176, 2.83024, 1.70136, 1.36855, 0.868623, 0.504935, 0.362328, 0.388109, 0.325745, 0.240063]\r\n  \"bayes_loss\"          => [345.835, 248.791, 166.169, 104.38, 62.5483, 35.5328, 21.4513, 16.1228, 15.2505, 15.8957, 16.9484, 17.8264, 18.4198]\r\n  \"unweighted_avg_rmse\" => [8.34082, 7.0818, 5.79068, 4.57407, 3.4754, 2.46218, 1.62662, 1.02805, 0.646614, 0.465264, 0.428847, 0.402579, 0.345853]\r\n  \"avg_rmse\"            => [60.3547, 51.1518, 41.6872, 32.7869, 24.8117, 17.5381, 11.5702, 7.30873, 4.59192, 3.29483, 3.06226, 2.89297, 2.49272]\r\n  \"loss\"                => [691.456, 496.655, 330.124, 204.544, 117.644, 59.1676, 26.0022, 10.4942, 4.17976, 2.13258, 1.81816, 1.61086, 1.18961]\r\n\r\n\r\njulia> get_error(ensemble_kalman_process) # gives `loss`\r\n13-element Vector{Float64}:\r\n 691.455946205919\r\n 496.65480995017833\r\n 330.124289885421\r\n 204.5444126630253\r\n 117.64367383515089\r\n  59.16761531429667\r\n  26.002243030566532\r\n  10.49419105983456\r\n   4.1797585437794345\r\n   2.1325780841256634\r\n   1.818157342011685\r\n   1.6108566293724835\r\n   1.1896067437257485\r\n\r\n```\r\n2. Using `process=Inversion(prior)` 13 iterations. This process should reduce `\"bayes_loss\"`\r\n```julia\r\njulia> include(\"sinusoid_example.jl\")\r\n\r\njulia> get_error_metrics(ensemble_kalman_process)\r\nDict{String, Vector{Float64}} with 6 entries:\r\n  \"unweighted_loss\"     => [62.6414, 44.2368, 28.7705, 17.3569, 9.64601, 4.64228, 1.93026, 0.729346, 0.274598, 0.149348, 0.133868, 0.107143, 0.0693921]\r\n  \"crps\"                => [6.06003, 5.31783, 4.4883, 3.57094, 2.53623, 1.47929, 1.21173, 0.690579, 0.454465, 0.332177, 0.317357, 0.240577, 0.164274]\r\n  \"bayes_loss\"          => [313.277, 221.203, 143.906, 86.9125, 48.432, 23.4981, 10.0379, 4.13831, 1.96701, 1.40926, 1.38771, 1.30156, 1.15324]\r\n  \"unweighted_avg_rmse\" => [7.9393, 6.685, 5.40876, 4.21771, 3.15111, 2.18348, 1.40218, 0.856602, 0.524561, 0.390978, 0.368237, 0.328633, 0.265003]\r\n  \"avg_rmse\"            => [57.5975, 48.4046, 39.0219, 30.284, 22.5248, 15.5684, 9.98219, 6.09489, 3.72416, 2.77685, 2.64788, 2.38016, 1.92458]\r\n  \"loss\"                => [626.414, 442.368, 287.705, 173.569, 96.4601, 46.4228, 19.3026, 7.29346, 2.74598, 1.49348, 1.33868, 1.07143, 0.693921]\r\n\r\n\r\njulia> get_error(ensemble_kalman_process) # returns `bayes_loss`\r\n13-element Vector{Float64}:\r\n 313.27711996240464\r\n 221.20309728020672\r\n 143.9064911629231\r\n  86.91249446523096\r\n  48.43199265347761\r\n  23.498054398930957\r\n  10.037934710569187\r\n   4.1383112427963376\r\n   1.9670068960544698\r\n   1.4092630164147009\r\n   1.387708968670417\r\n   1.3015596731263703\r\n   1.1532354014187622\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586zJU-D",
+        "number": 483,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/483"
+      },
+      {
+        "id": "I_kwDOEreD586z7Emw",
+        "number": 488,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/488"
+      }
+    ],
+    "createdAt": "2025-04-18T23:35:25Z",
+    "deletions": 47,
+    "labels": [],
+    "mergedAt": "2025-04-25T21:24:48Z",
+    "number": 484,
+    "title": "compute_error! bugfix, and add some more error metrics"
+  }
+]

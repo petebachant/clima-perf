@@ -1,0 +1,109 @@
+[
+  {
+    "additions": 293,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\n\n- Fix `glob` with absolute paths in `FieldTimeSeries` constructors (split directory from pattern)\n- Fix `OnDisk` `FieldTimeSeries` with split files by introducing `SplitFilePath` struct that maps global time indices to the correct part file\n- Fix checkpointer `restore_prognostic_state!` to update `writer.filepath` to match the restored part number, and save/restore `file_splitting` schedule state\n- Add post-split `iteration_exists` check in `write_output!` to skip already-written iterations after pickup\n- Add tests for split file reading (InMemory + OnDisk) and checkpointer pickup with file splitting\n\n**Depends on #5486** \u2014 that PR must be merged first since this branch builds on top of `ss/grids-in-the-field`.\n\n## Test plan\n\n- [x] Verify `FieldTimeSeries` with absolute paths and split files works for both `InMemory` and `OnDisk` backends\n- [x] Verify checkpointer pickup correctly restores filepath and file splitting schedule\n- [x] Verify \"moved-away parts\" scenario: only latest part file remains, pickup appends correctly\n- [x] Run existing test suite to check for regressions\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-13T12:27:34Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-04-17T16:17:36Z",
+    "number": 5492,
+    "title": "(0.107.0) Fix file splitting for JLD2Writer: OnDisk FTS, checkpointer pickup, and glob"
+  },
+  {
+    "additions": 87,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "## Summary\n\n- Fixes catastrophic cancellation in Float32 WENO smoothness indicators (\u03b2) that produced **negative \u03b2 values** and incorrect weights, causing NaN crashes with high-order WENO schemes\n- The \u03b2 quadratic form `\u03c8\u1d40C\u03c8` is invariant to constant shifts (it measures polynomial derivatives). Subtracting the stencil mean before the computation reduces operand magnitudes from O(\u03c8) to O(\u0394\u03c8), eliminating the cancellation\n- A dispatch on `NTuple{N, Float32}` ensures **zero overhead for Float64**\n\nBefore (raw Float32, \u03c1\u03b8 \u2248 340 stencil):\n```\n\u03b2 = [3.01e-1, 9.67e-2, 3.42e-2, -1.76e-2, 1.56e-1]   \u2190 negative \u03b2, 1180% error\n\u03c9 = [0.000, 0.000, 0.984, 0.000, 0.016]                \u2190 nearly ENO\n```\n\nAfter (mean-subtracted Float32):\n```\n\u03b2 = [2.72e-1, 6.37e-2, 2.03e-2, 1.24e-2, 1.22e-2]     \u2190 matches Float64\n\u03c9 = [0.000, 0.035, 0.499, 0.443, 0.023]                 \u2190 correct WENO weights\n```\n\nCloses #5485\n\n## Test plan\n\n- [x] Existing WENO tests pass (Float64 path is unchanged \u2014 identity fallback)\n- [x] Float32 WENO reconstruction tests produce correct weights for large-mean stencils\n- [x] Float32 WENO9 neutral ABL simulation (previously crashed at ~25 min) runs stably\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM78d30b",
+        "number": 5485,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5485"
+      }
+    ],
+    "createdAt": "2026-04-13T05:48:34Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-04-17T17:44:50Z",
+    "number": 5491,
+    "title": "Fix Float32 WENO smoothness indicators via constant shift"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "https://buildkite.com/clima/oceananigans/builds/30914#019d9a72-a779-4c00-b00f-1a3c8bddef61/L3903\r\n```\r\n\u250c Error: linkcheck 'https://par.nsf.gov/servlets/purl/10200806' status: 502.\r\n\u2514 @ Documenter ~/.julia/packages/Documenter/AXNMp/src/utilities/utilities.jl:47\r\n```\r\nNot sure why this URL was used when the paper has a DOI :slightly_smiling_face: \r\n\r\nSpotted in https://github.com/CliMA/Oceananigans.jl/pull/5491#issuecomment-4269203886",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-17T15:19:12Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-04-17T18:09:53Z",
+    "number": 5519,
+    "title": "Use DOI URL for Oceananigans JOSS paper"
+  }
+]

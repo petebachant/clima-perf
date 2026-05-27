@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "- FFTW v1.4.2 \u21d2 v1.4.3\r\n- JLD2 v0.4.10 \u21d2 v0.4.11\r\n- OffsetArrays v1.10.0 \u21d2 v1.10.2\r\n- MPI v0.18.0 \u21d2 v0.18.1\r\n- Tullio v0.2.14 \u21d2 v0.3.0\r\n- StructArrays v0.5.1 \u21d2 v0.6.0",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-04T20:33:11Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2021-07-05T04:27:48Z",
+    "number": 1822,
+    "title": "Update several packages"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR updates `examples/ocean_wind_mixing_and_convection.jl` with a new grid generating function that produces a constant grid spacing near the surface. A visualization of the grid spacing is\r\n\r\n![image](https://user-images.githubusercontent.com/15271942/124339919-d3ba0080-db6e-11eb-96f2-999856d9556d.png)\r\n\r\n@tomchor proposed this idea in #1762, but we couldn't find a suitable generating function and so a grid that becomes ever more refined toward the surface was used instead. I think a grid with constant near-surface spacing and bottom-intensified stretching will be useful for boundary layer turbulence experiments, so I thought it was worthwhile to spend a bit more time to come up with something.\r\n\r\nI thought the hyperbolic generating function was also useful, so I added it to the docstring for `VerticallyStretchedRectilinearGrid` as an example. This PR also fixes a typo in that docstring.\r\n\r\nSome notes:\r\n\r\nI developed a two-parameter stretching function:\r\n\r\n```julia\r\n## Linear near-surface generator\r\n\u03b6\u2080(k) = 1 + (h(k) - 1) / refinement\r\n\r\n## Bottom-intensified stretching function \r\n\u03a3(k) = (1 - exp(-stretching * h(k))) / (1 - exp(-stretching))\r\n\r\n## Generating function\r\nz_faces(k) = Lz * (\u03b6\u2080(k) * \u03a3(k) - 1)\r\n```\r\n\r\nwith `refinement` and `stretching` parameters`. Finding a suitable grid requires playing with both these parameters: perhaps counter-intuitively, when the `refinement` is weaker, the `stretching` has to be stronger to obtain a grid that's nearly constantly spaced near the surface. I think a slightly more convenient parameterization would use a \"transition\" parameter (controlling the depth at which the grid transitions from constant spacing to stretched) rather than a stretching parameter (there would also be a small parameter involved to control \"how close\" the spacing would be to constant at the transition depth).\r\n\r\nHowever I couldn't figure out how to implement such a parameterization without solving a transcendental equation. The idea I had was to set the slope of `\u03a3` to a small number at a specified fraction of the domain height `h\u1d62` by solving\r\n\r\n```julia\r\n\u03a3\u2032 = stretching * exp(-stretching * h\u1d62) / (1 - exp(-stretching)) = \u03f5\r\n```\r\n\r\nfor `stretching`. In the above, `\u03f5` is a small parameter controlling the smallness of `\u03a3\u2032` at the normalized height. Both `\u03f5` and `h\u1d62` are parameters.\r\n\r\nAside from being not quite right, there's something a little off about this approach. I think `stretching` should somehow depend on `refinement`; eg when `refinement = 1` then no stretching is needed.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-07-03T01:58:04Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2021-07-05T04:38:23Z",
+    "number": 1810,
+    "title": "Use constant near-surface grid spacing in ocean wind mixing and convection example + fixes some docstrings"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Could resolve #1274 .",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3NjkxMzk1ODM=",
+        "number": 1274,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1274"
+      }
+    ],
+    "createdAt": "2021-07-03T15:55:17Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2021-07-05T22:00:41Z",
+    "number": 1816,
+    "title": "Throw ArgumentError for window > interval in AveragedTimeInterval"
+  }
+]

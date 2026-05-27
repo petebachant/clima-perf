@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds support for variable \"closure constants\" in `SmagorinskyLilly`, and refactors the `AnisotropicMinimumDissipation` to share it. It discontinues support for `Function` closure constants in AMD.\r\n\r\nAs an example, the \"Van Driest\" damping function (discussed in #3369) would be implemented in a simple channel simulation as follows:\r\n\r\n```julia\r\n# Vertically-bounded resolved LES\r\n#\r\n# This script builds a simulation of freely-decaying turbulence in\r\n# a vertically-bounded domain, where turbulence far from the wall is modeled using\r\n# the SmagorinskyLilly eddy diffusivity closure, but the dynamics close to the wall\r\n# is fully resolved. The Van Driest damping function is used to modify the SmagorinkyLilly\r\n# model constant close to the wall to ensure that the dynamics is relatively unaffected\r\n# by the eddy diffusivity.\r\n\r\nusing Oceananigans\r\nusing Oceananigans.Grids: zspacing\r\nusing Oceananigans.Fields: FunctionField\r\nusing Oceananigans.TurbulenceClosures: VerticallyImplicitTimeDiscretization\r\n\r\ngrid = RectilinearGrid(size=(64, 64, 256), x=(0, 1), y=(0, 1), z=(0, 1),\r\n                       topology = (Periodic, Periodic, Bounded))\r\n\r\nvitd = VerticallyImplicitTimeDiscretization()\r\nmolecular_diffusivity = ScalarDiffusivity(vitd, \u03bd=1.05e-6)\r\n\r\n\"\"\"\r\n    van_driest_damping_function(x, y, z, p)\r\n\r\nReturn the model constant for SmagorinskyLilly which decreases to zero\r\nat the center of the first grid cell away from the wall.\r\n\"\"\"\r\n@inline function van_driest_damping_function(x, y, z, p)\r\n    # Position of first grid cell\r\n    z\u2080 = p.\u0394z\u2080 / 2\r\n    z\u2081 = 1 - p.\u0394z\u2081 / 2\r\n\r\n    # Distances to the wall\r\n    d\u207a\u2080 = (z - z\u2080) / p.\u03b4\u207a\r\n    d\u207a\u2081 = (z\u2081 - z) / p.\u03b4\u207a\r\n    d\u207a = min(d\u207a\u2080, d\u207a\u2081)\r\n\r\n    # Model constants\r\n    A\u207a = p.A\u207a\r\n    C = p.C\r\n\r\n    return C * (1 - exp(d\u207a / A\u207a))\r\nend\r\n\r\n# Find grid spacing at top and bottom, assuming rectilinearity\r\nNz = size(grid, 3)\r\n\u0394z\u2080 = zspacing(1, 1, 1, grid, Center(), Center(), Center())\r\n\u0394z\u2081 = zspacing(1, 1, Nz, grid, Center(), Center(), Center())\r\n\r\nparameters = (C = 0.16,\r\n              A\u207a = 26,   # :-D\r\n              \u0394z\u2080 = \u0394z\u2080, # vertical grid spacing at the bottom\r\n              \u0394z\u2081 = \u0394z\u2081, # vertical grid spacing at the top\r\n              \u03b4\u207a = 1)    # function of molecular_diffusivity.\u03bd\r\n\r\nvan_driest_damping = FunctionField{Center, Center, Center}(van_driest_damping_function, grid; parameters)\r\n\r\nsmagorinsky_lilly = SmagorinskyLilly(vitd, C=van_driest_damping)\r\n\r\nno_slip = ValueBoundaryCondition(0)\r\nu_bcs = FieldBoundaryConditions(top=no_slip, bottom=no_slip)\r\nv_bcs = FieldBoundaryConditions(top=no_slip, bottom=no_slip)\r\n\r\nmodel = NonhydrostaticModel(; grid,\r\n                            timestepper = :RungeKutta3,\r\n                            boundary_conditions = (u = u_bcs, v = v_bcs),\r\n                            closure = (molecular_diffusivity, smagorinsky_lilly))\r\n\r\n# Re = U * L / \u03bd \u2192 U = \u03bd * Re\r\n# U = \u03bd * Re\r\n\u03bd = molecular_diffusivity.\u03bd\r\nU = \u03bd * 1000\r\n\u03f5(x, y, z) = U * randn()\r\nset!(model, u=\u03f5, v=\u03f5, w=\u03f5)\r\n\r\n# \u0394t = 0.1 * \u0394x / U\r\n\u0394t = 0.1 * \u0394z\u2080 / U\r\nsimulation = Simulation(model; \u0394t, stop_iteration=100)\r\nrun!(simulation)\r\n\r\nusing GLMakie\r\nfig = Figure()\r\nax = Axis(fig[1, 1])\r\nu, v, w = model.velocities\r\nheatmap!(ax, interior(w, 1, :, :))\r\n```\r\n\r\nNote that the constant is defined at cell centers for now.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-01T16:47:48Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-06-24T14:41:59Z",
+    "number": 3370,
+    "title": "Introduce closure_constant interface for AMD and SmagorinskyLilly"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `Makie` package from `0.21, 0.22` to `0.21, 0.22, 0.24`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-22T00:33:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-06-24T14:57:31Z",
+    "number": 4611,
+    "title": "CompatHelper: bump compat for Makie in [weakdeps] to 0.24, (keep existing compat)"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `MakieCore` package from `0.7, 0.8, 0.9` to `0.7, 0.8, 0.9, 0.10`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-12T00:29:43Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-06-24T14:58:28Z",
+    "number": 4601,
+    "title": "CompatHelper: bump compat for MakieCore in [weakdeps] to 0.10, (keep existing compat)"
+  },
+  {
+    "additions": 645,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "solves #4044 \r\n\r\ncc @jagoosw \r\n\r\nTODO: \r\n- [x] add a test",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-11T09:33:29Z",
+    "deletions": 639,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2025-06-24T18:07:43Z",
+    "number": 4090,
+    "title": "Fix GPU indexing flat fields"
+  },
+  {
+    "additions": 623,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements the triad discretization for the Gent-McWilliams skew flux following [Griffies et al 1998](https://journals.ametsoc.org/view/journals/phoc/28/5/1520-0485_1998_028_0805_idiazc_2.0.co_2.xml?tab_body=fulltext-display).\r\n\r\n@jm-c \r\n\r\nRunning `/validation/isopycnal_skew_symmetric_diffusivity/coarse_baroclinic_adjustment.jl` produces \r\n\r\nhttps://github.com/user-attachments/assets/124baffe-037c-4acd-bf97-d2b7cde36015\r\n\r\nI think its working?",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-05T21:58:22Z",
+    "deletions": 52,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2025-06-24T23:48:04Z",
+    "number": 3901,
+    "title": "Use triads (Griffies et al 1998) to compute the skew flux "
+  }
+]

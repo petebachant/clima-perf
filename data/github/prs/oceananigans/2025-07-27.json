@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Following from #4627, I noticed that `enforce_open_boundary_mass_conservation!` was _always_ called and doing stuff even when there was no open boundaries.\r\n\r\nThis PR deals with that.\r\n\r\nwith @glwagner ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-26T22:39:09Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2025-07-27T00:55:55Z",
+    "number": 4674,
+    "title": "Only enforce open boundary mass conservation for open boundaries"
+  },
+  {
+    "additions": 107,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR allows using the `NonhydrostaticModel` on a `LatitudeLongitudeGrid`. We can perform some validation here before merging.\r\n\r\nwith @francispoulin \r\n\r\nAn example of a small hot box positioned at the bottom of a nonhydrostatic latitude-longitude grid leads to\r\n\r\n<img width=\"939\" height=\"543\" alt=\"image\" src=\"https://github.com/user-attachments/assets/516e20be-1401-4373-be02-b0cdaf9169af\" />\r\n\r\nafter about 10 minutes of evolution. The code is\r\n```julia\r\ngrid = LatitudeLongitudeGrid(size = (1, 100, 100), latitude = (-0.01, 0.01), longitude = (-10, 10), z = (-100, 0), topology=(Periodic, Bounded, Bounded))\r\nmodel = NonhydrostaticModel(; grid, tracers = :b, buoyancy = BuoyancyTracer(), advection=WENO())\r\nb\u209b(x, y, z) = 2e-4 * 10 * (10 + 5 * z / 100)\r\nbb(x, y, z) = -90 < z < -70 ? (-0.005 < y < 0.005 ? 2e-4 * 10 * 5 : 0) : 0\r\nb\u1d62(x, y, z) = b\u209b(x, y, z) + bb(x, y, z)\r\nset!(model, b=b\u1d62)\r\nsimulation = Simulation(model, \u0394t=10, stop_time=10minutes)\r\nconjure_time_step_wizard!(simulation, IterationInterval(10); cfl=0.5)\r\nrun!(simulation)\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-17T15:41:38Z",
+    "deletions": 92,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2025-07-27T01:55:31Z",
+    "number": 4654,
+    "title": "`NonhydrostaticModel` on a `LatitudeLongitudeGrid`"
+  }
+]

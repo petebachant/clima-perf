@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 95,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "## Summary\n\n- New `CosineRampMask{D}(; start, stop)` callable: half-cosine ramp from 0 at coordinate `start` to 1 at coordinate `stop` along direction `D`, clamped outside the interval.\n- The sign of `stop - start` flips the direction, so the same struct covers upward and downward ramps \u2014 useful for upper/lower sponge layers and Davies-style lateral nudging zones.\n- Sits next to `GaussianMask` / `PiecewiseLinearMask` in `src/Forcings/relaxation.jl`, exported from `Forcings.jl` and re-exported from `Oceananigans`.\n- 3-arg `(x, y, z)` callables only, matching the existing mask precedent.\n- No new dependencies; default `Adapt` covers the struct (concrete numeric fields).\n\n## Why\n\nThe cosine ramp is the standard shape for sponge / nudging zones; users currently roll their own. Adding it as a first-class mask keeps the upstream `Relaxation` API self-contained for the common case. Lands as the first step in a small series that generalizes `Relaxation` to accept `FieldTimeSeries` targets \u2014 but the mask is independently useful and stands alone.\n\n## Tests\n\n- New `@testset \"CosineRampMask cosine ramp\"` in `test/test_forcings.jl` covers:\n  - clamping outside `[start, stop]`\n  - endpoint and mid-point values for all three `D \u2208 (:x, :y, :z)`\n  - cosine symmetry around the mid-point\n  - monotonic interior\n  - reversed ramp (`start > stop`)\n  - `ArgumentError` on `start == stop`\n- `relaxed_time_stepping` smoke helper generalized to forward arbitrary mask kwargs; `CosineRampMask` joins `GaussianMask` / `PiecewiseLinearMask` in the relaxation-forcing time-stepping test.\n\n## Test plan\n\n- [x] CPU unit tests pass locally (34/34)\n- [x] CPU relaxation-forcing smoke tests pass locally (3/3, all three masks)\n- [x] Doctest output verified to match\n- [ ] CI green (CPU + GPU)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-11T20:27:25Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2026-05-13T20:12:52Z",
+    "number": 5574,
+    "title": "Add `CosineRampMask` forcing mask"
+  }
+]

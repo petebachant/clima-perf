@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 2178,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "This PR implements ZhouOptimalLAIModel, a new concrete type of AbstractBiomassModel,  that computes LAI dynamically from energy and water constraints, following Zhou et al. (2025). \r\n\r\n- [Zhou et al., 2025 manuscript](https://onlinelibrary.wiley.com/doi/pdf/10.1111/gcb.70125) \r\n- [Documentation](https://clima.github.io/ClimaLand.jl/previews/PR1625/standalone/pages/vegetation/canopy_structure/optimal_lai/)\r\n- [Dashboard (select lai)](https://dashboard.cupoftea.earth/land_longrun)\r\n\r\nIssues for future PR:\r\n#1634 - Storing time-integrated variables in Y \r\n#1636 - Dynamic C3/C4 vegetation distribution\r\n#1637 - Calibrate GPP and LAI\r\n#1638 - Refactor biomass model to decouple LAI from other fields \r\n#1639 - Use canopy temperature instead of air temperature for potential GPP (maybe it doesn't make sense though - how do we know canopy temperature if there's no canopy...)\r\n\r\nNOTE: As discussed with Kat, this no longer has C3 C4 partitioning (will be a separate PR)\r\n\r\nNOTE (Alexis): I believe this PR is ready to be merged. Further progress will be made in future PRs (see issues). The model works well - except LAI is overestimated in locations where GPP is overestimated - but this is related to GPP, not the LAI model. See [ILAMB GPP](https://dashboard.cupoftea.earth/ilamb/EcosystemandCarbonCycle/GrossPrimaryProductivity/FLUXCOM/FLUXCOM.html).\r\n",
+    "changedFiles": 26,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-03T19:27:13Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2026-02-18T00:34:49Z",
+    "number": 1625,
+    "title": "Add prognostic optimal LAI model (Zhou et al. 2025)"
+  },
+  {
+    "additions": 77,
+    "author": {
+      "id": "MDQ6VXNlcjIzNzQ0MTk1",
+      "is_bot": false,
+      "login": "braghiere",
+      "name": "Renato Braghiere"
+    },
+    "body": "- Add carbon flux variables: NEE, Ra, Rh, SOC to diagnostics\r\n- Add derived vegetation carbon (cVeg) from prescribed LAI/SAI\r\n  * Formula: cVeg = \u03c3l*LAI + \u03b7sl*h*SAI\r\n  * Uses specific leaf density and stem wood coefficients\r\n  * Enables comparison with 7 ILAMB biomass datasets\r\n- Add ILAMB mappings for all new carbon variables\r\n- Add all variables to short diagnostics for LandModel\r\n- Update buildkite ILAMB config with:\r\n  * Soil carbon section (HWSD, NCSCDV22, Koven)\r\n  * Biomass section (7 datasets)\r\n  * ERA5 TWSA as derived variable\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-13T20:56:52Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-02-18T02:51:52Z",
+    "number": 1643,
+    "title": "rb/Add carbon cycle metrics and vegetation biomass to ILAMB"
+  }
+]

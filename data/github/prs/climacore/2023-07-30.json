@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "I went to convert `hydrostatic_implicit.jl` to use ClimaTimesteppers, and @dennisYatunin and I discovered a bug that renders the test useless:\r\n\r\n```julia\r\nfunction linsolve!(::Type{Val{:init}}, f, u0; kwargs...)\r\n    function _linsolve!(x, A, b, update_matrix = false; kwargs...)\r\n        x = copy(b) #\r\n        ...\r\n    end\r\nend\r\n```\r\nThis does not mutate the incoming `x`, so `linsolve!` simply doesn't do what it's supposed to. Furthermore, since this test is meant to ensure the solution doesn't change, it \"passes\" because `linsolve!` doesn't actually do what it's suppose to.\r\n\r\nSince this depends on an older version of OrdinaryDiffEq, we think it's best to simply remove this test.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-07-28T18:42:26Z",
+    "deletions": 337,
+    "labels": [
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2023-07-30T23:12:50Z",
+    "number": 1400,
+    "title": "Remove incorrect hydrostatic_implicit.jl test"
+  }
+]

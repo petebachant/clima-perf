@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR makes the names of some surface functions more precise.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-17T00:32:32Z",
+    "deletions": 57,
+    "labels": [],
+    "mergedAt": "2022-11-17T01:07:18Z",
+    "number": 1127,
+    "title": "Use better surface names"
+  },
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds (and fixes) the ARM SGP case",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-17T02:18:34Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2022-11-17T02:58:14Z",
+    "number": 1128,
+    "title": "Add ARM SGP"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes a trivial mse entry to fix CI.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-17T04:15:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-11-17T04:51:15Z",
+    "number": 1129,
+    "title": "Remove trivial mse entry to fix ci"
+  },
+  {
+    "additions": 333,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR splits `sgs_flux_tendency!` into `implicit_sgs_flux_tendency!` and `explicit_sgs_flux_tendency!`, and it adds a job to the pipeline that runs compressible BOMEx with IMEX EDMF.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\nThe full set of changes in this PR is:\r\n- Change `compute_up_tendencies!` and `compute_en_tendencies!` so that they increment the EDMF tendencies instead of setting them (i.e., replace `tendency .= stuff` with `tendency .+= stuff`); this works because both the EDMF tendencies are zeroed out in both `implicit_tendency!` and `remaining_tendency!`/`remaining_tendency_increment!`\r\n- Split `compute_up_tendencies!` into `compute_implicit_up_tendencies!` and `compute_explicit_up_tendencies!`, where the former contains the advection tendencies and the latter contains all other tendencies\r\n- Split `compute_en_tendencies!` into `compute_implicit_en_tendencies!` and `compute_explicit_en_tendencies!`, where the former contains the diffusion tendency and the latter contains all other tendencies\r\n- Split `compute_turbconv_tendencies!` into `compute_implicit_turbconv_tendencies!` and `compute_explicit_turbconv_tendencies!`, where the former calls `compute_implicit_up_tendencies!`/`compute_implicit_en_tendencies!` and the latter calls `compute_explicit_up_tendencies!`/`compute_explicit_en_tendencies!`\r\n- Split `compute_gm_tendencies!` into `compute_implicit_gm_tendencies!` and `compute_explicit_gm_tendencies!`, where the former contains the SGS flux tendencies and the latter contains all other tendencies\r\n- Add the CLI options `imex_edmf_turbconv` and `imex_edmf_gm`, both of which default to `false`\r\n- Split `sgs_flux_tendency!` into `implicit_sgs_flux_tendency!` and `explicit_sgs_flux_tendency!`, where the former calls `compute_implicit_turbconv_tendencies!` when `imex_edmf_turbconv` is `true` and `compute_implicit_gm_tendencies!` when `imex_edmf_gm` is `true` (if both booleans are `false`, this function does nothing), and where the latter calls `compute_explicit_turbconv_tendencies!`, `compute_explicit_gm_tendencies!`, `compute_implicit_turbconv_tendencies!` when `imex_edmf_turbconv` is `false`, and `compute_implicit_gm_tendencies!` when `imex_edmf_gm` is `false`\r\n- Add a call to `implicit_sgs_flux_tendency!` to `implicit_tendency!` after the lines where the EDMF tendencies are zeroed out\r\n- Replace the call to `sgs_flux_tendency!` in `additional_tendency!` with a call to `explicit_sgs_flux_tendency!`\r\n- Add a job to the pipeline that runs compressible BOMEx using JFNK with `imex_edmf_turbconv` and `imex_edmf_gm` both set to `true`, ~~10 newton iterations, and a timestep of 100 seconds~~ and with the same other settings as the pre-existing JFNK job (see the update below)\r\n- Change the timestep of the job that runs compressible BOMEx using the \"plain\" Newton's method (not JFNK) from 40 seconds to 35 seconds, because apparently this simulation is so unstable that changing the order in which tendencies are added is sufficient to reduce the maximum timestep\r\n- Remove the `soft-fail` flag from the job that runs compressible BOMEx using JFNK without IMEX EDMF, since there appear to no longer be any non-deterministic bugs in that job\r\n- Rename the CLI option `krylov_forcing` to `krylov_rtol`\r\n- Add the CLI options `use_newton_rtol` (defaults to `false`), `newton_rtol` (defaults to `1e-5`, which is the default value in OrdinaryDiffEq.jl), `use_dynamic_krylov_rtol` (defaults to `false`), and `eisenstat_walker_forcing_alpha` (defaults to `2`; only used when `use_dynamic_krylov_rtol` is `true`); these new options are not exercised in this PR, but they need to be tuned (seemingly at random) in order to achieve IMEX EDMF timesteps much larger than 100 seconds, ~~although this will hopefully no longer be the case after line search backtracking is added to Newton's method in ClimaTimeSteppers.jl;~~ there are many more options available for tuning Newton's method, but this set of options appears to be sufficient for achieving large timesteps\r\n- Move the computation of `aux_up[i].entr_turb_dyn` and `aux_up[i].detr_turb_dyn` from `EDMF_functions.jl` to `entr_detr.jl`, per @haakon-e's request.\r\n\r\n## Update\r\n\r\nAfter a great deal of experimentation, there is now evidence that the linear equation that gets solved during the implicit Runge-Kutta stages of the IMEX EDMF job can be ill-conditioned for timesteps larger than 40 seconds, so this PR no longer uses a 100 second timestep for the IMEX EDMF job. The evidence (in the order it was observed) is as follows:\r\n1. When the IMEX EDMF job is run with several different values for a particular CLI option, the values which cause the simulation to run to completion seem to be chosen at random. For example, suppose that we run it with different values of `jvp_step_adjustment`, which is the amount by which the step size of the finite difference approximation of the Jacobian-vector product is scaled in the Krylov solver. One would expect that, for every combination of other CLI options, there is an optimal value of `jvp_step_adjustment` that minimizes the error of the finite difference approximation, and that values sufficiently far away from this optimum cause the simulation to crash. What we instead observe is that the values which cause the simulation to crash appear to be distributed uniformly at random among the set of values that are used. When the timestep is near 40s, the probability that a particular value will cause the simulation to crash is very low, and this probability grows as the timestep is increased, until eventually no value can cause the simulation to run to completion. This was initially attributed to the fact that Newton's method is not a globally convergent root-finding algorithm, which means that certain random values might cause it to diverge; it was supposed that adding a globalization method like line-search backtracking to Newton's method could alleviate this problem. However, this evidence is better explained by the linear equation being ill-conditioned, which cannot be fixed with a globalization method.\r\n2. When the IMEX EDMF job is run many times with the same CLI options, it can randomly switch between multiple outcomes. For example, when it is run with 10 newton iterations and a timestep of 100 seconds, it runs to completion in around 1\u20135% of its runs, and it crashes after around 4600 seconds in the remaining runs. Moreover, it always crashes at exactly the same state, and it finishes at exactly the same state every time it runs to completion. When the value of every field at every point in the simulation is logged, the first difference between the simulations that crash and the ones that run to completion occurs at the beginning of the third GMRES iteration. That is, the prognostic states, the caches, and the tendencies at the end of the second GMRES iteration are all exactly identical, but there is a difference between the prognostic states at the beginning of the third iteration. Specifically, some of the values of `w` (grid-mean vertical velocity) and `\u03c1atke` (updraft turbulent kinetic energy) differ in the last one or two digits of their `Float64` representations. The only currently known explanation for this is that the linear equation is ill-conditioned. If this is the case, then the solution of the linear equation will be computed using sums of large numbers with many significant digits. Since floating-point numbers have limited precision, changing the order in which these numbers are added will potentially alter the solution due to round-off error. When the prognostic state is computed on each GMRES iteration, it is obtained using a series of BLAS (Basic Linear Algebra Subprograms) function calls, which involve floating-point additions that can be rearranged by the processor. So, if the linear equation is ill-conditioned, we would expect to see the prognostic state randomly change based on how the processor allocates resources.\r\n\r\nIn order to verify that this is the case, we have a few options:\r\n- Compute the matrix used in the linear equation, and determine its condition number. We would expect to see this number grow as the timestep is increased, and we would expect it to be extremely large just before a simulation exhibits random behavior.\r\n- Increase the precision of the simulation's floating-point numbers from `Float64` to `Float128`, or perhaps even further. We would expect this to decrease the probability of significant round-off errors occurring, making it less likely for a simulation to randomly crash due to floating-point addition rearrangements. Unfortunately, this would come at the cost of drastically slowing down all floating-point operations.\r\n\r\nThe most likely culprit is, as always, EDMF filtering. In its current form, the filter involves clipping parts of the prognostic state when certain criteria are satisfied, which means that it is discontinuous with respect to its input. That is, if $\\mathcal{F}(Y)$ is the filtered version of the prognostic state $Y$, then, for certain values of $\\hat{Y}$, $\\mathcal{F}'(\\hat{Y})$ will be undefined. In practical terms, this means that, when $Y$ is sufficiently close to some value of $\\hat{Y}$, using a finite difference approximation to compute $\\mathcal{F}'(Y)$ will result in very large floating-point numbers. If the tendency of a filtered state is $\\mathcal{T}(\\mathcal{F}(Y))$, then the matrix used in the linear equation is equal to $dt * \u03b3 * \\partial/\\partial Y(\\mathcal{T}(\\mathcal{F}(Y))) - I$, where $dt$ is the timestep size and $\u03b3$ is the diagonal coefficient of the implicit Runge-Kutta Butcher tableau. Since $\\partial/\\partial Y(\\mathcal{T}(\\mathcal{F}(Y))) = \\mathcal{T}'(\\mathcal{F}(Y)) * \\mathcal{F}'(Y)$, this means that the matrix could be ill-conditioned when $Y$ is sufficiently close to some value of $\\hat{Y}$, at least when using a finite difference approximation to compute $\\partial/\\partial Y(\\mathcal{T}(\\mathcal{F}(Y)))$ (or, as in our case, using a finite difference approximation to compute the product of the matrix with a vector).\r\n\r\nIf the problem is indeed being caused by EDMF filtering, we have several potential solutions:\r\n- Compute the derivative using automatic differentiation instead of using a finite difference approximation. Ideally, this will cause the matrix used in the linear equation to only be ill-conditioned (or perhaps just be filled with `Inf`s or `NaN`s) when $Y$ is exactly equal to some value of $\\hat{Y}$, which is very unlikely to occur in practice. Using automatic differentiation was found to be possible earlier when only the EDMF advection tendency was being treated implicitly, but it might prove to be challenging when the EDMF diffusion tendency is also treated implicitly (on account of needing to propagate `Dual` numbers through a multitude of auxiliary variable computations). This would also require adding support for automatic differentiation to ClimaTimeSteppers.jl. \r\n- Modify EDMF filtering so that it applies a smooth modification to the prognostic state (e.g., a sigmoid function), or eliminate it altogether in favor of \"epsilon factors\" in the EDMF tendency. Ideally, this will prevent the matrix used in the linear equation from ever being ill-conditioned. This work is already ongoing, and it is being tracked in #1104.\r\n- Modify the preconditioner of the Krylov solver to reduce the condition number of the matrix. Perhaps the preconditioner could somehow \"undo\" the effects of the filter, though it is not at all clear how that could be achieved.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-10-25T01:02:39Z",
+    "deletions": 113,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2022-11-17T06:22:12Z",
+    "number": 1021,
+    "title": "Add implicit EDMF using JFNK"
+  },
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds the ability to set tridiagonal blocks along the diagonal of the implicit tendency's Jacobian, where each block corresponds to $\\partial\\mathcal{V}_t/\\partial\\mathcal{V}$, where $\\mathcal{V}$ is any variable in `Y.c.turbconv` or `Y.f.turbconv`.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\nThis PR modifies `SchurComplementW` by adding the new fields `\u2202\u1d9cTC\u209c\u2202\u1d9cTC` and `\u2202\u1da0TC\u209c\u2202\u1da0TC`, which store a tridiagonal matrix for each TC variable, and modifying `ldiv!` to use these fields appropriately. By default, these fields are filled with 0s, but they could be modified from `Wfact!` or from a callback to contain better approximations of the corresponding blocks from the exact Jacobian. This could allow us to decrease the number of iterations required by the Krylov solver on each implicit Runge-Kutta stage.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-11-17T06:40:21Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2022-11-17T18:51:14Z",
+    "number": 1130,
+    "title": "Add diagonal Jacobian blocks for TC"
+  }
+]

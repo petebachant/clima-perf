@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 286,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "It seems to me that, to date, one of the most challenging tasks that users have is: debug a large simulation that is breaking, e.g., yielding NaNs somewhere. This is especially complex for large models with many terms and implicit time-stepping with all the bells and whistles that we offer.\r\n\r\nThis PR attempts to provide tools to tackle this giant task, by introducing two functions:\r\n\r\n - `call_post_op_callback`\r\n - `post_op_callback`\r\n\r\nOne way that users may leverage this is, for example:\r\n\r\n```julia\r\nimport ClimaCore\r\nClimaCore.DataLayouts.call_post_op_callback() = true\r\nfunction ClimaCore.DataLayouts.post_op_callback(data)\r\n    if any(isnan, data)\r\n        error(\"Found NaNs!\")\r\n    end\r\nend\r\n\r\n# run simulation\r\n```\r\nNow, this assums that `any(isnan, data)` will work on all of the results-- it may not, but users can catch whatever data `post_op_callback` is called with and handle them accordingly. As such, this sort of debugging tool is capable of revealing that a given simulation errors in a wide range of locations, like [here](https://github.com/CliMA/ClimaTimeSteppers.jl/blob/95e6109c49e232c57e9e2c9f8d11c06ee08b835e/src/nl_solvers/newtons_method.jl#L162), [here](https://github.com/CliMA/ClimaTimeSteppers.jl/blob/95e6109c49e232c57e9e2c9f8d11c06ee08b835e/src/solvers/imex_ark.jl#L133), or [here](https://github.com/CliMA/ClimaCore.jl/blob/92f3b2beec8e292c5b32453d0d96fb121a017999/src/MatrixFields/field_matrix_solver.jl#L174), which may provide hints to users as to what is wrong.\r\n\r\nI'm not sure exactly how useful this will be, but I'm curious myself to try in order to debug the flaky ClimaTimestepper issues (where I'm having this experiencing this problem of hunting down NaNs).\r\n\r\nSince this would be a purely debugging tool, I would argue that it should not be a feature used in production (i.e., removing it should not be a breaking change).\r\n\r\nThoughts?",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-03T21:27:55Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2025-01-09T03:32:16Z",
+    "number": 2115,
+    "title": "Introduce post-operation callback"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is probably the smallest and least regrettable step towards fixing #2091. This is a subset of #2118.\r\n\r\nI realized that we actually probably want to leave the generic adapt methods in `src/`, since they could be applied for both cuda and metal, for example. So, I've only moved the ones that are explicitly device-specific.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-08T21:44:22Z",
+    "deletions": 35,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-01-09T15:56:26Z",
+    "number": 2120,
+    "title": "Move in-kernel specific adapt functions to cuda ext"
+  }
+]

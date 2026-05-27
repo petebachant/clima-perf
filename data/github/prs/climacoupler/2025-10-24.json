@@ -1,0 +1,74 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpdate ClimaParams version\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T06:59:23Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-10-24T17:17:41Z",
+    "number": 1526,
+    "title": "ClimaParams version"
+  },
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nIncludes some changes from #1501  to break that PR up into smaller pieces. Here we have mostly src/docs changes, and restructuring some code that was in oceananigans.jl before. This should not change any behavior.\r\n\r\n## Content\r\n- [x] add a `get_field` function for `ice_concentration`\r\n- [x] update some documentation\r\n- [x] move some shared functions out of oceananigans.jl and into climaocean_helpers.jl",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-22T00:52:10Z",
+    "deletions": 149,
+    "labels": [],
+    "mergedAt": "2025-10-24T19:59:07Z",
+    "number": 1523,
+    "title": "initial ClimaSeaIce changes"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRemove redundant tests so we test each added functionality only once (or as few times as possible)\r\n\r\n## Content\r\nRemoved runs:\r\n- Slabplanet timevarying insolation + rayleigh sponge\r\n  - tested by other runs\r\n- AMIP: ED only + integrated land\r\n  - we test this on GPU too, can remove the CPU run\r\n- AMIP: ED only + bucket\r\n  - we test this on GPU too, can remove the CPU run\r\n- AMIP - Float32 test\r\n  - we already use Float32 for a lot of other runs\r\n- GPU Slabplanet: default\r\n  - we can just test this on CPU\r\n- GPU Slabplanet: extra atmos diagnostics\r\n  - already tested on CPU\r\n- GPU AMIP: default\r\n  - we can just test this on CPU\r\n- GPU AMIP target: topography and diagnostic EDMF\r\n  - the 2 \"GPU AMIP: diag. EDMF + X\" already use Earth topography + diagnostic EDMF\r\n\r\nalso switches \"\"Slabplanet: dry, no radiation\" to use `evolving_ocean: false`  so we don't have to test that in the longruns\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T18:39:40Z",
+    "deletions": 110,
+    "labels": [],
+    "mergedAt": "2025-10-24T22:04:26Z",
+    "number": 1528,
+    "title": "clean up buildkite pipeline"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCleans up some longruns that we don't check:\r\n\r\n- Remove all DecayWithHeight runs\r\n- Remove all runs without topography\r\n- Remove slabplanet with evolving_ocean: false (@juliasloan25 will add one in ci to maintain this flag)\r\n- Change job names accordingly\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T18:36:36Z",
+    "deletions": 136,
+    "labels": [],
+    "mergedAt": "2025-10-24T22:09:23Z",
+    "number": 1527,
+    "title": "clean up longruns"
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "the `for` loop does not compile on the GPU. This PR follows the same implementation we have for closure tuples in `TurbulenceClosures`. I have also added a test",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-27T07:32:55Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2025-05-28T05:59:15Z",
+    "number": 4548,
+    "title": "Correct diffusive dissipation for tuple of closures"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "When loading data I saved with ClimaOcean the boundary conditions were missing and I was hitting errors with the show method.\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> u = FieldTimeSeries(\"one_degree_surface_fields.jld2\", \"u\"; backend = OnDisk())\r\n360\u00d7180\u00d71\u00d75 FieldTimeSeries{OnDisk} located at (Face, Center, Center) of u at one_degree_surface_fields.jld2\r\n\u251c\u2500\u2500 grid: 360\u00d7180\u00d740 ImmersedBoundaryGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded} on CPU with 5\u00d75\u00d74 halo\r\n\u251c\u2500\u2500 indices: (:, :, 40:40)\r\n\u251c\u2500\u2500 time_indexing: Linear()\r\n\u251c\u2500\u2500 backend: OnDisk\r\n\u251c\u2500\u2500 path: one_degree_surface_fields.jld2\r\n\u2514\u2500\u2500 name: u\r\n\r\njulia> u[1].boundary_conditions\r\nmissing\r\n\r\njulia> u[1]\r\nError showing value of type Field{Face, Center, Center, Nothing, ImmersedBoundaryGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded, OrthogonalSphericalShellGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded, Oceananigans.Grids.StaticVerticalDiscretization{OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}}, Oceananigans.OrthogonalSphericalShellGrids.Tripolar{Int64, Int64, Int64}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, CPU, Float64}, GridFittedBottom{Field{Center, Center, Nothing, Nothing, OrthogonalSphericalShellGrid{Float64, Periodic, Oceananigans.Grids.RightConnected, Bounded, Oceananigans.Grids.StaticVerticalDiscretization{OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}, OffsetArrays.OffsetVector{Float64, Vector{Float64}}}, Oceananigans.OrthogonalSphericalShellGrids.Tripolar{Int64, Int64, Int64}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, CPU, Float64}, Tuple{Colon, Colon, Colon}, OffsetArrays.OffsetArray{Float64, 3, Array{Float64, 3}}, Float64, FieldBoundaryConditions{BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Periodic, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Flux, Nothing}, BoundaryCondition{Oceananigans.BoundaryConditions.Zipper, Int64}, Nothing, Nothing, BoundaryCondition{Oceananigans.BoundaryConditions.Flux, Nothing}}, Nothing, Nothing}, Oceananigans.ImmersedBoundaries.CenterImmersedCondition}, Nothing, Nothing, CPU}, Tuple{Colon, Colon, UnitRange{Int64}}, OffsetArrays.OffsetArray{Float32, 3, Array{Float32, 3}}, Float32, Missing, Nothing, Nothing}:\r\nERROR: type Missing has no field west\r\nStacktrace:\r\n  [1] getproperty(x::Missing, f::Symbol)\r\n    @ Base ./Base.jl:37\r\n  [2] show(io::IOContext{Base.TTY}, field::Field{Face, Center, Center, Nothing, ImmersedBoundaryGrid{\u2026}, Tuple{\u2026}, OffsetArrays.OffsetArray{\u2026}, Float32, Missing, Nothing, Nothing})\r\n    @ Oceananigans.Fields ~/.julia/packages/Oceananigans/Z7sKR/src/Fields/show_fields.jl:43\r\n  [3] show(io::IOContext{\u2026}, ::MIME{\u2026}, f::Field{\u2026})\r\n    @ Oceananigans.Fields ~/.julia/packages/Oceananigans/Z7sKR/src/Fields/show_fields.jl:74\r\n  [4] (::OhMyREPL.var\"#7#8\"{REPL.REPLDisplay{REPL.LineEditREPL}, MIME{Symbol(\"text/plain\")}, Base.RefValue{Any}})(io::IOContext{Base.TTY})\r\n    @ OhMyREPL ~/.julia/packages/OhMyREPL/7DgPH/src/output_prompt_overwrite.jl:23\r\n  [5] with_repl_linfo(f::Any, repl::REPL.LineEditREPL)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:569\r\n  [6] display\r\n    @ ~/.julia/packages/OhMyREPL/7DgPH/src/output_prompt_overwrite.jl:6 [inlined]\r\n  [7] display\r\n    @ ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:278 [inlined]\r\n  [8] display(x::Any)\r\n    @ Base.Multimedia ./multimedia.jl:340\r\n  [9] #invokelatest#2\r\n    @ ./essentials.jl:892 [inlined]\r\n [10] invokelatest\r\n    @ ./essentials.jl:889 [inlined]\r\n [11] print_response(errio::IO, response::Any, show_value::Bool, have_color::Bool, specialdisplay::Union{Nothing, AbstractDisplay})\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:315\r\n [12] (::REPL.var\"#57#58\"{REPL.LineEditREPL, Pair{Any, Bool}, Bool, Bool})(io::Any)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:284\r\n [13] with_repl_linfo(f::Any, repl::REPL.LineEditREPL)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:569\r\n [14] print_response(repl::REPL.AbstractREPL, response::Any, show_value::Bool, have_color::Bool)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:282\r\n [15] (::REPL.var\"#do_respond#80\"{Bool, Bool, REPL.var\"#93#103\"{\u2026}, REPL.LineEditREPL, REPL.LineEdit.Prompt})(s::REPL.LineEdit.MIState, buf::Any, ok::Bool)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:911\r\n [16] #invokelatest#2\r\n    @ ./essentials.jl:892 [inlined]\r\n [17] invokelatest\r\n    @ ./essentials.jl:889 [inlined]\r\n [18] run_interface(terminal::REPL.Terminals.TextTerminal, m::REPL.LineEdit.ModalInterface, s::REPL.LineEdit.MIState)\r\n    @ REPL.LineEdit ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/LineEdit.jl:2656\r\n [19] run_frontend(repl::REPL.LineEditREPL, backend::REPL.REPLBackendRef)\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:1312\r\n [20] (::REPL.var\"#62#68\"{REPL.LineEditREPL, REPL.REPLBackendRef})()\r\n    @ REPL ~/.julia/juliaup/julia-1.10.9+0.aarch64.apple.darwin14/share/julia/stdlib/v1.10/REPL/src/REPL.jl:386\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```\r\n\r\nWas the missing put there by the output writer? The output reader?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-25T10:05:22Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-05-28T09:03:47Z",
+    "number": 4545,
+    "title": "Don't search for missing bcs"
+  },
+  {
+    "additions": 114,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "E.g., `Models` may need to depend on `Simulations`.",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-20T13:00:46Z",
+    "deletions": 89,
+    "labels": [],
+    "mergedAt": "2025-05-28T10:22:21Z",
+    "number": 4530,
+    "title": "Shuffle import order to clarify dependencies"
+  },
+  {
+    "additions": 211,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "At the moment, a nonlinear free surface conserves global tracer (except for on a tripolar grid which I ll address after this PR), but does not preserve the uniformity of a tracer.\r\n\r\nThis PR makes sure that an initially uniform tracer remains uniform by stepping the grid with the same timestepper used for tracers (density). \r\nI have also added a tracer constancy preservation test in the test suite.\r\n\r\nAfter this problem is solved, we have to deal with the issue of reconciliation of the grid with the free surface evolved in the barotropic step which at the moment are different: i.e. the grid is evolved with the large baroclinic step to ensure consistency with the tracer, while the free surface is evolved either implicitly or split explicitly but with another method that will make the two formulations diverge slightly.\r\n\r\nThis PR also changes the stored tendency, storing $\\sigma * G$ for tracers instead of storing just $G$",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-26T11:39:23Z",
+    "deletions": 209,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-05-28T15:14:37Z",
+    "number": 4546,
+    "title": "Ensure constancy preservation with nonlinear free surface"
+  }
+]

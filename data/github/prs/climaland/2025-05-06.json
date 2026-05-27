@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Previously to this commit, we were using `ClimaAnalysis.apply_oceanmask`\r\nto get locations (coordinates) on land to perform global calibration.\r\nThis was causing erroneous values at the coast, because it would\r\nsometimes use ocean locations, as the ClimaAnalysis mask slightly differ\r\nfrom the ClimaLand mask. Furthermore, we use a high threshold (0.99) for\r\nthe land mask to ensure only land pixels are used.\r\n\r\nFor example, longwave up at the coast had many zeros:\r\n![image](https://github.com/user-attachments/assets/d786eeb1-2761-4020-8b4d-a4623e12b42f)\r\n\r\nAnd, at the same locations, sensible heat had sometimes very large values \r\n![image](https://github.com/user-attachments/assets/b01054c0-ff09-4649-9a13-34909972351b)\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-29T21:33:03Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2025-05-06T20:36:42Z",
+    "number": 1132,
+    "title": "Fix calibration coastline errors"
+  }
+]

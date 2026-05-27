@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 1380,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "Coauthored with @eviatarbach \r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #253 \r\nCloses #154 \r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Implemented informative warning message for building \r\n`EnsembleKalmanProcess(...; Deltat = x, ...)` \r\nIn favour of the new constructor\r\n`EnsembleKalmanProcess(...; scheduler = DefaultScheduler(x), ...)`\r\nand updated all unit tests to the latter.\r\n- New `LearningRateScheduler` type and Objects in backwards compatible way, by adding the keyword `scheduler = ...`\r\n    1. `DefaultScheduler(k)` (always does step `k` unless user overrides at a given step), \r\n    2. `MutableScheduler()` (initially does step `1`, until user overrides with `k`, then does `k` thereafter until user next overrides)\r\n    3. `EKSStableScheduler()` - performs the stable EKS step calculation externally, in place of the original internal one.\r\n    4. `DataMisfitController()` - based on Iglesias Yan 2021's Bayesian tempering scheme.    \r\n- New Defaults are `DefaultScheduler(1)` usually, and `EKSStableScheduler` for EKS.\r\n- Current examples no longer have `Deltat= x` expressions in constructors of EKP object.\r\n- `calculate_timestep!` can output a flag if a termination condition is met, this will prevent further EKP updates (e.g. for `DataMisfitController`\r\n- Further options for DMC when it reaches the termination condition. `on_terminate = stop` `continue` or `continue_fixed` to either terminate, continue, or continue with latest timestep fixed.\r\n- Example comparing different schedulers (see results below)\r\n- Docstrings & docs page, EKI and UKI example: [SEE DOCS HERE](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR285/learning_rate_scheduler/)\r\n\r\n## Also Changed\r\n- A test coding pattern, where the forward map `G` transformed parameters internally, rather than using the parameter distributions to to return \"constrained parameters\" which is the proper way these should be used\r\n- The Nonlinear forward map that had a multiplicative noise internal variability, now has a no-noise and additive noise version used in testing (a more appropriate problem for EKP).\r\n - UKI initialization (/bugfix?) for timestep = `0.0` not `\\Delta t`. Allows for constructor cleanup and clean interface with new schedulers.\r\n - UKI now is consistent with other tools in building `Unscented{FT,IT}` types, not unparameterized `Unscented` types.\r\n\r\n### Example experiment - explained more clearly in docs\r\nLearning `(A,B)` from `f = exp(Asin(t) + B)`, from observing only `max(f)` and `mean(f)`\r\n\r\nFinal model solutions, as well as the max and mean of the solution \r\nleft: black = true model (not the observed data)\r\nright: black = observed truth, grey = mean/2*sd of true model observations\r\n![ensembles](https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/863069aa-5b6e-481c-8138-44f5e01b03d4)\r\n\r\n\r\n### Individual experiment behaviour\r\nmean ensemble member error to truth, (error), and mean ensemble member error to ensemble mean (spread).\r\nAvoiding ensemble collapse => dashed and solid lines are similar. \r\n![error_vs_spread_over_iteration](https://github.com/CliMA/EnsembleKalmanProcesses.jl/assets/47412152/66360946-d340-42b7-9f3e-a7a805c85967)\r\n\r\n\r\n\r\nGreen - constant step 0.02 for 50 steps (finishes at T=1)\r\nOrange - constant step 0.5 for 50 steps (finishes at T=25)\r\nRed - adaptive step, usually used for EKS (finishes at T=10^13?)\r\nPurple - adaptive DMC step terminates at 12 steps (finishes at T=1)\r\nBrown - adaptive DMC step with `on_terminate = continue` (finishes at T = 10^15)\r\n\r\n### Average convergence over 100 experiments\r\n50 ensemble members and 50 iterations (DMC typically terminates ~14-20 iterations)\r\nMethod      : DefaultScheduler{Float64}(0.5)\r\nFinal misfit: 0.011919044450605893\r\nFinal error : 0.027449304379020753\r\nFinal spread: 0.0031725385439674517\r\n \r\nMethod      : DefaultScheduler{Float64}(0.02)\r\nFinal misfit: 1.0919040792305175\r\nFinal error : 0.09912866440799409\r\nFinal spread: 0.07396181868428042\r\n \r\nMethod      : EKSStableScheduler{Float64}(1.0, 2.220446049250313e-16)\r\nFinal misfit: 5.648615687716918e-5\r\nFinal error : 0.03018464453288676\r\nFinal spread: 1.9601185362422715e-5\r\n \r\nMethod      : DataMisfitController{...}(..., \"stop\")\r\nFinal misfit: 1.1677896425071728\r\nFinal error : 0.09817906335167692\r\nFinal spread: 0.08739534124484036\r\n \r\nMethod      : DataMisfitController{...}(..., \"continue\")\r\nFinal misfit: 8.52533406253277e-17\r\nFinal error : 0.030283499635998162\r\nFinal spread: 5.974713527239014e-17\r\n\r\n\r\n### Conclusion? \r\nThese results imply that \r\n- DMC behaves similarly to fixed small-step EKI on `0->1`, but is far more efficient with regards to step size\r\n- DMC and fixed small-step EKI on `0->1` both retain better spread in the ensemble than other options,\r\n- Termination at T=1 (even averaged over 100's of runs) seems to give only conservative estimates of the mean, to an order of magnitude or more. (Likely to protect the spread of the ensemble?) \r\n- Continuing DMC causes it to mimic EKSStableScheduler behaviour but with less steps. (Brown is similar to red)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n\r\n\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585IlxXv",
+        "number": 154,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/154"
+      },
+      {
+        "id": "I_kwDOEreD585e6_ZW",
+        "number": 253,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/253"
+      }
+    ],
+    "createdAt": "2023-05-09T23:48:00Z",
+    "deletions": 236,
+    "labels": [],
+    "mergedAt": "2023-06-02T01:17:55Z",
+    "number": 285,
+    "title": "Timesteppers for EKP, from ParameterEstimocean"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-02T09:47:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-06-02T10:04:08Z",
+    "number": 289,
+    "title": "Update to v1.1"
+  }
+]

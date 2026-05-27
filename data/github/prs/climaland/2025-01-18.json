@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 391,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nSnow is made of liquid water and ice. Previously, we tracked the total water content in the snow via snow water equivalent (symbol S), which is the volume of liquid water you would get if the snow melted, per ground area. The liquid water mass fraction (symbol q_l) was obtained diagnostically and could only be nonzero if the snow was at the freezing temperature. \r\n\r\nThis approach handled melting of snow indirectly (conversion of ice to liquid water occured when we computed q_l diagnostically, based only on the total energy per mass of the snow), and then the loss of liquid water from the snowpack (\"runoff\" ) was included via a term in the ODE for S which corresponded to damping q_l to zero.\r\n\r\nThis worked fine, but it made it hard to address how rain falling on snow affects the liquid water content of the snow. We ignored this, and all liquid precip went straight to the soil (equivalent to saying it percolated through the snow instantaneously).\r\n\r\nThe equation for S was:\r\n`dS/dt = P_snow + snow_cover_fraction(Vapor Flux - Runoff)`\r\n\r\nThis PR adds a prognostic variable for snow liquid water (symbol S_l = q_l S). This allows us to better account for rain falling on snow. The equations we have are now:\r\n```\r\ndS/dt = P_snow + snow_cover_fraction(P_liq + Vapor Flux - Runoff)\r\ndS_l/dt = (P_liq + Vapor Flux * q_l - Runoff + Snow Melt) * snow cover fraction\r\n```\r\nWhere we assume that q_l * Vapor flux = evaporation of liquid water and the snow melt term has to be parameterized.\r\n\r\nNote that now q_l can be nonzero even if T < T_freeze, but that it will decrease in time due to refreezing.\r\n\r\n\r\n\r\nI ran the long runs - 88-> 92 NaNs in SWE @juliasloan25 \r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-20T22:51:18Z",
+    "deletions": 267,
+    "labels": [],
+    "mergedAt": "2025-01-18T17:41:20Z",
+    "number": 965,
+    "title": "Kd/rain on snow"
+  }
+]

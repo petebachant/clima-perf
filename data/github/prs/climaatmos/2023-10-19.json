@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 944,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAdds advective form EDMF. It uses h_tot and q_tot as prognostic variables. Currently we didn't add any other tracers.\r\n\r\nWe use `ConstantCoefficient` for entrainment. For detrainment, I changed the current `ConstantCoefficient` to `BOverW`, which is something like w * (coeff1 + coeff2 * b/w^2), so we can do either the old constant coefficient or the new w * (b/w^2 + const) detrainment. I think this is better as we don't need to include too many options. I wanted to change the names of current entrainment and detrainment closures as it is somewhat confusing. For example, `ConstantCoefficient` means `const * w/z` for entrainment, but `const * w` for detrainment. I will do that after this PR.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 45,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-08T02:25:10Z",
+    "deletions": 113,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-10-19T00:12:13Z",
+    "number": 2213,
+    "title": "Add advective edmf"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis makes the horizontal advection more consistent with the vertical advection.\r\nCloses #2255 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs50TAeO",
+        "number": 2255,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2255"
+      }
+    ],
+    "createdAt": "2023-10-19T06:20:21Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2023-10-19T18:21:15Z",
+    "number": 2256,
+    "title": "change advective edmf horizontal advection"
+  },
+  {
+    "additions": 594,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nUpdates ClimaAtmos to use the new implicit solver interface provided in `ClimaCore.MatrixFields` (CliMA/ClimaCore.jl#1326, CliMA/ClimaCore.jl#1399, and CliMA/ClimaCore.jl#1436).\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Replace `wfact.jl` and `linsolve.jl` with `implicit_solver.jl`. Most of the code from `wfact.jl` has been rewritten using the new `FieldName` and `FieldMatrix` infrastructure, while most of the code from `linsolve.jl` has been moved into the definition of `FieldMatrixSolver` in `ClimaCore`.\r\n- Modify the derivatives with respect to the vertical velocity `u\u2083` to use `AxisTensor`s and `AdjointAxisTensor`s. (We were previously replacing these derivatives with similar derivatives with respect to `u\u2083_data`, which made the code unnecessarily complicated.)\r\n- Add a detailed docstring for the `ImplicitEquationJacobian` object. (This was formerly called `SchurComplementW`, but it needed to be renamed because we will not always use the \"Schur complement solve\" algorithm in the future.) Simplify and update the comments in the `wfact!` function to reflect the new code.\r\n- Bump the ref counter to account for 12 small MSE table changes.\r\n- Update the code in `test/implicit/debugging_tools.jl`. Although this still isn't a unit test, as the code is not currently modular enough to write a proper test, it can be very helpful when debugging the matrix blocks in the `ImplicitEquationJacobian`.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-31T22:40:22Z",
+    "deletions": 836,
+    "labels": [],
+    "mergedAt": "2023-10-19T20:41:31Z",
+    "number": 2044,
+    "title": "Update to new implicit solver interface"
+  }
+]

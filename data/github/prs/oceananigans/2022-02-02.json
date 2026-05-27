@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #2210.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5C1i5n",
+        "number": 2210,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2210"
+      }
+    ],
+    "createdAt": "2022-02-02T00:18:39Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2022-02-02T03:12:28Z",
+    "number": 2211,
+    "title": "Only show free surface info when there is a free surface"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The clause that controls the definition of `cell_diffusion_timescale` in `TimeStepWizard` had a bug. I re-wrote in a way that's clearer to understand and that fixes the bug.\r\n\r\nConsider the MWE below:\r\n\r\n```julia\r\nusing Oceananigans\r\n\r\ngrid = RectilinearGrid(size=(8, 8, 8), extent = (1,1,1),\r\n                       topology=(Periodic, Periodic, Bounded))\r\n\r\nclosure = IsotropicDiffusivity(\u03bd=1)\r\nmodel = NonhydrostaticModel(grid = grid,\r\n                            closure = closure)\r\n@info \"\" model\r\n                            \r\nwizard = TimeStepWizard(diffusive_cfl=0.1,)\r\n```\r\n\r\nBefore this PR:\r\n\r\n```julia\r\njulia> wizard.cell_diffusion_timescale(model)\r\nInf\r\n\r\njulia> @which wizard.cell_diffusion_timescale(model)\r\ninfinite_diffusion_timescale(args...) in Oceananigans.Simulations at /home/tomas/.julia/packages/Oceananigans/IHPoE/src/Simulations/time_step_wizard.jl:12\r\n```\r\n\r\nAfter this PR:\r\n\r\n```julia\r\njulia> wizard.cell_diffusion_timescale(model)\r\n0.015625\r\n\r\njulia> @which wizard.cell_diffusion_timescale(model)\r\ncell_diffusion_timescale(model) in Oceananigans.TurbulenceClosures at /home/tomas/repos/Oceananigans.jl/src/TurbulenceClosures/turbulence_closure_diagnostics.jl:15\r\n```\r\n\r\nI'll also add a test to catch this in the future, since there are no tests for `diffusive_cfl` that I could tell.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-02T17:33:53Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2022-02-02T20:07:01Z",
+    "number": 2213,
+    "title": "Fixes bug in `TimeStepWizard`'s diffusive timescale calculation"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR extends the capability of our \"conditional computation\" framework wherein the \"re-calculation\" of expensive diagnostics and computations may be avoided if possible.\r\n\r\nPreviously, expensive field recalculations were avoided *only* at the outermost level (if the field were used directly in output), which in hindsight doesn't seem very useful since we often average or otherwise reduce expensive calculations for output (if we were not reducing an expensive calculation, we could simply calculate it offline).\r\n\r\nAvoiding recalculation for field \"dependencies\" requires adding a third function for field computation: we now have `compute_at!(field, time)`, `conditional_compute!(field, time)`, and `compute!(field, time)`.\r\n\r\n`compute_at!(field, time)` is the outermost function called by `fetch_output`. It falls back to `compute!(field)`. Fields opt-in to conditional computation by overloading `compute_at!`; for example, `ComputeField` implements\r\n\r\n```julia\r\ncompute_at!(field::ComputedField{X, Y, Z, <:FieldStatus}, time) where {X, Y, Z} = conditional_compute!(field, time)\r\n```\r\n\r\nThus `ComputedField`s that have a `field.status` which is not `Nothing` are _conditionally_ computed. But if `field.status === nothing`, the computed field is always recomputed.\r\n\r\nThe function `conditional_compute!(field, time)` examines `field.status` to determine whether a field has already been computed at `time` or not. If the field has been computed, it does nothing. If the field has not been computed, then `compute!(field, time)` is called, and `field.status.time` is updated.\r\n\r\nConditionally computed fields must define a function `compute!(field, time=nothing)` that takes an optional positional argument `time`. This ensures that both `compute!(field)` and `compute!(field, time)` are available.\r\n\r\nFinally, fields that depend on other fields should call `compute_at!(dependency, time)` on all field dependencies.\r\n\r\nI hope that makes sense. It sounds a bit convoluted so I'm not sure this is the simplest solution. Criticism welcome.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-01-12T18:45:16Z",
+    "deletions": 39,
+    "labels": [],
+    "mergedAt": "2021-01-20T16:33:01Z",
+    "number": 1301,
+    "title": "Implements compute_at! pattern for conditional computation"
+  }
+]

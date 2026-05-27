@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nTo couple the full LandModel with ClimaAtmos, there are a handful of miscellaneous changes to the ClimaLand code that need to be made. This PR makes a couple of them (see Content below for details).\r\n\r\nThese changes shouldn't be behavior changing.\r\n\r\nPart of #1038 \r\n\r\n## Content\r\n- [x] relax the type restriction for SoilDrivers to allow a `CoupledAtmosphere` in addition to `PrescribedAtmosphere` ([here](https://github.com/CliMA/ClimaLand.jl/blob/b8c7255f446d0fe766d0196ca581deb74cd29ec4/src/standalone/Soil/Biogeochemistry/Biogeochemistry.jl#L288))\r\n  - without this, we can't set up a SoilCO2Model with a CoupledAtmosphere\r\n- [x] move `snow_surface_specific_humidity` call out of `update_aux!` and into `surface_specific_humidity`, which  \r\n  - can't access `p.drivers.thermal_state` in `CoupledAtmosphere` case, so the call to `snow_surface_specific_humidity` needs to be within a function where we've dispatched on the atmos type. `surface_specific_humidity` is only called in the `turbulent_fluxes!` method for `PrescribedAtmosphere`, so moving it there fixes this\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T19:32:16Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2025-03-05T01:23:16Z",
+    "number": 1056,
+    "title": "relax SoilDrivers atmos type annotation; compute SnowModel humidity in model-specific method"
+  },
+  {
+    "additions": 709,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ntag new patch release\r\n\r\nClimaCoupler's nightly AMIP run has been failing using the main branch of ClimaLand because a function it uses was renamed. We have a PR that will fix it (https://github.com/CliMA/ClimaCoupler.jl/pull/1209), but we need a release of land before we can apply the fix\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-05T17:39:43Z",
+    "deletions": 617,
+    "labels": [],
+    "mergedAt": "2025-03-05T19:28:20Z",
+    "number": 1059,
+    "title": "tag v0.15.10"
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "The following [performance regression was noticed](https://gist.github.com/akshaysridhar/fca4d50242a8bcc65faa8289b03cdc8f ) when upgrading to ClimaCore v0.14.31 in ClimaAtmos, with additional information here (https://github.com/CliMA/ClimaCore.jl/pull/2304#issuecomment-2839688639). This PR disables shmem for finite diff ops in an attempt to recover a large chunk of this perf loss. \r\n\r\n```\r\nCC v 0.14.30 \r\nhttps://github.com/CliMA/ClimaCore.jl/pull/2304#issuecomment-2839688639\r\n1 GPU Aquaplanet: 0.694\r\n2 GPU Aquaplanet: 1.358 \r\n\r\nCC v 0.14.31\r\nhttps://github.com/CliMA/ClimaCore.jl/pull/2304#issuecomment-2839688639\r\n1 GPU Aquaplanet: 0.503\r\n2 GPU Aquaplanet: 1.005\r\n\r\nCC v 0.14.31 + Disable shmem \r\nOperators.use_fd_shmem() = false\r\n1 GPU Aquaplanet: 0.611\r\n2 GPU Aquaplanet: 1.285\r\n\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-01T22:47:28Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-05-02T00:14:38Z",
+    "number": 2317,
+    "title": "Disable shmem + update patch version > 0.14.32"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `Krylov` package from `0.9` to `0.9, 0.10`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-19T14:04:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-02T16:18:49Z",
+    "number": 2302,
+    "title": "CompatHelper: bump compat for Krylov in [weakdeps] to 0.10, (keep existing compat)"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This release is needed to extend the compat for Kyrlov in ClimaTimeSteppers, which is needed to add support for recent versions of Oceananigans in ClimaCoupler.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-02T16:22:52Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-02T16:53:24Z",
+    "number": 2318,
+    "title": "Bump to 0.14.33"
+  }
+]

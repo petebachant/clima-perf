@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 835,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3285\r\n\r\nThis is a big API change so we'll have to bump a minor version.\r\n\r\nThis PR changes the behavior of the internal function `node`, which returns a tuple of coordinates at index `i, j, k` and location `lx, ly, lz`, to omit coordinates from the tuple along `Flat` directions. Previously, `node` omitted coordinates only for `Nothing` locations. Now, `Flat` directions are treated similarly to `Nothing` locations.\r\n\r\nThis change changes the API for using `set!` with functions, and therefore for setting initial conditions, building immersed boundaries, using boundary condition functions, and background fields.\r\n\r\nBefore this PR, one might write\r\n\r\n```julia\r\ngrid = RectilinearGrid(size=64, z=(0, 1), topology=(Flat, Flat, Grid))\r\nc = CenterField(grid)\r\nrandom_numbers(x, y, z) = rand()\r\nset!(c, random_numbers)\r\n```\r\n\r\nAfter this PR, this code has to change because the `x, y` directions are `Flat`. Thus after this PR we will write\r\n\r\n```julia\r\ngrid = RectilinearGrid(size=64, z=(0, 1), topology=(Flat, Flat, Grid))\r\nc = CenterField(grid)\r\nrandom_numbers(z) = rand()\r\nset!(c, random_numbers)\r\n```\r\n\r\nAs a rule, coordinates within functions should never be provided for `Flat` directions or for `Nothing` locations.\r\n\r\nThere's more discussion about the pros and cons of this choice on #3285. ",
+    "changedFiles": 40,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5x1peg",
+        "number": 3285,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3285"
+      }
+    ],
+    "createdAt": "2023-10-23T15:47:43Z",
+    "deletions": 679,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2023-10-27T18:02:50Z",
+    "number": 3355,
+    "title": "(0.90.0) Omit entries in Flat direction from `node`"
+  }
+]

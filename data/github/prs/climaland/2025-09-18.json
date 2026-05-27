@@ -1,0 +1,141 @@
+[
+  {
+    "additions": 589,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ncloses #1316 \r\n\r\nMake all Callbacks use `IntervalBasedCallback` (previously called `FrequencyBasedCallback`)\r\n\r\n## Content\r\n\r\n- rename `FrequencyBasedCallback` to  `IntervalBasedCallback` \r\n- rename the `frequency` argument to `period`\r\n- Make `FrequencyBasedCallback` work with ITime\r\n- Add `FrequencyBasedCallback` methods that allow more flexibility for how the `affect!` is created\r\n- DriverUpdateCallback takes an update period and `t0` rather than a vector of update times.\r\n- `NonInterpSavingCallback` creates the tuple in which the cache is saved automatically\r\n- `NonInterpSavingCallback` takes an update period and `t0` rather than a vector of update times.\r\n- `NonInterpSavingCallback` can no longer save at non-uniform intervals. It can delay the saving until later in the simulation with the `t_first_save` or `first_save_date` args. \r\n- Change LandSimulation constructor to not convert Dates.Period(s) to ITime if they are not a `Dates.ConvertiblePeriod`. This adds support for update periods such as `Dates.Month` or `Dates.Year`.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 50,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7F2hSW",
+        "number": 1316,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1316"
+      }
+    ],
+    "createdAt": "2025-08-26T18:46:49Z",
+    "deletions": 737,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2025-09-18T13:57:03Z",
+    "number": 1380,
+    "title": "Tr/diag schedule cbs"
+  },
+  {
+    "additions": 559,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nRecently our tests have been taking longer, causing the GPU tests to time out often. This PR attempts to simplify (and shorten) the diagnostics and canopy model tests, which are the two slowest test files.\r\n\r\nNote that when run locally, the \"Land model diagnostics\" testset alone takes 5 minutes. This is probably due to a lot of compilation time. We could try to write a simpler test checking the integrated model diagnostics (or just test standalone model diagnostics, since they share infrastructure).\r\n\r\n## Content\r\n- [x] ~~diagnostics: instead of constructing a new model for each testset, construct one standalone and one integrated model at the start of the file and reuse them for different tests~~\r\n- [x] canopy model: combine the two \"canopy software pipes\" testsets into one. We keep the option using the `BigLeafEnergyModel`\r\n- [x] canopy model: use more default constructors in the \"canopy software pipes\" to make the code more readable and shorter (not sure if this will have any impact on performance)\r\n- [x] remove loops in the \"zero LAI\" test - now it tests Fields using the TwoStream radiative transfer model (still testing both Float32 and Float64)\r\n- [x] change tests that previously tested scalar and field parameters to only test Fields (zero LAI, two-stream model correctness, canopy software pipes, plant hydraulics parameterizations)\r\n- [x] remove the \"no plant\" test in plant_hydraulics_test.jl since it's redundant with the \"zero LAI\" test in canopy_model.jl\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-15T22:24:25Z",
+    "deletions": 1301,
+    "labels": [],
+    "mergedAt": "2025-09-18T17:34:31Z",
+    "number": 1429,
+    "title": "simplify tests - diagnostics and canopy model"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe have been allowing fields of a `PrescribedAtmosphere` to be Nothing, but this was only used in one test and isn't something we want to allow physically. This PR restricts fields of this object to always be TimeVaryingInputs.\r\n\r\nCloses #461\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5833_7",
+        "number": 461,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/461"
+      }
+    ],
+    "createdAt": "2025-09-17T18:54:10Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2025-09-18T17:35:10Z",
+    "number": 1438,
+    "title": "PrescribedAtmosphere fields can't be `nothing`"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nReduce buildkite ci duration \r\n\r\n\r\n\r\n## Content\r\n- increase number of precompiled files. I don't know if this helps, but this is what ClimaAtmos does\r\n- precompile the CUDA runtime. The CUDA.jl docs say to do this when running on a cluster.\r\n\r\n~~Buildkite on main takes an hour and 15 minutes. This changes it to take 1 hour.~~\r\nIt seems like this sometimes speeds up ci.\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-17T16:53:44Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-09-18T20:18:35Z",
+    "number": 1436,
+    "title": "Precomopile CUDA RT"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "closes #1202 \r\n\r\nFix timestepping docs render\r\n\r\nChange docs to not use reporting cb\r\n\r\nAlso make the global bucket tutorial render the heatmaps. Fix the renderering of the underscore in start_date and stop_date\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6-U2k1",
+        "number": 1202,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1202"
+      }
+    ],
+    "createdAt": "2025-09-18T16:47:11Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2025-09-18T23:28:28Z",
+    "number": 1445,
+    "title": "Fix docs rendering issues"
+  }
+]

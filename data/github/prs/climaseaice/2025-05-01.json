@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 256,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In the last iteration of PR #52 I removed ice concentration from the thermodynamic tendencies.\r\n\r\nHowever, in my opinion, the examples now are unphysical. For example, in the `freezing_on_a_lake.jl` the ice starts growing because of fluxes from the atmosphere where there is no sea ice to start with (and the lake has not reached freezing temperature yet) (see https://clima.github.io/ClimaSeaIceDocumentation/dev/literated/freezing_of_a_lake/)\r\nI think sea ice can grow only from the bottom if there is no sea ice and from the top only if there is sea ice available.\r\n\r\nKeeping thermodynamic tendencies the same, I think we should multiply the fluxes from the atmosphere with the concentration of sea ice to avoid this unphysical situation.\r\n\r\nThis PR does just that, the external top heat flux in the examples is multiplied by the ice concentration. In this way we ensure ice cannot grow in a hot lake.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-07T10:46:58Z",
+    "deletions": 134,
+    "labels": [],
+    "mergedAt": "2025-05-01T09:16:26Z",
+    "number": 57,
+    "title": "Fix examples and add the Semtner validation to the examples"
+  }
+]

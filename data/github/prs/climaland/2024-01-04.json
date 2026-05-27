@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 401,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdds the capability to update the drivers (atmospheric and radiative) with a callback. In the future, we will use this instead of updating each timestep as part of the tendency (i.e. instead of within`update_aux!`).\r\n\r\n\r\n## To-do\r\n- [x] double check logic of when we update the drivers and whether the times should be multiples of the timestep\r\n- [x] Tutorial explaining drivers\r\n- future PR: move all updating of drivers outside of update aux and use the callback instead.\r\n\r\n\r\n## Content\r\n1. Adds a callback which updates the p.driver fields at the times passed to the callback (`updateat`), which do not need to be a multiple of the timestep. Note that nothing restricts the user from wanting to update the drivers multiple times per step (even though this wouldnt make sense to do - the point of this is to update the drivers less frequently than the number of timesteps). \r\n2. Creates `update_driver!` functions for our different supported drivers: PrescribedAtmosphere, PrescribedRadiativeFluxes.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-02T20:39:03Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "LA_kwDOGiZe4s7ZTG-_",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2024-01-04T22:11:10Z",
+    "number": 439,
+    "title": "add driver update callback and functions, tests"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the relative vorticity term and Bernoulli term gradient in the `VectorInvariant` advection scheme to be valid on curvilinear grids.\r\n\r\nFollows: https://mitgcm.readthedocs.io/en/latest/algorithm/algorithm.html#vector-invariant-momentum-equations",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-20T20:50:25Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2021-02-23T21:54:56Z",
+    "number": 1391,
+    "title": "Updates VectorInvariant advection scheme for curvilinear grids"
+  },
+  {
+    "additions": 96,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "~~This PR adapts `BetaPlane` coriolis implementation for curvilinear grids (following #1371 and [MITgcm docs](https://mitgcm.readthedocs.io/en/latest/algorithm/algorithm.html#id8)).~~\r\n\r\n~~Note that the MITgcm docs specify averaging the Coriolis parameter / planetary vorticity (from corner / vorticity nodes, ffc, to the velocity nodes fcc and cfc). However, because the variation in the planetary vorticity is linear, I think the implementation in this PR is correct for beta planes? @jm-c please advise.~~\r\n\r\nI would ~~also~~ like to add a Coriolis term valid for the sphere and hydrostatic models (which amounts to the \"traditional approximation\"). ~~I'll do this once #1380 is merged.~~ This PR depends on #1380.\r\n\r\nSome feedback on what to call this object is certainly welcome! I have preliminary proposed \"`HydrostaticSphericalCoriolis` because it was the first silly thing I could think of.\r\n\r\nTo do:\r\n\r\n- [x] Add `HydrostaticSphericalCoriolis` plus unit tests\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-19T13:12:47Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2021-02-23T21:56:04Z",
+    "number": 1384,
+    "title": "Adds HydrostaticSphericalCoriolis"
+  }
+]

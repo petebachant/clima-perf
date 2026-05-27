@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 191,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nK_sat_frozen, K_dry, K_sat_unfrozen, and rhoc_ds are all parameters that are computed external to the Parameter struct of the soil model, and then stored in the struct. That means that we\r\n- rely on the user to set them properly\r\n- have a lot of code duplication between driver files to compute \r\n\r\nIn this PR, we move that computation into the outer constructor of the Parameters. If the user does wish to specify them directly, they can use the default constructor.\r\n\r\n\r\n## To-do\r\n\r\n\r\n## Content\r\n1. Moves the parameter definition of K, rho, rhoc for quartz, minerals, gravel, and organic matter into the constructor. Moves K for ice and water into constructor. These will be in ClimaParameters in the long term and not hardcoded.\r\n2. Uses these plus the soil component fractions of quartz, minerals, gravel, and organic matter to compute the parameters needed.\r\n3. stores these in the struct\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [X] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-08T22:04:32Z",
+    "deletions": 357,
+    "labels": [],
+    "mergedAt": "2024-02-09T21:06:13Z",
+    "number": 489,
+    "title": "compute soil params in constructor"
+  },
+  {
+    "additions": 82,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR adds a package extension in `ext/CreateParametersExt.jl`, which provides constructors for `LandParameters` via a FT or a toml dict. I have removed the `create_lsm_parameters(FT)` function and replaced it with  a function`LandParameters(FT)`\r\n\r\nThis should be merged before the other parameter PRs, since those changes should also go in the extension to avoid adding CLIMAParameters as a direct dependency\r\n\r\nTwo issues:\r\n\r\n- Insolation is needed as a direct dependency for the package extension\r\n- `Aqua.test_stale_deps` doesn't work well with package extensions. Insolation is never used directly in src, so Aqua thinks that it is a stale dependency. See [here](https://juliatesting.github.io/Aqua.jl/dev/stale_deps/#Stale-dependencies) for more info.",
+    "changedFiles": 38,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-07T23:48:24Z",
+    "deletions": 107,
+    "labels": [],
+    "mergedAt": "2024-02-09T22:04:10Z",
+    "number": 487,
+    "title": "Add package extension for CLIMAParameters"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nupdate deprecated ClimaCore function calls\r\n\r\ncloses #490",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5-0nnX",
+        "number": 490,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/490"
+      }
+    ],
+    "createdAt": "2024-02-09T19:39:14Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2024-02-09T23:11:04Z",
+    "number": 491,
+    "title": "rm ClimaCore deprecated functions"
+  },
+  {
+    "additions": 173,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nweekly release\r\n\r\n#### changes\r\n- snow albedo fix\r\n- `BulkAlbedoFunction` interface changed, `set_initial_parameter_field` removed\r\n- `CoupledAtmos` functions added: `turbulent_fluxes`, `initialize_drivers`",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-09T23:15:50Z",
+    "deletions": 147,
+    "labels": [],
+    "mergedAt": "2024-02-09T23:59:27Z",
+    "number": 492,
+    "title": "tag v0.9"
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The signature used to extend `FFTImplicitFreeSurfaceSolver` was not used by `build_implicit_free_surface_solver`; thus, slice ensemble models had incorrect free surface solvers. This PR fixes it.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-04T06:15:05Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-02-04T09:36:23Z",
+    "number": 2220,
+    "title": "Fixes FFT solver constructor for an ensemble of slice models"
+  },
+  {
+    "additions": 687,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is motivated by the need to specify higher order operators on `ImmersedBoundaries` #2209 \r\n\r\nSince all operators we use depend on first order derivatives, it is enough to cancel all derivatives inside the immersed domain, but, to do that, all operators have to specify a 3D location\r\n\r\nSo the changes that this PR introduces are: \r\n- fully 3D metric functions (i.e., `\u0394, A, V` for each 3D combination of `\u1d9c` and `\u1da0`). 1D and 2D spacings are still defined (as well as 2D areas for grids that support them) but are not explicitly exported by `Oceananigans.Operators`. This is because maybe we want to use them in the future but they should be used only when _strictly_ necessary. As an example, in a function which is known to be 2D or 1D (as a function exclusive to reduced fields)\r\n- Operators are now _only_ 3D with an exception of interpolations and differences that do not involve metric terms (I would also remove the `\u1d43` on the interpolations because it does not make much sense in my opinion, what do you think?)\r\n- I removed `Ax_u, Ax_v, Ax_\u03b6` and so on in favour of a general `Ax_q` (q for quantity) as the different character did not add anything to the operator so in my opinion it was a bit redundant and confusing (all information is stored in the direction of the area and the location) Let me know if you prefer something different (like maybe `Ax_mul_q` or `Ax_var`) or if you liked the `Ax_u, Ax_v, Ax_\u03b6` formulation\r\n- Last point (which motivated all this): derivatives are canceled if either of the points in the stencil are fully immersed\r\n\r\ncloses #2209\r\ncloses #2218 ",
+    "changedFiles": 66,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5C0uf7",
+        "number": 2209,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2209"
+      }
+    ],
+    "createdAt": "2022-02-02T18:20:31Z",
+    "deletions": 758,
+    "labels": [],
+    "mergedAt": "2022-02-04T16:54:18Z",
+    "number": 2214,
+    "title": "3D spacing and derivatives"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-02-04T17:00:07Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-02-04T17:01:30Z",
+    "number": 2221,
+    "title": "Bump version"
+  }
+]

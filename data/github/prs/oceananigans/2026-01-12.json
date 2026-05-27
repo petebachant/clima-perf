@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Spotted at https://github.com/JuliaTesting/ExplicitImports.jl/pull/159#issuecomment-3734439974",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-11T13:10:18Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-01-12T01:03:27Z",
+    "number": 5135,
+    "title": "Remove some stale imports"
+  },
+  {
+    "additions": 246,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Similar to https://github.com/NumericalEarth/Breeze.jl/pull/400 in spirit, this PR gets rid of ~almost~ all of the `Core.Box`es in Oceananigans\r\n\r\n~The only remaining issue is `c_idx` which is supposedly being boxed in~ https://github.com/CliMA/Oceananigans.jl/blob/7e4ffb6d54f1ff01a5c373f5a443307a7173c11a/src/Advection/weno_interpolants.jl#L204-L216 ~but frankly I'm struggling to see what's the issue.~ ***Edit***: now resolved, all `Core.Box`es that can be detected statically are gone.\r\n\r\nMost of the issues are things like\r\n```julia\r\nX = f(X, Y, Z)\r\nX = g(X, Y, Z)\r\n\r\n# or\r\n\r\nX = [X[i] for i in 1:n]\r\n\r\n# or\r\n\r\nX = ...\r\nf() do\r\n    X = g(X, Y, Z)\r\nend\r\n```\r\nWhenever you reuse the same label for different things, and especially when the label is used both on the right- and left-hand sides, the compiler struggles to complete inference.  Most of the changes here are simply about renaming variables.",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-10T17:56:14Z",
+    "deletions": 122,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-01-12T18:49:25Z",
+    "number": 5133,
+    "title": "Remove all `Core.Box`es"
+  },
+  {
+    "additions": 647,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This PR ensures that all relevant halo regions are filled correctly and organizes the halo-fill tests to improve readability and maintainability. Instead of testing halo fills panel by panel, the tests are grouped by panel parity (odd vs even), leveraging the fact that halo behavior is consistent across panels given correct cubed-sphere connectivity. ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-07T12:50:58Z",
+    "deletions": 449,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2026-01-12T19:17:28Z",
+    "number": 5113,
+    "title": "Ensure complete halo filling and organize halo-fill tests"
+  }
+]

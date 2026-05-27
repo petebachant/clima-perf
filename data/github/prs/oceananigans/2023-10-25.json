@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 392,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The code should allow all types of partitioning but there is a bug preventing the tests from passing for y- and xy-partitions.\r\n\r\nThis PR aims to fix the bug (and consequently add the excluded y- and xy-partitioning tests) \r\n\r\nrework `fill_halo_regions!` to split out non-communicating and communicating boundary conditions such that the latter are executed alone. \r\n\r\nTo give an example, for \r\n```julia \r\njulia> boundary_conditions = FieldBoundaryConditions(west = NoFluxBoundaryCondition(), east = NoFluxBoundaryCondition(), south = ImpenetrableBoundaryCondition(), north = DistributedCommunicationBoundaryCondition(), bottom = nothing, top = nothing)\r\nOceananigans.FieldBoundaryConditions, with boundary conditions\r\n\u251c\u2500\u2500 west: FluxBoundaryCondition: Nothing\r\n\u251c\u2500\u2500 east: FluxBoundaryCondition: Nothing\r\n\u251c\u2500\u2500 south: OpenBoundaryCondition: Nothing\r\n\u251c\u2500\u2500 north: DistributedBoundaryCondition: Nothing\r\n\u251c\u2500\u2500 bottom: Nothing\r\n\u251c\u2500\u2500 top: Nothing\r\n\u2514\u2500\u2500 immersed: DefaultBoundaryCondition (FluxBoundaryCondition: Nothing)\r\n```\r\n\r\nin main:\r\n```julia\r\njulia> halo_tuple = permute_boundary_conditions(boundary_conditions);\r\n\r\njulia> for i in 1:length(halo_tuple[1])\r\n              @info \"operation $(halo_tuple[1][i]) with bcs $((halo_tuple[2][i], halo_tuple[3][i]))\"\r\n       end\r\n[ Info: operation fill_bottom_and_top_halo! with bcs (nothing, nothing)\r\n[ Info: operation fill_west_and_east_halo! with bcs (FluxBoundaryCondition: Nothing, FluxBoundaryCondition: Nothing)\r\n[ Info: operation fill_south_and_north_halo! with bcs (OpenBoundaryCondition: Nothing, BoundaryCondition{Oceananigans.BoundaryConditions.DistributedCommunication, Nothing})\r\n```\r\n\r\nin this PR\r\n```julia\r\njulia> halo_tuple = permute_boundary_conditions(boundary_conditions);\r\n\r\njulia> for i in 1:length(halo_tuple[1])\r\n              @info \"operation $(halo_tuple[1][i]) with bcs $(halo_tuple[2][i])\"\r\n       end\r\n[ Info: operation fill_bottom_and_top_halo! with bcs (nothing, nothing)\r\n[ Info: operation fill_south_halo! with bcs (OpenBoundaryCondition: Nothing,)\r\n[ Info: operation fill_west_and_east_halo! with bcs (FluxBoundaryCondition: Nothing, FluxBoundaryCondition: Nothing)\r\n[ Info: operation fill_north_halo! with bcs (DistributedBoundaryCondition: Nothing,)\r\n```\r\n\r\n\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-13T18:16:55Z",
+    "deletions": 236,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2023-10-25T23:19:35Z",
+    "number": 3338,
+    "title": "Add Y-partition and XY-partition tests"
+  }
+]

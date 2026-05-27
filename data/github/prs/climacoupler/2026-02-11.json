@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nupdated from #1679\r\n\r\nI'm planning to split that PR into two pieces, this PR to add the simple ocean option and use Float32 for regular CI, and another to update to the TripolarGrid and conservative regridding. I'd rather do this than rebase because it became pretty large and the CMIP code has been moved into an extension.\r\n\r\n## Content\r\n- [x] update to ClimaSeaIce 0.4.3 so we can correctly use Float32 in CMIP\r\n- [x] use Float64 for CMIP longruns\r\n- [x] add `simple_ocean` setup and use it for short CI runs\r\n- [x] make non-simple ocean setup more complex\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-06T23:06:15Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2026-02-11T18:00:45Z",
+    "number": 1715,
+    "title": "add simple ocean option and use Float32 for CMIP in CI"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nI added `climacoupler-ci` to the [Clear Depot pipeline](https://buildkite.com/clima/clear-depot/settings/steps). Now we can use the generic clear depot instead of the coupler-specific one. The default `clear depot` can be used to clear this pipeline's depot by setting the environment variable `slug=climacoupler-ci`.\r\n\r\nAlso minimized optimization of everything in the regular CI by passing the -O0 flag (as opposed to the default -O2 optimization level).\r\n\r\nFor timing examples, see CI runs [with -O0](https://buildkite.com/clima/climacoupler-ci/builds/7163) vs [default](https://buildkite.com/clima/climacoupler-ci/builds/7165). The largest change is in GPU CMIP, which goes from 42 to 28 minutes. Some slabplanet runs and the sea breeze experiment become slower because they're run for 1+days. This option seems to only be useful for tests and experiments that run for \"a few\" steps (maybe <5, depending on the configuration).\r\n\r\n## Update 10 February 2026\r\nRebased on main\r\nNew timing comparison: with -O0 vs default",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-07T23:51:29Z",
+    "deletions": 53,
+    "labels": [],
+    "mergedAt": "2026-02-11T18:02:02Z",
+    "number": 1558,
+    "title": "use default depot + julia -O0 flag"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis field is unused so it can be removed\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-10T19:04:33Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-02-11T23:46:12Z",
+    "number": 1720,
+    "title": "remove rho from coupler fields added by bucket"
+  }
+]

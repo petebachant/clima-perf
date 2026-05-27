@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR replaces the call to `unrolled_reduce(op, Val(nc), init)` in the non-orographic gravity wave parametrization with a forcibly non-inlined call to `unrolled_reduce(op, StaticOneTo(nc), init)`.\r\n\r\nThe original solution was introduced in CliMA/UnrolledUtilities.jl#10 and CliMA/UnrolledUtilities.jl#12 in order to prevent compilation of 3 unit tests in CI from hanging (`nogw_test_3d.jl`, `nogw_test_mima.jl`, and `nogw_test_single_column.jl)`, but it does not have a direct equivalent in the standard library. The new version of this unrolled function call, which achieves the same goal of preventing compilation from hanging, is exactly equivalent to `reduce(op, Base.OneTo(nc); init)` (and also to `reduce(op, StaticOneTo(nc); init)`). The new version also makes it clear that inlining of the unrolled function call is what causes compilation to hang in this case.\r\n\r\n**_Note 1_**: This does not constitute a general rule of thumb, as it is possible to construct similar examples where not inlining is what causes compilation to hang. For example, if `itr` is a `StaticBitVector` that contains 256 `Bools`, then the following code hangs without inlining of `unrolled_reduce`:\r\n```\r\nunrolled_reduce(((itr\u2032, i)->unrolled_reduce(((itr\u2032\u2032, j)->unrolled_reduce(((itr\u2032\u2032\u2032, k)->Base.setindex(itr\u2032\u2032\u2032, !(itr\u2032\u2032\u2032[min(i, j, k)]), k)), StaticOneTo(length(itr\u2032\u2032)); init = itr\u2032\u2032)), StaticOneTo(length(itr\u2032)); init = itr\u2032)), StaticOneTo(length(itr)); init = itr)\r\n```\r\nInlining has been observed to improve compilation of several unit tests in UnrolledUtilities, whereas not inlining has only been observed to improve compilation of this one particular example in ClimaAtmos. So, UnrolledUtilities will continue to inline everything by default, and `@noinline` can be used on a case-by-case basis when compilation is too slow.\r\n\r\n**_Note 2_**: Although the equivalent non-unrolled function call uses `init` as a keyword argument, and although `unrolled_reduce` supports using `init` as a keyword argument, this is not done here in order to ensure GPU compatibility. If the non-orographic gravity wave parameterization calls `unrolled_reduce(op, StaticOneTo(nc); init)`, the GPU compiler [claims](https://buildkite.com/clima/climaatmos-ci/builds/21144#019297b1-a2fc-400e-a860-d95edba1c2c1) that it cannot compile the resulting kernel because it contains a dynamic function call.\r\n\r\n@Xiaoyang-Xie, the compilation mystery is finally resolved!",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-18T06:54:54Z",
+    "deletions": 548,
+    "labels": [],
+    "mergedAt": "2024-10-23T22:05:48Z",
+    "number": 3313,
+    "title": "Clarify inlining of unrolled_reduce for non-orographic gravity wave"
+  }
+]

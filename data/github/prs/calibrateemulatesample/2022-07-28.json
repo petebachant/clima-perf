@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "Resolves #168 to add args + kwargs into `optimize_hyperparameters!()` for `GPJL()` optimizer\r\n## Content\r\n- Adds ability to modify the arguments for `Optim` methods. \r\n- Adds to docstring, a warning about the positional default argument for `method` forced upon us in `GaussianProcesses.jl`\r\n\r\n## Examples \r\nI've verified these work in `examples/Emulator/GaussianProcess/learn_noise.jl` example. after adding `Optim,LineSearches` to `examples/Emulator/GaussianProcess/Project.toml`)\r\n\r\n1. Add kwargs only \r\n```julia\r\n...\r\nkwargs = (key1=\"val1\", key2=\"val2\")\r\noptimize_hyperparameters!(emulator, kwargs...)\r\n```\r\n2. Modify args only (the user MUST add `Optim` and set the first argument to be the `method`, default `LBFGS()`)\r\n```julia\r\nusing Optim\r\n...\r\nother_args = (LBFGS(), arg1, arg2) \r\noptimize_hyperparameters!(emulator, args...)\r\n```\r\n3. Modify the method linesearch [option](https://julianlsolvers.github.io/LineSearches.jl/stable/) (relating to #168)\r\n```julia\r\nusing Optim, LineSearches\r\n...\r\nmethod_arg = LBFGS(linesearch=BackTracking())\r\noptimize_hyperparameters!(emulator, method_arg)\r\n```\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN85NVq1K",
+        "number": 168,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/168"
+      }
+    ],
+    "createdAt": "2022-07-20T22:32:16Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2022-07-28T01:37:23Z",
+    "number": 172,
+    "title": "Add args/kwargs to `optimize_hyperparameters!()`"
+  }
+]

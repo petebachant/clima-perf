@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR nukes the unused, incorrect method `total_size(grid::AbstractGrid)` ~~(and an unused fallback method)~~ and moves `total_size(loc, grid)` from `Fields/field.jl` to `Grids/grid_utils.jl`.\r\n\r\nResolves #883 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODgxNTMyNTQ=",
+        "number": 883,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/883"
+      }
+    ],
+    "createdAt": "2020-08-31T18:42:33Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2020-09-01T00:02:42Z",
+    "number": 889,
+    "title": "Moves total_size(loc, grid) to grid_utils.jl"
+  },
+  {
+    "additions": 392,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Last TODO item for the JOSS paper.\r\n\r\nWas going to include the convergence tests as part of `test_verification.jl` but in cleaning them up (mostly by relying on the version of Oceananigans in the repository, `using .ConvergenceTests` as a local module, and making sure legends don't block off the plots) I noticed that the 2D convergence tests are all failing now.\r\n\r\nPretty sure this must be a stupid mistake as they were all converging correctly as of Oceananigans v0.30.0 but haven't tried to figure out what went wrong yet...\r\n\r\nSince they're kinda important now I'm thinking we should have a test job that just runs all the convergence tests, tests that the order of convergence is as expected, and produces all the convergence plots so we can look at them. We can do this once we've set up Buildkite somewhere (see also @simonbyrne's https://github.com/CliMA/slurm-buildkite).\r\n\r\nAlso, @glwagner do we still need `analyze_single_forced_fixed_slip.jl` and `analyze_forced_fixed_slip_pressure.jl`? They're not mentioned in the convergence tests `README.md` so maybe we should remove them?\r\n\r\nResolves #873\r\n\r\n# Convergence test plots\r\n\r\n![point_exponential_decay_time_stepper_convergence](https://user-images.githubusercontent.com/20099589/91511129-04753d80-e8ad-11ea-95a9-582b79da9dab.png)\r\n\r\n![cosine_advection_diffusion_solutions](https://user-images.githubusercontent.com/20099589/91511137-09d28800-e8ad-11ea-9ac5-f978cd49ae5b.png)\r\n\r\n![cosine_advection_diffusion_error_convergence](https://user-images.githubusercontent.com/20099589/91511140-0b9c4b80-e8ad-11ea-84ce-cb418b1971b0.png)\r\n\r\n![gaussian_advection_diffusion_solutions](https://user-images.githubusercontent.com/20099589/91511147-0dfea580-e8ad-11ea-8c09-9816a687e67e.png)\r\n\r\n![gaussian_advection_diffusion_error_convergence](https://user-images.githubusercontent.com/20099589/91511151-0f2fd280-e8ad-11ea-80c4-8b7920da8d64.png)\r\n\r\n![two_dimensional_diffusion_convergence](https://user-images.githubusercontent.com/20099589/91511159-122ac300-e8ad-11ea-877e-251defc28879.png)\r\n\r\n![taylor_green_convergence](https://user-images.githubusercontent.com/20099589/91511163-12c35980-e8ad-11ea-85bb-e80d110f6048.png)\r\n\r\n![forced_free_slip_convergence](https://user-images.githubusercontent.com/20099589/91511170-17880d80-e8ad-11ea-9833-1f22e97d1a34.png)\r\n\r\n![forced_fixed_slip_convergence](https://user-images.githubusercontent.com/20099589/91511172-18b93a80-e8ad-11ea-8a69-87999899a8e6.png)\r\n",
+    "changedFiles": 41,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODY4ODU4MTU=",
+        "number": 873,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/873"
+      }
+    ],
+    "createdAt": "2020-08-28T01:43:26Z",
+    "deletions": 536,
+    "labels": [],
+    "mergedAt": "2020-09-01T22:01:30Z",
+    "number": 881,
+    "title": "Clean up convergence test scripts and plots"
+  }
+]

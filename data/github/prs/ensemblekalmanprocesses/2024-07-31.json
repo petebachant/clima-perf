@@ -1,0 +1,110 @@
+[
+  {
+    "additions": 1643,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #382\r\nCloses #383\r\nCloses #385 \r\nImproves some of the getters in #386\r\n\r\n\r\nSummarized by the docs [here](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR384/observations/)\r\nand the API docs [here](https://clima.github.io/EnsembleKalmanProcesses.jl/previews/PR384/API/Observations/)\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Remove the unnecessary Module wrapping `Observations` object. And Replaces the old and largely useless `Observation` object\r\n- Create new `Observation` `ObservationSeries` and `Minibatcher` object. that can store `y`'s `Gamma`'s and minibatching framework to batch up epochs over them.\r\n- EKP now always internally stores an `ObservationSeries` rather than `y` and `\\Gamma` separately. \r\n- Observations are now accessed using the get functions that pull the stacked-`y` and blocked-`\\Gamma` from the `ObservationSeries` object for the current minibatch\r\n- `update_minibatch!(` is called at the end of each EKP step, updating the batch. At the end of the epoch, this also calls `create_new_epoch!(` for the minibatcher to create a new epoch of minibatches\r\n- compatible with EKI, ETKI, EKS and UKI - as `Observation` stores the inverse obs noise cov too.\r\n- learning rate schedulers compatible with minibatching\r\n- Back-compatible with old interface passing in `y` and `Gamma` to EKP\r\n- changes examples that used the old `Observation` object\r\n- unit tests for all new structs\r\n- added a docs page with small examples\r\n- API & docstrings\r\n- resolves the ETKI bug with the timestepper, and ensured scaling preserved in new update\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 26,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586Mj1NN",
+        "number": 382,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/382"
+      },
+      {
+        "id": "I_kwDOEreD586Mj1Oc",
+        "number": 383,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/383"
+      },
+      {
+        "id": "I_kwDOEreD586NgbeE",
+        "number": 385,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/385"
+      }
+    ],
+    "createdAt": "2024-06-17T20:31:32Z",
+    "deletions": 394,
+    "labels": [],
+    "mergedAt": "2024-07-31T00:59:25Z",
+    "number": 384,
+    "title": "Complete redesign of \"Observations\" object enabling introduction of minibatching"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-31T01:03:19Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-07-31T01:27:10Z",
+    "number": 388,
+    "title": "Update version to v1.1.6"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #389 \r\n& Bump to 1.1.7\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- add a repeat call to build a matrix of repeated observations\r\n- add a call to `deterministic_forward_map = false` in unit tests to catch errors like this in future\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD586Ren-s",
+        "number": 389,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/389"
+      }
+    ],
+    "createdAt": "2024-07-31T19:10:35Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-07-31T19:33:38Z",
+    "number": 390,
+    "title": "Bump version to v1.1.7 after bugfix"
+  }
+]

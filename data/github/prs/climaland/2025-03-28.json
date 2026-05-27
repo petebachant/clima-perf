@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 374,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nThis PR fixes several issues `NeuralSnowExt` and its test. \r\n\r\n1. The test `tests/standalone/Snow/tool_tests.jl` is only run when `CUDA` and `cuDNN` are able to be imported without throwing errors. Otherwise, nothing happens. During instantiation of the buildkite experiments environment, CUDA and MPI are added, but cuDNN is not. Because of this, `tool_tests.jl` did not run any tests on CI and buildkite. I think the expected behavior was for the tests to be run on buildkite. \r\n\r\n2. If the test is manually ran, it  breaks. This is in part because it was not updated after changes to the snow module and NeuralSnowExt, and partially because the `Flux.jl` compat for ClimaLand allows versions >= v0.15. (The .buildkite project file has the compat set to v0.14). I think the intention was to not support versions greater than v0.14 because the model weights could not be loaded in. Additionally, in new versions of `Flux.jl`, implicitly taking the gradient of model parameters is deprecated. This also changes the way the training interface functions. \r\n\r\n3. `NeuralSnowExt` is conditionally needs CUDA and cuDNN to be loaded. CUDA, however is never imported, and the model is never moved onto the gpu. \r\n\r\n\r\nCloses #1061\r\n\r\n## To-do\r\nIf desired, backwards support for Flux v0.14 can be added.\r\n\r\n## Content\r\n\r\n- remove `CUDA` and `cuDNN` from the required packages to load `NeuralSnowExt`\r\n- remove support for flux v0.14. There are major breaking changes between v0.14 and v0.15 detailed below. \r\n- add support for loading models created in older versions of Flux by adding a new method for `Flux.loadmodel!` for the specific parameters not included in the source model parameters.\r\n- change to using Flux's explicit mode\r\n- change `tool_tests.jl` to work with changes to snow module\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n- **Chores**\n  - Modernized underlying dependencies and removed outdated GPU-acceleration support for a leaner runtime.\n- **New Features**\n  - Enhanced model loading and training workflows by streamlining parameter handling.\n- **Documentation**\n  - Updated tutorials and examples to reflect the streamlined APIs and dependency changes.\n- **Tests**\n  - Refined test setups to align with the updated model configuration and improved state validation.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6lS2kR",
+        "number": 974,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/974"
+      },
+      {
+        "id": "I_kwDOGiZe4s6sybYC",
+        "number": 1061,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1061"
+      }
+    ],
+    "createdAt": "2025-02-28T20:25:01Z",
+    "deletions": 400,
+    "labels": [],
+    "mergedAt": "2025-03-28T18:40:25Z",
+    "number": 1054,
+    "title": "Tr/fix deprecated flux calls @coderabbit"
+  },
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "https://github.com/CliMA/ClimaArtifacts/pull/116 adds the last two missing artifacts, so now ArtifactWrappers can be removed from ClimaLand\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-28T18:52:05Z",
+    "deletions": 111,
+    "labels": [],
+    "mergedAt": "2025-03-28T22:43:49Z",
+    "number": 1092,
+    "title": "Remove ArtifactWrappers"
+  }
+]

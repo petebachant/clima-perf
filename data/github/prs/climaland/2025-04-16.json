@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 414,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdds a prognostic variable for accumulating fluxes in time for the soil model. This can be used to check conservation error in our timestepping scheme, as shown in the diagnostic plots for the soil model.\r\n\r\nDennis pointed out that we can test conservation of the discrete equations by looking at vertical integrals of tendencies, and comparing to the flux difference between the top and bottom of the domain. Since RK schemes are linear combinations of these tendencies, the timestepping should also \"conserve\" aside from additional discretization error in time\r\n\r\nFor example:\r\n\r\n`\\partial_t x  = -\\partial_z(F_x) + S_x` PDE we currently solve\r\n dX/dt = `\\int [-(F_x(top)- F_x(bottom)) + \\int S_x dz]` # Equation 1, for conservation that we are adding in this PR;\r\nwhere X is the vertically integrated volumetric content of energy or water volume, and x is the volumetric content(z).\r\n\r\nSubtleties:\r\n- Liquid water and energy have their divergence of flux terms stepped implicitly, so we computed the contributions of the RHS of Equation 1 due to boundary fluxes in the implicit tendency for X.\r\n- I added an additional cache variable which stores the expected vertical integral of sources, and it is computed in the explicit tendency of Equation 1. (All source terms are stepped explicitly)\r\n- we do not include \\partial X_t/\\partial theta in the Jacobian.\r\n\r\nThis is what is happening now in this PR (with ARS 111):\r\n`X_{i+1} - X_{i} = [-F_{i+1}(top) + F_{i+1}(bottom) + (\\int S dz)_i] * \\Delta t`\r\n\r\n@gemini-code-assist ignore\r\n\r\n\r\n## To-do\r\n- Add conservation flag to model which adds the variables or not, and steps them or not (Future PR, or skip if it doesnt slow stuff down much)\r\n\r\n\r\n## Content\r\n- adds X as a prognostic variable (not with this name - open to naming changes)\r\n- computes contributions of dX/dt as described above\r\n- correctly handles source terms in addition to fluxes\r\n- adds diagnostics\r\n- adds a helper plotting function with tracks conservation given the output diagnostics (see plots below)\r\n- adds tests for the functions\r\n- checks conservation in some of our tutorials and experiment runs\r\n\r\n## Plots\r\nOutput from global soil long run:\r\n\r\n<img width=\"728\" alt=\"Screenshot 2025-04-03 at 7 03 45\u202fAM\" src=\"https://github.com/user-attachments/assets/44019004-f6b1-4052-9dca-c4f304d83935\" />\r\n\r\n<img width=\"728\" alt=\"Screenshot 2025-04-03 at 7 04 03\u202fAM\" src=\"https://github.com/user-attachments/assets/7c5f12f0-c07b-4340-b15e-954ceb34602b\" />\r\n\r\n\r\nwhere not that the water value itself should be O(1) and the energy should be O(1e9)\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-31T23:33:59Z",
+    "deletions": 68,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2025-04-16T02:23:58Z",
+    "number": 1095,
+    "title": "Checking conservation for soil"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "We still had some experiments and tests with non-zero `npolynomial`. Diagnostics with the land-sea mask are correct only when `npolynomial` is zero, so this commit ensures that all our tests and experiments are using `npolynomial` of 0. This is also how we want to run `ClimaLand` in general, so there is little point in keeping `npolynomial != 0`.\r\n\r\nI left one case with `npolynomial = 3` to check that it is still working.\r\n",
+    "changedFiles": 31,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-16T15:35:22Z",
+    "deletions": 94,
+    "labels": [],
+    "mergedAt": "2025-04-16T17:19:31Z",
+    "number": 1111,
+    "title": "Make npolynomial = 0 by default"
+  },
+  {
+    "additions": 332,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "ClimaCore `0.14.30` introduced support for masks and ClimaLand now uses it by default. This commit restores compatibility with previous versions of ClimaCore restoring the behavior before we had a mask: if users run with previous versions of ClimaCore, they will not get the mask.\r\n\r\nThis compatibility allows us to replicate previous results.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-15T15:28:19Z",
+    "deletions": 290,
+    "labels": [],
+    "mergedAt": "2025-04-16T18:16:46Z",
+    "number": 1108,
+    "title": "Restore support for ClimaCore < 0.14.30"
+  },
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "All the information needed to select the resolution for the land-sea mask is in the space. This commit automatically select the correct file to use when working with land-sea masks.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-15T16:12:15Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2025-04-16T22:08:12Z",
+    "number": 1109,
+    "title": "Automatically pick mask resolution"
+  }
+]

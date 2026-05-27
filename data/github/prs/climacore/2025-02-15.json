@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 182,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the version of julia on CI, and updates the dependencies.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-14T19:32:06Z",
+    "deletions": 188,
+    "labels": [
+      {
+        "color": "06CF1E",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABAlTlKw",
+        "name": "Dependencies"
+      }
+    ],
+    "mergedAt": "2025-02-15T00:46:16Z",
+    "number": 2189,
+    "title": "Update julia in CI + dependencies"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "- Update deprecated github runner\r\n- Remove .dev",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-12T20:31:23Z",
+    "deletions": 212,
+    "labels": [],
+    "mergedAt": "2025-02-15T00:49:30Z",
+    "number": 2183,
+    "title": "Update CI"
+  },
+  {
+    "additions": 87,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #2186.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6qB03R",
+        "number": 2186,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2186"
+      }
+    ],
+    "createdAt": "2025-02-14T19:06:45Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-02-15T00:50:26Z",
+    "number": 2187,
+    "title": "Fix adapt for vert topo and Topology2D"
+  },
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "#2108 partially describes the odissey I went through to understand and fix this bug.\r\n\r\nAfter discussing this with folks at MPI.jl (https://github.com/JuliaParallel/MPI.jl/issues/892), a potential problem was identified:\r\n```\r\nremapper._interpolated_values[remapper.colons..., begin]\r\n```\r\nin the `ClimaComms.reduce!` call allocates a new copy. This can mess up CUDA's synchronization, so that the correct data is not sent over. The simple solution is to use `view` instead of slices.\r\n\r\nIn addition to this, this PR changes `interpolate` to use `interpoalte!`, which leads much simpler code (the reason it was not done this way originally is because `interpolate!` is a more recent addition and behaved slightly differently).\r\n\r\nCloses #2108 \r\nCloses #2132 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6kFChg",
+        "number": 2108,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2108"
+      }
+    ],
+    "createdAt": "2025-01-30T18:45:08Z",
+    "deletions": 141,
+    "labels": [],
+    "mergedAt": "2025-02-15T17:17:09Z",
+    "number": 2169,
+    "title": "Fix distributed remapping bug"
+  }
+]

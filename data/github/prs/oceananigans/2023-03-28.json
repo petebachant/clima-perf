@@ -1,0 +1,73 @@
+[
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "On main we are passing the tendency kernel function as an argument to the kernel. \r\nApparently, this prevents compilation on the CPU.\r\nAnother place where this design was implemented is the vertically implicit solver, where we pass functions to calculate the tridiagonal matrix coefficients.\r\n\r\nThis PR fixes both problems.\r\n\r\nAfter this PR we should remember that we cannot pass functions as kernel arguments, \r\nnot even as properties of a struct! Instead we can pass `Val(:function_name)` and dispatch on that to call the correct `function_name` (as implemented in this PR for the vertically implicit solver)\r\n\r\nBaroclinic adjustment test (with `Nx = Ny = 128, Nz = 10`)\r\non main:\r\n```julia\r\n[ Info: Initializing simulation...\r\n[00.00%] i: 0, t: 0 seconds, wall time: 870.922 ms, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 16.500 minutes\r\n[ Info:     ... simulation initialization complete (957.942 ms)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (19.178 seconds).\r\n[15.28%] i: 20, t: 5.500 hours, wall time: 1.732 minutes, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 18.150 minutes\r\n[32.08%] i: 40, t: 11.550 hours, wall time: 1.376 minutes, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 19.965 minutes\r\n[50.57%] i: 60, t: 18.205 hours, wall time: 1.333 minutes, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[69.09%] i: 80, t: 1.036 days, wall time: 1.219 minutes, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[87.61%] i: 100, t: 1.314 days, wall time: 1.175 minutes, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[ Info: Simulation is stopping after running for 7.623 minutes.\r\n[ Info: Simulation time 1.500 days equals or exceeds stop time 1.500 days.\r\n```\r\n\r\non this PR:\r\n```julia\r\n[ Info: Initializing simulation...\r\n[00.00%] i: 0, t: 0 seconds, wall time: 9.474 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 16.500 minutes\r\n[ Info:     ... simulation initialization complete (4.467 seconds)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (29.607 seconds).\r\n[15.28%] i: 20, t: 5.500 hours, wall time: 45.943 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 18.150 minutes\r\n[32.08%] i: 40, t: 11.550 hours, wall time: 14.963 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 19.965 minutes\r\n[50.57%] i: 60, t: 18.205 hours, wall time: 15.328 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[69.09%] i: 80, t: 1.036 days, wall time: 15.417 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[87.61%] i: 100, t: 1.314 days, wall time: 14.862 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[ Info: Simulation is stopping after running for 2.050 minutes.\r\n[ Info: Simulation time 1.500 days equals or exceeds stop time 1.500 days.\r\n```\r\n\r\non Oceananigans v0.79.2 (with KA 0.7.2):\r\n```julia\r\n[ Info: Initializing simulation...\r\n[00.00%] i: 0, t: 0 seconds, wall time: 52.447 ms, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 16.500 minutes\r\n[ Info:     ... simulation initialization complete (53.391 ms)\r\n[ Info: Executing initial time step...\r\n[ Info:     ... initial time step complete (748.379 ms).\r\n[15.28%] i: 20, t: 5.500 hours, wall time: 14.167 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 18.150 minutes\r\n[32.08%] i: 40, t: 11.550 hours, wall time: 14.841 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 19.965 minutes\r\n[50.57%] i: 60, t: 18.205 hours, wall time: 14.606 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[69.09%] i: 80, t: 1.036 days, wall time: 14.924 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[87.61%] i: 100, t: 1.314 days, wall time: 13.987 seconds, max(u): (0.000e+00, 0.000e+00, 0.000e+00) m/s, next \u0394t: 20 minutes\r\n[ Info: Simulation is stopping after running for 1.358 minutes.\r\n[ Info: Simulation time 1.500 days equals or exceeds stop time 1.500 days.\r\n```\r\ncloses #2996 \r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5hckA0",
+        "number": 2996,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2996"
+      }
+    ],
+    "createdAt": "2023-03-27T16:28:48Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2023-03-28T11:54:57Z",
+    "number": 3030,
+    "title": "Don't pass function coefficients to `solve!` with `BatchedTridiagonalSolver` for vertically implicit diffusion"
+  },
+  {
+    "additions": 115,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "As discussed in #2882, `similar(::Field)` does not copy boundary conditions...\r\n\r\n~This PR gives us the option to pass boundary conditions to `initialize_matrix` methods.~\r\n\r\nThis PR:\r\n- renames `initialize_matrix` ->  `compute_matrix_for_linear_operation`\r\n- moves into `matrix_solver_utils.jl`\r\n- adds docstring\r\n\r\nResolves #2882 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5c7ek9",
+        "number": 2882,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2882"
+      }
+    ],
+    "createdAt": "2023-01-30T02:06:17Z",
+    "deletions": 59,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2023-03-28T22:54:02Z",
+    "number": 2885,
+    "title": "Clean up methods for computing matrix that corresponds to `linear_operation!` used by MultigridSolver"
+  }
+]

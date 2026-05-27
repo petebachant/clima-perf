@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 857,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "# Refactor 1-moment microphysics process options\r\n\r\n## Summary\r\n\r\nThis PR refactors how individual microphysical processes are enabled and disabled in the 1-moment scheme. Every process now has an explicit `No*` option that returns zero tendency, and each process is addressed individually via option dispatch. Accretion processes are added to the options struct for the first time. The `VarTimescaleAcnv` option has been moved from CM2 to CM1 module and its parameters are consolidated into the 1M parameter tree. All callers \u2014 bulk tendencies, tests, docs \u2014 are updated.\r\n\r\n## Changes\r\n\r\n### `src/parameters/Microphysics1MOptions.jl`\r\n\r\n- Added `No*` option singletons for every process so each one can be individually disabled: `NoCloudLiquidFormation`, `NoCloudIceFormation`, `NoRainAutoconversion`, `NoSnowAutoconversion`, `NoRainCondensationEvaporation`, `NoSnowDepositionSublimation`, `NoSnowMelt`, and one for each accretion pair.\r\n- Renamed options for clarity and consistency:\r\n  - `CloudIceMeltToLiquid` \u2192 `CloudIceMelt`\r\n  - `LiquidAutoconv1M` \u2192 `RainAutoconversion1M`\r\n  - `LiquidAutoconv2M` \u2192 `RainAutoconversionPrescribedNd`\r\n  - `SnowAutoconvNoSupersat/WithSupersat` \u2192 `SnowAutoconversionNoSupersaturation/WithSupersaturation`\r\n  - `EvaporationOnly` \u2192 `RainEvaporation`\r\n  - `SublimationOnly` \u2192 `SnowSublimation`\r\n  - `DepositionSublimation` \u2192 `SnowDepositionSublimation`\r\n  - Field `rain_evaporation` \u2192 `rain_condensation_evaporation`\r\n  - Field `snow_sublimation` \u2192 `snow_deposition_sublimation`\r\n  - Field `cloud_liquid_autoconversion` \u2192 `rain_autoconversion`\r\n- Added accretion processes to `Microphysics1MOptions`: `CloudLiquidRainAccretion`, `CloudLiquidSnowAccretion`, `CloudIceRainAccretion`, `CloudIceSnowAccretion`, `RainSnowAccretion` (each with a corresponding `No*` variant).\r\n- Removed `RainIceAccretion` (previously an undifferentiated accretion flag).\r\n\r\n### `src/parameters/Microphysics1MParams.jl`\r\n\r\n- Removed the top-level `prescribed_Nc` field; droplet number concentration is now stored inside `VarTimescaleAcnv.Nc`.\r\n- Removed the `FT` type parameter from `Microphysics1MParams`.\r\n\r\n### `src/parameters/Microphysics1M.jl`\r\n\r\n- Added `VarTimescaleAcnv` export and definition (moved from `Microphysics2M.jl`). It now holds `\u03c4`, `\u03b1`, and `Nc` as a single struct.\r\n\r\n### `src/parameters/Microphysics2M.jl`\r\n\r\n- Removed `VarTimescaleAcnv` struct, constructor, and export (moved to `Microphysics1M.jl`).\r\n\r\n### `src/Microphysics1M.jl`\r\n\r\n- Converted `conv_q_lcl_to_q_rai` from a direct `Acnv1M`-struct-based call to option dispatch: `conv_q_lcl_to_q_rai(::NoRainAutoconversion | ::RainAutoconversion1M | ::RainAutoconversionPrescribedNd, mp, tps, micro, thermo)`.\r\n- Converted `accretion` wrappers to option dispatch for all four cloud-precip pairs (`CloudLiquidRainAccretion`, `CloudLiquidSnowAccretion`, `CloudIceRainAccretion`, `CloudIceSnowAccretion`).\r\n- Added high-level `accretion_snow_rain(::NoRainSnowAccretion | ::RainSnowAccretion, mp, tps, micro, thermo)` that calls both the cold and warm collision arms and returns `(; S_rai_sno, S_sno_rai, S_melt)`.\r\n- Removed the `accretion_rain_sink` public docstring (it is now an internal-only low-level kernel).\r\n\r\n### `src/BulkMicrophysicsTendencies.jl`\r\n\r\n- Updated the 1M tendency function to dispatch on all new accretion options from `Microphysics1MOptions`, passing the full `mp` struct through to each process wrapper.\r\n\r\n\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T23:11:22Z",
+    "deletions": 356,
+    "labels": [
+      {
+        "color": "dfaaf4",
+        "description": "Large-scale code improvement",
+        "id": "LA_kwDOFzm_uM8AAAABDFgzqw",
+        "name": "Refactor :star2:"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-05-26T21:10:55Z",
+    "number": 717,
+    "title": "Aj/bulk micro options part2"
+  }
+]

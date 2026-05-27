@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR further enhances the XESMF extension.\r\n\r\n- [x] Cleanup of:\r\n  https://github.com/CliMA/Oceananigans.jl/blob/ff6d022f280e2d1d9b680843857bc6fffa637645/ext/OceananigansXESMFExt.jl#L12-L29\r\n  eg use `permutedims` instead of `'`\r\n- [x] Ensure all is smooth with GPU architectures; add tests for GPU (perhaps move from GitHub actions to buildkite)\r\n- [ ] Does the regridding reproduces the Python xESMF regridding?\r\n- [ ] (Perhaps related to the above) Can the integral before and after regridding be better than `rtol = 1e-4`?\r\n- [ ] Documentation/Example for how to do a regridding using XESMF.jl (docstrings with examples should suffice for now; convert some example(s) to doctest(s)).\r\n\r\n\r\nPartially deals with #4818",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-27T14:34:32Z",
+    "deletions": 81,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2025-09-30T11:08:31Z",
+    "number": 4819,
+    "title": "Further enhancements of the XESMF extension"
+  },
+  {
+    "additions": 336,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR does a bit of reorganizing but mainly it makes it possible to write a `Field` directly into a NetCDF file. The motivations are:\r\n\r\n- Historically Oceananigans' NetCDF capabilities have been tied to simulations, but that doesn't need to be the case and this is a first step towards something more general\r\n- More practically, it makes it easier for us to support immersed grid reconstruction from NetCDF (something I'll tackle after https://github.com/CliMA/Oceananigans.jl/pull/4687/ is merged, which supports non-immersed grid reconstruction)\r\n- This feature also allows for fields with different underlying grids, or windowed different, and even fields from two completely different simulations, to live in the same NetCDF file. All that is needed is to pass a different `dimension_name_generator` for each.\r\n\r\nHere's a quick example:\r\n\r\n```julia\r\njulia> grid = RectilinearGrid(size=(4, 4, 4), extent=(1, 1, 1));\r\n\r\njulia> c = CenterField(grid);\r\n\r\njulia> ds = NCDataset(\"test.nc\", \"c\")\r\nDataset: test.nc\r\nGroup: /\r\n\r\n\r\n\r\njulia> defVar(ds, \"c\", c, attrib=Dict(\"long_name\" => \"Center field\", \"units\" => \"kg/m\u00b3\"));\r\n\r\njulia> ds\r\nDataset: test.nc\r\nGroup: /\r\n\r\nDimensions\r\n   x_caa = 4\r\n   y_aca = 4\r\n   z_aac = 4\r\n\r\nVariables\r\n  x_caa   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  x_caa\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the x-direction.\r\n\r\n  y_aca   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  y_aca\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the y-direction.\r\n\r\n  z_aac   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  z_aac\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the z-direction.\r\n\r\n  c   (4 \u00d7 4 \u00d7 4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  x_caa \u00d7 y_aca \u00d7 z_aac\r\n    Attributes:\r\n     units                = kg/m\u00b3\r\n     long_name            = Center field\r\n\r\n\r\n\r\njulia> c\u0304 = Average(c, dims=3);\r\n\r\njulia> defVar(ds, \"c\u0304\", c\u0304, attrib=Dict(\"long_name\" => \"Average center field\", \"units\" => \"kg/m\u00b2\"));\r\n\r\njulia> ds\r\nDataset: test.nc\r\nGroup: /\r\n\r\nDimensions\r\n   x_caa = 4\r\n   y_aca = 4\r\n   z_aac = 4\r\n\r\nVariables\r\n  x_caa   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  x_caa\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the x-direction.\r\n\r\n  y_aca   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  y_aca\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the y-direction.\r\n\r\n  z_aac   (4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  z_aac\r\n    Attributes:\r\n     units                = m\r\n     long_name            = Cell center locations in the z-direction.\r\n\r\n  c   (4 \u00d7 4 \u00d7 4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  x_caa \u00d7 y_aca \u00d7 z_aac\r\n    Attributes:\r\n     units                = kg/m\u00b3\r\n     long_name            = Center field\r\n\r\n  c\u0304   (4 \u00d7 4)\r\n    Datatype:    Float64 (Float64)\r\n    Dimensions:  x_caa \u00d7 y_aca\r\n    Attributes:\r\n     units                = kg/m\u00b2\r\n     long_name            = Average center field\r\n```\r\n\r\nFor now I decided to extend the existing `defVar` in order to avoid creating new functions, but we can definitely also create a new function specifically for that (`to_netcdf(field::AbstractField)`?).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-27T16:18:46Z",
+    "deletions": 82,
+    "labels": [],
+    "mergedAt": "2025-09-30T21:27:54Z",
+    "number": 4730,
+    "title": "Add methods to write a field directly to NetCDF"
+  }
+]

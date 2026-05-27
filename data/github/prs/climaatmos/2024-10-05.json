@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1673,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "Improve gcm-driven single column calibrations:\r\n\r\n1.  modify priors\r\n2. add entrainment pi group calibration\r\n3.  improve plotting scripts\r\n4.  add rmse metrics and plotting\r\n5.  add eki metrics and plotting\r\n6.  parallelize CA single column runs (cases) over cpu cores\r\n7.  easier specification of normalization for LES/EDMF profiles (mean, std to transform vars -> N(0, 1)); option for taking log\r\n\r\n\r\nA summary of the \r\n\r\nThe observation vector for a single configuration is formed by concatenating profiles across calibration variables, where each geophysical variable is normalized to have approximately unit variance and zero mean. These variable-by-variable normalization factors are precomputed (`norm_factors_dict`) and applied to all observations. Following this operation, the spatiotemporal calibration window is applied and temporal means are computed to form the observation vector `y`. Because variables are normalized to have 0 mean and unit variance, a constant diagonal noise matrix is used (configurable as `const_noise`).\r\n\r\n\r\n### Observation Map\r\n1. **Time-mean**: Time-mean of profiles taken between [`y_t_start_sec`, `y_t_end_sec`] for `y` and [`g_t_start_sec`, `g_t_end_sec`] for `G`.\r\n2. **Interpolation**: Case-specific (i.e., \"shallow\", \"deep\") interpolation to the calibration grid, defined with stretch-grid parameters in `z_cal_grid`.\r\n3. **Normalization**: Variable-specific normalization using the mean and standard deviation defined in `norm_factors_by_var`. Optionally, take log of variables using `log_vars` before normalization.\r\n4. **Concatenation**: Stack across cases in a batch, forming `y`, `G`.\r\n\r\n\r\n## Prognostic EDMF results after 11 iterations with default calibration configurations (defined in `experiment_config.yml`)\r\n\r\n#### cfSite 23\r\n![ensemble_plot_clw_i_11_cu](https://github.com/user-attachments/assets/9fc1ba80-9a97-42c0-b99d-f9f0cd3c6541)\r\n\r\n\r\n#### cfSite 17\r\n![ensemble_plot_clw_i_11](https://github.com/user-attachments/assets/2ff21b49-b705-4abc-8a99-1dbdff0347bc)\r\n\r\n\r\n#### RMSE Plot\r\n![rmse_vs_iteration.pdf](https://github.com/user-attachments/files/17124199/rmse_vs_iteration.pdf)\r\n\r\n\r\n\r\n\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-24T18:30:42Z",
+    "deletions": 648,
+    "labels": [],
+    "mergedAt": "2024-10-05T02:45:47Z",
+    "number": 3336,
+    "title": "Updates to gcm-driven single column calibrations"
+  }
+]

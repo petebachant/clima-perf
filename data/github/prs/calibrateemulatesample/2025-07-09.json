@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 732,
+    "author": {
+      "id": "MDQ6VXNlcjQ1NDA0MjI3",
+      "is_bot": false,
+      "login": "ArneBouillon",
+      "name": ""
+    },
+    "body": "This PR makes the following changes:\r\n - The `orig2zscore` and `zscore2orig` functions, which were unused, are removed.\r\n - The individual data processors are moved to their own files.\r\n - `Decorrelater` is renamed to `Decorrelator`\r\n - Instead of exporting all subroutines related to data processing, I now only export `create_encoder_schedule`, `initialize_and_encode_with_schedule!`, `encode_with_schedule`, and `decode_with_schedule`. My rationale for this is twofold.\r\n   - It makes clear that these are the APIs that should be used in practice. The internal functions now start with an underscore (can be removed! just an idea) and can, if necessary, still be used outside the package as, e.g., `CES.Utilities._initialize_and_encode_data!`.\r\n   - It allows the internal subroutines to implement only the methods necessary for our API functions, reducing the number of methods we need to define and maintain.\r\n - Partially thanks to the above change, I could remove the `extract_data` functions.\r\n\r\nI also started working towards `LikelihoodInformed` processors by passing both structure matrices to the initialization code of `PDCP`s. I didn't pass the observation yet, since I'm still looking for a clean way to add this to the pipeline.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-08T01:38:21Z",
+    "deletions": 783,
+    "labels": [],
+    "mergedAt": "2025-07-09T21:03:25Z",
+    "number": 371,
+    "title": "Re-organize data reduction"
+  }
+]

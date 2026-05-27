@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 140,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Insolation is one of the most expensive packages to load (xref: https://github.com/SciML/ExponentialUtilities.jl/issues/128#issue-1696750512).\r\n\r\nThis PR removes the data from the repo, and instead lazily downloads the data via Artifacts (if used). The API is correspondingly updated. These are breaking changes but I think it makes the code more modular since we remove the module constants, and users don't pay the cost of interpolating all of this data unless they need it.\r\n\r\nThis PR improves package load times:\r\n\r\nMain:\r\n```julia\r\njulia> @time using Insolation\r\n[ Info: Precompiling Insolation [e98cc03f-d57e-4e3c-b70c-8d51efe9e0d8]\r\n  4.247356 seconds (9.36 M allocations: 550.601 MiB, 1.79% gc time, 22.78% compilation time: 0% of which was recompilation)\r\n```\r\n\r\nThis PR:\r\n```julia\r\njulia> @time using Insolation\r\n  0.569632 seconds (2.52 M allocations: 185.921 MiB, 2.25% gc time, 1.57% compilation time: 8% of which was recompilation)\r\n```\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODx1b8s5lIl5p",
+        "number": 43,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNTM1ODIzMjI=",
+          "name": "Insolation.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Insolation.jl/issues/43"
+      }
+    ],
+    "createdAt": "2023-05-09T22:54:22Z",
+    "deletions": 89,
+    "labels": [],
+    "mergedAt": "2023-05-10T00:51:07Z",
+    "number": 44,
+    "title": "Remove data, download using Artifacts, update API"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "xref: https://github.com/JuliaRegistries/General/pull/83239#issuecomment-1541170735",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-10T02:37:46Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-05-10T02:38:27Z",
+    "number": 45,
+    "title": "Add ArtifactWrappers compat"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR defines broadcastable for OrbitalData",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-10T15:54:03Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-05-10T15:54:28Z",
+    "number": 46,
+    "title": "Define broadcast"
+  }
+]

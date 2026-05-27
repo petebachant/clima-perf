@@ -1,0 +1,163 @@
+[
+  {
+    "additions": 477,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR replaces `$..$` with ` ``..`` `  and `$$..$$` with ` ```math ... ``` `.\r\n\r\nAccording to @mortenpi dollar signs are deprecated.\r\n\r\n<img width=\"831\" alt=\"Screen Shot 2020-10-24 at 9 34 31 am\" src=\"https://user-images.githubusercontent.com/7112768/97059461-37e9f500-15dc-11eb-8dd0-beb25351f4ce.png\">\r\n",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-23T22:26:47Z",
+    "deletions": 463,
+    "labels": [],
+    "mergedAt": "2020-10-26T11:42:21Z",
+    "number": 1097,
+    "title": "Remove dollar signs used for latexing in Docs"
+  },
+  {
+    "additions": 252,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds two new features for interacting with `Checkpointer`s.\r\n\r\nThe first is the method\r\n\r\n```julia\r\nset!(model, checkpointer_filepath::AbstractString)\r\n```\r\n\r\nthat sets all the checkpointed data in `checkpointer_filepath` to `model`, including tendencies, and synchronizes the model clock and iteration with the checkpointed clock and iteration.\r\n\r\nThe second is a kwarg in `run!` meant to be used as either\r\n\r\n```julia\r\nrun!(simulation, pickup=true)\r\n```\r\n\r\nor \r\n\r\n```julia\r\nrun!(simulation, pickup=n)\r\n```\r\n\r\nor \r\n\r\n```julia\r\nrun!(simulation, pickup=filepath)\r\n```\r\n\r\nwhere `n` is an integer that refers to an iteration number of a checkpointer file to be \"picked up\" and run from, and `filepath` is a string that indicates the path to checkpoint data. `pickup=true` looks for the latest checkpointed file and picks up the simulation from there.\r\n\r\nTo do:\r\n\r\n- [x] actually add run!(simulation, pickup=true)\r\n- [x] tests for `set!`\r\n- [x] tests for `run!`\r\n- [x] modify `JLD2OutputWriter` so it doesn't fail in common use cases\r\n\r\nResolves #1068 \r\nResolves #602 \r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NTY0NTU5ODE=",
+        "number": 602,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/602"
+      },
+      {
+        "id": "MDU6SXNzdWU3MjE2OTcwNTE=",
+        "number": 1068,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1068"
+      }
+    ],
+    "createdAt": "2020-10-20T02:49:00Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2020-10-26T13:14:55Z",
+    "number": 1082,
+    "title": "New checkpointer features: set! and simulation \"pickup\""
+  },
+  {
+    "additions": 922,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a field-dependent boundary conditions feature. This is an extension to the boundary conditions API that leaves existing functionality unchanged.\r\n\r\nThe functionality is similar to that for `Forcing`. For quadratic bottom stress acting on the `u`-velocity we'd write\r\n\r\n```julia\r\nu_bottom_stress(x, y, t, u, v, Cd) = - Cd * u * sqrt(u^2 + v^2)\r\n\r\nbottom_bc = BoundaryCondition(Flux, u_bottom_stress, field_dependencies=(:u, :v), parameters=1e-3)\r\n```\r\n\r\nDealing with the wall-normal velocity components is a bit annoying. For now we don't interpolate them, which leads to different behavior at left and right boundaries (due to the fact that the wall-normal index is assumed to refer to cell centers). Right now this is not much of a practical issue --- it would only affect cases in which wall-normal velocities were non-zero _and_ those values were used in boundary conditions on other fields.\r\n\r\nOne solution is to store \"wall-normal\" indices separately for each of the `field_dependencies`. Then we can correctly infer the boundary index in `regularize_boundary_condition` because we know field locations there.\r\n\r\nWe still need to:\r\n\r\n- [x] update boundary conditions docs\r\n- [x] see if any examples can be simplified?\r\n\r\nResolves #897 ",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2OTAzMTI0MjA=",
+        "number": 897,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/897"
+      }
+    ],
+    "createdAt": "2020-10-21T18:47:19Z",
+    "deletions": 645,
+    "labels": [],
+    "mergedAt": "2020-10-26T16:13:13Z",
+    "number": 1093,
+    "title": "Field-dependent boundary conditions"
+  },
+  {
+    "additions": 202,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request sets the compat entry for the `Glob` package to `1.3`.\n\nThis is a brand new compat entry. Previously, you did not have a compat entry for the `Glob` package.\n\nNote: I have not tested your package with this new compat entry. It is your responsibility to make sure that your package tests pass before you merge this pull request. Note: Consider tagging a patch release immediately after merging this PR, as downstream packages may depend on this for tests to pass.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-26T13:28:06Z",
+    "deletions": 137,
+    "labels": [],
+    "mergedAt": "2020-10-26T16:26:13Z",
+    "number": 1102,
+    "title": "CompatHelper: add new compat entry for \"Glob\" at version \"1.3\""
+  },
+  {
+    "additions": 661,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Some of the examples had typos and incorrect comments. Also, some of the plotting is improved now that we know beautiful plots means `contourf` with `linewidth=0`. I added a few features to some of the examples, most notably `AveragedField`. Finally, we now always visualize in post-process.\r\n\r\nDepends on #1093, since that PR beautifies a few of the examples as well with field-dependent boundary conditions.\r\n\r\nResolves #676 ",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1NzY0NjEwNjY=",
+        "number": 676,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/676"
+      }
+    ],
+    "createdAt": "2020-10-25T02:18:26Z",
+    "deletions": 481,
+    "labels": [],
+    "mergedAt": "2020-10-26T22:04:01Z",
+    "number": 1099,
+    "title": "Beautify the examples"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "To be merged once #1093 and #1099 are in.\r\n\r\nRelease notes:\r\n\r\n* Adds support for \"picking up\" a simulation from a checkpoint via the keyword `pickup=true`, `pickup=checkpoint_iteration::Int` and `pickup=checkpont_filepath::String` in `run!(simulation)` (#1082)\r\n\r\n* Adds a function `set!(model, checkpoint_filepath)` for \"setting\" a model state to the state recorded in a checkpoint file (#1082)\r\n\r\n* Adds support for \"field-dependent\" boundary conditions similar to field-dependent forcing terms (#1093)\r\n\r\n* Beautifies and cleans up many of the examples, including getting them to build faster on Travis (#1099)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-26T13:31:21Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-10-26T22:30:17Z",
+    "number": 1103,
+    "title": "Bump version to 0.44.0"
+  }
+]

@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE2OTIwMDk=",
+      "is_bot": false,
+      "login": "simonbyrne",
+      "name": "Simon Byrne"
+    },
+    "body": "This isn't how we should do distributed remapping, so i'll just disable them.\r\n\r\nAvoids #1513.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-23T17:45:06Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2023-10-23T20:28:59Z",
+    "number": 1515,
+    "title": "remove distributed TempestRemap tests"
+  },
+  {
+    "additions": 159,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds an indefinite integral implementation that uses a function-based input argument. Concretely, given `\u03d5(z)`, this interface allows us to solve for `\u2202\u03d5/\u2202z = f(\u03d5,z)`. The existing field-based implementation cannot be used in this situation, because `f` is a function of `\u03d5`, which is what we're computing. So, this implementation uses RootSolvers to find `\u03d5` at the next level in order to provide a somewhat generic interface.\r\n\r\nUnfortunately, one limitation of this is that `\u03d5` must be a scalar field, and it cannot be, e.g., a `NamedTuple`. We could try to lift this assumption, but that would require adjustments to RootSolvers.\r\n\r\nCloses #1492.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5zRcnL",
+        "number": 1492,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1492"
+      }
+    ],
+    "createdAt": "2023-10-19T20:47:35Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "bfd4f2",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABLo-4LQ",
+        "name": "numerics"
+      }
+    ],
+    "mergedAt": "2023-10-23T21:58:00Z",
+    "number": 1504,
+    "title": "Add and test function-based indefinite integrals"
+  }
+]

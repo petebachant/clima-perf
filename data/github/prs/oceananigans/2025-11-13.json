@@ -1,0 +1,137 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "I don't think we want to allocate memory for these by default, since they are not used in the majority of cases (especially the horizontal gradients).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-13T02:44:40Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-11-13T06:29:19Z",
+    "number": 4933,
+    "title": "Don't materialize gradients by default"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This is to include #4933 in a new release.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-13T08:51:02Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-11-13T13:14:20Z",
+    "number": 4934,
+    "title": "Bump version from 0.101.0 to 0.101.1"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR cleans up the interface for forcing with Models. It's inspired by some similar improvements for Breeze.AtmosphereModel. In particular it more clearly distinguishes between \"prognostic fields\" and \"model fields\". Model fields (perhaps not the greatest name) is a superset of prognostic fields and may include selected auxiliary fields (but typically not _all_ auxiliary fields) that the model designer deems could be useful for users within forcing and boundary condition functions. ",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-12T12:18:09Z",
+    "deletions": 33,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2025-11-13T20:15:41Z",
+    "number": 4930,
+    "title": "Change regularize_forcing to materialize_forcing, plus refine model_forcing interface"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Apparently, #4931 did not solve the issue. This PR should correct it. I am also adding a test",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-13T18:20:09Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-11-13T21:40:56Z",
+    "number": 4935,
+    "title": "import OutputReaders in Reactant extension"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "To clear the depot:\r\nIf you ever need to clear the depot (e.g. if some packages get corrupted and can't be correctly accessed), you can go to the [Clear Depot pipeline](https://buildkite.com/clima/clear-depot), click \"new build\", and put your pipeline's name as the value for the environment variable `SLUG`, i.e. `slug=oceananigans-distributed` for this pipeline).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-12T14:14:41Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2025-11-13T21:41:32Z",
+    "number": 4783,
+    "title": "Try reusing the julia path for distributed tests"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The formulation does two things:\r\n\r\n1. it controls how the diagonals are computed and\r\n2. it determines whether or not to apply the zero-mean gauge condition\r\n\r\nWe need to be able to modulate these independently for variations on the Poisson problem; eg problems like those enountered in an anelastic pressure correction algorithm (which modifies the z-dependent term and thus the diagnoals, but is still a homogeneous problem with a gauge condition).\r\n\r\ncc @navidcy @giordano\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-13T21:14:44Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-11-13T23:12:12Z",
+    "number": 4936,
+    "title": "Introduce Abstract formulation types for FourierTridiagonalPoissonSolver"
+  }
+]

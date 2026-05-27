@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Removes duplicated kinetic energy, contravariant velocity, and thermo_state assignments in implicit tendencies: \r\n\r\nThese are computed in `src/precomputed_quantities.jl`. \r\nThe required code block in `precomputed_quantities` is: \r\n\r\n```\r\n    @. \u1d9cu_bar[colidx] = C123(\u1d9cu\u2095[colidx]) + C123(\u1d9cinterp(\u1da0w[colidx]))\r\n    @. \u1da0u_tilde[colidx] =\r\n        \u1da0winterp(\r\n            Y.c.\u03c1[colidx] * \u1d9cJ[colidx],\r\n            Geometry.Contravariant123Vector(\u1d9cu\u2095[colidx]),\r\n        ) + Geometry.Contravariant123Vector(Y.f.w[colidx])\r\n    @. \u1da0u\u00b3[colidx] =\r\n        Geometry.project(Geometry.Contravariant3Axis(), \u1da0u_tilde[colidx])\r\n    compute_kinetic!(\u1d9cK[colidx], Y.c.u\u2095[colidx], Y.f.w[colidx])\r\n    thermo_params = CAP.thermodynamics_params(params)\r\n    thermo_state!(Y, p, \u1d9cinterp, colidx; time = t)\r\n    @. \u1d9cp[colidx] = TD.air_pressure(thermo_params, \u1d9cts[colidx])\r\n```\r\n\r\nThis increases the threaded allocation count. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-17T16:28:19Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      },
+      {
+        "color": "0052cc",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABLyr7KQ",
+        "name": "Dycore equations"
+      }
+    ],
+    "mergedAt": "2023-03-21T16:52:21Z",
+    "number": 1469,
+    "title": "Remove duplicated code"
+  }
+]

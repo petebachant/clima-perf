@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Some regular maintenance",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-08-17T14:37:03Z",
+    "deletions": 116,
+    "labels": [],
+    "mergedAt": "2020-08-28T00:02:34Z",
+    "number": 860,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Oceananigans closes NetCDF files after running a simulation via `run!` but in some cases, e.g. #862 (and in the case of the examples), we want to run for a bit then plot then run some more, so we actually don't want to close NetCDF files at the end of `run!(simulation)`.\r\n\r\nThis PR changes the behaviour of `run!` so it does not close NetCDF files.\r\n\r\nResolves #862 \r\n\r\ncc @mukund-gupta ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2ODE5NzEwNDU=",
+        "number": 862,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/862"
+      }
+    ],
+    "createdAt": "2020-08-20T17:24:48Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2020-08-28T12:51:38Z",
+    "number": 863,
+    "title": "Dont close output writers at the end of `run!`"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #857 \r\n\r\nMinimal working example:\r\n```julia\r\nusing Oceananigans, Oceananigans.Diagnostics, Oceananigans.AbstractOperations\r\ngrid = RegularCartesianGrid(size=(16, 16, 16), extent=(1, 1, 1))\r\nmodel = IncompressibleModel(architecture=CPU(), grid=grid)  # Same with GPU()\r\nu, v, w = model.velocities\r\n\u222buv = Average(u*v, dims=(1, 2), return_type=Array)\r\n```\r\n\r\nOld error (obscure and not useful to users):\r\n```\r\nERROR: MethodError: no method matching architecture(::Oceananigans.AbstractOperations.MultiaryOperation{Oceananigans.Grids.Face,Oceananigans.Grids.Cell,Oceananigans.Grids.Cell,2,typeof(*),Tuple{OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}},OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}},Tuple{typeof(identity),typeof(Oceananigans.Operators.\u2111xy\u1da0\u1d9c\u1d43)},RegularCartesianGrid{Float64,Periodic,Periodic,Bounded,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}})\r\nClosest candidates are:\r\n  architecture(::Array) at /home/alir/Oceananigans.jl/src/Architectures.jl:46\r\n  architecture(::CUDA.CuArray) at /home/alir/Oceananigans.jl/src/Architectures.jl:47\r\n  architecture(::Field) at /home/alir/Oceananigans.jl/src/Fields/field.jl:167\r\n  ...\r\nStacktrace:\r\n [1] Average(::Oceananigans.AbstractOperations.MultiaryOperation{Oceananigans.Grids.Face,Oceananigans.Grids.Cell,Oceananigans.Grids.Cell,2,typeof(*),Tuple{OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}},OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}},Tuple{typeof(identity),typeof(Oceananigans.Operators.\u2111xy\u1da0\u1d9c\u1d43)},RegularCartesianGrid{Float64,Periodic,Periodic,Bounded,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}}; dims::Tuple{Int64,Int64}, iteration_interval::Nothing, time_interval::Nothing, return_type::Type{T} where T) at /home/alir/Oceananigans.jl/src/Diagnostics/average.jl:52\r\n [2] top-level scope at REPL[17]:1\r\n```\r\n\r\nNew error (more useful):\r\n```\r\nERROR: MethodError: no method matching Average(::Oceananigans.AbstractOperations.MultiaryOperation{Oceananigans.Grids.Face,Oceananigans.Grids.Cell,Oceananigans.Grids.Cell,2,typeof(*),Tuple{OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}},OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}},Tuple{typeof(identity),typeof(Oceananigans.Operators.\u2111xy\u1da0\u1d9c\u1d43)},RegularCartesianGrid{Float64,Periodic,Periodic,Bounded,OffsetArrays.OffsetArray{Float64,1,StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}}}}; dims=(1, 2), return_type=Array)\r\nClosest candidates are:\r\n  Average(::Oceananigans.AbstractOperations.AbstractOperation, ::Oceananigans.Models.AbstractModel; dims, kwargs...) at /home/alir/Oceananigans.jl/src/AbstractOperations/computations.jl:98\r\n  Average(::Oceananigans.AbstractOperations.AbstractOperation, ::Any; dims, kwargs...) at /home/alir/Oceananigans.jl/src/AbstractOperations/computations.jl:86\r\n  Average(::F, ::D, ::P, ::I, ::T, ::Float64, ::R) where {F, R, D, P, I, T} at /home/alir/Oceananigans.jl/src/Diagnostics/average.jl:13 got unsupported keyword arguments \"dims\", \"return_type\"\r\n  ...\r\nStacktrace:\r\n [1] top-level scope at REPL[10]:1\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2NzkzMjM4Mjg=",
+        "number": 857,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/857"
+      }
+    ],
+    "createdAt": "2020-08-14T18:42:53Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-08-28T21:01:40Z",
+    "number": 858,
+    "title": "Clearer error in operation average constructor"
+  }
+]

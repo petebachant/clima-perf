@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-25T20:07:36Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA0",
+        "name": "bug"
+      }
+    ],
+    "mergedAt": "2022-04-26T00:08:12Z",
+    "number": 347,
+    "title": "add latent heat to surface energy flux"
+  },
+  {
+    "additions": 1420,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR adds two important files---`rrtmgp_model.jl` and `radiation_utilities.jl`.\r\n\r\n`rrtmgp_model.jl`is a user-friendly wrapper for `RRTMGP.jl` that is able to automatically handle extension profiles, boundary layers, and interpolation/extrapolation schemes, as well as expose all the relevant inputs/outputs of `RRTMGP` to users while hiding all  the irrelevant data structures. We will eventually move this file into the `RRTMGP.jl` repository, but, for the sake of faster development, we should keep it here until we have settled on the final interface.\r\n\r\n`radiation_utilities.jl` is the equivalent of `baroclinic_wave_utilities.jl` for radiation; it introduces a cache function, a tendency function, and a callback function that use an `RRTMGPModel`. A lot of information is currently hardcoded into these functions (e.g., volume mixing ratios of gases are read in from a dataset provided with `RRTMGP`, and the land surface temperature is set to `29 * exp(-(\u03d5 / 26)^2 / 2) + 271`), but we will add more versatility as we continue to experiment.\r\n\r\nThis PR also adds a new `baroclinic_wave_rhoe_equilmoist_radiation.jl` example to the Buildkite pipeline. This example demonstrates how to use `radiation_utilities.jl`. Since it is not very physically meaningful, this example will eventually be removed, so a regression test does not need to be added for it.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-25T21:10:29Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2022-04-26T00:31:11Z",
+    "number": 348,
+    "title": "Add RRTMGPModel and radiation cache/tendency/callback"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "I think I spotted a typo. If not, never mind.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-21T21:24:05Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA1",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2022-04-26T18:31:25Z",
+    "number": 336,
+    "title": "Docs: Typo fix in Equations"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-26T22:08:29Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2022-04-26T23:39:10Z",
+    "number": 351,
+    "title": "fix sign error in diff bc"
+  }
+]

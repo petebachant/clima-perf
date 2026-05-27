@@ -1,0 +1,60 @@
+[
+  {
+    "additions": 3296,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR removes the CubedSpheres module and re-implements CubedSphere grid using the MultiRegion module. Furthermore, it improves the OrthogonalSphericalShellGrid.\r\n\r\n## Implemented in this PR\r\n- uses Distances package which allowed us to clear up various utilities in the grid_utils.jl file regarding great circle distances on the sphere\r\n- fix some bugs that didn't allow an OrthogonalSphericalShellGrid to be constructed with any topology\r\n- better and more accurate show methods that also work on the GPU.\r\n- construct ConformalCubedSphereGrid + tests\r\n- introduces the Connectivity type for MultiRegionGrids + adds a default CubedSphereGrid connectivity\r\n- adds halo filling functionality for tracers + velocities ( + tests)\r\n- introduced CubedSphereField abstraction\r\n- introduces CubedSphereConnectivity + tests\r\n\r\n\r\n## Outstanding issues\r\n(Several issues will be opened as soon as this PR is merged for the following)\r\n- Coordinate and metric halo fillings for the ConformalCubedSphereGrid are hardcoded. We need to re-implement this based on the connectivity of the grid so that it works (i) for any connectivity and (ii) for any CubedSpherePartition.\r\n- Properties `\u03be\u2097, \u03be\u1d63, \u03b7\u2097, \u03b7\u1d63` should be taken out from OrthogonalSphericalShellGrid _or_, even better, be grouped together into a property `conformal_cubed_sphere` or something. This way, the OrthogonalSphericalShellGrid will be general and not necessarily tied to the conformal cubed sphere.\r\n- Differentiate the OrthogonalSphericalShellGrid constructors from the cubed_sphere_panel constructors\r\n- Shortcut for velocity halo filling\r\n- Alleviate the need for multiple hallo filling passes for velocities (**important for performance/scaling**)\r\n- Add testing for MultiRegionGrids with `YPartition`\r\n- Allow uneven x-y partition for ConformalCubedSphere",
+    "changedFiles": 83,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5hj7Qw",
+        "number": 3020,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3020"
+      },
+      {
+        "id": "I_kwDOCRy_aM5hj7rz",
+        "number": 3021,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3021"
+      }
+    ],
+    "createdAt": "2023-01-18T11:25:34Z",
+    "deletions": 3844,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2023-07-27T15:09:26Z",
+    "number": 2867,
+    "title": "Add ConformalCubedSphere grid via MultiRegion module"
+  }
+]

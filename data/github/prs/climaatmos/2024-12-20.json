@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR allows us to create a minimal parameter set for all model configurations using FT as input. \r\n\r\n`create_parameter_set` has been replaced with direct `ClimaAtmosParameters` constructors which are not dependent on the AtmosConfig, but we should not see any simulation changes.\r\n\r\nClimaAtmosParameters (CAP) now contains parameters for all configurations to prevent the use of parsed_args. CAP already contained parameters that were unused by certain configurations, such as RRTMGP parameters. This primarily affects the microphysics parameters - both 0m and 1m params are now stored regardless of config. This PR touches a lot of files because the access to specific microphysics parameters structs in tendencies had to be changed.\r\n\r\nThe main method is `ClimaAtmosParameters(toml_dict::TD, dt = nothing)`. If `dt` is passed in, it is used to override the `precipitation_timescale` used in microphysics. Since the config key `override_precip_timescale` is no longer used it has been removed.\r\n\r\nOther constructors are available, which end up calling the toml_dict method:\r\n- `ClimaAtmosParameters(config::AtmosConfig)`\r\n- `ClimaAtmosParameters(::Type{FT}, dt = nothing)`\r\n\r\nThis PR also removes water_params, they are unused",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-12T19:51:47Z",
+    "deletions": 185,
+    "labels": [],
+    "mergedAt": "2024-12-20T00:17:50Z",
+    "number": 3481,
+    "title": "Add float-type constructor for ClimaAtmosParameters"
+  },
+  {
+    "additions": 198,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nweekly release",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-19T18:46:57Z",
+    "deletions": 216,
+    "labels": [],
+    "mergedAt": "2024-12-20T00:21:57Z",
+    "number": 3488,
+    "title": "tag v0.28.1"
+  }
+]

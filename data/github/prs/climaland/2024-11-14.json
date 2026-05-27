@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 158,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nClose #845 \r\n\r\nBecause this involves name changing, a *lot* of files changed in experiments, test.\r\n\r\nFor review, I think it is enough to focus on the changes to files in src/. @braghiere \r\nTagging @Espeer5 since you implemented the two stream scheme and this impacts those functions - only review as your time permits :)\r\n\r\n## To-do\r\n\r\n## Content\r\nPreviously, we computed the absorbed, reflected, and transmitted fluxes in moles of photons per m^2/s in both NIR and PAR. This required:\r\n- converting PAR and NIR downwelling energy flux -> moles of photon fluxes, which is then used to get moles photon/m^2/s absorbed, transmitted, reflected.  We do this because PAR is needed in moles of photon for photosynthesis and SIF computations. But, it required then converting absorbed molar flux etc back to get total absorbed energy flux, transmitted flux, etc\r\n- NIR is not needed in molar flux, but we still computed it this way since we did it for PAR\r\n\r\nContent:\r\n- compute fraction absorbed, reflected, transmitted\r\n- when a molar flux of absorbed PAR is needed, convert to it, but otherwise work in energy fluxes\r\n- remove lambda_gamma_NIR (typical energy per photon in the NIR) from parameters and all scripts since we do not need to convert the NIR energy flux into a moles of photon flux.\r\n- renamed inc_* -> *_d (incoming -> downwelling by our convention)\r\n- Changed names: `compute_absorbances` -> `compute_fractional_absorbances`, `plant_absorbed_pfd` -> `canopy_sw_rt` (shortwave radiative transfer)\r\n\r\n\r\nI compared multiple buildkite plots (ClimaLandSims, fluxnet sites, canopy implicit timestepping, canopy without lai/sai, and all plots were identical between this and the latest PR that merged into main).\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6ZxR77",
+        "number": 845,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/845"
+      }
+    ],
+    "createdAt": "2024-10-14T19:16:44Z",
+    "deletions": 237,
+    "labels": [],
+    "mergedAt": "2024-11-14T23:26:13Z",
+    "number": 851,
+    "title": "Compute surface albedo correctly"
+  }
+]

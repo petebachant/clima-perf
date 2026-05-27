@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 124,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nTo debug NaNs in the soil model, I restricted the domain depth to 10 m, since that led to more NaNs earlier. I saw in this long run: https://buildkite.com/clima/climaland-long-runs/builds/4009 that the NaNs were appearing in 1 year over South America and Indonesia. I then debugged the ones over South America. 12 NaNs appeared by the end of the simulation.\r\n![image](https://github.com/user-attachments/assets/cb9cfcdf-c4ef-45a6-9416-926ac12b3fa7)\r\n\r\nThe NaNs were appearing first in the bottom of the domain. Very weird behavior was showing up: water was leaving the domain (as expected from the BC of free drainage), but the temperature in the bottom was increasing (to unphysical levels). This is tied to inconsistent boundary conditions: if water leaves the domain but energy does not, the temperature has to increase to compensate.\r\n\r\nThis PR adds that change in. I checked here: https://buildkite.com/clima/climaland-long-runs/builds/4011 that the NaNs are gone.\r\n![image](https://github.com/user-attachments/assets/f739259b-4aca-4997-a540-4178fb17eb14)\r\n\r\n\r\nI then reverted the domain depth back to 50m. In the next land 10 year long runs, this hopefully will improve stability, since we also saw NaNs in similar locations. At that point, we can decide to make the domain shallower and continue debugging NaNs as makes sense.\r\n\r\n\r\nNote that a future PR will modify the top bc to account for this type of error also: precipitation is a flux of water into the domain, and this should change the energy flux also.\r\nhttps://github.com/CliMA/ClimaLand.jl/issues/1163\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6atJkm",
+        "number": 859,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/859"
+      }
+    ],
+    "createdAt": "2025-05-23T20:30:54Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2025-05-24T00:36:31Z",
+    "number": 1161,
+    "title": "Fix bottom boundary condition"
+  }
+]

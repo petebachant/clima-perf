@@ -1,0 +1,113 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Update ClimaAtmos to SurfaceFluxes v 0.12\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-23T22:19:23Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "0052cc",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABLyr7KQ",
+        "name": "Dycore equations"
+      }
+    ],
+    "mergedAt": "2024-10-03T00:47:04Z",
+    "number": 3332,
+    "title": "up SurfaceFluxes in examples"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the nsight from from `gpu_aquaplanet_dyamond`, since it's giving some errors while saving profiler information and then appears to be hanging when uploading to buildkite (example [here](https://buildkite.com/clima/climaatmos-ci/builds/20961#019252a7-7574-4e4f-80af-f9977671c06b)):\r\n\r\n```\r\nSaving profiler information | 1m 42s\r\n-- | --\r\n\u00a0 | Generating '/tmp/slurm-44215412/nsys-report-9f55.qdstrm'\r\n\u00a0 | [1/1] [==19%                       ] report.nsys-rep\r\n\u00a0 | Importer error status: Importation failed.\r\n\u00a0 | Import Failed with unexpected exception: /dvs/p4/build/sw/devtools/Agora/Rel/QuadD_Main/QuadD/Host/QdstrmImporter/main.cpp(34): Throw in function {anonymous}::Importer::Importer(const boost::filesystem::path&, const boost::filesystem::path&)\r\n\u00a0 | Dynamic exception type: boost::wrapexcept<QuadDCommon::RuntimeException>\r\n\u00a0 | std::exception::what: RuntimeException\r\n\u00a0 | [QuadDCommon::tag_message*] = Status: AnalysisFailed\r\n\u00a0 | Error {\r\n\u00a0 | Type: RuntimeError\r\n\u00a0 | SubError {\r\n\u00a0 | Type: InvalidArgument\r\n\u00a0 | Props {\r\n\u00a0 | Items {\r\n\u00a0 | Type: OriginalExceptionClass\r\n\u00a0 | Value: \"N5boost10wrapexceptIN11QuadDCommon24InvalidArgumentExceptionEEE\"\r\n\u00a0 | }\r\n\u00a0 | Items {\r\n\u00a0 | Type: OriginalFile\r\n\u00a0 | Value: \"/dvs/p4/build/sw/devtools/Agora/Rel/QuadD_Main/QuadD/Host/Analysis/Modules/EventCollection.cpp\"\r\n\u00a0 | }\r\n\u00a0 | Items {\r\n\u00a0 | Type: OriginalLine\r\n\u00a0 | Value: \"1055\"\r\n\u00a0 | }\r\n\u00a0 | Items {\r\n\u00a0 | Type: OriginalFunction\r\n\u00a0 | Value: \"void QuadDAnalysis::EventCollection::CheckOrder(QuadDAnalysis::EventCollectionHelper::EventContainer&, const QuadDAnalysis::ConstEvent&) const\"\r\n\u00a0 | }\r\n\u00a0 | Items {\r\n\u00a0 | Type: ErrorText\r\n\u00a0 | Value: \"Wrong event order has been detected when adding events to the collection:\\nnew event ={ StartNs=282462349596 StopNs=282462349705 GlobalId=297315521685546 Event={ TraceProcessEvent=[{ Correlation=18871 EventClass=1 TextId=706 ReturnValue=0 },] } Type=48 }\\nlast event ={ StartNs=724295437177 StopNs=724296018404 GlobalId=297315521685546 Event={ TraceProcessEvent=[{ Correlation=96667 EventClass=1 TextId=708 ReturnValue=0 },] } Type=48 }\"\r\n\u00a0 | }\r\n\u00a0 | }\r\n\u00a0 | }\r\n\u00a0 | }\r\n\u00a0 | Generated:\r\n\u00a0 | /central/scratch/esm/slurm-buildkite/climaatmos-ci/20961/climaatmos-ci/gpu_aquaplanet_dyamond/output_active/report.qdstrm\r\n\u00a0 | Running global post-command hook | 0s\r\n\u00a0 | Uploading artifacts | \u00a0\r\n\u00a0 | $ buildkite-agent artifact upload gpu_aquaplanet_dyamond/output_active/*\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Found 8 files that match \"gpu_aquaplanet_dyamond/output_active/*\"\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading to default Buildkite artifact storage\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Creating (0-8)/8 artifacts\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-923a-421a-a27d-c37b0ed36f28 gpu_aquaplanet_dyamond/output_active/summary.pdf (364 KiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9234-4068-a43e-e688fa6bb057 gpu_aquaplanet_dyamond/output_active/gpu_aquaplanet_dyamond_parameters.toml (25 KiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9234-4859-a4e7-ea32c6813dad gpu_aquaplanet_dyamond/output_active/hdf5_files.tar (512 B)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9235-44a1-a9fa-56f05c28b886 gpu_aquaplanet_dyamond/output_active/summary_2D.pdf (1.6 MiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9237-487b-9e0a-89f11c2430ab gpu_aquaplanet_dyamond/output_active/report.qdstrm (222 MiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9238-4352-abc8-a773bb5065b1 gpu_aquaplanet_dyamond/output_active/graceful_exit.dat (1 B)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9238-43de-966c-916f33924a79 gpu_aquaplanet_dyamond/output_active/nc_files.tar (378 MiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Uploading artifact 019252df-9239-4312-8d85-495285bc93fc gpu_aquaplanet_dyamond/output_active/gpu_aquaplanet_dyamond.yml (2.7 KiB)\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/gpu_aquaplanet_dyamond.yml\"\r\n\u00a0 | 2024-10-03 07:53:56 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/hdf5_files.tar\"\r\n\u00a0 | 2024-10-03 07:53:57 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/graceful_exit.dat\"\r\n\u00a0 | 2024-10-03 07:53:57 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/gpu_aquaplanet_dyamond_parameters.toml\"\r\n\u00a0 | 2024-10-03 07:53:57 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/summary.pdf\"\r\n\u00a0 | 2024-10-03 07:54:01 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/summary_2D.pdf\"\r\n\u00a0 | 2024-10-03 08:17:35 INFO   Successfully uploaded artifact \"gpu_aquaplanet_dyamond/output_active/report.qdstrm\"\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-03T17:16:58Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2024-10-03T17:34:10Z",
+    "number": 3358,
+    "title": "Remove nsys report from gpu_aquaplanet_dyamond"
+  },
+  {
+    "additions": 241,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR updates the dependencies",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-03T17:15:02Z",
+    "deletions": 235,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2024-10-03T19:59:18Z",
+    "number": 3357,
+    "title": "Update dependencies"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "While `insolation_tuple` seems to be currently used only in one function, it is stored in the cache and available everywhere. For spheres, `insolation_tuple` was updated in the radiation callback, but that was not the case for other configurations. This commit ensures that `insolation_tuple` is always updated. For non-spheres, we assume insolation at Greenwhich (lat = long = 0).\r\n\r\nThis commit also unifies a little bit the logic between the two cases (with and without sphere).\r\n\r\n@szy21 could you double-check that my code rearrangement is valid? I think that the two branches of the if statement share most of the logic, but they are written slightly differently and I don't think the field2array should matter in this case\r\n\r\nCloses #3356 #3355",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-03T18:42:33Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2024-10-03T20:49:26Z",
+    "number": 3359,
+    "title": "Update insolation_tuple for boxes too"
+  },
+  {
+    "additions": 143,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR enables MPI tests for restarts and changes a little bit the structure of the restart test. I changed the order of things because I need to add more complex cases, but I don't want to add more nesting levels. Now, I can push more tests to the test dict directly.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-01T17:00:05Z",
+    "deletions": 102,
+    "labels": [],
+    "mergedAt": "2024-10-03T23:28:33Z",
+    "number": 3351,
+    "title": "Reorganize restart tests"
+  }
+]

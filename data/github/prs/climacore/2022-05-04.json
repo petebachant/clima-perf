@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 481,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "@simonbyrne This is an example which results in the inexact transform error when attempting to return a \"do-nothing\" warp. \r\n\r\nE.g. See f\u2207Z_column[v](horizontal gradient of z field in warped space) in `adaptspace.jl` which is used to `reconstruct_metric` terms.  \r\n```\r\nf\u2207Z_column[v] = [3.183231456205249e-12]\r\nf\u2207Z_column[v] = [2.0463630789890885e-12]\r\nf\u2207Z_column[v] = [0.0]\r\nf\u2207Z_column[v] = [-2.842170943040401e-14]\r\n```\r\nError is an inexact transform\r\n```\r\nLoadError: InexactError: transform(ClimaCore.Geometry.CovariantAxis{(3,)}, [-8.185202263645752e-34, -0.026239656928510158])\r\n```\r\nEnforcing f\u2207Z_column[v]  to be zero results in a run that reproduces the results from the corresponding unwarped simulation. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5HwQWL",
+        "number": 662,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/662"
+      }
+    ],
+    "createdAt": "2022-04-15T16:33:57Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2022-05-04T00:44:33Z",
+    "number": 667,
+    "title": "Non-zero metric term in warped spaces"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "While working on PR #702 , I realized that this small utility function could have been handy (and would have made the 3d sphere example consistent with the 2d sphere one). \r\n\r\nIt basically ignores the Z coordinate and calls the existing method for LatLongPoints. \r\nSince basically re-uses the same method, I did not repeat all of the cases in the unit tests, but only one.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-04T04:54:59Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyODk5ODQwNjIy",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2022-05-04T23:41:05Z",
+    "number": 703,
+    "title": "Add great_circle_distance between LatLongZPoints"
+  }
+]

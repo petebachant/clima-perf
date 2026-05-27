@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Constructing dictionaries for `NetCDFOutputWriter` can be quite boilerplate-y. This PR also helps unify the JLD2 and NetCDF output writers (see #884).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-04T18:05:48Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2020-11-09T13:35:11Z",
+    "number": 1139,
+    "title": "NetCDFOutputWriter accepts named tuples now"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Should probably tag a bugfix release v0.44.1 with this PR.\r\n\r\nResolves #1141",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MzcwMjk2ODU=",
+        "number": 1141,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1141"
+      }
+    ],
+    "createdAt": "2020-11-05T15:40:55Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2020-11-09T14:19:52Z",
+    "number": 1142,
+    "title": "Update packages and one less adapt"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #1118\r\n\r\nNeeds a `@test_throws`. Ruins the formatting of the `IncompressibleModel` constructor but small price to pay.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MzMzMjYxMzE=",
+        "number": 1118,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1118"
+      }
+    ],
+    "createdAt": "2020-10-30T16:46:24Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-11-09T15:01:27Z",
+    "number": 1121,
+    "title": "Make sure users always construct a model with an `AbstractArchitecture`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-09T14:00:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-11-09T15:05:22Z",
+    "number": 1152,
+    "title": "Bump v0.44.1"
+  },
+  {
+    "additions": 128,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds a new function `interpolate(field, x, y, z)` that interpolates `field` to the physical point `(x, y, z)` using trilinear interpolation. This may be used for Lagrangian particle tracking (X-Ref #511), output on custom grids, and checkpoint restoration onto a new grid.\r\n\r\nNo guarantees when `(x, y, z)` lies outside the domain of the field. I think it interpolates into the halo regions and I can test for this if we think it's important (actually this might be an important case...).\r\n\r\nWorrying about out of bounds, boundary conditions, extrapolation, etc. could slow down the `interpolate` function so it assumes the input makes sense. I think it's the particle's job to stay within the domain of the field.\r\n\r\nOutput on a new grid is possible via\r\n\r\n```julia\r\nnew_field_data = interpolate.(Ref(field), nodes(loc, new_grid, reshape=true)...)\r\n```\r\n\r\nor\r\n\r\n```julia\r\nnew_field_data = interpolate.(Ref(field), xs, ys, zs)\r\n```\r\n\r\nso I did not feel the need to define any new types like `InterpolatedField` or `Interpolator`.\r\n\r\n@glwagner has pointed out that when restoring onto a new grid, you may want to respect global budgets in which case `interpolate` may not be appropriate for checkpoint restoration and an `integrator` (?) of some kind might be needed to ensure conservation of field quantities (momentum, tracers) via Gaussian quadrature. Is this a problem with linear interpolation though? Seems like linear interpolation should preserve global integrals?\r\n\r\nResolves #975",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDg5NjI0ODY=",
+        "number": 975,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/975"
+      }
+    ],
+    "createdAt": "2020-10-21T01:32:05Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2020-11-09T20:53:22Z",
+    "number": 1090,
+    "title": "Trilinear `interpolate` functionality for fields"
+  }
+]

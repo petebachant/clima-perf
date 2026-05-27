@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 1379,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR removes the PencilFFT library from Oceananigans and builds a distributed FFT solver using Oceananigans' inhouse transforms. This allows us to run on GPUs both periodic and bounded domains.\r\nNo stretched mesh is supported at the moment (that will come in a later PR)\r\n\r\nThe transposition is performed through a custom `transpose` routine built for Oceananigans' fields that assumes \r\n- the starting configuration is always a _z-free_ configuration.\r\n- the transpose directions are _z-free_ -> _y-free_ -> _x-free_ -> _y-free_ -> _x-free_\r\n- the y-direction is integer divisible by the number of ranks that divide the x-direction\r\n- the z-direction is integer divisible by the number of ranks that divide the y-direction\r\n\r\nAn additional assumption is that:\r\n- if TY is Bounded, also TZ needs to be Bounded\r\n- if TX is Bounded, also TY needs to be Bounded\r\n\r\nAll these assumptions can be relaxed in following PRs",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-20T06:37:06Z",
+    "deletions": 503,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2024-08-07T12:29:26Z",
+    "number": 3279,
+    "title": "(0.91.6) Distributed FFTs using Oceananigans' inhouse DiscreteTransforms"
+  },
+  {
+    "additions": 127,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements an extension to Oceananigans with `convert_arguments` for Makie plots.\r\n\r\nFor example:\r\n\r\n```julia\r\njulia> using Oceananigans, GLMakie\r\nPrecompiling Oceananigans\r\n  7 dependencies successfully precompiled in 18 seconds. 157 already precompiled.\r\n[ Info: Precompiling GLMakie [e9467ef8-e4e7-5192-8a1a-b1aee30e663a]\r\n[ Info: Precompiling OceananigansMakieExt [8b7e02c2-18e1-5ade-af7b-cfb5875075c8]\r\n[ Info: Precompiling ChainRulesCoreExt [eae2faf6-b232-58cb-a410-7764fda2830c]\r\n\r\njulia> grid = RectilinearGrid(size=(10, 10, 10), x=(0, 1), y=(0, 1), z=(0, 1))\r\n10\u00d710\u00d710 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0) regularly spaced with \u0394x=0.1\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0) regularly spaced with \u0394y=0.1\r\n\u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0] regularly spaced with \u0394z=0.1\r\n\r\njulia> c = CenterField(grid)\r\n10\u00d710\u00d710 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 10\u00d710\u00d710 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 16\u00d716\u00d716 OffsetArray(::Array{Float64, 3}, -2:13, -2:13, -2:13) with eltype Float64 with indices -2:13\u00d7-2:13\u00d7-2:13\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0\r\n\r\njulia> set!(c, (x, y, z) -> rand())\r\n10\u00d710\u00d710 Field{Center, Center, Center} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 10\u00d710\u00d710 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 16\u00d716\u00d716 OffsetArray(::Array{Float64, 3}, -2:13, -2:13, -2:13) with eltype Float64 with indices -2:13\u00d7-2:13\u00d7-2:13\r\n    \u2514\u2500\u2500 max=0.998531, min=0.000368158, mean=0.516368\r\n\r\njulia> heatmap(view(c, :, 2, :))\r\n```\r\n\r\n<img width=\"597\" alt=\"image\" src=\"https://github.com/user-attachments/assets/c468e905-5f08-4743-8b4c-57e7f6c5ba3c\">\r\n\r\nI edited a few of the examples and enabled push previews, so we can take a look at the docs when they are finished.\r\n\r\nThe next level is to automatically label axes, but I think we should save that for a future PR.\r\n\r\nCloses #3178 ",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5rD0Hp",
+        "number": 3178,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3178"
+      }
+    ],
+    "createdAt": "2024-08-06T23:24:27Z",
+    "deletions": 81,
+    "labels": [
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2024-08-07T16:38:53Z",
+    "number": 3686,
+    "title": "Implement Makie extension"
+  },
+  {
+    "additions": 821,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR implements the infrastructure for open boundary conditions in the `NonhydrostaticModel` as well as a few simple methods. \r\n\r\nThis PR:\r\n\r\n- [x] Adds a `matching_scheme` property to `Open` boundary classifications to allow different `fill_X_halo!` to be dispatched\r\n- [x] Introduces `update_boundary_condition!` to be called before halo fills allowing the `mathcing_scheme` to have properties which can evolve with the model\r\n- [x] Make the existing tests pass\r\n- [x] and implements a zero gradient matching scheme\r\n\r\n(Others please feel free to update this comment as necessary.)\r\n\r\n\r\n------------------------------------------------------------------------\r\nHi all,\r\n\r\nFollowing discussion with @glwagner, @simone-silvestri, and @jm-c this is a first attempt at implementing open boundary conditions. First I will try to get it working for the non-hydrostatic model which seems to be relatively straightforward.\r\n\r\nAs a first step, I have implemented east/west boundaries which allow a flow to be prescribed or to travel out of the domain (i.e. if you set `OpenBoundaryCondition(nothing)` then my code is assuming the flow will be travelling into that boundary). The outflow condition is equivalent to having a nondimensional phase speed of 1 (sec 3.1 of https://doi.org/10.1016/S0924-7963(97)00023-7) which seems to work fine.\r\n\r\nWhen I vary the inflow velocity I do see waves in the velocity field reflecting from the downstream boundary. I gather that we expect this with any outflowing boundary and would remedy this with a sponge layer, but maybe this is where we need to add something to the pressure solver.\r\n\r\nWith a constant inflow (0.1 m/s, 0.625m resolution, AMD and SeawaterBuoyancy), and a turbulent outflow, it seems to work okay:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/assets/26657828/1509c8fa-ea24-40a2-84d5-33da424567b1\r\n\r\nI am going to try and implement the test cases in the paper mentioned below next.\r\n\r\nI have a few things I think we should think about:\r\n- Does it make more sense for `Open` to be a topology because otherwise, users have to manually specify boundary conditions on everything? Then we can automatically set `OpenBoundaryCondition(nothing)` unless a user sets something else.\r\n- Should we have an automatic way to setup a sponge layer?\r\n- Do we think it is correct not to add a term to the pressure for time-varying inflow? I think we do not (see below).\r\n\r\n<details>\r\n<summary>How I understand the maths:</summary>\r\nStarting from the momentum equation:\r\n\r\n$\\partial_t\\vec u = \\vec{G_u} - \\nabla P$\r\n\r\nWe split the time step by defining:\r\n\r\n$\\vec u^\\star - \\vec u^n = \\int_{t_n}^{t_{n+1}}\\vec{G_u}dt$\r\n\r\nso\r\n\r\n$\\vec u^{n+1} - \\vec u^\\star = -\\int_{t_n}^{t_{n+1}}\\nabla P_{non}dt \\approx -\\Delta t\\nabla P_{non}$\r\n\r\nwe take the divergence of this (and requiring $\\nabla \\cdot \\vec u^{n+1}$) to give:\r\n\r\n$\\nabla^2P_{non} = \\frac{\\nabla \\cdot \\vec u^\\star}{\\Delta t}$\r\n\r\nTo enforce boundary conditions on $u^{n+1}$ they are instead enforced on $u^\\star$. In the case where we prescribe an inflow (e.g. $u(x = 0) = 1$) this results in the $\\nabla \\cdot \\vec u^\\star$ term having the term `u_{2jk} - u_{1jk}` at the `i=1` point (in the central difference case, I don't know where spatial operation approximations are defined in the code) change from `u_{2jk} - 0`  in the no penetration case to `u_{2jk} - u_{open boundary}$.\r\n\r\nIn the case where the interior velocity is already the same as the specified velocity (and everything else is uniform), this means that at `i=1` $\\nabla^2 P_{non}$ changes from being positive to zero, so we go from having a pressure gradient at the wall counteracting the flow away from the wall (or I suppose a reconfiguration to `u=0` everywhere to enforce compressibility) to having no pressure gradient across the wall. \r\n\r\nThinking about it this is exactly what happens for periodic domains where we are essentially specifying the flow outside of the domain. That makes me think that we don't need to do anything else for time-varying inflows.\r\n</details>\r\n\r\nAs for making the outflows more correct, I think we should be able to extend to the method for calculating ht phase velocity by the method in 3.3 of https://doi.org/10.1016/0021-9991(83)90127-4 (linked in https://github.com/CliMA/Oceananigans.jl/issues/833) which doesn't depend on previous time steps as some other Orlanski methods do, but it does depend on the time difference of the interior solution with the next step which currently does not get passed to the boundary conditions. Perhaps it might be most straightforward to evaluate $c=-\\frac{\\partial\\phi/\\partial t}{\\partial\\phi/\\partial x}$ by passing the tendencies and using $\\partial\\phi/\\partial t = G_n$ (although this isn't quite correct for the velocity so maybe $-\\nabla P$.\r\n\r\nI think passing the tendencies automatically is going to require some materialization step when the model is setup to pass $G^n$ into the boundary conditions but I know we're trying to avoid doing that so any other suggestions would be useful. I've started testing this by initialising the timestepper first but it is a bit clumsy.",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-25T18:09:12Z",
+    "deletions": 155,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2024-08-07T20:26:45Z",
+    "number": 3482,
+    "title": "(0.91.7) Open boundary conditions for `NonhydrostaticModel`"
+  }
+]

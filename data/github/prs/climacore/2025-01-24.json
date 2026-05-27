@@ -1,0 +1,105 @@
+[
+  {
+    "additions": 150,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR debugs the deformation flow example, which broke in this [build](https://buildkite.com/clima/climacore-ci/builds/5020) (and is broken on main). So, this PR is effectively fixing CI. Closes #2151.\r\n\r\nI've updated the way that the logging works for the limiters:\r\n\r\n - This PR collects convergence statistics in the QuasimonotoneLimiter, and provides users with functions to print that information. This will alleviate log bloat, and give users better information for debugging.\r\n - The convergence stats are only supported for cpu jobs, since this requires using mutable structs. Perhaps there's a way we can still do this for gpu jobs, but that will require a very different looking solution, which is not the purpose of this PR.\r\n\r\nThis test has been somewhat flaky for a while, and debugging has been challenging because the log is very bloated with false-positive warnings. The flakiness could be related to https://github.com/CliMA/ClimaTimeSteppers.jl/issues/283, but I'm not sure. Ultimately, I think we need to add more precise / granular unit tests.\r\n\r\nThis PR should not be behavior changing, but I would like to, at some point, short-circuit the iteration loop in the limiters when the tracer mass (and some other variables) are zero, which results in relative error of NaNs / non-convergence warnings.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6nEUR2",
+        "number": 2151,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2151"
+      }
+    ],
+    "createdAt": "2025-01-22T04:46:35Z",
+    "deletions": 57,
+    "labels": [
+      {
+        "color": "DCBE23",
+        "description": "Issues releated to CI",
+        "id": "MDU6TGFiZWwzMjk4MjM0MDA4",
+        "name": "CI"
+      }
+    ],
+    "mergedAt": "2025-01-24T05:21:17Z",
+    "number": 2152,
+    "title": "Improve limiter debug info, update deformation flow example and buffers"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Closes #2101\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6jSDjG",
+        "number": 2101,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2101"
+      }
+    ],
+    "createdAt": "2025-01-24T00:55:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-01-24T05:21:40Z",
+    "number": 2157,
+    "title": "Export center_space, face_space from CommonSpaces"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #2146.\r\n\r\nBasically, this PR skips the axes check when we can confirm that it matches what we would get from `return_space`.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6nBDKc",
+        "number": 2146,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2146"
+      }
+    ],
+    "createdAt": "2025-01-24T15:49:05Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2025-01-24T18:30:37Z",
+    "number": 2158,
+    "title": "Allow for re-instantiating field-style broadcasted objects"
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 650,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAllow standalone models to define variables on subdomains (e.g. just on the surface, or throughout the domain).\r\n\r\nRequired for 2d aux variables of the soil model (for example).\r\n\r\nRemoves requirement for bucket model to have its own methods for `initialize`\r\n\r\nSimplifies our domains by removing the LSM domains\r\n\r\nDown the road will reduce allocations as we can now pre-allocate surface fields for e.g. the soil model for storing the boundary fluxes\r\n\r\n\r\n## To-do\r\nReview\r\nPropagate to docs and experiments once approach is settled.\r\n\r\n\r\n## Content\r\n1. Remove LSM domains (LSMSingleColumnDomain, LSMMultiColumnDomain, LSMSphericalShellDomain)\r\n2. Changes the `space` stored in the domains to have the spaces of the surface (for 0D-2D domains) or of the subsurface+surface(for 1D/3D domains). This is more general in case we ever need to store additional spaces (e.g. the face space, which we do use in some places). They are stored as a NamedTuple.\r\n3. Calling `coordinates(domain)` now also returns a NamedTuple with the coordinates for each space associated with that domain.\r\n4. add `prognostic_domain_names` and `auxiliary_domain_names` which now must be defined for all variables of all models (e.g. :surface, :subsurface)\r\n5. updates methods appropriately for `initialize` to include the domain types. When initializing a variable, we use the coordinates of the domain, along with the \"state\" =  `getproperty(coords, var_domain_name)`.\r\n6. Removes unnecessary Bucket `initialize` methods and updates LSM methods for the new functionality.\r\n7. removes `domain_name(model)` function as this is superceded by variable domain names.\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 49,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5YZKvd",
+        "number": 126,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/126"
+      },
+      {
+        "id": "I_kwDOGiZe4s5rmjkV",
+        "number": 266,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/266"
+      },
+      {
+        "id": "I_kwDOGiZe4s5v8Ywg",
+        "number": 318,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/318"
+      }
+    ],
+    "createdAt": "2023-09-19T19:32:14Z",
+    "deletions": 706,
+    "labels": [],
+    "mergedAt": "2023-09-22T02:29:31Z",
+    "number": 334,
+    "title": "Generalize variable domains"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake new release so ClimaCoupler.jl can use recent snow fix (#330)\r\n\r\nAlso updates from julia 1.9.1 to 1.9.3\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-22T17:19:24Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2023-09-22T20:39:34Z",
+    "number": 340,
+    "title": "bump version to 0.3.3"
+  }
+]

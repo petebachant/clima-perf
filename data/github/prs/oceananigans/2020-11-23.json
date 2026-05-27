@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #1159 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3Mzk0Njg4ODQ=",
+        "number": 1159,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1159"
+      }
+    ],
+    "createdAt": "2020-11-10T00:46:45Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2020-11-23T16:42:20Z",
+    "number": 1161,
+    "title": "Allow `pickup=true` with zero checkpoints"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Enhancement in the Eady turbulence example.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-11-15T23:48:07Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2020-11-23T17:22:52Z",
+    "number": 1187,
+    "title": "Slight terminology upgrade in eady example"
+  },
+  {
+    "additions": 1076,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR rewrites how we do benchmarking so it's easier to analyze, visualize, and compare benchmark results. It's also easier to add new benchmarks. And we have automated multithreading benchmarks (we can approach MPI benchmarking in a similar manner).\r\n\r\nWe used to use TimerOutputs.jl for benchmarking but really it's made more for profiling. This PR\r\n1. switches to using the `BenchmarkGroup` from BenchmarkTools.jl which makes it easy to compare benchmarks (e.g. check for CPU -> GPU performance and for performance relative to a base case).\r\n2. Dataframes.jl and PrettyTables.jl are used to visualize benchmarks, which are prettier, and you can output HTML tables that can be easily embedded into documentation.\r\n3. PkgBenchmark.jl allows use to compare benchmarks between two commits or branches (right now only via `benchmark_regression.jl`) which should make it easy to automate checking for performance regressions between PRs and the master branch.\r\n\r\nThe next big step for benchmarking would be to create a Buildkite benchmarks pipeline that can be triggered via GitHub comments (this would involve looking into https://github.com/buildkite/trigger-pipeline-action).\r\n\r\nI started embedding HTML tables into the docs but it's going to be hard for users to parse tables full of numbers. Plots and bar graphs might be much more useful here, but this might require a Buildkite pipeline to generate the figures to embed into the documentation. So I'll leave this important step for a different PR.\r\n\r\nI also want to add a script that generates a better version of the benchmark plots in the README, but this might have to wait for a future PR.\r\n\r\nIt's a little rough around the edges but I think it's polished enough to be considered for merging. Feels like benchmarks share a lot of boilerplate but might try to reduce it in a future PR.\r\n\r\nSome fun benchmarking facts:\r\n* GPU models using WENO-5 are 250x faster than CPU models using WENO-5!\r\n* TEOS-10 slows down your CPU model by ~30%, but only ~3% for GPU models!\r\n* 2D Leith is most expensive closure.\r\n\r\nResolves #1088 ",
+    "changedFiles": 24,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MjYwMTIzOTY=",
+        "number": 1088,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1088"
+      }
+    ],
+    "createdAt": "2020-11-11T14:59:11Z",
+    "deletions": 762,
+    "labels": [],
+    "mergedAt": "2020-11-23T18:24:53Z",
+    "number": 1169,
+    "title": "New benchmarking framework"
+  }
+]

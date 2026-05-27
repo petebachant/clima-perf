@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "U_kgDOCkNVfw",
+      "is_bot": false,
+      "login": "AmanKashyap0807",
+      "name": "Aman Kashyap"
+    },
+    "body": "directory to prevent restart failures when original files are moved\r\n\r\n## Purpose \r\nThis PR addresses issue #4040. Currently, the output YAML file generated after a simulation references the paths of the original input TOML files. If those original files are moved or deleted, restarting the simulation from the output YAML fails.\r\n\r\nThis change ensures that the output YAML points to the absolute path of the parameters TOML file that is automatically saved in the output directory ( <job_id>_parameters.toml ). This makes the output folder self-contained and allows for robust restarts even if the original input files are modified or removed.\r\n\r\n\r\n## To-do\r\n- Modify `get_simulation` in type_getters.jl to update the toml path in output config\r\n- use abspath to ensure the path is unambiguous regardless of the execution directory\r\n\r\n\r\n## Content\r\nThe fix is implemented in `type_getters.jl` withing the get_simulation function.\r\nPrior to writing the output YAML file, I created a copy of config.parsed_args to avoid modifying the runtime configuration object (which seemed safer than in-place mutation). In this copy, I updated the toml key to be a list containing the absolute path to the local `*_parameters.toml` file.\r\n\r\nAs suggested by @haakon-e and @nefrathenrici , I used the full absolute path (abspath(...)) for the new TOML entry. This avoids potential ambiguity with relative paths depending on where the Julia process is launched.\r\n\r\n## Verification Step:\r\nI verified this manually using a small \"box\" simulation configuration:\r\n\r\n\r\n1. Ran a simulation using an existing TOML file ( box_density_current_test.toml ) as input.\r\n2. Verified that the generated output YAML now points to the file in the output directory instead of the original input file.\r\n3. Renamed the original input TOML file to simulate deletion.\r\n4. Successfully restarted the simulation using the generated output YAML \r\n\r\nLet me know if any adjustment are needed, or if you want any test script.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs7PVeFf",
+        "number": 4040,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4040"
+      }
+    ],
+    "createdAt": "2026-02-03T15:17:20Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "80B1D5",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABTagwBA",
+        "name": "Quality assurance"
+      }
+    ],
+    "mergedAt": "2026-02-18T00:16:49Z",
+    "number": 4264,
+    "title": "Updated the yaml output to reference the toml file in the output"
+  },
+  {
+    "additions": 6962,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR introduces subgrid-scale (SGS) quadrature integration for microphysics tendencies and performs a major reorganization of the microphysics module structure. The SGS quadrature approach accounts for thermodynamic variability in temperature and moisture, capturing SGS variations and improving representation of phase changes.\r\n\r\n## Key Changes\r\n1. SGS Quadrature Integration (sgs_quadrature.jl)\r\n  * New microphysics_tendencies_quadrature function integrates point-wise microphysics over joint PDF of (`T`, `q_tot`)\r\n  * Supports 1M and 2M microphysics schemes via CloudMicrophysics.BulkMicrophysicsTendencies API\r\n  * Performs quadrature over saturation adjustment for equilibrium moisture models\r\n\r\n2. Module Reorganization\r\n  * Consolidated microphysics tendencies into unified `tendency.jl` entry point\r\n  * Generally consolidated microphysics calculations into microphysics directory (e.g., rather than in cache, although the cache uses the physics functions)\r\n\r\n3. CloudMicrophysics v0.31 API Migration\r\n  * Updated to CloudMicrophysics v0.31.1+\r\n  * Migrated to consolidated parameter containers\r\n  * Updated aerosol activation function signatures\r\n\r\n4. Bulk microphysics tendencies uses MM2015 relaxation-to-equilibrium in the fused tendency API. \r\n  * The simple relaxation terms are currently not supported in atmos. Support for them should be added in CloudMicrophysics.\r\n  * Implicit timestepping for the relaxation terms with `p.atmos.noneq_cloud_formation_mode == Implicit()` is not currently handled correctly and needs to be revised. \r\n\r\n5. Output diagnostics changes from liquid-ice potential temperature variance (and q_t covariance) to temperature variance and covariance (temperature is more natural for microphysics calculations)\r\n\r\n## Bug Fixes \r\n1. Inconsistent density scaling in cloud liquid self-collection limiter: In the old 2M precipitation code, the `cloud_liquid_self_collection` limiter incorrectly divided `n\u2097` by `\u03c1` ([Line 642](https://github.com/CliMA/ClimaAtmos.jl/blob/92ae51cc97ddd18727546650ec1d863a59de8e52/src/parameterized_tendencies/microphysics/microphysics_wrappers.jl#L642))\r\n \r\n2. Aerosol `Mode_\u03ba` constructor argument mismatch: there were mismatches in constructor arguments. These are not entirely fixed. The upstream aerosol code in CMP needs to be updated.\r\n\r\nCloses #4262 #4293 \r\n \r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 106,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-02T16:17:12Z",
+    "deletions": 2859,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-02-18T08:30:48Z",
+    "number": 4260,
+    "title": "SGS Quadrature Integration and Microphysics Refactor"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nMore info on using dependabot for julia package updates can be found: [here](https://discourse.julialang.org/t/psa-github-dependabot-now-supports-julia/134997). From that link:\r\n\r\n> Dependabot has some benefits over CompatHelper:\r\n> \r\n> - PRs will have their CI run automatically without manual interaction\r\n> - Any checked-in manifests will be updated, or if that fails the resolver errors will be shown directly in the PR body\r\n> - Workspaces are supported. Just set the directory: field like normal to the root where the main Project.toml is, and the sub-projects will be handled automatically. An example PR can be seen [here](https://github.com/IanButterworth/Julia-DependabotTest/pull/16)\r\n> - Dependabot can tie into security/CVE reporting\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\nFeedback sought for whether:\r\n- dependabot should check for updates daily (this is what CompatHelper did). Weekly (on weekdays) is another alternative\r\n- dependabot should consolidate package updates into one PR (seems more efficient on our resources) or post separate PRs, which is what CompatHelper did\r\n- dependabot should update `.buildkite` environment at all. CompatHelper did not do this.\r\n    - Note: I believe we can have separate update frequencies for each environment\r\n    - Note: If/when we move to using [`[workspaces]`](https://pkgdocs.julialang.org/v1/toml-files/#The-%5Bworkspace%5D-section), a Julia v1.12 feature, the root and `.buildkite` environment would be automatically handled.\r\n- Once feedback is received and this PR is merged, I'll copy the changes to other repos.\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n- applies to root and .buildkite environments\r\n- check every monday\r\n- all julia package updates are grouped into a single PR\r\n- remove CompatHelper\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-17T19:30:59Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2026-02-18T22:32:40Z",
+    "number": 4308,
+    "title": "ci: use dependabot to update julia packages"
+  }
+]

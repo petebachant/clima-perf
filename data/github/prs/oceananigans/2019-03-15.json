@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 500,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a new boundary condition API.\r\n\r\nIt's a bit of a work in progress. Before merging we need:\r\n* tests (simple 1D test with temperature to see if budgets are correct?)\r\n* export some appropriate objects / functions to user\r\n* some API development to make boundary condition specification easier\r\n* documentation.\r\n\r\nCriticism welcome!\r\n\r\n## Summary of implementation: the `BoundaryCondition`\r\n\r\nThe core type of this PR is `BoundaryCondition`. The `BoundaryCondition` has one field, `calc`, and is made callable via\r\n\r\n```julia\r\n(bc::BoundaryCondition)(args...) = bc.calc(args...)\r\n```\r\n\r\nA `BoundaryCondition` has one parameter: `BCType`. The `BCType` can be `Default`, `Flux`, or `Value`. We include `Default` because the specification of boundary conditions is baked in to the algorithm. In the case of 'default' boundary conditions, no calculations are made.\r\n\r\n### `nboundary_conditions = nfields x ndims x 2`.\r\n\r\nIn principle, the user can specify `5 x 3 x 2` boundary conditions: on each of the 5 fields (which we currently have --- unfortunately, we may want more in the future), the user can specify a condition on any of the 6 boundaries. The model is initialized with all 30 boundary conditions set to `Default`.\r\n\r\nWe allow for all possible boundaries to have conditions by introducing three structs:\r\n\r\n* `CoordinateBoundaryConditions` with fields `left` and `right`\r\n* `FieldBoundaryConditions` with fields `x`, `y`, and `z`\r\n* `BoundaryConditions` with fields `u`, `v`, `w`, `T`, and `S`.\r\n\r\n### Specifying boundary conditions and user API\r\n\r\nA boundary condition is now specified by defining a function that calculates it within a kernel that loops over the boundary in question. The arguments of a flux boundary conditions on a top or bottom boundary (the only situation supported so far) are\r\n\r\n```julia\r\nu, v, w, T, S, t, step, Nx, Ny, Nz, \u0394x, \u0394y, \u0394z, i, j\r\n```\r\n\r\nThis will probably change in the future.\r\n\r\nThe user API is rather threadbare at the moment. To define a constant flux boundary condition, for example, the user might write (to specify the boundary condition as a function)\r\n\r\n```julia\r\nmodel = Model(...)\r\n\r\nconst constant_flux = # something\r\nsurface_temperature_flux(args...) = constant_flux\r\nflux_bc = BoundaryCondition{Flux}(surface_temperature_flux)\r\nmodel.boundary_conditions.T.z.right = flux_bc\r\n```\r\n\r\nto specify the boundary condition as a constant, \r\n\r\n```julia\r\nmodel = Model(...)\r\n\r\nflux_bc = BoundaryCondition(Flux, constant_flux)\r\nmodel.boundary_conditions.T.z.right = flux_bc\r\n```\r\n\r\nThere are probably some sugary things that we can implement to smooth this specification.\r\n\r\n### Caveats\r\n\r\n* We support only flux boundary conditions at top and bottom at the moment\r\n* We can only handle fluxes in terms of the constant vertical viscosities and diffusivities\r\n* If the viscosities and diffusivities are allowed to vary in the vertical at some point in the future, we will have to re-configure the implementation\r\n* We cannot intercept the specification of a flux if we have, for example, a parameterization like KPP that takes care of the surface fluxes with a closure (rather than as a boundary condition).\r\n\r\n### A side note\r\n\r\nI think that, at some point, it would be preferable to move the implementation of boundary conditions and equations to a new file / module so that new physics can be easily implemented my modifying that module / file.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-09T02:24:42Z",
+    "deletions": 79,
+    "labels": [
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2019-03-15T21:26:53Z",
+    "number": 118,
+    "title": "A new boundary condition API"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-15T22:49:54Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2019-03-15T22:50:04Z",
+    "number": 129,
+    "title": "Fixes bug with method resolution of apply_bcs!"
+  },
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-15T23:33:11Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2019-03-15T23:35:57Z",
+    "number": 130,
+    "title": "Allows boundary conditions to be numbers or arrays"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-15T23:55:11Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2019-03-15T23:55:22Z",
+    "number": 131,
+    "title": "Fixes bug with undefined Bx By Bz args"
+  }
+]

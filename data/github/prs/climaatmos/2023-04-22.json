@@ -1,0 +1,98 @@
+[
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "Co-authored by: @trontrytel, @jiahe23 \r\n\r\nThis PR \r\n- removes some unnecessary mixing_length_params struct from EDMF model;\r\n- cleans up related functions that takes mixing_length_params as input.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5f2kMw",
+        "number": 1421,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1421"
+      }
+    ],
+    "createdAt": "2023-04-20T20:30:44Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "BE51A0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABFVs-Mg",
+        "name": "EDMF :tornado:"
+      }
+    ],
+    "mergedAt": "2023-04-22T00:44:13Z",
+    "number": 1591,
+    "title": "Cleanup mixing length "
+  },
+  {
+    "additions": 168,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR is split off from #1512. It adds a new file called `abbreviations.jl`, which contains all commonly used shorthands for operators and vector types, simplifying the code that needs to be added for EDFMX.\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Move all commonly used shorthands for operators and vector types to `abbreviations.jl`.\r\n- Add code comments that describe the issues with the current center-to-face operator boundary conditions.\r\n- Add a `\u1da0set_upwind_bcs` operator, and move the impenetrable boundary condition enforcement from `\u1d9cdiv\u1d65` to this operator.\r\n- Rewrite the `vertical_transport!` and `vertical_transport_jac!` functions so that they use `\u1da0set_upwind_bcs`.\r\n- Clean up the code comments for `vertical_transport_jac!`.\r\n- Remove all uses of `p.operators`.\r\n- Remove all redefinitions of operators and vector types defined in `abbreviations.jl`.\r\n- Replace some vector types with their new abbreviations (only in files that will be relevant to EDMFX).\r\n- Remove unnecessary imports of `ClimaCore.Geometry` and `ClimaCore.Operators`.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-22T08:32:24Z",
+    "deletions": 318,
+    "labels": [],
+    "mergedAt": "2023-04-22T10:07:37Z",
+    "number": 1594,
+    "title": "Add constant operators and vector types"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjM5OTMyMDMw",
+      "is_bot": false,
+      "login": "valeriabarra",
+      "name": "Valeria Barra"
+    },
+    "body": "## Purpose \r\nThis PR adds the longrun, high-res jobs for upwinding (both with first-order and third-order) either tracers only or tracers & energy: moist BW, moist HS, and aquaplanet. \r\n\r\nCloses #1587 \r\n\r\n## Content\r\n\r\n- Added high-res jobs for upwinding (both with first-order and third-order) either tracers only or tracers & energy: moist BW, moist HS, and aquaplanet. (I know the third-order upwinding jobs were not technically requested, but I need to test these two operators separately because then `zalesak` depends on both. We can modify all the third-order upwinding jobs with `zalesak` later).\r\n- Removed the experimental `zalesak` job. We will add `zalesak` jobs later when we can confirm its stability. \r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5j9J5I",
+        "number": 1587,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1587"
+      }
+    ],
+    "createdAt": "2023-04-20T15:57:14Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2023-04-22T23:26:12Z",
+    "number": 1588,
+    "title": "Longruns: add first & third-order upwinding jobs"
+  }
+]

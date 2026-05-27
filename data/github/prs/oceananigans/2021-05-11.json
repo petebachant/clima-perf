@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 876,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds an eddying aquaplanet validation experiment that's still a work-in-progress (early stage PR).\r\n\r\nThe idea is to force a `HydrostaticFreeSurfaceModel` on a `CubedSphereGrid` with a \"tradewind-like\" zonal wind stress pattern akin to [Marshall et al. (2007)](https://journals.ametsoc.org/view/journals/atsc/64/12/2007jas2226.1.xml).\r\n\r\nThis is figure 3 from the paper:\r\n\r\n![i1520-0469-64-12-4270-f03](https://user-images.githubusercontent.com/20099589/115593956-293a7d00-a2a3-11eb-98cd-4874b6b3d638.gif)\r\n\r\nand this is the analytic formula I'm using to mimic it:\r\n\r\n![image](https://user-images.githubusercontent.com/20099589/115593657-c8ab4000-a2a2-11eb-8090-b584e88b7e72.png)\r\n\r\nWe integrate `\u03c4` to obtain a streamfunction for the wind stress which we then use to diagnose the surface \r\nmomentum fluxes on the cubed sphere. _I think I got the magnitude wrong so I fixed it with a scaling factor..._\r\n\r\nI tried adding a lot of noise to the initial velocities but the wind stress smoothed it away.\r\n\r\nhttps://user-images.githubusercontent.com/20099589/115597574-6739a000-a2a7-11eb-9fd5-70ace544bef7.mp4\r\n\r\n@christophernhill suggested adding some random noise to the wind stress as well. And we probably also need a mechanism to remove energy otherwise the wind stress keeps accelerating the fluid until the model blows up. Maybe we need some bottom drag even though we only have one vertical level?",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-21T17:45:03Z",
+    "deletions": 145,
+    "labels": [],
+    "mergedAt": "2021-05-11T19:16:15Z",
+    "number": 1602,
+    "title": "Eddying aquaplanet"
+  },
+  {
+    "additions": 1402,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements vertically-implicit time integration for tracers and momentum.\r\n\r\nWe restrict attention to the `HydrostaticFreeSurfaceModel` and quasi-Adams-Bashforth time integration. This requires some refactoring of function-calling in `TurbulenceClosures` some upgrades to `BatchedTridiagonalSolver`, and changes to `ab2_step!(model::HydrostaticFreeSurfaceModel, dt)`. At first we will only support vertically implicit diffusion for `HorizontallyCurvilinearAnisotropicDiffusivity`. However, `TurbulenceClosures` has been extensively refactored to permit quick extension of vertically-implicit time-stepping to `IsotropicDiffusivity`, `AnisotropicDiffusivity`, and LES closures. ~~There are a few questions to answer before implementing implicit time-stepping there that we should discuss in issues.~~ It should be straightforward enough to implement vertically implicit time stepping for these closures and test them with existing regression tests.\r\n\r\nTo construct a model that steps forward the vertical component of `HorizontallyCurvilinearAnisotropicDiffusivity` implicitly, we introduce the syntax\r\n\r\n```julia\r\nivd_closure = HorizontallyCurvilinearAnisotropicDiffusivity(\u03baz = 1.0, time_discretization = VerticallyImplicitTimeDiscretization())\r\n```\r\n\r\nThe default `time_discretization` is `ExplicitTimeDiscretization`.\r\n\r\nThe constructor for `HydrostaticFreeSurfaceModel` handles constructing a `VerticallyImplicitDiffusionSolver` when implicit time discretization is specified.\r\n\r\nThis script:\r\n\r\n```julia\r\nusing Plots\r\nusing Printf\r\nusing Oceananigans\r\nusing Oceananigans.TurbulenceClosures: VerticallyImplicitTimeDiscretization, time_discretization\r\n\r\ngrid = RegularRectilinearGrid(size=128, z=(-0.5, 0.5), topology=(Flat, Flat, Bounded))\r\n\r\nevd_closure = HorizontallyCurvilinearAnisotropicDiffusivity(\u03baz = 1.0)\r\nivd_closure = HorizontallyCurvilinearAnisotropicDiffusivity(\u03baz = 1.0, time_discretization = VerticallyImplicitTimeDiscretization())\r\n\r\nmodel_kwargs = (grid=grid, tracers=:c, buoyancy=nothing, velocities=PrescribedVelocityFields())\r\n\r\nimplicit_model = HydrostaticFreeSurfaceModel(; closure=ivd_closure, model_kwargs...)\r\nexplicit_model = HydrostaticFreeSurfaceModel(; closure=evd_closure, model_kwargs...)\r\nmodels = (implicit_model, explicit_model)\r\n                                        \r\ninitial_temperature(x, y, z) = exp(-z^2 / 0.02)\r\n\r\n[set!(model, c=initial_temperature) for model in models]\r\n\r\nz = znodes(implicit_model.tracers.c)\r\n\r\nc_implicit = view(interior(implicit_model.tracers.c), 1, 1, :)\r\nc_explicit = view(interior(explicit_model.tracers.c), 1, 1, :)\r\n\r\nc_plot = plot(c_implicit, z, linewidth = 2, label = \"t = 0\", xlabel = \"Tracer concentration\", ylabel = \"z\")\r\n                  \r\ndiffusion_time_scale = implicit_model.grid.\u0394z^2 / implicit_model.closure.\u03baz.c\r\nstop_time = 100diffusion_time_scale\r\n\r\nsimulations = [Simulation(explicit_model, \u0394t = 1e-1 * diffusion_time_scale, stop_time = stop_time),\r\n               Simulation(implicit_model, \u0394t = 1e0  * diffusion_time_scale, stop_time = stop_time)]\r\n\r\n[run!(simulation) for simulation in simulations]\r\n\r\nplot!(c_plot, c_implicit, z, linewidth = 3, alpha = 0.6, label = @sprintf(\"implicit model, t = %.3e\", model.clock.time))\r\nplot!(c_plot, c_explicit, z, linewidth = 2, linestyle = :dash, label = @sprintf(\"explicit model, t = %.3e\", model.clock.time))\r\n\r\ndisplay(c_plot)\r\n```\r\n\r\nproduces\r\n\r\n<img width=\"1392\" alt=\"image\" src=\"https://user-images.githubusercontent.com/15271942/117589924-a6f2eb00-b0e1-11eb-87a2-fb51a4eacc85.png\">\r\n\r\nNote that with implicit treatment of the diffusion term we can use a time step comparable to the diffusion time-scale. The same time-step with explicit time discretization leads to model blow up.\r\n\r\n~~Future~~ This PR ~~will hopefully~~ extends functionality to other closures and also to `IncompressibleModel` and the RK3 time-stepper.\r\n\r\nIn the process of cleaning up TurbulenceClosures I am also resolving a few other issues, such as an incorrect formulation of viscous fluxes for `IsotropicDiffusivity` and the semi-random default viscosity and thermal diffusivities that we've been using.\r\n\r\nResolves #1278\r\nResolves #1643 \r\nResolves #1644 ",
+    "changedFiles": 60,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3Njk0MjY0MDA=",
+        "number": 1278,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1278"
+      },
+      {
+        "id": "MDU6SXNzdWU4ODI4OTEzOTQ=",
+        "number": 1643,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1643"
+      },
+      {
+        "id": "MDU6SXNzdWU4ODI5OTMwNjg=",
+        "number": 1644,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1644"
+      }
+    ],
+    "createdAt": "2021-05-06T17:06:56Z",
+    "deletions": 817,
+    "labels": [],
+    "mergedAt": "2021-05-11T21:09:56Z",
+    "number": 1639,
+    "title": "`VerticallyImplicitTimeDiscretization` for vertical diffusion of tracers and momentum"
+  }
+]

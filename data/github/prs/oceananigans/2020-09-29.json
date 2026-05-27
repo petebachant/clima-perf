@@ -1,0 +1,143 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #991",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTA1MTg3ODI=",
+        "number": 991,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/991"
+      }
+    ],
+    "createdAt": "2020-09-28T20:54:27Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2020-09-29T10:45:31Z",
+    "number": 992,
+    "title": "Update new_data.jl"
+  },
+  {
+    "additions": 1069,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR overhauls the infrastructure supporting user-defined forcing functions. Many of these changes are discussed in #896 .\r\n\r\n## `ModelForcing` is no more\r\n\r\nThe first important change is the elimination of `ModelForcing`. The `forcing` kwarg in the constructor for `IncompressibleModel` now accepts a named tuple, similar to the kwarg `boundary_conditions`.\r\n\r\n## New default for `IncompressibleModel`\r\n\r\nSecond, functions that are passed directly to `IncompressibleModel` are assumed to have the \"continuous form\" signature\r\n\r\n```julia\r\nfunc(x, y, z, t)\r\n```\r\n\r\n## New user-facing function: `Forcing`\r\n\r\nThird, forcing functions that deviate from this default behavior should be constructed with the function `Forcing`. Thus `SimpleForcing` is eliminated, as well as `ParameterizedForcing`. Moreover, simple-forcing-like functions can now depend on arbitrary fields interpolated to the location at which the forcing is applied. We thus support constructs like\r\n\r\n```julia\r\ngrowth_in_sunlight(x, y, z, t, P) = exp(z) * P\r\n\r\nplankton_forcing = Forcing(growth_in_sunlight, field_dependencies=:P)\r\n```\r\n\r\nprovided that `:P` is in `model.tracers`.\r\n\r\n### Docstring for `Forcing`\r\n\r\n```julia\r\n\"\"\"\r\n    Forcing(func; parameters=nothing, field_dependencies=(), discrete_form=false)\r\n\r\nReturns a forcing function added to the tendency of an Oceananigans model field.\r\n\r\nIf `discrete_form=false` (the default), and neither `parameters` nor `field_dependencies`\r\nare provided, then `func` must be callable with the signature\r\n\r\n    `func(x, y, z, t)`\r\n\r\nwhere `x, y, z` are the east-west, north-south, and vertical spatial coordinates, and `t` is time.\r\nNote that this form is also default in the constructor for `IncompressibleModel` and `Forcing` is\r\nnot needed for forcing functions of this form.\r\n\r\nIf `discrete_form=false` (the default), and `field_dependencies` are provided,\r\nthe signature of `func` must include them. For example, if `field_dependencies=(:u, :S)`\r\n(and `parameters` are _not_ provided), then `func` must be callable with the signature\r\n\r\n    `func(x, y, z, t, u, S)`\r\n\r\nwhere `u` is assumed to be the `u`-velocity component, and `S` is a tracer. Note that any field\r\nwhich does not have the name `u`, `v`, or `w` is assumed to be a tracer and must be present\r\nin `model.tracers`.\r\n\r\nIf `discrete_form=false` (the default) and `parameters` are provided, then the _last_ argument\r\nto `func` must be `parameters`. For example, if `func` has no `field_dependencies` but does\r\ndepend on `parameters`, then it must be callable with the signature\r\n\r\n    `func(x, y, z, t, parameters)`\r\n\r\nWith `field_dependencies=(:u, :v, :w, :c)` and `parameters`, then `func` must be\r\ncallable with the signature\r\n\r\n    `func(x, y, z, t, u, v, w, c, parameters)`\r\n\r\nIf `discrete_form=true` then `func` must be callable with the \"discrete form\"\r\n\r\n    `func(i, j, k, grid, clock, model_fields)`\r\n\r\nwhere `i, j, k` is the grid point at which the forcing is applied, `grid` is `model.grid`,\r\n`clock.time` is the current simulation time and `clock.iteration` is the current model iteration,\r\nand `model_fields` is a `NamedTuple` with `u, v, w`, the fields in `model.tracers`,\r\nand the fields in `model.diffusivities`, each of which is an `OffsetArray`s (or `NamedTuple`s\r\nof `OffsetArray`s depending on the turbulence closure) of field data.\r\n\r\nWhen `discrete_form=true` and `parameters` _is_ specified, `func` must be callable with the signature.\r\n\r\n    `func(i, j, k, grid, clock, model_fields, parameters)`\r\n    \r\n`parameters` is arbitrary in principle, however GPU compilation can place\r\nconstraints on `typeof(parameters)`.\r\n\r\nExamples\r\n=======\r\n\r\n```julia\r\n# Parameterized forcing\r\nparameterized_func(x, y, z, t, p) = p.\u03bc * exp(z / p.\u03bb) * cos(p.\u03c9 * t)\r\n\r\nv_forcing = Forcing(parameterized_func, parameters = (\u03bc=42, \u03bb=0.1, \u03c9=\u03c0))\r\n\r\n# Field-dependent forcing\r\ngrowth_in_sunlight(x, y, z, t, P) = exp(z) * P\r\n\r\nplankton_forcing = Forcing(growth_in_sunlight, field_dependencies=:P)\r\n\r\n# Parameterized, field-dependent forcing\r\ntracer_relaxation(x, y, z, t, c, p) = p.\u03bc * exp((z + p.H) / p.\u03bb) * (p.dCdz * z - c) \r\n\r\nc_forcing = Forcing(tracer_relaxation,\r\n                    field_dependencies = :c,\r\n                            parameters = (\u03bc=1/60, \u03bb=10, H=1000, dCdz=1))\r\n\r\n# Unparameterized discrete-form forcing function\r\nfiltered_relaxation(i, j, k, grid, clock, model_fields) =\r\n    @inbounds - (model_fields.c[i-1, j, k] + model_fields.c[i, j, k] + model_fields.c[i+1, j, k]) / 3\r\n\r\nsimple_forcing = Forcing(simple_nonlinear_source, discrete_form=true)\r\n\r\n# Discrete-form forcing function with parameters\r\nmasked_damping(i, j, k, grid, clock, model_fields, parameters) = \r\n    @inbounds - parameters.\u03bc * exp(grid.zC[k] / parameters.\u03bb) * model_fields.u[i, j, k]\r\n\r\nmasked_damping_forcing = Forcing(masked_damping, parameters=(\u03bc=42, \u03bb=\u03c0), discrete_form=true)\r\n```\r\n\r\n## New object showing up in discrete-form boundary condition functions and forcing functions\r\n\r\nPreviously, discrete-form boundary condition functions and forcing functions contained an object called `state`: `state.velocities` contained velocities, `state.tracers` contained tracers, and `state.diffusivities` contained diffusivities. This object is now flattened to `model_fields`, such that `model_fields.u` gives the `u`-velocity`, model_fields.T` gives temperature, etc. \r\n\r\nNote: one exception occurs when closures are given as a tuple and `diffusivities` is not nothing: in this case, there is a `model_fields.diffusivities` property, where `model_fields.diffusivities[i]` is a `NamedTuple` (or `nothing`) corresponding \r\nto `model.closure[i]`. It is not currently common to use closure tuples with computed diffusivity fields, but this may become more common in the future and more attention may need to be paid here.\r\n\r\nResolves #896 \r\nResolves #985 ",
+    "changedFiles": 52,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2OTAyOTUzODQ=",
+        "number": 896,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/896"
+      },
+      {
+        "id": "MDU6SXNzdWU3MDk1MjM2NjQ=",
+        "number": 985,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/985"
+      }
+    ],
+    "createdAt": "2020-09-26T18:22:04Z",
+    "deletions": 690,
+    "labels": [],
+    "mergedAt": "2020-09-29T17:27:35Z",
+    "number": 989,
+    "title": "New forcing function interface, defaults, and functionality"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "We'll uncomment these lines once `WENO{N}` schemes are ready to be used. And hopefully we can figure out a way to avoid frustrating users with PyCall/Conda stuff just to use Oceananigans.\r\n\r\nResolves #990",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTA0NDUwODI=",
+        "number": 990,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/990"
+      }
+    ],
+    "createdAt": "2020-09-28T23:01:18Z",
+    "deletions": 58,
+    "labels": [],
+    "mergedAt": "2020-09-29T21:19:50Z",
+    "number": 996,
+    "title": "Remove SymPy dependency for now"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "To make use of the new forcing function API in #989 and to fix #990 and #991 I think we should tag v0.39.0 once the current batch of PRs has been merged.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MTA0NDUwODI=",
+        "number": 990,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/990"
+      }
+    ],
+    "createdAt": "2020-09-28T23:09:57Z",
+    "deletions": 54,
+    "labels": [],
+    "mergedAt": "2020-09-29T21:20:25Z",
+    "number": 998,
+    "title": "Bump v0.39.0"
+  }
+]

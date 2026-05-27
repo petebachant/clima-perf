@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "# Summary \r\nAdjust `.JuliaFormatter.toml` to (a) raise `margin` to 120 and (b) set `join_lines_based_on_source = true`, allowing selective horizontal grouping where it improves semantic readability while preserving existing vertical structure where it conveys meaning.\r\n\r\n## Rationale\r\n**Previous strict wrapping forced one-item-per-line patterns that:**\r\n* Inflated vertical span of dense physics kernels.\r\n* Obscured natural semantic clusters (e.g., related stress terms, gas families).\r\n* Reduced scan speed during reviews (mental grouping had to be reconstructed). The new settings let authors explicitly signal grouping intent in source; the formatter no longer immediately re-expands those choices.\r\n\r\n\r\n## Changed Options\r\n* `margin`: `80` \u2192 `120` (headroom for grouped argument clusters without overflow)\r\n`join_lines_based_on_source`: `false` \u2192 `true` (respect intentional horizontal grouping)\r\n\r\n## Intended Benefits\r\n* Faster cognitive parsing of tightly coupled argument sets.\r\n* Reduced diff noise (smaller vertical churn for minor edits).\r\n* Space to annotate clusters with concise inline comments without forcing wrap.\r\n* Still respects margin to prevent unreadably long lines.\r\n\r\nThe option, `join_lines_based_on_source` is the key change in this PR (whether you set margin to 120 or 100 or 500 isn't really too important. A modest increase as proposed, simply allows more flexibility). \r\n\r\nWith `join_lines_based_on_source = false`, if you have a function signature (or other expression) that is less than `margin` number of characters, it is _**forced**_ to be on one line. If the expression exceeds `margin`, then it is _**forced**_ to be split item-by-item on a new line.\r\nWith `join_lines_based_on_source = true`, the developer can choose themselves what makes the most sense for the code they're writing. For wrapper functions, putting things on one line is reasonable. For large function signatures for a physics closure, visually grouping related variables may make the most sense. The choice should be left to the expert, not an overly limiting formatter tool.\r\n\r\n## Non-Goals\r\n* Enforcing horizontal compaction everywhere.\r\n* Reformatting legacy files wholesale.\r\n* Introducing any behavioral code changes.\r\n\r\n## Guidelines / Guardrails \r\nUse horizontal grouping when:\r\n* Parameters form a natural physical or logical block (e.g., \u03c4 components, gas VMR family).\r\n* Adjacent arguments share a common prefix or dimensional meaning. Retain one-per-line or minimal groups when:\r\n* Arguments are heterogeneous and unrelated.\r\n* Adding grouping would push near or beyond margin or harm diff clarity. Add a short comment header above multi-group blocks when it materially aids scanning.\r\n\r\n**Note:** the reformatted files within this PR came about solely from running `JuliaFormatter.format(\".\")` after implementing the configuration changes. These came about due to the increased `margin` option, but are, as you can see, minimal.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-22T20:13:47Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2025-08-27T02:52:42Z",
+    "number": 3968,
+    "title": "rft: Increase formatting margin and enable source-based line joins for semantic grouping"
+  },
+  {
+    "additions": 127,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR changes the tendencies for the updraft from sedimentation in prognostic EDMF. If we ignore the tendency due to sedimentation in the area fraction equation, here is the full equation with sedimentation:\r\n![IMG_4747](https://github.com/user-attachments/assets/17a7623e-58b3-4982-be85-96a94141d401)\r\nFor the implementation, we ignore the last term in the energy and tracer equations, as 1 / \\rhoa results in large tendencies. I kept the previous code in the comments.\r\n\r\nIt also changes the boundary condition for the grid-mean tendency from mass flux of microphysics tracers. The new boundary condition set the tendency to zero. This helps with the negative grid-mean tracer at the first grid cell.\r\n\r\nThe results for dycoms2 and rico look good. TRMM is ok but the convection is not deep. While the equation is not accurate, I think this is a good starting point for e.g. testing implicit solvers.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-26T18:46:44Z",
+    "deletions": 93,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-08-27T23:06:42Z",
+    "number": 3982,
+    "title": "Change sedimentation in prognostic EDMF"
+  }
+]

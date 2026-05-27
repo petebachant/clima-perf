@@ -1,0 +1,36 @@
+[
+  {
+    "additions": 693,
+    "author": {
+      "is_bot": true,
+      "login": "app/copilot-swe-agent"
+    },
+    "body": "Moves the prognostic LAI model from Zhou et al. (2025) out of `pmodel.jl` into a new `optimal_lai.jl` module following the canopy component pattern, and integrates it as a full CanopyModel component with callback support.\n\n## Changes\n\n**New module: `src/standalone/Vegetation/optimal_lai.jl`**\n- `AbstractLAIModel{FT}` - Base type for LAI models\n- `OptimalLAIModel{FT}` - Concrete implementation with parameters `k`, `z`, `chi`, `f0`, `sigma`, `alpha`\n- Auxiliary variable `LAI` (type `FT`, domain `surface`)\n- Functions: `compute_L_max()`, `compute_m()`, `lambertw0()`, `compute_steady_state_LAI()`, `update_LAI!()`\n  - Additional parameters (`Ao_annual`, `P_annual`, `D_growing`, `ca`, `GSL`) are optional arguments with defaults in `update_optimal_LAI()`\n- Callback mechanism: `call_update_optimal_LAI()`, `make_OptimalLAI_callback()`, `get_model_callbacks()`\n- LAI is automatically updated at local noon via the callback system\n- Constructor `OptimalLAIParameters{FT}(toml_dict)` reads parameters from TOML configuration\n\n**Restored `src/standalone/Vegetation/pmodel.jl`**\n- Removed ~415 lines of LAI code\n- Removed `:L` from auxiliary variables\n- Reverted to main branch (clean photosynthesis-only implementation)\n\n**Updated `src/standalone/Vegetation/Canopy.jl`**\n- Added `lai_model` field to `CanopyModel` struct\n- Updated `canopy_components()` to include `:lai_model`\n- Updated constructors to accept `lai_model` parameter\n- LAI model callbacks are automatically collected with other component callbacks\n\n**Updated diagnostics**\n- `land_compute_methods.jl`: Changed path `p.canopy.photosynthesis.L` \u2192 `p.canopy.lai_model.LAI`\n\n**Updated `toml/default_parameters.toml`**\n- Added optimal LAI model parameters: `optimal_lai_k`, `optimal_lai_z`, `optimal_lai_chi`, `optimal_lai_f0`, `optimal_lai_sigma`, `optimal_lai_alpha`\n\n**Updated `experiments/integrated/fluxnet/ozark_pmodel.jl`**\n- Added `OptimalLAIModel` instantiation using TOML parameters\n- Passed `lai_model` to `CanopyModel` constructor\n\n## Usage\n```julia\n# Simple constructor using TOML parameters\nlai_model = OptimalLAIModel{FT}(\n    OptimalLAIParameters{FT}(toml_dict)\n)\n\n# Or with explicit parameters\nlai_model = OptimalLAIModel{FT}(\n    OptimalLAIParameters{FT}(\n        k = 0.5,\n        z = 12.227,\n        chi = 0.7,\n        f0 = 0.62,\n        sigma = 0.771,\n        alpha = 0.067,\n    )\n)\n\n# Pass to CanopyModel\ncanopy = CanopyModel{FT}(\n    surface_domain,\n    canopy_forcing,\n    LAI,\n    toml_dict;\n    # ... other components ...\n    lai_model,\n)\n\n# Access LAI via p.canopy.lai_model.LAI\n# LAI is automatically updated at local noon through the callback system\n```\n\n## Reference\nZhou et al. (2025) \"A General Model for the Seasonal to Decadal Dynamics of Leaf Area\" Global Change Biology\n\n<!-- START COPILOT CODING AGENT SUFFIX -->\n\n\n\n<details>\n\n<summary>Original prompt</summary>\n\n> The branch kd/ar/optimal_lai_pmodel adds a prognostic LAI model based on https://onlinelibrary.wiley.com/doi/pdf/10.1111/gcb.70125 \"A General Model for the Seasonal to Decadal Dynamics of Leaf Area\" by Zhou et al., 2025 in Global Change Biology. \n> \n> In the branch code, the model is implemented in src/standalone/Vegetation/pmodel.jl. It was tested at a site (experiments/integrated/fluxnet/ozark_pmodel.jl) and works well. I want to move this model to a new file, src/standalone/Vegetation/optimal_lai.jl. pmodel.jl should be back to how it is in main. \n> \n> OptimalLAIModel will be a concrete type of a new AbstractLAIModel abstract type. You will need to define a parameter struct (OptimalLAIParameters) containing k, z, chi, f0, sigma, alpha (you will see them in the equations), and do the other usual thing (look at other models in src/standalone/Vegetation). The auxiliary var is LAI, of type FT, in domain surface. \n> \n> Check that the docstrings look good. \n> \n> Adjust the diagnostics files edit, for example, src/diagnostics/land_compute_methods.jl, L will be stored in a new location with your src change. \n> \n> If something is unclear, let me know. I will try your model (via experiments/integrated/fluxnet/ozark_pmodel.jl) once your PR is ready\n\n\n</details>\n\n\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n\ud83d\udca1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-27T16:09:57Z",
+    "deletions": 414,
+    "labels": [],
+    "mergedAt": "2025-10-27T17:53:42Z",
+    "number": 1512,
+    "title": "Refactor optimal LAI model to standalone module with callback integration"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nNecessary changes for change to Vast filesystem.\r\n\r\n## Content\r\n- [x] use the queue `central` instead of `new-central` for CI (other pipelines use `clima`)\r\n- [x] rename any paths that use `central/` or `groups/`\r\n  - I didn't find anything that uses these paths in ClimaLand\r\n- [x] change the queue in the [buildkite pipeline](https://buildkite.com/clima/climaland-ci/settings/steps)\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-24T18:56:37Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-10-27T20:12:19Z",
+    "number": 1511,
+    "title": "use central queue for change to Vast"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "@mukund-gupta discovered a bug (see #1104) that prevents the use of function diffusivities with the `TimeStepWizard`.\r\n\r\nWe don't want the wizard to be so all-powerful that it samples a diffusivity function over the whole grid just to compute it's maximum value. So, this PR does the simple thing and avoids limiting the time-step by the diffusivity when it's a function.\r\n\r\nA better solution would require users to explicitly ask their time-step to be limited by diffusivities, and for that step to fail when the diffusivity is a function (eg #1087).\r\n\r\nIt could make sense to add a test for all possible combinations of diffusivities and wizards, but it might be better to wait for a more comprehensive PR that addresses #1087...\r\n\r\nResolves #1104 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3Mjk3NTA0Mjg=",
+        "number": 1104,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1104"
+      }
+    ],
+    "createdAt": "2020-10-26T17:41:25Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2020-10-28T18:55:47Z",
+    "number": 1105,
+    "title": "Blending magic and diffusivities-as-functions"
+  },
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "I guess we agreed to make this change a while back after reading [Oreskes et al. (1994)](https://doi.org/10.1126/science.263.5147.641).\r\n\r\nOn verification vs. validation:\r\n\r\n> In contrast to the term verification, the term validation does not necessarily denote an establishment of truth (although truth is not precluded). Rather, it denotes the establishment of legitimacy, typically given in terms of contracts, arguments, and methods.\r\n\r\nWe have some convergence tests which should fall under _validation experiments_ as well. Oreskes et al. (1994) comment on the fact that comparison of analytical vs. numerical solutions for Earth science models is an exercise in validation as e.g. users of Oceananigans.jl intend to model the real ocean (no analytical solutions) and not necessarily the Boussinesq equations.",
+    "changedFiles": 61,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-10-28T15:44:12Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2020-10-28T20:22:12Z",
+    "number": 1108,
+    "title": "Actually they're validation experiments, not verification experiments"
+  }
+]

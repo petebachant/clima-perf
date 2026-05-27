@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes #1358",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MDc2NjUzMzM=",
+        "number": 1358,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1358"
+      }
+    ],
+    "createdAt": "2021-02-16T22:44:49Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2021-02-17T00:21:38Z",
+    "number": 1367,
+    "title": "Removed outdated model_setup/time_stepping from docs"
+  },
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds `boundary_conditions` to `ComputedField`.\r\n\r\nI added a new `DefaultComputedFieldBoundaryCondition`, because `DefaultBoundaryCondition` specifies an `ImpenetrableBoundaryCondition` when a field is located on `Face` and the direction is `Bounded`. But I think this is only appropriate for velocities and is not what we want in general. Arguably, we should change `DefaultBoundaryCondition` instead and implement special behavior for velocity fields...\r\n\r\nStrictly speaking the boundary conditions are only \"correct\" in periodic directions, since we have no way of evaluating what the boundary conditions need to be in `Bounded` directions. Should we use a `nothing` default for `Bounded` directions in all cases for `ComputedField`?\r\n\r\nCurrent tests pass, but I still need to add tests to make sure that halos are filled properly.\r\n\r\ncc @tomchor ",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-04T15:12:40Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2021-02-17T17:43:13Z",
+    "number": 1340,
+    "title": "Adds boundary conditions to ComputedField and KernelComputedField"
+  },
+  {
+    "additions": 317,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a `VectorInvariant` formulation for momentum advection in `HydrostaticFreeSurfaceModel`, and also adds  a `validation/bickley_jet/bickley_jet.jl` script. \r\n\r\n`validation/bickley_jet/` also contains a preliminary implementation of `DiskTimeSeries` which might be useful to merge into the source code eventually to help users post-process their output.\r\n\r\nWith `WENO5` for both `momentum_advection` and `tracer_advection`, we obtain\r\n\r\nhttps://user-images.githubusercontent.com/15271942/108126995-913ccf00-7078-11eb-8ced-ac4d51fe3bd2.mp4\r\n\r\nThis is more or less what we \"expect\" (though it'd be nice to be more quantitative at some point).\r\n\r\nWith `CenteredSecondOrder` for `momentum_advection`, but `WENO5` for `tracer_advection`, we obtain\r\n\r\nhttps://user-images.githubusercontent.com/15271942/108127592-7454cb80-7079-11eb-9091-45cd93464c6e.mp4\r\n\r\nwhile with `VectorInvariant` we get\r\n\r\nhttps://user-images.githubusercontent.com/15271942/108127600-77e85280-7079-11eb-9f55-2fc5f8ea1a06.mp4",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-16T22:08:21Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2021-02-17T18:25:28Z",
+    "number": 1366,
+    "title": "VectorInvariant momentum advection \"scheme\" and Bickley jet validation example"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds areas, volumes, and a few product operators needed to evaluate correct Coriolis terms on curvilinear grids, following\r\n\r\nhttps://mitgcm.readthedocs.io/en/latest/algorithm/algorithm.html#id8\r\n\r\nBefore merging we should discuss:\r\n\r\n- Should I update all the Coriolis terms? (`beta_plane.jl, non_traditional_f_plane.jl`, etc?)\r\n- Are we ok using three-letter codes, even though we only plan to support horizontally-curvilinear grids (rather than vertically curvilinear grids) in the near future?\r\n- Should we add more regression tests / evaluate existing regression tests before changing terms that are not covered?\r\n- It's not feasible to adapt the _entire_ codebase to work on curvilinear grids right now. How should we handle throwing errors for cases that are not supported? Adding `RegularCartesianGrid` annotations in key places seems like the easiest strategy, but we should be careful not to miss any. We can perhaps add annotations to _all_ operators, and then support curvilinearity in as parsimonious fashion as possible to be conservative.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-17T14:16:38Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2021-02-17T23:46:00Z",
+    "number": 1371,
+    "title": "Adds a few areas and volumes needed for correct Coriolis terms on curvilinear grids"
+  }
+]

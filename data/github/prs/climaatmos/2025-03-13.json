@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n\r\n - Assumes `implied_values = :face`, which is the only setting that we currently support, and supporting `implied_values = :center` would involve changing pressure and temperature to live on cell faces, which would be very complicated in terms of a model feature.\r\n - Moves `radiation_mode` from a keyword arg to a positional arg, so that we can dispatch on it. This should allow us to simplify, and make assumptions inside, the `GrayRadiation`, `ClearSkyRadiation` etc. constructors.\r\n\r\nThis is technically a breaking change, since the `RRTMGPModel` interface is changing. We could add internal method constructors and pass it to a keyword constructor. Do people prefer that?",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-12T19:54:12Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2025-03-13T00:44:52Z",
+    "number": 3694,
+    "title": "Refactor RRTMGP interface"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This is an analog to https://github.com/CliMA/ClimaCore.jl/pull/2179.\r\n\r\nThis PR will make sure that we don't accidentally pin a specific version of ClimaAtmos in the buildkite environment, which could result in the wrong version of ClimaAtmos being tested.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-12T21:40:54Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      }
+    ],
+    "mergedAt": "2025-03-13T16:39:12Z",
+    "number": 3695,
+    "title": "Test that ClimaAtmos is developed in buildkite pipeline"
+  },
+  {
+    "additions": 154,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR hoists the lookup table logic per radiation mode.\r\n\r\nWhile this increases the number of lines of code, this helps break down `RRTMGPModel` into a much smaller function, and the interface to `lookup_tables` is nice in that it only requires\r\n\r\n - Radiation mode (mostly consists of Bools and Floats)\r\n - the ClimaComms device\r\n - the float type\r\n\r\nSo, this function does not need loads of other pieces within the scope of `RRTMGPModel`. This means that we can more easily interactively experiment with it and write unit tests for it.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-13T01:47:28Z",
+    "deletions": 99,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      }
+    ],
+    "mergedAt": "2025-03-13T17:45:08Z",
+    "number": 3696,
+    "title": "Hoist lookup table logic"
+  }
+]

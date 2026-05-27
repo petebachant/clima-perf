@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 365,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #146 - This commit changes the internal behavior of TimeVaryingInputs23D to use dates rather than seconds since start date. This will make the transition to ITime a little easier since it is easy to convert a ITime to a date.\r\n\r\nThe behavior of TimeVaryingInputs23D will only differ when `dt` in milliseconds is an odd number or precision more than one millisecond is required. For the first case, this is because the code computes `dt / 2` in `_time_range_dt_dt_e`. In all other cases, the behavior should be identical as before.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6mU8AY",
+        "number": 146,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/146"
+      }
+    ],
+    "createdAt": "2025-01-15T18:17:51Z",
+    "deletions": 171,
+    "labels": [],
+    "mergedAt": "2025-01-21T19:30:48Z",
+    "number": 147,
+    "title": "Changes the internal behavior of TimeVaryingInputs23D to use dates rather than seconds since start date"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Recent PRs in `ClimaCore` and\r\n`ClimaComms` (https://github.com/CliMA/ClimaCore.jl/pull/2114 and https://github.com/CliMA/ClimaComms.jl/pull/103) changed how contexts are adapted to GPUs. This, coupled with\r\nhttps://github.com/CliMA/ClimaAtmos.jl/pull/3522, prompted me to look again at the `TimeVaryingInputs0D` struct.\r\n\r\nThis struct is used in two main ways:\r\n- to set site-level forcings/parameters (in ClimaLand)\r\n- to set fields that have constant value on the globe (e.g., CO2)\r\n\r\nThe previous implementation achieved GPU compatibility by moving everything to the GPU. This is not a great idea when the operation being performed is some variation of linear interpolation in one dimension (time) and for just one data point, as there is nothing really to be parallelized. This choice was made because initially this feature was only used in single-site ClimaLand runs, where all we cared about was to be able to run on GPU. The other day, I realized that I could have GPU compatibility in a much simpler and more robust way by leveraging the `fill!` function. With this commit, 0D interpolation (1D in time, 0D spatially) is changed to be always on the CPU, and the result is written to the Field (or destination in general) using `fill!`.\r\n\r\nAs a result, the CUDA extension is no longer needed.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-21T16:49:55Z",
+    "deletions": 89,
+    "labels": [],
+    "mergedAt": "2025-01-21T23:39:23Z",
+    "number": 148,
+    "title": "Simplify TimeVaryingInputs0D"
+  }
+]

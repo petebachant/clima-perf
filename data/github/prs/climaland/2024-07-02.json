@@ -1,0 +1,142 @@
+[
+  {
+    "additions": 528,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdd in our first approximation for the energy equation Jacobian, which only includes d\\rho e_int/dT.\r\n\r\nThis does allow us to take much bigger timesteps, more comparable to our target of 15 minutes, except in the cases where the soil is freezing or the canopy is present. If we make the thermal mass of the canopy larger, we can take bigger steps. \r\n-> need to think about how we handle soil freezing in terms of implicit stepping\r\n-> canopy temp probably does need an implicit solver.\r\n\r\n\r\n## To-do\r\n\r\n## Content\r\n- Alter imp/exp tendencies for soil energy hydrology\r\n- Alter update jacobian for soil energy hydrology\r\n- Increase timesteps in tutorials and *some* experiments. In cases with a canopy, this involved increasing ac_canopy as well, so those are unchanged\r\n- Add unit test/update unit tests\r\n- Adds a buildkite run showing performance as a function of timestep, similar to what we had in Richards equation. We simulation the exact same system, but in one case with T > T freeze, and in one case with T < Tfreeze. The timestep required is orders of magnitude different.\r\nNo Phase change:\r\n![energy_conservation_flux_full_soil_no_pc](https://github.com/CliMA/ClimaLand.jl/assets/65979205/aa41350e-4405-4d31-9b95-32862e8637ea)\r\n![water_conservation_flux_full_soil_no_pc](https://github.com/CliMA/ClimaLand.jl/assets/65979205/11e43923-fdc4-49f5-b69a-b1b27a91b7b0)\r\n\r\nWith Phase change:\r\n![energy_conservation_flux_full_soil_pc](https://github.com/CliMA/ClimaLand.jl/assets/65979205/5f5e52f9-fbe2-49e5-9cfb-d1da4680d243)\r\n![water_conservation_flux_full_soil_pc](https://github.com/CliMA/ClimaLand.jl/assets/65979205/7e5903fa-8122-4adc-8942-f501c32d84d6)\r\n\r\nNote the differences in x and y axes. The solution at dt = 10, 100 seconds for the phase change one has lots of oscillations and is not good enough, although the relative error is not terrible\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6MEUUC",
+        "number": 663,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/663"
+      }
+    ],
+    "createdAt": "2024-06-25T23:37:20Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2024-07-02T19:52:39Z",
+    "number": 678,
+    "title": "Approximate soil energy Jacobian"
+  },
+  {
+    "additions": 99,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nClose #660 \r\n\r\nWe have the function `imp_tendency!`, which calls `update_aux!`, `update_boundary_fluxes!`, and `compute_imp_tendency!` (where the actual tendency computation is done). We also have the explicit analogs.\r\n\r\nSimilarly, we have `tendency_jacobian!`, which calls `update_aux!`, `update_boundary_fluxes!`, and `update_jacobian!` (where the actual tendency computation is done).\r\n\r\n## To-do\r\n\r\n\r\n## Content\r\nRenames two functions\r\n`update_jacobian -> compute_jacobian` (analog is `compute_imp_tendency`)\r\n`tendency_jacobian -> jacobian` (analog is `imp_tendency`)\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6MEOCQ",
+        "number": 660,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/660"
+      }
+    ],
+    "createdAt": "2024-07-02T16:19:41Z",
+    "deletions": 132,
+    "labels": [
+      {
+        "color": "5319E7",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfrouHA",
+        "name": "API"
+      },
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      },
+      {
+        "color": "bfdadc",
+        "description": "PRs that maintain functionality but increase clarity of code",
+        "id": "LA_kwDOGiZe4s8AAAABqn7U8Q",
+        "name": "software clarity"
+      }
+    ],
+    "mergedAt": "2024-07-02T20:44:56Z",
+    "number": 685,
+    "title": "renaming"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR modernizes the README of the root of this repo. \r\n\r\nHave a look at how it renders [here](https://github.com/CliMA/ClimaLand.jl/tree/ar/update_readme)\r\n\r\nTO DO:\r\n\r\n\r\n(go ahead and edit this post to add to do list)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-26T20:57:10Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "LA_kwDOGiZe4s7ZTG-9",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2024-07-02T21:21:39Z",
+    "number": 679,
+    "title": "Update ClimaLand README"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Seems to reduces allocations and it should not be needed.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-25T17:32:49Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2024-07-02T22:26:41Z",
+    "number": 676,
+    "title": "Remove FT. from Biogeochemistry"
+  }
+]

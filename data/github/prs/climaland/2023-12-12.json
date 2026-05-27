@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 528,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR:\r\n- Removes most abstract types from most structs (149e4cc0)\r\n- Removes `Symbol`s from broadcasted expressions (4750c500, ca2cf0e1)\r\n- Fixes some types and mark GPU compatibility for some tests (ecf9c205, 00a56e80, 9f4c04b0, c7950a92)\r\n\r\nThis PR requires ClimaCore 0.11.5 (not released yet at the time of writing). With this PR, **27/28** tests are now passing!\r\n\r\nWith this PR, the Ozark experiment also runs if one uses CUDA 5 and substitutes Spline1D objects with something that is GPU compatibile",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-11-24T15:28:53Z",
+    "deletions": 295,
+    "labels": [
+      {
+        "color": "76B900",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABdk7FAg",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2023-12-12T16:29:21Z",
+    "number": 410,
+    "title": "More GPU"
+  },
+  {
+    "additions": 612,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n1. Introduce the following structure to tendency (and jacobian) updates:\r\n```\r\nfunction make_exp_tendency!(model)\r\n    update_aux! = make_update_aux(model)\r\n    update_boundary_fluxes! = make_update_boundary_fluxes(model)\r\n    compute_exp_tendency! = make_compute_exp_tendency(model)\r\n    function exp_tendency!(dY,Y,p,t)\r\n        update_aux!(p,Y,t)\r\n        update_boundary_fluxes!(p,Y,t)\r\n        compute_exp_tendency!(dY,Y,p,t)\r\n    end\r\n    return exp_tendency!\r\nend\r\n````\r\n\r\n2. Remove all \"interaction\" functions, as `update_boundary_flux!` methods for land models can be used for this purpose.\r\n## To-do\r\nreview\r\nFuture PR: propagate to bucket model\r\nFuture PR: rename `set_initial_aux!` to `set_initial_cache!` ?\r\nFuture PR: add `update_forcing!` call prior to `update_aux!`\r\n\r\n\r\n## Content\r\n1. move `update_boundary_fluxes!` outside of the \"compute tendency\" function (affects all standalone models except Bucket, which doesnt use this yet). The default for an AbstractModel is no update (shared_utilities/models.jl).\r\n2. Adds the call to `update_boundary_fluxes!` into the full implicit and explicit tendency functions, after calling `update_aux!` (shared_utilities/models.jl)\r\n3. Adds it to the Jacobian update functions (shared_utilities/models.jl, standalone/Soil/rre.jl)\r\n4. define a method of `make_update_boundary_fluxes` for `SoilCanopyModel` and other integrated models. This take the place of \"interactions_update_vars!\" (src/integrated/*.jl). The default is no additional variables and calling `update_boundary_fluxes!` for each component model. (ClimaLSM.jl/src/ClimaLSM.jl)\r\n6. Remove \"interaction\" naming everywhere - but we still allow for additional aux vars to be added in integrated models (`lsm_aux_vars`)\r\n7. Updated the LSM tutorial as well as added back in the model tutorial explaining AbstractModels.\r\n8. Update tests\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-01T20:02:10Z",
+    "deletions": 200,
+    "labels": [],
+    "mergedAt": "2023-12-12T18:18:16Z",
+    "number": 417,
+    "title": "Next steps of boundary vars"
+  }
+]

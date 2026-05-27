@@ -1,0 +1,65 @@
+[
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/2548\r\n\r\nBefore this PR:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = RectilinearGrid(size=(4, 4, 4),\r\n                              x = (0,1), y=(0,1),\r\n                              z = LinRange(0,1,20), \r\n                              halo=(3,3,3),\r\n                              )\r\n4\u00d74\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)      regularly spaced with \u0394x=0.25\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)      regularly spaced with \u0394y=0.25\r\n\u2514\u2500\u2500 Bounded  z \u2208 [0.0, 0.210526] variably spaced with min(\u0394z)=0.0526316, max(\u0394z)=0.0526316\r\n\r\njulia> grid.z\u1d43\u1d43\u1d9c\r\n10-element OffsetArray(::Vector{Float64}, -2:7) with eltype Float64 with indices -2:7:\r\n -0.13157894736842105\r\n -0.07894736842105263\r\n -0.02631578947368421\r\n  0.02631578947368421\r\n  0.07894736842105263\r\n  0.13157894736842105\r\n  0.18421052631578946\r\n  0.23684210526315788\r\n  0.2894736842105263\r\n  0.3421052631578947\r\n\r\njulia> collect(grid.x\u1d9c\u1d43\u1d43)\r\n10-element Vector{Float64}:\r\n -0.625\r\n -0.375\r\n -0.125\r\n  0.125\r\n  0.375\r\n  0.625\r\n  0.875\r\n  1.125\r\n  1.375\r\n  1.625\r\n```\r\n\r\nAfter this PR:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n[ Info: Precompiling Oceananigans [9e8cae18-63c1-5223-a75c-80ca9d6e9a09]\r\n[ Info: Oceananigans will use 6 threads\r\n\r\njulia> grid = RectilinearGrid(size=(4, 4, 4),\r\n                              x = (0,1), y=(0,1),\r\n                              z = LinRange(0,1,20), \r\n                              halo=(3,3,3),\r\n                              )\r\nERROR: ArgumentError: `length(z)` must be equal to size passed to `size` argument.\r\nStacktrace:\r\n [1] validate_dimension_specification(T::Type, \u03be::LinRange{Float64}, dir::Symbol, size_dir::Int64, FT::Type)\r\n   @ Oceananigans.Grids ~/repos/Oceananigans.jl/src/Grids/input_validation.jl:108\r\n [2] validate_rectilinear_domain(TX::Type, TY::Type, TZ::Type, FT::Type, size::Tuple{Int64, Int64, Int64}, extent::Nothing, x::Tuple{Int64, Int64}, y::Tuple{Int64, Int64}, z::LinRange{Float64})\r\n   @ Oceananigans.Grids ~/repos/Oceananigans.jl/src/Grids/input_validation.jl:100\r\n [3] validate_rectilinear_grid_args(topology::Tuple{DataType, DataType, DataType}, size::Tuple{Int64, Int64, Int64}, halo::Tuple{Int64, Int64, Int64}, FT::Type, extent::Nothing, x::Tuple{Int64, Int64}, y::Tuple{Int64, Int64}, z::LinRange{Float64})\r\n   @ Oceananigans.Grids ~/repos/Oceananigans.jl/src/Grids/rectilinear_grid.jl:284\r\n [4] RectilinearGrid(architecture::CPU, FT::Type; size::Tuple{Int64, Int64, Int64}, x::Tuple{Int64, Int64}, y::Tuple{Int64, Int64}, z::LinRange{Float64}, halo::Tuple{Int64, Int64, Int64}, extent::Nothing, topology::Tuple{DataType, DataType, DataType})\r\n   @ Oceananigans.Grids ~/repos/Oceananigans.jl/src/Grids/rectilinear_grid.jl:259\r\n [5] top-level scope\r\n   @ REPL[2]:1\r\n [6] top-level scope\r\n   @ ~/.julia/packages/CUDA/Uurn4/src/initialization.jl:52\r\n```\r\n\r\nI decided to throw an error instead of a warning because I don't think we want the user be able to proceed in a situation like this.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5Jkd9D",
+        "number": 2548,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2548"
+      }
+    ],
+    "createdAt": "2022-05-13T00:24:53Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2022-05-13T12:21:41Z",
+    "number": 2550,
+    "title": "Throws error when size of dimension is mismatched when constructing RectilinearGrid"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-13T13:23:52Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2022-05-13T18:36:11Z",
+    "number": 2551,
+    "title": "Fixes bug in IBM with Value or Gradient boundary conditions"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "@szy21 pointed out that our long runs were broken due to the reproducibility tests. It looks like #3437 removed [this check](https://github.com/CliMA/ClimaAtmos.jl/pull/3437/files#diff-fd99dc8960514e7a27ca9720b6557562d62ddee7cf84c7580569ffd72cdbc960L50), which means that the long runs try to run some reproducibility infrastructure in the driver where we plot/compare against the main branch.\r\n\r\nWe should probably make that orthogonal to the repro tests, but I had plans to refactor `latest_comparable_paths` anyway, so this PR adds that check back in, and changes to using `compute_bins`, which is unit tested (as well as `latest_comparable_paths`), and this fixes a bug in `latest_comparable_paths` in that we will no longer incorrectly compare against potentially incompatible commits after reverted commits (when duplicate reference counters exist on main).\r\n\r\nWhat this means is that if we revert commits, we no longer need to manually delete files on central, instead we keep them all. This also means, however, that when we revert commits in a PR, that first PR has no comparable reference.\r\n\r\nWe could try to change this edge case, but I think there are too many subtle things that could happen. For example, what if the reference counter goes: `1, 2, 3, 4, 1, 2, 3, 1`? We don't know if reverting the second time reverts to the first or second `1`. The only way we could know for sure is to hash the source/ext code and leverage this to decide. That might be a nice improvement, but that may be a lot of work for this one edge case. And all we get from this is having a comparable reference when we revert the commit.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-18T02:08:43Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      }
+    ],
+    "mergedAt": "2024-11-18T17:38:00Z",
+    "number": 3443,
+    "title": "Refactor `latest_comparable_paths`"
+  }
+]

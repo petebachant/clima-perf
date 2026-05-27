@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request sets the compat entry for the `TOML` package to `1`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.\nNote: Consider registering a new release of your package immediately after merging this PR, as downstream packages may depend on this for tests to pass.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-29T00:08:56Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-10-31T02:56:53Z",
+    "number": 342,
+    "title": "CompatHelper: add new compat entry for TOML at version 1, (keep existing compat)"
+  },
+  {
+    "additions": 165,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- closes #339\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- changes the momentum parameter from $\\beta_k = \\frac{2}{k+2}$ into  $\\beta_k = \\theta_k(\\theta_{k-1}^{-1} - 1)$ with $\\theta_{0} = 1$. The new general formulation always satisfies a required quadratic inequality needed for convergence acceleration proofs. Explicitly, one picks $\\theta_k$ to satisfy $\\frac{1-\\theta_k}{\\theta_k^2}\\Delta t_k \\leq \\frac{\\Delta t_{k-1}}{\\theta_{k-1}^2}$. \r\n- small UKI bug-fix (just stops some warnings on compile)\r\n- moved the original `NesterovAccelerator` to `ConstantStepNesterovAccelerator`\r\n- added 1 hr to bors timer, mac OS tests are being 10x slower today than yesterday (with no changes on our end)\r\n\r\n## Results from Unit tests\r\nRuns additional tests with 20 steps of the `DataMisfitController()` learning rate scheduler. Preliminary findings\r\n- It seems even for constant timesteps this formulation is better (in the early stages) than the original formulation \r\n- It seems that the update seems to give benefit to all of the methods using DMC timestepper/ EKS Stable timestepper.\r\n### For Constant timestep problems\r\n```\r\nAccelerator: DefaultAccelerator Process: Inversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.507262042724763\r\nAccelerator: ConstantStepNesterovAccelerator Process: Inversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 17.64047643331899\r\nAccelerator: NesterovAccelerator Process: Inversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 5.059129584415419\r\nAccelerator: DefaultAccelerator Process: TransformInversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.414729659424668\r\nAccelerator: ConstantStepNesterovAccelerator Process: TransformInversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.394047688287434\r\nAccelerator: NesterovAccelerator Process: TransformInversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.39590620316884\r\nAccelerator: DefaultAccelerator Process: Unscented\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 5.537821536383912\r\nAccelerator: ConstantStepNesterovAccelerator Process: Unscented\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 11.155144156229342\r\nAccelerator: NesterovAccelerator Process: Unscented\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 5.574272962450679\r\n```\r\n### For variable timestep problems\r\n\r\n```\r\nAccelerator: DefaultAccelerator Process: Inversion\r\n[ Info: Termination condition of timestepping scheme `DataMisfitController` will be exceeded during the next iteration.\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.883305568165869\r\nAccelerator: NesterovAccelerator Process: Inversion\r\n[ Info: Termination condition of timestepping scheme `DataMisfitController` will be exceeded during the next iteration.\r\n\u250c Warning: Termination condition of timestepping scheme `DataMisfitController` has been exceeded. Preventing futher updates\r\n\u2502  Set on_terminate=\"continue\" in `DataMisfitController` to ignore termination\r\n\u2514 @ EnsembleKalmanProcesses ~/Dropbox/Caltech/CESjl/EnsembleKalmanProcesses.jl/src/LearningRateSchedulers.jl:278\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.4114237694466025\r\nAccelerator: DefaultAccelerator Process: TransformInversion\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.414729659424668\r\nAccelerator: NesterovAccelerator Process: TransformInversion\r\n[ Info: Termination condition of timestepping scheme `DataMisfitController` will be exceeded during the next iteration.\r\n\u250c Warning: Termination condition of timestepping scheme `DataMisfitController` has been exceeded. Preventing futher updates\r\n\u2502  Set on_terminate=\"continue\" in `DataMisfitController` to ignore termination\r\n\u2514 @ EnsembleKalmanProcesses ~/Dropbox/Caltech/CESjl/EnsembleKalmanProcesses.jl/src/LearningRateSchedulers.jl:278\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.400576672334215\r\nAccelerator: DefaultAccelerator Process: Unscented\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 5.765752171697719\r\nAccelerator: NesterovAccelerator Process: Unscented\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 5.2125091342967265\r\nAccelerator: DefaultAccelerator Process: Sampler\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 6.239456914512827\r\nAccelerator: NesterovAccelerator Process: Sampler\r\n\u250c Warning: Acceleration is experimental for Sampler processes and may affect convergence.\r\n\u2514 @ EnsembleKalmanProcesses ~/Dropbox/Caltech/CESjl/EnsembleKalmanProcesses.jl/src/EnsembleKalmanProcess.jl:220\r\n\u250c Info: Convergence:\r\n\u2502   cost_initial = 123.31914542296597\r\n\u2514   cost_final = 4.896253011160538\r\n\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD5850zxF7",
+        "number": 339,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/339"
+      }
+    ],
+    "createdAt": "2023-10-24T17:24:05Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2023-10-31T17:48:47Z",
+    "number": 341,
+    "title": "modified accelerator for variable timestep"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request sets the compat entry for the `Statistics` package to `1`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.\nNote: Consider registering a new release of your package immediately after merging this PR, as downstream packages may depend on this for tests to pass.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-29T00:09:00Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2023-10-31T18:45:39Z",
+    "number": 343,
+    "title": "CompatHelper: add new compat entry for Statistics at version 1, (keep existing compat)"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-31T20:50:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2023-10-31T21:40:19Z",
+    "number": 344,
+    "title": "Update project to v1.1.4"
+  }
+]

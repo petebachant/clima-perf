@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 752,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds Lagrangian particle tracking for incompressible models.\r\n\r\nYou construct `LagrangianParticles` by passing in a bunch of x, y, z coordinates as 1D arrays (`xs`, `ys`, `zs`) when constructing an incompressible model:\r\n\r\n```julia\r\nmodel = IncompressibleModel(grid = grid, ..., particles = LagrangianParticles(x=xs, y=ys, z=zs))\r\n```\r\n\r\nthen the particles are advected with the flow at every time step (i.e. online particle advection).\r\n\r\nIf arrays are used for `x`, `y`, `z` then I think you should be able to add/remove/birth/kill/breed/split/combine/beach/teleport/etc. particles at any time since arrays are mutable and the type signature of the `LagrangianParticles` won't change.\r\n\r\nIn a futue PR we might want to add `LagrangianParticles` parameters, forcing functions (?), and callafters so that particle properties can be tracked, evolved, and interacted with tracers to model biogeochemistry (https://github.com/JuliaOcean/PlanktonIndividuals.jl) or play ecological games (https://github.com/ali-ramadhan/lagrangian-microbes).\r\n\r\nRight now I suppose it only advects particles using forward Euler. Using the model's RK3 for particle advection would double (or triple?) the memory usage of the particle tracker as we would have to store previous tendencies (velocities). I wonder if the accuracy of forward Euler is acceptable for Lagrangian particle tracking. I'm also wondering whether it makes sense to support both forward Euler and RK3 in case you want to advect a huge number of particles and memory is limiting the amount of particles you can track? I guess you can do RK3 or RK4 inside the `advect_particles!` kernel but it would assume that the velocity field is constant between stages. Perhaps a convergence test is needed to answer these questions.\r\n\r\nI think there are a lot of things that can be done at boundaries (see e.g. https://github.com/OceanParcels/parcels/issues/37, https://github.com/OceanParcels/parcels/issues/47, https://github.com/OceanParcels/parcels/issues/61) so I think we should pick a decent default and leave other options for future PRs.\r\n\r\nRight now, periodic dimensions are handled correctly but otherwise if a particle goes through a wall it will be placed back at the wall. This may cause it to get stuck at the wall.\r\n\r\ncc @suyash @zhenwu0728 Would something like this work for you guys?\r\n\r\nTODO:\r\n\r\n- [x] Figure out how we want to time step particle advection.\r\n- [x] Decide on a default way of handling boundary conditions.\r\n- [x] Tell NetCDF and JLD2 output writers how to write `LagrangianParticles` locations to disk.\r\n- [x] Test that particle locations are correct after advection. Can test with an analytic solution produced by a constant flow field.\r\n- [x] Write documentation for how to use Lagrangian particle tracking (add a page to the model setup docs).\r\n- [x] Benchmark Lagrangian particle tracking with 1 - 100,000,000 particles.\r\n- [x] Make cool movie.\r\n\r\nResolves #511",
+    "changedFiles": 23,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1MTMzNzM5ODc=",
+        "number": 511,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/511"
+      }
+    ],
+    "createdAt": "2020-10-21T11:23:01Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2021-01-26T19:49:38Z",
+    "number": 1091,
+    "title": "Lagrangian particle tracking"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This is a temporary fix for #1280 (time stepping a model with `pickup=true` -> it blows up) until schedules can be probably checkpointed.\r\n\r\nWhile this is a temporary fix, it has affected a number of people already (@qwert2266, @suyashbire1, @sandreza, and now @sam12396 in #1300) so would be good to merge this and tag a new release.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-01-13T16:23:22Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2021-01-26T20:55:13Z",
+    "number": 1303,
+    "title": "Always take positive time steps"
+  }
+]

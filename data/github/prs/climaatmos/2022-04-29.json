@@ -1,0 +1,151 @@
+[
+  {
+    "additions": 75,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR adds moisture to `single_column_radiative_equilibrium.jl`. Specifically, it adds an `idealized_h2o` flag to the `rrtmgp_model_cache`, which computes a volume mixing ratio at every point such that the relative humidity is at most 0.6 and the specific humidity decreases monotonically with height. Due to our unrealistic initial condition (300 K throughout the domain), the relative humidity is slowly increased from 0 to 0.6 to prevent RRTMGP from giving absurd values at the top of the domain at the start of the simulation.\r\n\r\nAlso, this PR adds grid stretching to the radiative equilibrium example (so that `dz = 100` at the bottom and `dz = 10000` at the top), and it makes grid stretching available for other examples that use `driver.jl`.\r\n\r\nIn addition, this PR allows non-idealized insolation to work for flat spaces, and it fixes a bug in non-idealized insolation that occurs when `FT = Float32`, though the radiative equilibrium example will continue to use idealized insolation by default.\r\n\r\nCloses #349 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5IfaXP",
+        "number": 349,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/349"
+      }
+    ],
+    "createdAt": "2022-04-28T23:40:03Z",
+    "deletions": 27,
+    "labels": [],
+    "mergedAt": "2022-04-29T00:43:11Z",
+    "number": 364,
+    "title": "Add moist radiative equilibrium example"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQ3MjkwMjU3",
+      "is_bot": false,
+      "login": "jiahe23",
+      "name": ""
+    },
+    "body": "Currently, the jld2 data is saved in the format of `dayX.jld2` which contains which day the data is. However, I found it useful to add seconds of the day into the filename when debugging. Usually, I save the data step-by-step on the day the simulation crashes and it overwrites if the filename contains only day info.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-29T13:52:07Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2022-04-29T16:38:10Z",
+    "number": 369,
+    "title": "update jld2 filename"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - adds compat entries for some of our dependencies-- right now we're auto-updating to breaking versions. This should help us more easily manage upgrading deps. \r\n - Fixes cli flags for the long runs.\r\n\r\nI used `CompatDevTools` to kick start the compat entries in `examples/`, and then applied `synchronize_compats` to the package directory.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-29T15:45:38Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-04-29T17:08:12Z",
+    "number": 370,
+    "title": "Add/manage compat entries"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes some docs formatting and improves some of the logs",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-29T16:45:23Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA1",
+        "name": "documentation"
+      },
+      {
+        "color": "965A87",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7yCRv-",
+        "name": "Logging :ledger:"
+      }
+    ],
+    "mergedAt": "2022-04-29T17:52:12Z",
+    "number": 371,
+    "title": "Improve docs and logging"
+  },
+  {
+    "additions": 207,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR closes out #326 by:\r\n - Upgrading to the latest NCRegressionTests, which is now more strict\r\n - Use the oldest reference dataset with a matching reference counter\r\n\r\nI just recently cleared the julia depot path, so this should actually upgrade to the latest versions.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-29T04:20:53Z",
+    "deletions": 163,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      }
+    ],
+    "mergedAt": "2022-04-29T20:01:11Z",
+    "number": 366,
+    "title": "Update the regression test logic"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Update mass tendencies to reflect diffusive moisture tendencies.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-29T17:11:57Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2022-04-29T21:18:11Z",
+    "number": 372,
+    "title": "Hyperdiffusion (moisture) contribution to mass equation"
+  }
+]

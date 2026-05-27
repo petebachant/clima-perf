@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a new method, `getidx_return_type`, which returns the type of a `getidx` call, independent of many other arguments, like the space, idx etc.\r\n\r\nThis new method is effectively branchless (as it doesn't depend on the `Interior`, `LeftBoundaryWindow` or `RightBoundaryWindow`), which means that inference should be far cheaper on this method than actually calling `getidex`. This may be helpful for conversions and or type assertions, which could help improve latency.\r\n\r\nThe reason this new method is being added, however, is because I'd like to see if and how easy it would be for our shared memory to instead store the result of `getidx` calls from within the stencil methods. Caching in this way would make the population of shared memory nearly independent of the stencil, resulting in perhaps far simpler code and less duplication.\r\n\r\nOne downside of this approach is that it does not apply shared memory to the local geometry, which involves several reads.\r\n\r\nTo ensure that the code is correct, I've added the use of this new function to assert the return type of `getidx` from within the `apply_stencil!` method, which is basically harmless.\r\n\r\nSince this PR is mostly additive, I'm going to merge so long it passes CI, as this will allow me to more easily experiment with this new shared memory design that I've described above.\r\n\r\nIf it doesn't work out, we can remove it.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-05T16:30:38Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2025-04-05T16:59:22Z",
+    "number": 2280,
+    "title": "Define getidx_return_type"
+  }
+]

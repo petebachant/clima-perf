@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 873,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nRefactor boundary condition types.\r\n\r\nWhat we had in place was a little confusing (you could either pass a NamedTuple with values of type \"AbstractSoilBC\" or something of type \"AbstractSoilBC\" as your boundary condition), had very little unification between how we handled BC between soil +soil co2, and had nested named tuples for models with only a single boundary condition needed.\r\n\r\nI was also finding it very hard to use the RichardsAtmosDrivenBC in PR #511 due to the design.\r\n\r\n\r\n\r\n\r\nAfter this PR, we would have:\r\nInstead of:\r\n```\r\nboundary_fluxes = (top = RichardsAtmosDrivenFluxBC(), bottom = (water = WaterFluxBC(),))\r\n```\r\nyou now have \r\n```\r\nboundary_fluxes = (top = RichardsAtmosDrivenFluxBC(), bottom = WaterFluxBC()).\r\n```\r\ninstead of\r\n```\r\nboundary_fluxes = (top = (water = MoistureBC(), bottom = (water = WaterFluxBC(),))\r\n```\r\nyou now have\r\n```\r\nboundary_fluxes = (top = MoistureBC(), bottom = WaterFluxBC())\r\n```\r\ninstead of :\r\n```\r\nboundary_fluxes = (top = (water = MoistureBC(), heat = TemperatureBC()), bottom = (water = WaterFluxBC(), heat = HeatFluxBC(),))\r\n```\r\nyou now have:\r\n```\r\nboundary_fluxes = (top = WaterHeatBC(; water = MoistureBC(), heat = TemperatureBC()),\r\n                   bottom = WaterHeatBC(; water = WaterFluxBC(), heat = HeatFluxBC()))\r\n```\r\ninstead of\r\n```\r\nboundary_fluxes = (top = AtmosDrivenFluxBC(), bottom = (water = WaterFluxBC(), heat = HeatFluxBC(),)) \r\n```\r\n\r\nnow, we would have\r\n```\r\nboundary_fluxes = (top = AtmosDrivenFluxBC(), bottom = WaterHeatBC(; water = WaterFluxBC(), heat = HeatFluxBC())) \r\n```\r\n## To-do\r\nreview\r\n\r\n## Content\r\nThis PR refactors the code so that \r\n1. You can make types of `AbstractWaterBC` which can be used for RichardsModel or for the water equation in the EnergyHydrologyModel. All of our old BC types are now subtyped from this.\r\n2. You can also define types of `AbstractHeatBC` for the soil heat equation. All of our old BC types are now subtyped from this.\r\n3. To create BC for the EnergyHydrologyModel, you can combined an AbstractHeat and AbstractWater BC if these are treated independently, or use a BC that indicates that the water and heat BC are set in way that depend on each other. The former is a `WaterHeatBC <: AbstractEnergyHydrologyBC`, the second has one example currently: `AtmosDrivenFluxBC <: AbstractEnergyHydrologyBC`. (change: introduce WaterHeatBC struct instead of using a NamedTuple, introduce abstract type)\r\n4. The SoilCO2 model follows the same conventions as RichardsModel (single equation, single BC).\r\n5. Since boundary condition types may require additional variables, all PDE models now use and extend the `boundary_var` methods instead of this being done haphazardly/only for soil.\r\n6. I removed the nested named tuples with redundant information for soil co2 and richards equation. This means we specify BC like `top = WaterFluxBC()` and not `top = (;water = WaterFluxBC()))`\r\n7. `soil_boundary_fluxes` now updates in place (easy change to make but not directly related to this PR)\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 34,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-29T20:48:52Z",
+    "deletions": 613,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "LA_kwDOGiZe4s7ZTG-9",
+        "name": "documentation"
+      },
+      {
+        "color": "5319E7",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfrouHA",
+        "name": "API"
+      },
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2024-03-03T01:05:11Z",
+    "number": 535,
+    "title": "Refactor boundary condition types"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1382,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nUnifies the cloud fraction and microphysics quadrature pipelines so they share the same SGS moments, eliminating physical inconsistencies between the two.\r\n\r\n## Changes\r\n\r\n* New `sgs_moments pre-pass` (`compute_sgs_moments` / `set_sgs_moments!`): A Gauss\u2013Hermite quadrature pass to compute (`\u03bc_S`, `\u03c3_S\u00b2`, `M_l`, `M_i`): the mean and variance of the saturation variable (saturation excess in Gaussian case) plus the SGS-mean equilibrium condensates. Both cloud fraction and microphysics consume these cached moments, guaranteeing they operate on identical physics.\r\n\r\n* Hybrid cloud fraction (`compute_cloud_fraction_hybrid`): Replaces the former Sommeria\u2013Deardorff approximation with a smooth logistic-CDF formula evaluated on the quadrature-derived (`\u03bc_S`, `\u03c3_S\u00b2`). An activation factor `\u03b1` gates the cloud fraction to zero in clear states. Dispatches on `GaussianSGS`, `LogNormalSGS`, and `GridMeanSGS`.\r\n* Shape-function partition in `Microphysics1MEvaluator` (similar to @sajjadazimi's approach): Distributes prognostic grid-mean condensate across quadrature points via `q_lcl_hat = q_lcl_mean \u00b7 (\u03b3_l \u00b7 q_lcl_eq_hat + \u03b2_l)` where `\u03b3_l \u00b7 M_l + \u03b2_l = 1`, giving exact mass conservation by construction. The \u03b2-factor provides a smooth fallback when equilibrium moments vanish. The shape-function coefficients (`\u03b3`, `\u03b2`) are precomputed once per grid cell.\r\n\r\n## To-do (later)\r\n\r\n* Symmetric subdomain treatment: give each EDMF subdomain its own cloud fraction and SGS quadrature, using environment-only covariances for the environment. Currently, grid-mean covariances and state are used for all subdomains, which can double-count updraft variance.\r\n* Calibrate cf_steepness_scale and (and check sensitibity to `q_min`) on cloud fraction and precipitation in DYCOMS/TRMM.\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-11T23:58:13Z",
+    "deletions": 573,
+    "labels": [],
+    "mergedAt": "2026-05-16T01:18:15Z",
+    "number": 4479,
+    "title": "Make cloud formulation consistent with quadrature and resolution-adaptive"
+  }
+]

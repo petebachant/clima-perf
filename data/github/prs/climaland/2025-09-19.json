@@ -1,0 +1,127 @@
+[
+  {
+    "additions": 531,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis moves LAI, SAI, RAI and rooting depth to a new biomass component of the canopy. The canopy height is included here.\r\n\r\nWe do this for two reasons:\r\n- it doesnt make sense for these to \"belong\" in PlantHydraulics, especially in the future when we need to predict LAI using a model\r\n- with other moisture stress parameterizations, or a different plant hydraulics scheme, we do not need to use \"PlantHydraulicsModel\", but still need LAI, rooting depth, height, etc.\r\n\r\n\r\n## To-do\r\nlong runs here https://buildkite.com/clima/climaland-long-runs/builds/4239\r\nThe snowy land long run is unchanged compared to main. the Pmodel run is slightly changed, I think because of the set_historical_cache use only. LAI is unchanged between main and this branch for the pmodel\r\n\r\n\r\n## Content\r\n- add biomass component\r\n- move area index, rooting depth to this component (remove from PlantHydraulics)\r\n- If you choose the plant hydraulics prognostic scheme, you need to define layer thicknesses of the canopy in a multilayer scheme. In this case, we check that the two heights are consistent.\r\n- use \"Set historical cache\" in the climaland integrated model set_initial cache function (unrelated bug)\r\n- remove construction of pmodel CB which is made automatically in the Simulation struct  (in global_soil_canopy_pmodel.jl)\r\n- remove set_canopy_prescribed_field! in favor of update_biomass!\r\n- lai_consistency check now only happens on init\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 41,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6HSt2b",
+        "number": 600,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/600"
+      }
+    ],
+    "createdAt": "2025-08-28T19:19:05Z",
+    "deletions": 568,
+    "labels": [
+      {
+        "color": "D93F0B",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABfro14Q",
+        "name": "breaking change"
+      }
+    ],
+    "mergedAt": "2025-09-19T00:19:01Z",
+    "number": 1388,
+    "title": "Move LAI, SAI, RAI, rooting depth to new biomass component"
+  },
+  {
+    "additions": 95,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd the SIF parameters to the toml\r\n\r\n## To-do\r\nRebase after #600 merges\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-17T23:42:59Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2025-09-19T14:32:16Z",
+    "number": 1442,
+    "title": "sif parameters from a toml"
+  },
+  {
+    "additions": 33,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nReduce git repo size\r\n\r\n\r\nBefore I cleared old previews:\r\n\r\n```\r\n| Name                         | Value     | Level of concern               |\r\n| ---------------------------- | --------- | ------------------------------ |\r\n| Biggest checkouts            |           |                                |\r\n| * Number of directories  [1] |  67.3 k   | !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! |\r\n| * Maximum path length    [1] |   105 B   | *                              |\r\n| * Number of files        [1] |  86.9 k   | *                              |\r\n| * Total size of files    [1] |  4.83 GiB | *****                          |\r\n\r\n[1]  f39a0c3a490baf5a93d35b1f228e52409d947b7d (refs/remotes/origin/gh-pages^{tree})\r\n```\r\n\r\n\r\n\r\nafter I cleared:\r\n\r\n\r\n```\r\n Biggest checkouts            |           |                                |\r\n| * Number of directories  [3] |  4.38 k   | **                             |\r\n| * Maximum path depth     [3] |     8     |                                |\r\n| * Maximum path length    [3] |   105 B   | *                              |\r\n| * Number of files        [3] |  6.41 k   |                                |\r\n| * Total size of files    [3] |   383 MiB |                                |\r\n| * Number of symlinks     [3] |     8     |                                |\r\n| * Number of submodules       |     0     |                                |\r\n```\r\n\r\n\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-18T20:37:11Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-09-19T15:26:54Z",
+    "number": 1447,
+    "title": "Add GHA for doc preview cleanup"
+  },
+  {
+    "additions": 129,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #1424 - This PR adds logging for parameters for long runs and make some functions take in `toml_dict` instead of `earth_param_set`.",
+    "changedFiles": 65,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s7LyOZ8",
+        "number": 1424,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1424"
+      }
+    ],
+    "createdAt": "2025-09-19T16:57:15Z",
+    "deletions": 170,
+    "labels": [],
+    "mergedAt": "2025-09-19T22:54:01Z",
+    "number": 1452,
+    "title": "Construct earth_param_set internally for drivers"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose\r\ncloses julia format action https://github.com/CliMA/ClimaLand.jl/pull/1403 \r\ncloses actions/checkout https://github.com/CliMA/ClimaLand.jl/pull/1334\r\ncloses downgrade compat https://github.com/CliMA/ClimaLand.jl/pull/1268\r\ncloses cairomakie https://github.com/CliMA/ClimaLand.jl/pull/1235\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-19T21:07:26Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2025-09-19T23:48:02Z",
+    "number": 1454,
+    "title": "update GHA, package compats"
+  }
+]

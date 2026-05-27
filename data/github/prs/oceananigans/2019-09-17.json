@@ -1,0 +1,54 @@
+[
+  {
+    "additions": 220,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes `model.diagnostics` and `model.output_writers` into `OrderedDict`s by default.\r\n\r\nIn addition, we add functionality that preserves the existing behavior: when the user calls `push!(model.diagnostics, new_diagnostic)`, the diagnostic `new_diagnostic` is given a default name (something like `:diag1`). In addition, the diagnostics can be accessed by index (an integer) or by name (assumed to be a `Symbol`, though in principle anything except an integer might be used).\r\n\r\nGiving names to diagnostics should prove useful for saving `Timeseries` diagnostics, or accessing the value of a diagnostic for logging / other purposes.\r\n\r\nWe use `OrderedDict` so that the diagnostics and output writers are executed in the order they were inserted, which is a potentially useful feature for interdependent diagnostics.\r\n\r\nWe also add code that extends the functionality of `Timeseries` so that the user may pass a `NamedTuple` of timeseries, eg:\r\n\r\n```julia\r\ncfl_timeseries = Timeseries((adv=AdvectiveCFL(dt), diff=DiffusiveCFL(dt)), frequency=1)\r\nmodel.diagnostics[:timeseries] = cfl_timeseries\r\n```\r\n\r\nThe sampled values would then be stored in `cfl_timeseries.data.adv` and `cfl_timeseries.data.diff`. By extending `getproperty`, we also provide syntax such that\r\n\r\n```julia\r\ncfl_timeseries.adv\r\n```\r\n\r\nreturns the array `cfl_timeseries.data.adv`, for user convenience. As for \"non-tupled\" diagnostics, the samples in `cfl_timeseries.data.adv` can be plotted alongside `cfl_timeseries.time`.\r\n\r\nResolves #362.\r\nResolves #361.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0ODMxMjk0MDQ=",
+        "number": 361,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/361"
+      },
+      {
+        "id": "MDU6SXNzdWU0ODMxMzQwNTU=",
+        "number": 362,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/362"
+      }
+    ],
+    "createdAt": "2019-09-16T20:40:41Z",
+    "deletions": 72,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-09-17T11:15:54Z",
+    "number": 411,
+    "title": "Put Diagnostics and OutputWriters into OrderedDicts, plus code f\u2026"
+  }
+]

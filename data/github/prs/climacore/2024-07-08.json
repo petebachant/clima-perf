@@ -1,0 +1,82 @@
+[
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n\r\n - Adds the use of LazyBroadcast.jl to the ClimaCore test suite\r\n - Refactors [test/MatrixFields/matrix_fields_broadcasting/test_scalar_1.jl](https://github.com/CliMA/ClimaCore.jl/pull/1873/files#diff-e8c45e2f36b528c6915f067e14926c439bcdb814cacc17d9366fcca69ad9f557) by splitting apart the unit and optimization tests.\r\n\r\nThe advantages of the refactoring done in this PR are:\r\n - The broadcasted object can later be reused to test (or benchmark) `getidx` (https://github.com/CliMA/ClimaCore.jl/issues/1871)\r\n - Code duplication is reduced between `get_result` (e.g., `() -> (@. \u1d9c\u1d9cmat \u22c5 \u1d9cvec)`) and `set_result!` (e.g., `result -> (@. result = \u1d9c\u1d9cmat \u22c5 \u1d9cvec)`) by simply defining a generic `set_result!` (`set_result!(result, bc) = (materialize!(result, bc); nothing)`), made possible by using the broadcasted object.\r\n - The unit tests are very fast, and can be included in the unit tests, so that we can improve our reported unit test coverage.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-08T15:46:14Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2024-07-08T18:13:38Z",
+    "number": 1873,
+    "title": "Add LazyBroadcast to test env, refactor MatrixField BC tests"
+  },
+  {
+    "additions": 145,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR refactors the field matrix tests:\r\n - The utilities are generalized for some of the more complex cases\r\n - This PR refactors case 2 and 16, and adds them to the unit test list",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-08T18:59:02Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-07-08T19:39:50Z",
+    "number": 1875,
+    "title": "Refactor matrix field tests, test_scalar 2 and 16"
+  },
+  {
+    "additions": 684,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is a followup to #1875.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-08T20:54:46Z",
+    "deletions": 376,
+    "labels": [
+      {
+        "color": "6484A3",
+        "description": "",
+        "id": "MDU6TGFiZWwzMDkyOTUwMjUy",
+        "name": "refactor"
+      },
+      {
+        "color": "829D8D",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzQzOTg1MTgx",
+        "name": "tests"
+      }
+    ],
+    "mergedAt": "2024-07-08T21:53:54Z",
+    "number": 1876,
+    "title": "Refactor more matrix field broadcasting tests"
+  }
+]

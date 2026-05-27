@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 151,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR fixes two bugs in `WindowedTimeAverage`. The first is discussed in #962. The second occurs because it is possible that the output time specified by `time_interval` is reached prior to the completion of `time_window`. This PR changes `WindowedTimeAverage` so that average finalization occurs just prior to output.\r\n\r\nIt'd probably be good to add a test to this PR.\r\n\r\nIn addition, issues like this suggest it may be best to adjust the time-step so that output is \"aligned\". We can do this without cost now that we have a RungeKutta3 timestepper.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-18T18:08:36Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2020-09-24T11:11:41Z",
+    "number": 964,
+    "title": "Fixes initialization and finalization bugs in WindowedTimeAverage"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a `dims` keyword argument to `zero_halo_regions`, so that we can avoid zeroing out halo regions in directions that are not averaged. It also adds tests to ensure that this works.\r\n\r\nThis PR does not solve all the issues with averaging halo regions, however. In particular, the halo regions are not guaranteed to be correct because they may have been previously zeroed out.\r\n\r\nThis can be solved by calling `fill_halo_regions` prior to computing an average. However, this solution is not possible with the current syntax, because field boundary conditions can depend on other fields of model that are not available within `compute!(averaged_field)`. I will raise an issue after this PR to discuss this other problem, which involves some difficult trade-offs.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-24T13:44:41Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2020-09-24T15:50:08Z",
+    "number": 970,
+    "title": "Do not zero out halo regions in directions that arent averaged"
+  },
+  {
+    "additions": 182,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements an optimization that (potentially) avoids redundant recompilation of fields when `compute!(output)` is called in `fetch_output`. This optimization was discussed on #955 .\r\n\r\nThe idea is to use `model.clock.time` as a \"key\" which is checked prior to computation. Fields that opt-in to avoid recomputation then check if `model.clock.time == field.status.time`. If the two are equal, no computation is performed.\r\n\r\nThis will hopefully speed up expressions that involve `AveragedField`s, `ComputedField`s, and `BuoyancyField`. Note that in the case that users specify scratch space for a field, they must opt-in to this optimization by passing `recompute_safely=false` to the field constructor. If scratch space is not specified (and we therefore know it is unique), recomputation is avoided by default.\r\n\r\nThis PR also changes the keyword `computed_data` to `operand_data` in the constructor for `AveragedField(op::AbstractOperation)`. \r\n\r\nTodo:\r\n\r\n- [x] Tests\r\n\r\nResolves #955 \r\nResolves #967 ",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MDM2Mzc0Mzk=",
+        "number": 955,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/955"
+      },
+      {
+        "id": "MDU6SXNzdWU3MDY0OTI0OTY=",
+        "number": 967,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/967"
+      }
+    ],
+    "createdAt": "2020-09-23T17:14:06Z",
+    "deletions": 45,
+    "labels": [],
+    "mergedAt": "2020-09-24T22:37:40Z",
+    "number": 968,
+    "title": "Avoiding unnecessary recomputation of fields in output evaluation"
+  }
+]

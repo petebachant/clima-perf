@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 147,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "`KernelFunctionOperation` gives users the ability to specify custom kernel functions of `(i, j, k, grid)` as abstract operations. This is useful for a variety of purposes, such as calculating vorticity on the cubed sphere (cannot be expressed in terms of normal abstract operations) or generating random numbers in kernels within the `Field` infrastructure.\r\n\r\n```julia\r\nusing Oceananigans.Operators: \u03b6\u2083\u1da0\u1da0\u1d43 # called with signature \u03b6\u2083\u1da0\u1da0\u1d43(i, j, k, grid, u, v)\r\n\r\ngrid = model.grid\r\nu, v, w = model.velocities\r\n\r\n\u03b6_op = FunctionOperation(Face, Face, Center, \u03b6\u2083\u1da0\u1da0\u1d43, grid, computed_dependencies=(u, v))\r\n\r\n\u03b6 = ComputedField(\u03b6_op) # identical to `VerticalVorticityField`\r\n\r\nbarotropic_\u03b6 = AveragedField(\u03b6_op, dims=3)\r\n```\r\n\r\nResolves #1623 .",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4NjkwODU1NDQ=",
+        "number": 1623,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1623"
+      }
+    ],
+    "createdAt": "2021-04-28T16:01:19Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2021-04-28T20:34:00Z",
+    "number": 1627,
+    "title": "New `KernelFunctionOperation <: AbstractOperation` for custom kernel functions"
+  }
+]

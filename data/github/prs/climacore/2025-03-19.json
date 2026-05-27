@@ -1,0 +1,120 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "[skip ci]\r\n\r\nUpdates NEWS.md\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-18T17:20:33Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-03-19T01:17:00Z",
+    "number": 2244,
+    "title": "Update NEWS.md with changes on main"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #2247.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6uwY-Y",
+        "number": 2247,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2247"
+      }
+    ],
+    "createdAt": "2025-03-19T14:09:25Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-19T16:39:24Z",
+    "number": 2248,
+    "title": "Add support for in-place map"
+  },
+  {
+    "additions": 1387,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR implements shared memory for the finite difference stencil `DivergenceF2C`. This is a step towards #1746, where the [high-level design](https://github.com/CliMA/ClimaCore.jl/issues/1746#issuecomment-2682159755) is discussed (it's basically the same design that we use for spectral element kernels).\r\n\r\n### Some notes on implementation and behavior details:\r\n\r\n - Like our SEM, shared memory (shmem) is supported through a single layer of operator composition. That is, composed operators like `div(grad(f))` will put the result of `grad(f)` into shared memory per thread (or, per point), but duplicate reads of `f` will still occur (thread `i` will read `f` at `i+1` and thread `i+1` will read `f` at  `i`). To improve on this, we can write combined operators (e.g., `divgrad`), where shmem is managed, and this will result in a minimal number of required reads/writes. Ideally, we could automate this somehow, but I think that's the next step. One nice aspect of automating this is that we wouldn't need to introduce new terminology to users.\r\n - If the vertical resolution is too large (e.g., 1000 vertical levels), then we dispatch to a shmem-free version to support higher vertical resolution.\r\n - This PR only adds shared memory for a F2C operator, we should probably add one C2F operator, so that we exercise the cell center-filling shared memory branch code (which is currently not exercised, and is therefore likely not correct).\r\n - I've also added some specializations for `JContravariant3` to convince cuda to emit fused instructions (found through nsight compute).\r\n\r\n### Direct kernel performance impact\r\n\r\nThis [comment](https://github.com/CliMA/ClimaCore.jl/pull/2184#issuecomment-2672013425) discusses the direct impact on kernels.\r\n\r\n### Overall performance impact\r\n\r\n - Here is a GPU target pipeline [build](https://buildkite.com/clima/climaatmos-target-gpu-simulations/builds/405) of ClimaAtmos, and the latest nearby [main](https://buildkite.com/clima/climaatmos-target-gpu-simulations/builds/406). For moist held suarez, 1 gpu:\r\n - main: SYPD 1.88\r\n - This branch: SYPD 2.056\r\n\r\n### Adding new operators\r\n\r\nTo add new operators, developers need to update two files:\r\n\r\n - `ext/cuda/operators_fd_shmem.jl`, where you need to define:\r\n   - `fd_operator_shmem` - allocates shared memory\r\n   - `fd_operator_fill_shmem_interior!` - defines how interior stencil shmem is populate\r\n   - `fd_operator_fill_shmem_left_boundary!` - defines how left stencil shmem is populate\r\n   - `fd_operator_fill_shmem_right_boundary!` - defines how right stencil shmem is populate\r\n   - `fd_operator_evaluate` - defines how to get the result of `getidx` from shmem\r\n  - `ext/cuda/operators_fd_shmem_is_supported.jl`, where you need to define `fd_shmem_is_supported` for the newly supported operator (and boundary conditions)",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-12T21:50:12Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2025-03-19T17:24:29Z",
+    "number": 2184,
+    "title": "Use shared memory in `DivergenceF2C` stencil operators"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR is an attempt to reduce latency. This was motivated by the example in #2215.\r\n\r\n```julia\r\nusing SnoopCompileCore\r\nusing ClimaCore.CommonSpaces\r\nimport ClimaCore\r\nimport ClimaCore: Fields, Geometry, Operators, Spaces\r\nimport LinearAlgebra: dot\r\n\r\nspace = ExtrudedCubedSphereSpace(; z_elem = 10, z_min = 0, z_max = 1, radius = 10, h_elem = 10, n_quad_points = 4, staggering = CellCenter(), );\r\n\r\n\u1d9cu\u2095 = similar(zeros(space), Geometry.Covariant12Vector{Float64});\r\n\u1da0u\u2083 = similar(zeros(Spaces.face_space(space)), Geometry.Covariant3Vector{Float64});\r\n\u1da0u\u00b3 = similar(zeros(Spaces.face_space(space)), Geometry.Contravariant3Vector{Float64});\r\n\u1da0u\u2095\u00b3 = similar(zeros(Spaces.face_space(space)), Geometry.Contravariant3Vector{Float64});\r\n\u1d9cu = similar(zeros(space), Geometry.Covariant123Vector{Float64});\r\nfill!(parent(\u1d9cu\u2095), 0);\r\nfill!(parent(\u1da0u\u2083), 0);\r\nfill!(parent(\u1da0u\u2095\u00b3), 0);\r\nfill!(parent(\u1d9cu), 0);\r\nfill!(parent(\u1da0u\u00b3), 0);\r\n\u1d9cK = zeros(space);\r\n\r\n# Warm InterpolateF2C up\r\n_ = @. Operators.InterpolateF2C()(Geometry.Covariant123Vector(\u1da0u\u2083));\r\n\r\n\r\nfunction mytest(\u1d9cK, \u1d9cu, \u1da0u\u2095\u00b3, \u1da0u\u00b3, \u1d9cu\u2095, \u1da0u\u2083)\r\n    interp_f2c = Operators.InterpolateF2C()\r\n    @. \u1d9cu = Geometry.Covariant123Vector(\u1d9cu\u2095) + interp_f2c(Geometry.Covariant123Vector(\u1da0u\u2083))\r\n    @. \u1da0u\u00b3 = \u1da0u\u2095\u00b3 + Geometry.Contravariant3Vector(\u1da0u\u2083)\r\n    @. \u1d9cK = 1 / 2 * (\r\n        dot(Geometry.Covariant123Vector(\u1d9cu\u2095), Geometry.Contravariant123Vector(\u1d9cu\u2095)) +\r\n        interp_f2c(dot(Geometry.Covariant123Vector(\u1da0u\u2083), Geometry.Contravariant123Vector(\u1da0u\u2083))) +\r\n        2 * dot(Geometry.Contravariant123Vector(\u1d9cu\u2095), interp_f2c(Geometry.Covariant123Vector(\u1da0u\u2083)))\r\n    )\r\n    return nothing\r\nend\r\n@time mytest(\u1d9cK, \u1d9cu, \u1da0u\u2095\u00b3, \u1da0u\u00b3, \u1d9cu\u2095, \u1da0u\u2083)\r\n```\r\n\r\nSeveral experiments were attempted, some were found to be fruitful. These experiments were performed with Julia 1.10:\r\n```\r\nUnrolledUtilities.unroll_map (naive)\r\n  0.797456 seconds (3.07 M allocations: 220.475 MiB, 23.52% gc time, 94.72% compilation time)\r\n  37.969 ms (0 allocations: 0 bytes)\r\n\r\nUnrolledUtilities.unroll_map with Base.@_inline_meta\r\n  3.422859 seconds (46.47 M allocations: 2.352 GiB, 22.98% gc time, 99.61% compilation time)\r\n  1.853 ms (0 allocations: 0 bytes)\r\n\r\nUnrolledUtilities.unroll_map with Base.@_propagate_inbounds_meta\r\n  3.190773 seconds (46.47 M allocations: 2.352 GiB, 21.57% gc time, 99.76% compilation time)\r\n  1.877 ms (0 allocations: 0 bytes)\r\n\r\nUnrolledUtilities.unrolled_map_into_tuple (naive)\r\n  0.669018 seconds (2.79 M allocations: 199.967 MiB, 14.59% gc time, 93.86% compilation time)\r\n  38.014 ms (0 allocations: 0 bytes)\r\n\r\nUnrolledUtilities.unrolled_map_into_tuple with Base.@_propagate_inbounds_meta\r\n  2.343249 seconds (34.25 M allocations: 1.761 GiB, 16.47% gc time, 99.60% compilation time)\r\n  1.900 ms (0 allocations: 0 bytes)\r\n\r\nUnrolledUtilities.unrolled_map_into_tuple with Base.@_inline_meta\r\n  2.629591 seconds (34.25 M allocations: 1.761 GiB, 15.49% gc time, 99.73% compilation time)\r\n  1.861 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta\r\n  1.722072 seconds (17.49 M allocations: 981.042 MiB, 19.83% gc time, 98.70% compilation time)\r\n  1.904 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations\r\n  1.340580 seconds (17.50 M allocations: 980.648 MiB, 16.88% gc time, 99.72% compilation time)\r\n  1.741 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + mygetidx\r\n  1.715542 seconds (21.53 M allocations: 1.127 GiB, 16.88% gc time, 99.31% compilation time)\r\n  1.744 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + mygetidx + (mygetidx type annotations)\r\n  1.553747 seconds (21.54 M allocations: 1.128 GiB, 14.65% gc time, 99.16% compilation time)\r\n  1.742 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + union splitting in getidx\r\n  1.018555 seconds (11.33 M allocations: 677.195 MiB, 16.38% gc time, 99.62% compilation time)\r\n  1.747 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + union splitting in getidx, no Base.promote_op\r\n  0.980109 seconds (11.35 M allocations: 670.100 MiB, 13.69% gc time, 99.63% compilation time)\r\n  1.745 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + union splitting in getidx, no Base.promote_op, \"union-splitting\" in `get_struct`\r\n  0.805466 seconds (8.31 M allocations: 488.659 MiB, 8.03% gc time, 99.56% compilation time)\r\n  1.780 ms (0 allocations: 0 bytes)\r\n\r\n@ncall with Base.@_propagate_inbounds_meta + type annotations + union splitting in getidx, no Base.promote_op, \"union-splitting\" in `get_struct` + PrecompileTools\r\n  0.766675 seconds (8.18 M allocations: 479.529 MiB, 7.90% gc time, 99.51% compilation time)\r\n  1.752 ms (0 allocations: 0 bytes)\r\n\r\n@ncall without Base.@_propagate_inbounds_meta\r\n  0.593864 seconds (2.53 M allocations: 175.663 MiB, 17.64% gc time, 98.32% compilation time)\r\n  7.158 ms (0 allocations: 0 bytes)\r\n\r\nmain\r\n  1.828435 seconds (21.47 M allocations: 1.170 GiB, 14.75% gc time, 99.57% compilation time)\r\n  1.874 ms (0 allocations: 0 bytes)\r\n```\r\n\r\nUsing `SnoopCompile` with flamegraphs:\r\n\r\n```julia\r\nusing SnoopCompileCore\r\nusing ClimaCore.CommonSpaces\r\nimport ClimaCore\r\nimport ClimaCore: Fields, Geometry, Operators, Spaces\r\nimport LinearAlgebra: dot\r\n\r\nspace = ExtrudedCubedSphereSpace(; z_elem = 10, z_min = 0, z_max = 1, radius = 10, h_elem = 10, n_quad_points = 4, staggering = CellCenter(), );\r\n\r\n\u1d9cu\u2095 = similar(zeros(space), Geometry.Covariant12Vector{Float64});\r\n\u1da0u\u2083 = similar(zeros(Spaces.face_space(space)), Geometry.Covariant3Vector{Float64});\r\n\u1da0u\u00b3 = similar(zeros(Spaces.face_space(space)), Geometry.Contravariant3Vector{Float64});\r\n\u1da0u\u2095\u00b3 = similar(zeros(Spaces.face_space(space)), Geometry.Contravariant3Vector{Float64});\r\n\u1d9cu = similar(zeros(space), Geometry.Covariant123Vector{Float64});\r\nfill!(parent(\u1d9cu\u2095), 0);\r\nfill!(parent(\u1da0u\u2083), 0);\r\nfill!(parent(\u1da0u\u2095\u00b3), 0);\r\nfill!(parent(\u1d9cu), 0);\r\nfill!(parent(\u1da0u\u00b3), 0);\r\n\u1d9cK = zeros(space);\r\n\r\n# Warm InterpolateF2C up\r\n_ = @. Operators.InterpolateF2C()(Geometry.Covariant123Vector(\u1da0u\u2083));\r\n\r\ntinf = @snoop_inference begin\r\n\r\n    function mytest(\u1d9cK, \u1d9cu, \u1da0u\u2095\u00b3, \u1da0u\u00b3, \u1d9cu\u2095, \u1da0u\u2083)\r\n        interp_f2c = Operators.InterpolateF2C()\r\n        @. \u1d9cu = Geometry.Covariant123Vector(\u1d9cu\u2095) + interp_f2c(Geometry.Covariant123Vector(\u1da0u\u2083))\r\n        @. \u1da0u\u00b3 = \u1da0u\u2095\u00b3 + Geometry.Contravariant3Vector(\u1da0u\u2083)\r\n        @. \u1d9cK = 1 / 2 * (\r\n            dot(Geometry.Covariant123Vector(\u1d9cu\u2095), Geometry.Contravariant123Vector(\u1d9cu\u2095)) +\r\n            interp_f2c(dot(Geometry.Covariant123Vector(\u1da0u\u2083), Geometry.Contravariant123Vector(\u1da0u\u2083))) +\r\n            2 * dot(Geometry.Contravariant123Vector(\u1d9cu\u2095), interp_f2c(Geometry.Covariant123Vector(\u1da0u\u2083)))\r\n        )\r\n        return nothing\r\n    end\r\n    mytest(\u1d9cK, \u1d9cu, \u1da0u\u2095\u00b3, \u1da0u\u00b3, \u1d9cu\u2095, \u1da0u\u2083)\r\n\r\nend;\r\n\r\nfg = flamegraph(tinf)\r\nusing ProfileView\r\nProfileView.view(fg)\r\n```\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T18:29:57Z",
+    "deletions": 97,
+    "labels": [
+      {
+        "color": "11DC9E",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABEZGepg",
+        "name": "Latency"
+      }
+    ],
+    "mergedAt": "2025-03-19T20:07:48Z",
+    "number": 2225,
+    "title": "Attempts to reduce latency"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Bump version number",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-18T22:57:01Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-03-19T20:41:42Z",
+    "number": 2246,
+    "title": "Make patch release"
+  }
+]

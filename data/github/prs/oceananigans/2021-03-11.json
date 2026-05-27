@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 355,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a major refactor of the `TurbulenceClosures` module. In particular, it \"standardizes\" how turbulence closures specify diffusive fluxes. Each turbulence closure now defines 12 functions (or opts in to functionality via subtyping, eg `AbstractEddyViscosityClosure`):\r\n\r\n* `diffusive_flux_x`, `diffusive_flux_y`, and `diffusive_flux_z` for tracer diffusive fluxes\r\n* `viscous_flux_ux`, `viscous_flux_uy`, and `viscous_flux_uz` for viscous fluxes of x-momentum\r\n* 6 other functions similar to `viscous_flux_ux`, etc for `y` and `z` momentum components\r\n\r\nThen there is a single implementation of `\u2207_\u03ba_\u2207c`, for example, which calculates the divergence of the diffusive fluxes in a way that generalizes to curvilinear grids.\r\n\r\nThis refactor was not that difficult because many turbulence closures had functions analogous to these --- they were just called by different names. So in a way this PR simply establishes standard notation.\r\n\r\nA major advantage of standard notation is that we can now correctly specify flux boundary conditions even when we cannot fill halos for this purpose. For example, right now we fill halos so that (fingers crossed!) boundary fluxes are zero when the diffusion operator is evaluated on boundary-adjacent cells, and then in a second step add the specific boundary fluxes. But with a function `diffusive_flux_x`, we can now \"reverse\" boundary fluxes and add specified fluxes generically. This PR therefore makes progress towards #1400.\r\n\r\nWork on this PR started with a few extra tests for `HydrostaticFreeSurfaceModel` (though its focus is not quite different). So as a bonus this PR also adds tests for `HydrostaticFreeSurfaceModel` (which may need to be disabled if they fail on the GPU so that we can get this PR in sooner rather than later).",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-10T16:29:25Z",
+    "deletions": 445,
+    "labels": [],
+    "mergedAt": "2021-03-11T16:22:53Z",
+    "number": 1449,
+    "title": "Major refactor of TurbulenceClosures module plus more tests for HydrostaticFreeSurfaceModel"
+  },
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a convenience constructor for `VerticalVorticityField` which computes the vertical vorticity in a manner consistent with the `VectorInvariant` momentum advection scheme.\r\n\r\ncc @sandreza who may find it useful.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-11T00:55:06Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2021-03-11T18:08:52Z",
+    "number": 1454,
+    "title": "VerticalVorticityField"
+  }
+]

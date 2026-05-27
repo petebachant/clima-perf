@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "The current Manifest conflicts with FFMPEG v0.4 and thus enforces it to fallback to FFMPEG v0.2.\r\nThis, in principle, is not a problem since we don't depend on FFMPEG. But as soon as we try to use Makie/GLMakie which has FFMPEG as a dependency then it is forced to use FFMPEG v0.2.\r\n\r\nFFMPEG v0.2 cannot compile on Apple\u2019s M1/M2 chips and this creates errors and inconvenience. \r\n\r\nI tried to enforce installing `FFMPEG@v0.4` on the current environment and this resulted in downgrade of some `jll`s.\r\n\r\n```\r\n\u2305 [0234f1f7] \u2193 HDF5_jll v1.14.0+0 \u21d2 v1.12.2+2\r\n\u2303 [7243133f] \u2193 NetCDF_jll v400.902.208+0 \u21d2 v400.902.5+1\r\n\u2305 [458c3c95] \u2193 OpenSSL_jll v3.0.9+0 \u21d2 v1.1.21+0\r\n```\r\n\r\nInformed by that, this PR ensures that those `jll`s satisfy `FFMPEG`s dep requirements so that people with Apple M1/2 chips (like myself) can still use Oceananigans + Makie for plotting.\r\n\r\nI've been troubling with this all morning along with @glwagner and @siddharthabishnu. Not sure if this is the best solution possible, but it does work. Hopefully this is something that it will be fixed from other packages moving forward.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-29T23:53:35Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2023-06-30T22:50:58Z",
+    "number": 3161,
+    "title": "Fix issue with GL/CairoMakie not being able to compile on Apple's M1/2 chips"
+  }
+]

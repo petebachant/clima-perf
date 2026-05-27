@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request improves the numerical stability and correctness of the `saturation_vapor_pressure` calculation in `src/air_saturation_functions.jl` and adds new tests to ensure correct behavior at very low temperatures. The most important changes are:\r\n\r\n**Numerical stability and correctness improvements:**\r\n\r\n* Refactored the computation of saturation vapor pressure by rewriting the power term as an exponent and combining terms inside a single `exp` call for better numerical stability, and added a guard to return zero when temperature is zero. (`src/air_saturation_functions.jl`)\r\n\r\nPrior to this change, the function read:\r\n```julia\r\nreturn press_triple *\r\n    # Use fast_power to compute (T / T_triple)^(\u0394cp / R_v) more efficiently\r\n    fast_power(T / T_triple, \u0394cp / R_v) *\r\n    exp((LH_0 - \u0394cp * T_0) / R_v * (1 / T_triple - 1 / T))\r\n```\r\nwhere `fast_power(x, y) = exp(y * log(x))`. For `T = Float32(1e-5)`, the result of `fast_power` would be valid, but `press_triple * fast_power(...)` resulted in `Inf32` (numerical overflow). The last expression evaluates to `0`, so the returned value is `Inf * 0 = NaN`. By calculating `exp(x+y)` instead of `exp(x) * exp(y)`, this issue does not materialize.\r\n\r\nThis function would still return `NaN` for `T=0` exactly, due to the arguments of `fast_power`. Now, we explicitly check for `iszero(T)` and set the return value to `0`, without branching. The function now reads\r\n\r\n```julia\r\n# Combine the power-law and exponential factors of the Clausius-Clapeyron relation\r\n# into a single exp() call:\r\n#   p_tr * (T/T_tr)^(\u0394cp/Rv) * exp[...]  \u2192  p_tr * exp( (\u0394cp/Rv)*log(T/T_tr) + ... )\r\n# This avoids computing a separate pow, which is less efficient on GPUs,\r\n# and reduces floating-point rounding by summing the exponents before exponentiation.\r\nq_vap_sat = press_triple * exp(\r\n    (\u0394cp / R_v) * log(T / T_triple) +\r\n    (LH_0 - \u0394cp * T_0) / R_v * (1 / T_triple - 1 / T),\r\n)\r\nreturn ifelse(iszero(T), zero(T), q_vap_sat)\r\n```\r\n\r\n**Testing enhancements:**\r\n\r\n* Added a new test set to verify that the saturation vapor pressure returns zero for very small and zero temperatures, ensuring correct low-temperature behavior for both liquid and ice cases. (`test/correctness.jl`)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-17T20:23:57Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-03-18T18:43:03Z",
+    "number": 313,
+    "title": "fix: limiting behavior, saturation vapor pressure"
+  }
+]

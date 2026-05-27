@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-07T15:11:52Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-03-09T00:29:58Z",
+    "number": 4179,
+    "title": "Add \"_rank0\", \"_rank1\" etc to output prefix on distributed architectures"
+  },
+  {
+    "additions": 374,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds a constructor for `Clock` which depends on `grid`, and therefore architecture. This allows the clock to be traced when using `arch = ReactantState()`.\r\n\r\nIn addition to that, this PR discontinues support for `run!` with `arch = ReactantState()`. Our rationale is that we cannot yet support the `Simulation` paradigm, which executes time-steps in a `while` loop until `!(simulation.running)`, where `simulation.running` is typically controlled by `if` statements that depend, for example, on `clock.iteration`. Basically we're deciding not to try to use `@trace if`, yet.\r\n\r\nAs a result, time step loops with `Reactant` should be managed manually. To facilitate this, this PR also adds a function `first_time_step!` which first `initialize!(model)` and `update_state!(model)` before taking a time-step (which is limited to Euler step for AB2).\r\n\r\ncc @giordano ",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-12T23:53:02Z",
+    "deletions": 78,
+    "labels": [],
+    "mergedAt": "2025-03-09T20:26:51Z",
+    "number": 4096,
+    "title": "Set a default Clock depending on the grid"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-06T16:42:29Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-03-09T23:31:27Z",
+    "number": 4174,
+    "title": "Fix the docstring for `ImmersedBoundaryGrid`"
+  }
+]

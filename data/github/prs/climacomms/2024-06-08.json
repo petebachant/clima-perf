@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 168,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR fixes the issues with the macros, introduced in #79.\r\n\r\nUsing `sin.(AT(rand(1000, 1000)))` in the test suite:\r\n\r\n```julia\r\nmain\r\njulia> using Revise; include(\"test/hygiene.jl\")\r\n----------- @time\r\n  0.000047 seconds\r\n\r\nthis branch\r\njulia> using Revise; include(\"test/hygiene.jl\")\r\n----------- @time\r\n  0.046593 seconds (97 CPU allocations: 22.891 MiB, 12.87% gc time) (6 GPU allocations: 45.776 MiB, 0.44% memmgmt time)\r\n```\r\nSo, this appears to fix the issue. I'm not sure what the best way to test this.\r\n\r\nPart of the reason is that this PR is technically behavior changing in that the macro now makes an argument-less closure, and times (in the case of `@time`) the closure.\r\n\r\nI think that this is probably fine and, frankly, we could even eliminate the macro and just make the methods, which are far easier to extend/understand (as there is no hygiene to worry about), user-facing. The purely method-based approaches may be easier to test, too, since we could even check `@which` to ensure that we're calling the extension when we expect.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-07T00:58:06Z",
+    "deletions": 75,
+    "labels": [
+      {
+        "color": "51B479",
+        "description": "",
+        "id": "LA_kwDOGUSWBM8AAAABpDJFKA",
+        "name": "bugfix :bug::hammer:"
+      }
+    ],
+    "mergedAt": "2024-06-08T01:55:06Z",
+    "number": 83,
+    "title": "Fix macros"
+  }
+]

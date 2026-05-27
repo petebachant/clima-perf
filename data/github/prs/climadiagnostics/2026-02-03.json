@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 71,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "When trying to output diagnostics for 1D vertical column fields in Atmos (e.g., vertical profiles of scalar statistics) using a `NetCDFWriter` that was initialized from a 3D `ExtrudedFiniteDifferenceSpace`, the writer would fail with:\r\n\r\n`ERROR: Incompatible z dimension already exists in file output/.../variable_name.nc`\r\n\r\nIn `write_field!`, when calling `add_space_coordinates_maybe!`, the full `writer.num_points` tuple (e.g., (num_lon, num_lat, num_z)) was passed for all space types. However, for `FiniteDifferenceSpace` (1D column), only the vertical dimension (num_z,) should be passed.\r\n\r\nThe `add_space_coordinates_maybe!` method for `FiniteDifferenceSpace` then called `dimension_exists(nc, name, num_points_z)` with the full 3-tuple, causing the dimension size check to fail.\r\n\r\n\r\nThis PR adds conditional logic in `write_field!` to extract only the vertical component of `num_points` when the field's space is a `FiniteDifferenceSpace`. This mirrors the existing pattern for handling 2D horizontal fields, where `num_points` is appropriately sliced.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-02T22:03:10Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-02-03T00:41:32Z",
+    "number": 157,
+    "title": "Support 1D column (FiniteDifferenceSpace) diagnostics when writer is initialized from 3D space"
+  }
+]

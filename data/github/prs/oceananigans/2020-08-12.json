@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Got bitten by CuArray scalar operations while debugging some Europa runs so this PR adds an `__init__()` function to the Oceananigans module that disables CuArray scalar operations once the module has been loaded and only allows scalar ops via the `CUDA.@allowscalar` macro.\r\n\r\nNow when we accidentally perform scalar ops on CuArrays we should get an error, which is much better than having silent performance regressions which has happened multiple times in the past.\r\n\r\nTwo remaining problems:\r\n1. `set!(u::Field, v::Number) = @. u.data = v` actually incurs scalar ops because `a::CuArray .= 1.5` does not but `a::OffsetArray{CuArray .= 1.5` does, so it's probably something we have to fix by adapting broadcasting over offsetarrays?\r\n2. For similar broadcasting reasons I think\r\n    ```julia\r\n    data = cpudata(output)\r\n    ds[name][:, :, :, time_index] = view(data, ow.slices[name]...)\r\n    ```\r\n    also incurs scalar ops during NetCDF output so I will try changing back to the old behavior where we used something like `\t    \r\n    ```julia\r\n    data = interiorparent(output)\r\n    !isa(output, Array) && (data = Array(data))\r\n    ds[name][:, :, :, time_index] = view(data, ow.slices[name]...)\r\n    ```\r\n\r\nResolves #276",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0NTM1NDkyOTM=",
+        "number": 276,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/276"
+      }
+    ],
+    "createdAt": "2020-08-12T13:25:43Z",
+    "deletions": 96,
+    "labels": [],
+    "mergedAt": "2020-08-12T16:40:20Z",
+    "number": 851,
+    "title": "Dynamically disable CuArray scalar operations"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Release notes:\r\n\r\nThis is a bugfix release that disables CuArray scalar operations by default (to avoid surprise scalar operations that can cause huge slowdowns) and **fixes a related bug where writing GPU fields to NetCDF was very slow**. Also includes small updates to the documentation.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-08-12T14:55:36Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-08-12T16:40:43Z",
+    "number": 852,
+    "title": "Bump v0.34.1"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 299,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Call them system tests, model verification tests, or end-to-end tests, that's what this PR is about.\r\n\r\nCurrently a work in progress as I hit a roadblock with checkpointing so **the tests will fail**. See #141. BUT, for testing we can just set `model.forcings = nothing` and manually reconstruct the forcings as we know them.\r\n\r\nTests implemented so far:\r\n1. Checkpointing integration test: Run two coarse rising thermal bubble simulations and make sure that when restarting from a checkpoint, the restarted simulation matches the non-restarted simulation numerically.\r\n2. NetCDF output integration test: Run a coarse thermal bubble simulation and save the output to NetCDF at the 10th time step. Then read back the output and test that it matches the model's state.\r\n3. Thermal bubble golden master test: Run the coarse thermal bubble simulation for 10 time steps and check that the model output matches a golden master output.\r\n4. Deep convection golden master test\r\n\r\n@jm-c @christophernhill: do post any ideas for tests that should be implemented in this PR.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-03-19T16:42:00Z",
+    "deletions": 32,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2019-03-21T18:39:14Z",
+    "number": 140,
+    "title": "Checkpointing, NetCDF, and golden master tests"
+  }
+]

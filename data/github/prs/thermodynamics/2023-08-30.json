@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "We were assuming that mean sea level pressure (MSLP) and the reference pressure used in potential temperature are the same. This is technically not a mistake. It is causing problems in ClimaAtmos where we were overwriting `MSLP=101325` value to be `100000` hPa for some of our cases but not for others.\r\n\r\nI'm hoping that differentiating between the two would help us get rid of those [overwrites](https://github.com/CliMA/ClimaAtmos.jl/blob/d91fe26e69a964746fea7778d98ab8ab760ed598/src/parameters/create_parameters.jl#L133-L156)\r\n\r\nI kept the `MSLP` in temperature profiles and in the `specific_entropy_` reference pressure. Lucky for us entropy is not used in ClimaAtmos, so it doesn't really matter.   ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-28T23:07:01Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "251886",
+        "description": "",
+        "id": "MDU6TGFiZWwzMzUwNDQyNDg2",
+        "name": "breaking changes :boom:"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Add label to launch Buildkite",
+        "id": "LA_kwDODuejNs8AAAABRtDTgg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2023-08-30T00:13:32Z",
+    "number": 151,
+    "title": "Dont assume that MSLP and theta ref pressure are the same"
+  }
+]

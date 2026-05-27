@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-03T05:26:05Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-05-04T03:32:01Z",
+    "number": 5557,
+    "title": "Fix latex rendering for Docs/Forcing/Advective forcing"
+  },
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "At the moment, `AveragedTimeInterval` does not support a `Dates` clock. This PR allows to use a `Dates` clock passing `Dates.Period` averaging times\r\n\r\nMWE:\r\n```julia\r\nusing Dates\r\nusing Oceananigans\r\n\r\ngrid  = RectilinearGrid(size=(1,1,1), extent=(1,1,1))\r\nclock = Oceananigans.TimeSteppers.Clock(time=DateTime(2010, 1, 1))\r\nmodel = HydrostaticFreeSurfaceModel(grid; clock)\r\n\r\n# Works on main (TimeInterval supports Dates)\r\nJLD2Writer(model, model.velocities; schedule=TimeInterval(Dates.Day(1)), filename=\"ti\")\r\n\r\n# Fails on main (works on this PR)\r\nJLD2Writer(model, model.velocities; schedule=AveragedTimeInterval(Dates.Day(1)), filename=\"ati\")\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-04T14:02:49Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-05-04T19:47:26Z",
+    "number": 5562,
+    "title": "Allow `AveragedTimeInterval` with a `Dates` clock"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-04T14:35:44Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-05-04T20:20:37Z",
+    "number": 5563,
+    "title": "Update Chor et. al (2026) in published papers"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-29T21:57:25Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-05-04T20:27:38Z",
+    "number": 5553,
+    "title": "Fix typos in boundary_condition.jl documentation"
+  }
+]

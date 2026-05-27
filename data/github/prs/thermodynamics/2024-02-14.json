@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-14T00:54:10Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2024-02-14T00:54:18Z",
+    "number": 198,
+    "title": "Add changelog file"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR adds a method to every user-facing `ThermodynamicState` constructor, in which all input arguments are promoted to the same number type. In addition, `q_vap_saturation_generic` is given a new method that promotes its input arguments.\r\n\r\nWith only three exceptions, every function from `Thermodynamics.jl` that gets called while computing the precomputed quantities and implicit tendencies of `ClimaAtmos.jl` only takes two input arguments: a parameter set and a `ThermodynamicState`. The exceptions are\r\n  - constructors of `ThermodynamicState`s, where some inputs can be prescribed by the conditions at `t = 0` or `z = 0` while others depend on the prognostic state\r\n  - `total_specific_enthalpy(param_set, ts, e_tot)`, where `ts` and `e_tot` both depend on the prognostic state\r\n  - `q_vap_saturation_generic(param_set, T, \u03c1, phase)`, where `T` is prescribed by the conditions at `z = 0` while `\u03c1` depends on the prognostic state in the bottom element\r\n\r\nSo, this PR constitutes the minimum set of additions to `Thermodynamics.jl` that will enable us to use automatic differentiation in `ClimaAtmos.jl`, which involves replacing values in the prognostic state with numbers of type `ForwardDiff.Dual`.\r\n\r\nThis is a simpler alternative to #197, which I'm going to close for now. In the future, we may want to come back to the changes in that PR, since they are much more generalizable. That is, they will not require to continue adding new methods to every function that relies on promotion during automatic differentiation in other repositories. The downside to those changes is that they would allow developers to silently introduce `Float32`/`Float64` type instabilities within internal functions, and we would probably want to add more unit tests to ensure that those are avoided.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-02-14T22:02:48Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Add label to launch Buildkite",
+        "id": "LA_kwDODuejNs8AAAABRtDTgg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2024-02-14T23:18:35Z",
+    "number": 199,
+    "title": "Add promoting constructors for Dual number support"
+  }
+]

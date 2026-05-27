@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 493,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "While in a perfect world we would include diffusivities in `model_fields` for both forcing functions and boundary condition functions, including them makes trouble for the compilation of `ContinuousForcing` (see #1059).\r\n\r\nWe should have had a test that `ContinuousForcing` works with non-trivial turbulence closures (and perhaps tuples of closures as well). Since we don't include `diffusivities` in `model_fields` anymore, there's no need for such a test. But let it be noted that if `diffusivities` is ever restored to `model_fields`, we'll need to test that this works with various forcing functions and boundary condition functions (perhaps the problem will disappear as the julia versions march ever onwards...)\r\n\r\nThis PR relies on #1057 (though it shouldn't...)\r\n\r\nResolves #1059 ",
+    "changedFiles": 32,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU3MjA5MDA0NzE=",
+        "number": 1059,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1059"
+      }
+    ],
+    "createdAt": "2020-10-13T22:27:14Z",
+    "deletions": 418,
+    "labels": [],
+    "mergedAt": "2020-10-17T16:51:00Z",
+    "number": 1061,
+    "title": "Omit diffusivities from model_fields"
+  },
+  {
+    "additions": 487,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR writes new `Adapt.adapt_structure` methods for `Field`, `AveragedField`, and `ComputedField`:\r\n\r\n* `Field` and `ComputedField` are adapted to their data (thus shedding location information, the grid, and boundary conditions). This is fine because we don't reference location information or boundary conditions _inside_ GPU kernels\r\n\r\n* `AveragedField` sheds `operand` and `grid` when adapted to the GPU. `AveragedField` still needs location information for `getindex` to work correctly.\r\n\r\nThis obviates the need for `datatuple` (we still keep the function around however because its useful for tests). It also obviates the need for `gpufriendly`.\r\n\r\n~~We can now use `AveragedField` and `ComputedField` inside kernels.~~ This still doesn't work. We need to open an issue once this PR is merged.\r\n\r\nThis PR supersedes #746  .\r\n\r\nFinally, we can dramatically simplify the time-stepping routine since we don't need to \"unwrap\" fields anymore.\r\n\r\nIt's probably worthwhile running a benchmark before merging but hopefully there's no issue.\r\n\r\nResolves #722 .\r\n\r\n",
+    "changedFiles": 28,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU1ODk1ODc4MTE=",
+        "number": 722,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/722"
+      }
+    ],
+    "createdAt": "2020-10-13T19:52:55Z",
+    "deletions": 389,
+    "labels": [],
+    "mergedAt": "2020-10-17T16:51:03Z",
+    "number": 1057,
+    "title": "Adapt Field, AveragedField, and ComputedField for GPU, round 2"
+  }
+]

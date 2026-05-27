@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 310,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds `getidx` micro benchmarks for some matrix field operators. I've also refactored things a bit so that we can run some flame graphs on these functions. Here's what the output looks like for `test/MatrixFields/matrix_field_broadcasting.jl`:\r\n\r\n\r\n```julia\r\njulia> using Revise; include(joinpath(\"test\", \"MatrixFields\", \"matrix_field_broadcasting.jl\"))\r\ncomms_device = ClimaComms.CPUSingleThreaded()\r\n[ Info: getidx times max(interior,left,right) = (3 nanoseconds,3 nanoseconds,3 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,5 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (7 nanoseconds,7 nanoseconds,7 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,5 nanoseconds,5 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (14 nanoseconds,14 nanoseconds,14 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (22 nanoseconds,24 nanoseconds,24 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (19 nanoseconds,19 nanoseconds,19 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (35 nanoseconds,36 nanoseconds,36 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (20 nanoseconds,50 nanoseconds,45 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (16 nanoseconds,17 nanoseconds,17 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (75 nanoseconds,120 nanoseconds,116 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (193 nanoseconds,242 nanoseconds,257 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (1 microsecond, 246 nanoseconds,1 microsecond, 575 nanoseconds,1 microsecond, 684 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (110 nanoseconds,142 nanoseconds,148 nanoseconds)\r\nTest Summary:                    | Pass  Total     Time\r\nScalar Matrix Field Broadcasting |  112    112  5m26.4s\r\ncomms_device = ClimaComms.CPUSingleThreaded()\r\n[ Info: getidx times max(interior,left,right) = (11 nanoseconds,11 nanoseconds,11 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (58 nanoseconds,59 nanoseconds,84 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (48 nanoseconds,48 nanoseconds,47 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (71 nanoseconds,78 nanoseconds,78 nanoseconds)\r\nTest Summary:                        | Pass  Total     Time\r\nNon-scalar Matrix Field Broadcasting |   28     28  1m13.6s\r\n```\r\n\r\nThis nicely lines up indicating that `test_scalar_15` is problematic.",
+    "changedFiles": 24,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-10T12:53:37Z",
+    "deletions": 241,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2024-07-10T14:33:21Z",
+    "number": 1879,
+    "title": "Add getidx benchmarks, refactor, update code loading"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR hoists eltype calls in the matrix multiplication.\r\n\r\nmain\r\n```julia\r\nmain\r\njulia> using Revise; include(joinpath(\"test\", \"MatrixFields\", \"matrix_field_broadcasting.jl\"))\r\n[ Info: getidx times max(interior,left,right) = (3 nanoseconds,3 nanoseconds,3 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,5 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (7 nanoseconds,7 nanoseconds,7 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (5 nanoseconds,5 nanoseconds,5 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (14 nanoseconds,14 nanoseconds,14 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (22 nanoseconds,23 nanoseconds,23 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (19 nanoseconds,19 nanoseconds,19 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (35 nanoseconds,36 nanoseconds,36 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (51 nanoseconds,43 nanoseconds,46 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (16 nanoseconds,17 nanoseconds,17 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (232 nanoseconds,297 nanoseconds,298 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (260 nanoseconds,334 nanoseconds,376 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 microseconds, 197 nanoseconds,5 microseconds, 570 nanoseconds,5 microseconds, 584 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (107 nanoseconds,156 nanoseconds,152 nanoseconds)\r\nTest Summary:                    | Pass  Total     Time\r\nScalar Matrix Field Broadcasting |  112    112  5m23.0s\r\n[ Info: getidx times max(interior,left,right) = (11 nanoseconds,11 nanoseconds,11 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (93 nanoseconds,96 nanoseconds,120 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (48 nanoseconds,48 nanoseconds,48 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (70 nanoseconds,77 nanoseconds,77 nanoseconds)\r\nTest Summary:                        | Pass  Total     Time\r\nNon-scalar Matrix Field Broadcasting |   28     28  1m07.7s\r\n```\r\n\r\nthis PR\r\n```julia\r\njulia> using Revise; include(joinpath(\"test\", \"MatrixFields\", \"matrix_field_broadcasting.jl\"))\r\n[ Info: getidx times max(interior,left,right) = (3 nanoseconds,3 nanoseconds,3 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (4 nanoseconds,4 nanoseconds,4 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (7 nanoseconds,7 nanoseconds,7 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (5 nanoseconds,5 nanoseconds,5 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (14 nanoseconds,15 nanoseconds,14 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (22 nanoseconds,23 nanoseconds,23 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (19 nanoseconds,19 nanoseconds,19 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (35 nanoseconds,36 nanoseconds,36 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (15 nanoseconds,16 nanoseconds,16 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (15 nanoseconds,16 nanoseconds,16 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (57 nanoseconds,82 nanoseconds,93 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (134 nanoseconds,163 nanoseconds,182 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (723 nanoseconds,784 nanoseconds,829 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (97 nanoseconds,129 nanoseconds,130 nanoseconds)\r\nTest Summary:                    | Pass  Total     Time\r\nScalar Matrix Field Broadcasting |  112    112  5m36.8s\r\n[ Info: getidx times max(interior,left,right) = (11 nanoseconds,11 nanoseconds,11 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (95 nanoseconds,110 nanoseconds,99 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (48 nanoseconds,49 nanoseconds,49 nanoseconds)\r\n[ Info: getidx times max(interior,left,right) = (70 nanoseconds,78 nanoseconds,78 nanoseconds)\r\nTest Summary:                        | Pass  Total     Time\r\nNon-scalar Matrix Field Broadcasting |   28     28  1m12.2s\r\n```\r\n\r\nSo, scalar tests 11, 13, 14, and 15 are significantly faster with this PR.\r\n\r\nThe flame graph for 15 is a step towards #1871, but there is still some time in `eltype`, which seems odd.\r\n\r\n<img width=\"2145\" alt=\"Screenshot 2024-07-10 at 11 02 08\u202fAM\" src=\"https://github.com/CliMA/ClimaCore.jl/assets/1880641/adde5bdd-8ac1-4fa8-89e8-7e9fdd98701d\">\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-07-10T15:04:57Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-07-10T16:13:03Z",
+    "number": 1880,
+    "title": "Hoist eltype calls in matrix multiplication"
+  }
+]

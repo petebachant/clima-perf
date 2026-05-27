@@ -1,0 +1,94 @@
+[
+  {
+    "additions": 144,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Opening as draft because this fails at the moment.  The test failure is elaborated in https://github.com/CliMA/Oceananigans.jl/pull/4979#issue-3660106097.  @simone-silvestri when you get a chance, could you please help with this one?  I think we need to either not export the non-existing metrics (and the related methods), or define all of them.  In https://github.com/CliMA/Oceananigans.jl/pull/4979#issuecomment-3572316835 you seemed to lean towards the former.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-26T23:30:29Z",
+    "deletions": 93,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2025-12-01T14:17:16Z",
+    "number": 4992,
+    "title": "Check undefined exports with Aqua"
+  },
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Also, move some methods from `Utils` to `Grids`, as they need types or functions defined in that submodule.  Ref: https://github.com/CliMA/ClimaOcean.jl/pull/688#issuecomment-3594140493 and https://github.com/NumericalEarth/Breeze.jl/pull/195#discussion_r2575386683.\r\n\r\nI wish I had done this before, but it didn't occur to me that I could just move some methods from `Utils` to `Grids` :disappointed: However this change should be non-breaking for downstream packages, as `prettysummary` is accessible from both `Grids` and `Utils`.\r\n\r\nOther functions moved around are\r\n\r\n* [`periphery_offset`](https://juliahub.com/ui/Search?type=symbols&q=periphery_offset&t=function)\r\n* [`interior_work_layout`](https://juliahub.com/ui/Search?type=symbols&q=interior_work_layout&t=function) (but this is still nominally in `Utils`, but extended in `Grids`)\r\n* [`longitude_in_same_window`](https://juliahub.com/ui/Search?type=symbols&q=longitude_in_same_window&t=function)\r\n* [`flip_location`](https://juliahub.com/ui/Search?type=symbols&q=flip_location&t=function)\r\n* [`get_longitude_vertices`](https://juliahub.com/ui/Search?type=symbols&q=get_longitude_vertices&t=function)\r\n* [`get_latitude_vertices`](https://juliahub.com/ui/Search?type=symbols&q=get_latitude_vertices&t=function)\r\n* [`get_lat_lon_nodes_and_vertices`](https://juliahub.com/ui/Search?type=symbols&q=get_lat_lon_nodes_and_vertices&t=function)\r\n* [`get_cartesian_nodes_and_vertices`](https://juliahub.com/ui/Search?type=symbols&q=get_cartesian_nodes_and_vertices&t=function)\r\n\r\nbut according to JuliaHub search (I included the links above) they are used exclusively by Oceananigans, among all packages registered in General, so no downstream package should be affected by these moves.",
+    "changedFiles": 34,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T11:17:26Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2025-12-01T16:27:15Z",
+    "number": 5006,
+    "title": "Move `prettysummary` to Utils"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Might be a source of error, however, tests seem not to pick this up...",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T12:43:31Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-12-01T16:44:36Z",
+    "number": 5007,
+    "title": "Fix `location` was not passed in `configure_kernel`"
+  },
+  {
+    "additions": 79,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a new kwarg for WENO and UpwindBiased constructors called `minimum_buffer_upwind_order`. The purpose of this kwarg is to allow users to easily limit the minimum order that the \"buffer\" schemes can reach as a boundary is approached.\r\n\r\nI left the default value of this kwarg at `1`, which preserves existing behavior whereby the innermost buffer scheme is an `UpwindBiased(order=1)`. However, I would also like to propose setting the default value to `3` so that the innermost scheme is `Centered(order=2)` by default.\r\n\r\nI also changed the `show` method so that the buffer schemes are displayed:\r\n\r\n```julia\r\njulia> WENO(order=9)\r\nWENO{5, Float64, Float32}(order=9)\r\n\u251c\u2500\u2500 buffer_scheme: WENO{4, Float64, Float32}(order=7)\r\n\u2502   \u2514\u2500\u2500 buffer_scheme: WENO{3, Float64, Float32}(order=5)\r\n\u2502       \u2514\u2500\u2500 buffer_scheme: WENO{2, Float64, Float32}(order=3)\r\n\u2502           \u2514\u2500\u2500 buffer_scheme: UpwindBiased(order=1)\r\n\u2514\u2500\u2500 advecting_velocity_scheme: Centered(order=8)\r\n```\r\n\r\nand\r\n\r\n```julia\r\njulia> WENO(order=9, minimum_buffer_upwind_order=3)\r\nWENO{5, Float64, Float32}(order=9)\r\n\u251c\u2500\u2500 buffer_scheme: WENO{4, Float64, Float32}(order=7)\r\n\u2502   \u2514\u2500\u2500 buffer_scheme: WENO{3, Float64, Float32}(order=5)\r\n\u2502       \u2514\u2500\u2500 buffer_scheme: WENO{2, Float64, Float32}(order=3)\r\n\u2502           \u2514\u2500\u2500 buffer_scheme: Centered(order=2)\r\n\u2514\u2500\u2500 advecting_velocity_scheme: Centered(order=8)\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-30T19:55:13Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-12-01T19:57:07Z",
+    "number": 5003,
+    "title": "Implement minimum_buffer_upwind_order for WENO and UpwindBiased"
+  }
+]

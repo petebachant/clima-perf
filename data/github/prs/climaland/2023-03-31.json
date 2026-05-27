@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 687,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nPrimarily to remove the option to run PH as a standalone model. In doing so, it became clear that the canopy component models werent really the same thing as the soil model, canopy model, snow model, because they cannot be run in standalone mode. This suggested that we might want another name for them - they arent really \"AbstractModels\" in the sense of ClimaLSM. so, we introduced \"component models\", which share some, but not all, of the AbstractModel functionality.\r\n\r\n## Content\r\nMajor Changes\r\n1. Introduces CanopyComponents (which share much, but not all, of the same functionality as AbstractModels, but are not models in the sense of defining a complete tendency function, state vector, etc).\r\n2. Removes the option to have a canopy model with only a PH model. You now must run a canopy model with all four components. This required updates to the constructor for the soil+canopy \"LSM\" model.\r\n3. Removes the `domain` from PH as this is duplicated in `canopy`; removes the check in the canopy constructor which checks that they are the same. Also removes the `earth_param_set` from PH, since this is duplicated in `canopy`\r\n\r\nMinor changes:\r\n1. creates the aux variable `transpiration`, which is stuck in conductance right now. This is *always* updated, and when setting the BC in PH, is used if we are not using the Prescribed BC.\r\n2. Moves transpiration functions that set the boundary condition of plant hydraulics into that module, rather than having them be split between Canopy and PH.jl\r\n3. Makes the flux from the roots not hardcoded to depend on stem properties (for the case where there is no stem)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5hqlG5",
+        "number": 174,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/174"
+      }
+    ],
+    "createdAt": "2023-03-24T22:24:53Z",
+    "deletions": 430,
+    "labels": [],
+    "mergedAt": "2023-03-31T20:01:08Z",
+    "number": 175,
+    "title": "Plant hydraulics only runs as part of the canopy"
+  }
+]

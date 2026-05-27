@@ -1,0 +1,153 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-17T11:34:46Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-01-17T11:35:10Z",
+    "number": 5149,
+    "title": "Add new papers to the Oceananigans section"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-17T10:16:52Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-01-17T11:57:53Z",
+    "number": 5148,
+    "title": "Remove ConservativeRegridding from Project"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "not used and increases the maintainance burden",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-16T22:06:21Z",
+    "deletions": 176,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-01-17T13:44:29Z",
+    "number": 5147,
+    "title": "(0.104.0) Remove support for AB3 barotropic substepping"
+  },
+  {
+    "additions": 2874,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This is a work-in-progress PR that aims to reformulate the timestepping scheme of the `HydrostaticFreeSurfaceModel` to \r\nmake sure that three numerical properties are satisfied:\r\n\r\n- tracers are globally conserved (the integral of a tracer field remains constant in the absence of forcings)\r\n- tracers are locally conserved (an initially constant tracer remains constant in the absence of forcings)\r\n- The free surface is evolved consistently with the grid thickness.\r\n\r\nThis is easier to achieve with an explicit discretization of the free surface (`ExplicitFreeSurface` and `SplitExplicitFreeSurface`) rather than an implicit free surface discretization and with RK3 rather than AB2.\r\nHowever, this PR reformulates much of the timestepping algorithm, so it will be a lengthy WIP that will need to be thoroughly validated for all combinations of barotropic and baroclinic timestepping schemes.\r\n\r\nMore changes are performed to correctly abstract the timestepping schemes, which, at the moment, are tailored specifically to the `NonhydrostaticModel` (for example, the timesteppers include a `compute_pressure_correction!` or a ` correct_velocities` function, which are meaningful only for a non-hydrostatic Navier Stokes solver)\r\n\r\nEdit: another objective I have is to remove any timestepping from the `update_state!` function. We should be able to call `update_state!` multiple times in a row without problems and timestepping inside `update_state!` negates this possibility.\r\n\r\nTODO:\r\n- [ ] <s> Remove timestepping from `update_state!` </s> In another PR\r\n- [x] Clean up the time-stepping code\r\n- [x] Introduce transport weights for transport averaging in the SplitExplicitFreeSurface\r\n- [x] Implement a conservative, low-storage Runge Kutta method (of arbitrary order) using the Explicit free surface\r\n- [x] Implement a conservative, low-storage Runge Kutta method (of arbitrary order) coupled with the SplitExplicitFreeSurface\r\n- [x] Implement a conservative, low-storage Runge Kutta method (of arbitrary order) using the (PCG) ImplicitFreeSurface\r\n- [x] Ensure that the conservation is satisfied on `DistributedGrids`\r\n- [ ] <s> Implement a semi - conservative method for AB2  </s> In another PR\r\n- [ ] <s> Address precision errors that tend to destroy conservation for constant fields </s> In another PR",
+    "changedFiles": 99,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-23T16:09:22Z",
+    "deletions": 1675,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-01-17T23:19:19Z",
+    "number": 4811,
+    "title": "(0.104.0) Reformulate hydrostatic model timestepping"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #5152\r\nCloses #5151",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7kCEu0",
+        "number": 5151,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5151"
+      },
+      {
+        "id": "I_kwDOCRy_aM7kCJmz",
+        "number": 5152,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5152"
+      }
+    ],
+    "createdAt": "2026-01-17T20:31:17Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-01-17T23:46:39Z",
+    "number": 5153,
+    "title": "Code cleanup"
+  }
+]

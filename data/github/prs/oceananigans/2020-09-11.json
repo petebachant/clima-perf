@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #734 \r\nResolves #919 ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2MDY2MTQ0MjA=",
+        "number": 734,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/734"
+      },
+      {
+        "id": "MDU6SXNzdWU2OTcwMjM0MTQ=",
+        "number": 919,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/919"
+      }
+    ],
+    "createdAt": "2020-09-10T16:57:53Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2020-09-11T01:09:14Z",
+    "number": 929,
+    "title": "Fixes bug in zero_halo_regions that uses wrong indices for face-located fields in Bounded directions"
+  },
+  {
+    "additions": 239,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR introduces an `AveragedField` type.\r\n\r\nThe intent is that this field will eventually replace `Average`. Before that occurs, we need to overhaul both output writers, but especially the NetCDFOutputWriter, so that they can properly slice all types of fields.\r\n\r\nAn `AveragedField` is constructed with the syntax (for example)\r\n\r\n```julia\r\navg = AveragedField(operand; dims=(1, 2))\r\n```\r\n\r\nwhere `operand` is the object being averaged (which should also be a field), and `dims` are the dimensions over which the field is reduced. There is an optional argument `data` which would be an `OffsetArray` of the correct size which avoids extra memory allocation. We also overload `Statistics.mean`, so that the above code can be written\r\n\r\n```julia\r\navg = mean(operand; dims=(1, 2))\r\n```\r\n\r\nWhen we have `ComputedField`s, `operand` can involve `AbstractOperations`. This will come in a future PR.\r\n\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-10T20:13:11Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2020-09-11T11:47:39Z",
+    "number": 930,
+    "title": "AveragedField"
+  },
+  {
+    "additions": 331,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements `ComputedField`.\r\n\r\nThe concept is that the results of applying an abstract operation should be stored in a field-like object, since it has a location.\r\n\r\nThis PR, along with #930, tidies up the way that abstract operations are computed and stored, how averages of fields are computed and stored, and how averages of abstract operations are handled.\r\n\r\nA key new function is `AveragedField(op::AbstractOperation; kwargs...)`, which first creates a `ComputedField`, and then returns an average over that `ComputedField`.\r\n\r\nAnother key feature is that `compute!(comp::ComputedField` calls `compute!(comp.operand)`. In addition, `compute!(op::AbstractOperation)` is defined for all abstract operations. This means that abstract operations which themselves depend on either `ComputedField`s or `AveragedField`s can be computed correctly. In the future, however, some optimization is warranted to avoid \"recomputing\" certain fields.\r\n\r\nOnce both the `JLD2OutputWriter` and the `NetCDFOutputWriter` have full support for all types of `AbstractField`, we can nuke both `Average` and `Computation` from the source and move to this new interface.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-11T01:08:06Z",
+    "deletions": 100,
+    "labels": [],
+    "mergedAt": "2020-09-11T14:20:31Z",
+    "number": 931,
+    "title": "ComputedField"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-11T13:34:39Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2020-09-11T15:24:46Z",
+    "number": 933,
+    "title": "Only test Mac OSX on Travis now"
+  }
+]

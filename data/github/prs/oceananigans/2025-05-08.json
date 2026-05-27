@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Currently, `extrema(field)` fails with scalar indexing on CUDA. The reason for this is that `extrema(c::AbstractField)` is not defined, so we fall back to `extrema(a::AbstractArray; dims, kw...)`.\r\n\r\nThis commit adds `extrema(field)` by calling `minimum(field)` and `maximum(field)` separately. Note that there's an opportunity for optimization here, where both the extrama are found in the same reduction.\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-07T17:49:12Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2025-05-08T13:14:46Z",
+    "number": 4484,
+    "title": "Add extrema(c::AbstractField)"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-08T15:01:40Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-05-08T15:07:03Z",
+    "number": 4486,
+    "title": "Bump to 0.96.25"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This PR resolves a method ambiguity that arises when attempting to set a `MultiRegionField` using a scalar value.\r\n\r\nMinimal Working Example:\r\n```\r\ngrid = ConformalCubedSphereGrid(CPU(); panel_size=(4, 4, 1), z=(-1, 0), horizontal_direction_halo=2, radius=1)\r\nu = XFaceField(grid)\r\nset!(u, 1)\r\n```\r\nThe above code throws the following error:\r\n```\r\nERROR: MethodError: set!(::Field{...}, ::Int64) is ambiguous.\r\n```\r\n\r\nRoot Cause: There is a method ambiguity between the following definitions:\r\n```\r\nset!(u::Field, a::Number) (defined in Fields/set!.jl)\r\nset!(mrf::Field{...}, v) (defined in MultiRegion/multi_region_field.jl)\r\n```\r\nTo resolve this, we define the following explicit methods:\r\n\r\n```\r\nset!(mrf::MultiRegionField, a::Number)  = apply_regionally!(set!,  mrf, a)\r\nfill!(mrf::MultiRegionField, a::Number) = apply_regionally!(fill!, mrf, a)\r\n```\r\n\r\nImpact: This change ensures that scalar assignments like `set!(u, 1)` or `fill!(u, 1)` work seamlessly for `MultiRegionField`s without ambiguity errors.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-08T17:01:03Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-05-08T20:26:35Z",
+    "number": 4489,
+    "title": "Resolve ambiguity when setting MultiRegionField with a number"
+  }
+]

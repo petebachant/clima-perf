@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 327,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n\r\nWe would like to implement an equation solving for T_canopy prognostically. This PR is a precursor to a PR adding in the energy balance equation. \r\n\r\nThe purpose of this is to add canopy temperature and emissivity to the equations implemented for the soil/canopy model.  Any time a temperature is used now, it is labeled as T_air or T_canopy for clarity (along with P_air, q_air, etc).  At the same time, we have added emissivity to the canopy RT parameters and that is used now as well.\r\n\r\nWe have also introduced an Energy component to the canopy. The only supported energy model is one in which the canopy temperature is set to the air temperature.\r\nTherefore, this PR formalizes what we were doing already but has made it more extensible. Future energy component models which compute T_canopy/q_canopy prognostically will need to set that variable correctly via a new method of `canopy_temperature`, etc.  But no code anywhere else would need to change (in terms of flux computations).\r\n\r\nhttps://github.com/CliMA/ProjectManagement/issues/2\r\n\r\n## To-do\r\nReview use of T_air/P_air/q_air in update_aux! of Canopy.jl (in computing the Medlyn term, GPP, etc)\r\nReview the equations for net radiative fluxes for the soil, canopy, and outgoing radiation in soil_canopy_model.jl\r\n\r\n\r\n## Content\r\n- add energy component to the CanopyModel\r\n- sets the default energy component to the PrescribedCanopyTempModel\r\n- creates a function `canopy_temperature` which returns the air temperature when used with a PrescribedCanopyTempModel\r\n- explicitly uses T_canopy, T_air, e_canopy in equations for fluxes instead of implicitly assuming T_canopy=T_air and e_canopy = 1\r\n- Adds e_canopy to the RT parameter struct.\r\n\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-09-16T00:00:18Z",
+    "deletions": 121,
+    "labels": [],
+    "mergedAt": "2023-09-25T17:08:52Z",
+    "number": 331,
+    "title": "Canopy temperature and emissivity"
+  }
+]

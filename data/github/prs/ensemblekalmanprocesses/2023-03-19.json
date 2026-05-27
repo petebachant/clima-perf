@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "See #257 for details.\r\n\r\nWith this implementation, combining all the examples [here](https://clima.github.io/EnsembleKalmanProcesses.jl/dev/parameter_distributions/#ParameterDistribution-constructor) gives a vector that displays like this:\r\n```julia\r\njulia> combine_distributions([u; prior])\r\nParameterDistribution with 7 entries: \r\n'constrained_mvnormal' with Constraint[Bounds: (0, \u221e), Bounds: (0, \u221e), Bounds: (0, \u221e)] over distribution Parameterized(FullNormal( dim: 3 \u03bc: [1.0, 1.0, 1.0] \u03a3: [0.5 0.25 0.0; 0.25 0.5 0.25; 0.0 0.25 0.5] ) ) \r\n'constrained_sampled' with Constraint[Bounds: (10, 15), Bounds: (-\u221e, \u221e)] over distribution Samples{Float64}([1.0 5.0 9.0 13.0; 3.0 7.0 11.0 15.0]) \r\n'Beta' with Constraint[Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e), Bounds: (-\u221e, \u221e)] over distribution VectorOfParameterized{Beta{Float64}}(Beta{Float64}[Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0), Beta{Float64}(\u03b1=2.0, \u03b2=2.0)]) \r\n'point_seven' with Constraint[Bounds: (0.0, 1.0)] over distribution Parameterized(Normal{Float64}(\u03bc=0.9581731745582243, \u03c3=0.7851841275859747)) \r\n'upper bound' with Constraint[Bounds: (-\u221e, 5.0)] over distribution Parameterized(Normal{Float64}(\u03bc=1.458006955602075, \u03c3=0.03487311564634986)) \r\n'lower bound' with Constraint[Bounds: (-5.0, \u221e)] over distribution Parameterized(Normal{Float64}(\u03bc=1.740120034293624, \u03c3=0.026311235124201148)) \r\n'no bound' with Constraint[Bounds: (-\u221e, \u221e)] over distribution Parameterized(Normal{Float64}(\u03bc=0.7, \u03c3=0.15)) \r\n```\r\n\r\nIndividual constraints render like this:\r\n```julia\r\njulia> no_constraint()\r\nConstraint{NoConstraint} with bounds (-\u221e, \u221e)\r\n\r\njulia> bounded_below(-5)\r\nConstraint{BoundedBelow} with bounds (-5, \u221e)\r\n\r\njulia> bounded_above(-5)\r\nConstraint{BoundedAbove} with bounds (-\u221e, -5)\r\n\r\njulia> bounded(-5,5)\r\nConstraint{Bounded} with bounds (-5, 5)\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD585fgQrD",
+        "number": 257,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/257"
+      }
+    ],
+    "createdAt": "2023-03-16T21:59:18Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwyNTE2MDYyMjI3",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2023-03-19T01:19:56Z",
+    "number": 259,
+    "title": "implement Base.show for core types"
+  }
+]

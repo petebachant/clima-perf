@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 429,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\n\nAdds GPP calibration (against ILAMB FLUXCOM) to the global calibration pipeline and restructures `experiments/calibration/` so different calibration experiments can be selected without editing the driver script.\n\n### What changed\n\n- **Per-experiment config files** under `experiments/calibration/configs/`:\n  - `energy_fluxes.jl` \u2014 prior default (1 param, `lwu`/`shf`/`lhf`)\n  - `gpp.jl` \u2014 5-param P-model + moisture-stress calibration vs `gpp`\n  - `gpp_lhf.jl` \u2014 same 5 params vs `gpp` + `lhf`\n  - `test.jl` \u2014 single-iteration smoke test (loaded when `TEST_CALIBRATION` is set)\n  \n  Each config defines `CALIBRATE_CONFIG`, `NOISE_SCALARS`, and `get_calibration_prior()`. Select one at runtime via `CALIBRATION_CONFIG=gpp_lhf.jl bash run_calibration.sh`.\n\n- **Per-variable noise scalars**: `generate_observations.jl` now builds a separate `EKP.Observation` per variable with its own `ScalarCovariance`, then combines them block-diagonally. This lets GPP (scalar 2, g C m\u207b\u00b2 day\u207b\u00b9) and LHF (scalar 20, W m\u207b\u00b2) coexist with appropriate weighting.\n\n- **ILAMB support**: `make_era5_observation_vector` \u2192 `make_observation_vector`; new `get_calibration_obs_var_dict` in `ext/land_sim_vis/leaderboard/data_sources.jl` merges ERA5 energy fluxes with ILAMB GPP. Preprocessing now derives the windowing date range from the data itself (instead of the hardcoded 1979\u20132024 ERA5 range) and propagates NaNs through resampling rather than erroring. `analyze_iteration` now also computes ILAMB monthly/seasonal leaderboards.\n\n- **Runtime plumbing**:\n  - `run_calibration.sh` accepts an optional `OUTPUT_DIR` positional arg (useful for Derecho scratch) and sets `HDF5_USE_FILE_LOCKING=FALSE` to avoid NC_EHDFERR on Lustre.\n  - `module_load_string` for both `ClimaGPUBackend` and `DerechoBackend` now reads the `climacommon/YYYY_MM_DD` version from the driver's `LOADEDMODULES`, so forward-model jobs inherit whichever version was loaded before invoking the script (no more hardcoded version in `run_calibration.jl`).\n  - Forward-model diagnostics extended to include `gpp` and `et` so leaderboards render.\n\n## Results\n\nCalibration on GPP + LHF (noise scalars 2 and 20, respectively \u2014 see `experiments/calibration/configs/gpp_lhf.jl`):\n\n<img width=\"2400\" height=\"2400\" alt=\"gpp_lhf_ilamb\" src=\"https://github.com/user-attachments/assets/8a3b5ef3-33fc-4b8f-8d5f-b45ecd0f3197\" />\n\n<img width=\"2400\" height=\"3200\" alt=\"gpp_lhf_era5\" src=\"https://github.com/user-attachments/assets/daf1506b-16cc-4eff-850c-35a1c83d7590\" />\n\n<img width=\"6000\" height=\"1000\" alt=\"gpp_lhf_errors\" src=\"https://github.com/user-attachments/assets/3f0401e6-bab2-440c-99f1-7df96edba8cc\" />\n\n**RMSE = 0.9, Bias = 0.1**. For reference, [other ILAMB models](https://www.ilamb.org/land-hist/EcosystemandCarbonCycle/GrossPrimaryProductivity/FLUXCOM/FLUXCOM.html) land around RMSE \u2248 1.8, Bias \u2248 0.5 \u2014 so we're comfortably ahead with a simpler parameterisation (P-model rather than PFT-specific). Caveat: we prescribe LAI, and I haven't confirmed whether the ILAMB baselines do.\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-06T17:36:13Z",
+    "deletions": 126,
+    "labels": [
+      {
+        "color": "fbca04",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACL-BGHw",
+        "name": "Run test calibration"
+      }
+    ],
+    "mergedAt": "2026-04-17T20:17:58Z",
+    "number": 1705,
+    "title": "calibrate gpp"
+  }
+]

@@ -1,0 +1,132 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`conditional_length` has a lot of specializations for `NTuple` that create ambiguities, also for an immersed field we have a generic unspecialized `dims` method.\r\n\r\nThis PR cleans up a bit the `conditional_length` method, generalizing the `Tuple` behavior and avoiding ambiguities.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-30T08:58:35Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-04-01T06:33:11Z",
+    "number": 5456,
+    "title": "Clear ambiguities in `conditional_length`"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Repeat of #4671.  This was originally introduced in https://github.com/CliMA/Oceananigans.jl/pull/3880#issuecomment-2462033959, but I don't understand the motivation very well, might just be a problem which happened back then and has been resolved since.  I removed this dependency in #5458, and tests still passed (all tests also passed in #4671).  Close #5465",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-31T21:06:22Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-04-01T06:48:39Z",
+    "number": 5466,
+    "title": "Remove dependency on `CUDA_Runtime_jll` in `test/` environment"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-01T10:44:59Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-04-01T11:01:31Z",
+    "number": 5467,
+    "title": "Add \"performance dashboard\" to README"
+  },
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Addresses item B3 from #5349.\n\n## Summary\n\nAdds a `## Bulk drag boundary conditions` section to `docs/src/models/boundary_conditions.md` covering:\n\n- **Formulations**: `QuadraticFormulation` (standard ``C^D |U| u``) vs `LinearFormulation` (Rayleigh friction ``C^D u``), with units clarified for each\n- **Domain bottom drag**: Basic usage with `FieldBoundaryConditions(bottom=drag)`, showing that the velocity direction is auto-inferred\n- **Immersed boundary drag**: Using `ImmersedBoundaryCondition(bottom=drag)` to target specific facets, and the shorthand `immersed=drag` for all non-normal facets\n- **Background velocities**: The `background_velocities=(U\u221e, V\u221e, W\u221e)` keyword for simulations with a mean current (as used in the tilted bottom boundary layer example)\n\nAll examples are `jldoctest` blocks drawing from the existing docstrings in `src/Models/BulkDragBoundaryConditions.jl`.\n\n## Test plan\n\n- [x] Docs build without errors (`julia --project=docs/ docs/make.jl`)\n- [x] All new jldoctest blocks pass",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-31T13:13:27Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-04-01T13:21:03Z",
+    "number": 5464,
+    "title": "Add BulkDrag boundary conditions documentation"
+  },
+  {
+    "additions": 114,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "An attempt to address items B7, C1, C5, C6 from #5349.\n\n## Summary\n\n- **C1 \u2014 Units** (`quick_start.md`): New `## Units` section listing all `Oceananigans.Units` constants with a table and example. This module is used in 8 of 14 examples but was never explained anywhere.\n- **C5 \u2014 `SphericalCoriolis`** (`models/coriolis.md`): Expanded the Spherical Coriolis section to explain the difference between `HydrostaticSphericalCoriolis` (traditional approximation) and `SphericalCoriolis` (includes non-traditional horizontal terms), with a constructor example for each.\n- **B7 \u2014 `background_closure_fluxes`** (`models/background_fields.md`): New section explaining that turbulent closure fluxes from background field gradients are off by default and showing how to enable them with `BackgroundFields(background_closure_fluxes=true, ...)`.\n- **C6 \u2014 `PiecewiseLinearMask`** (`models/forcing_functions.md`): New `### Mask types` subsection introducing `GaussianMask` and `PiecewiseLinearMask` side-by-side with a jldoctest and guidance on when to use each. Clarified that the default `mask` equals 1 everywhere so the forcing applies over the full domain.\n\n## Test plan\n\n- [ ] Docs build without errors (`julia --project=docs/ docs/make.jl`)\n- [ ] All new jldoctest blocks pass",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-31T12:54:26Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-04-01T19:22:24Z",
+    "number": 5463,
+    "title": "Fill small documentation gaps (Units, SphericalCoriolis, background_closure_fluxes, PiecewiseLinearMask)"
+  }
+]

@@ -1,0 +1,86 @@
+[
+  {
+    "additions": 755,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #341 \r\nCloses #342 \r\nCloses #343 \r\nCloses #344 \r\nCloses #345 \r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\nFrom a private repos of @KotaOK-00 - and with additional  changes to interface\r\n- Copy implementation of the gradient-based sampler proposals\r\n- Implemented the calculation of ESJD\r\n- Added esjd unit test.\r\n- Created a new system `AutodiffProtocol` containing derived types `GradFreeProtocol` `ForwardDiffProtocol` and `ReverseDiffProtocol`. autodiff options are created with the MCMCProtocol, e.g.,\r\n```julia \r\nBarkerSampling() # creates BarkerSampling{ForwardDiffProtocol}()\r\nBarkerSampling{ReverseDiffProtocol}() # creates BarkerSampling{ReverseDiffProtocol}()\r\npCNMHSampling() # creates pCNMHSampling{GradFreeProtocol}()\r\n```\r\nWithin the MCMC `propose` step, we make calls to `autodiff_gradient` and `autodiff_hessian`\r\n```julia\r\nautodiff_gradient(model, current_state.params, sampler)\r\nautodiff_hessian(model, current_state.params, sampler)\r\n``` \r\nthat dispatch off the pre-specified autodiff protocol in the `sampler`. e.g. for `ForwardDiffProtocol` this runs\r\n```julia\r\nForwardDiff.gradient(x -> AdvancedMH.logdensity(model, x), current_state.params)\r\nSymmetric(ForwardDiff.hessian(x -> AdvancedMH.logdensity(model, x), current_state.params))\r\n```\r\nThis will make adding new autodiff options easier\r\n- Created a new type `AGPJL` for AbstractGPs. When building an emulator with AGPJL, As there is no optimizer of such kernels, we allow users to train e.g. with GPJL, then do the following:\r\n```julia\r\nopt_params_per_model = Emulators.get_params(gp_optimized)\r\nkernel_params = [\r\nDict(\r\n       \"log_rbf_len\" => params[1:end-2],\r\n       \"log_std_sqexp\" => params[end-1],\r\n       \"log_std_noise\" => params[end],\r\n) \r\nfor params in opt_params_per_model]\r\nagp = GaussianProcess(AGPJL(), ...)\r\nEmulator( agp, ... ; ..., kernel_params = kernel_params) # builds\r\n```\r\nIf the user does not provide kernel_params, a useful error message appears to direct them what to do.\r\n- Unit tests in `GaussianProcesses/runtests.jl` for AGP interface as above, and that GPJL vs AGP gives very similar emulator predicitions\r\n- Unit tests in `MarkovChainMonteCarlo/runtests.jl` for AGP on RWM and pCN sampling - give similar posterior means to GPJL (NB it is much slower, 5-10x)\r\n- Unit testing in `MarkovChainMonteCarlo/runtests.jl` for Barker update (ForwardDiff and ReverseDiff) with comparable results to RWM.\r\n\r\nEmulators produce similar outputs.\r\n```julia \r\n[ Info: testing algorithm: RWMHSampling{GradFreeProtocol}\r\n[ Info: ESJD = [0.03796417690519561, 0.21983371208939942, 0.4385500000002978]\r\n[ Info: 1.4149419254957858\r\n...\r\n[ Info: testing algorithm: BarkerSampling{ForwardDiffProtocol}\r\n[ Info: ESJD = [0.0202305530376406, 0.07430262173309042, 0.4598200000003191]\r\n[ Info: 1.384449605016855\r\n...\r\n[ Info: testing algorithm: BarkerSampling{ReverseDiffProtocol}\r\n[ Info: ESJD = [0.02262425874003432, 0.07044827968512407, 0.4570100000003163]\r\n[ Info: 1.333019873088517\r\n```\r\n\r\n## MISC\r\n- added non-Barker implementation as new issue. I have removed these algorithms as they do not perform well in unit testing and require possibly significant improvements to the tuning mechanisms to work \r\n- Mac is slow! In unit tests, for sampling with (AbstractGP+ForwardDiff) Mac is over 10x slower, while ReverseDiff Mac is ~5x slower\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN86md_Zt",
+        "number": 341,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/341"
+      },
+      {
+        "id": "I_kwDOCrQRN86md_cR",
+        "number": 342,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/342"
+      },
+      {
+        "id": "I_kwDOCrQRN86momBH",
+        "number": 343,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/343"
+      },
+      {
+        "id": "I_kwDOCrQRN86momEd",
+        "number": 344,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/344"
+      },
+      {
+        "id": "I_kwDOCrQRN86momLz",
+        "number": 345,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/345"
+      }
+    ],
+    "createdAt": "2025-01-16T13:41:13Z",
+    "deletions": 182,
+    "labels": [],
+    "mergedAt": "2025-01-31T18:53:42Z",
+    "number": 339,
+    "title": "Add Autodiff compatable emulator and Barker gradient-based sampler"
+  }
+]

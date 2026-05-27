@@ -1,0 +1,170 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMxMzUzODg0",
+      "is_bot": false,
+      "login": "jumerckx",
+      "name": ""
+    },
+    "body": "... to make Reactant happy, perhaps.\r\nref: https://github.com/PRONTOLab/GB-25/pull/68",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-16T21:22:46Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2025-03-17T14:53:40Z",
+    "number": 4226,
+    "title": "Capture `Clock.stage` with a type parameter"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjEyNjAxMjQ=",
+      "is_bot": false,
+      "login": "wsmoses",
+      "name": "William Moses"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-17T12:47:02Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-03-17T17:22:54Z",
+    "number": 4227,
+    "title": "Add adapt for TimeInterpolator"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This is needed to have indices that are CuTracedRNumber inside kernels like `interpolate_atmosphere_state` in ClimaOcean.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-17T14:49:37Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-03-17T17:41:16Z",
+    "number": 4230,
+    "title": "Convert TimeInterpolator indices to Int"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-17T17:42:02Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-03-17T17:42:11Z",
+    "number": 4232,
+    "title": "Bump to 0.95.29"
+  },
+  {
+    "additions": 258,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The GPU Reactant tests were reaching 2h which is a bit long.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-17T17:33:27Z",
+    "deletions": 251,
+    "labels": [],
+    "mergedAt": "2025-03-17T19:49:07Z",
+    "number": 4231,
+    "title": "Add a second Reactant test group"
+  },
+  {
+    "additions": 3308,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR updates the `NetCDFOutputWriter` to:\r\n* Properly work on `RectilinearGrid` and `LatitudeLongitudeGrid` (with correct and useful output attributes).\r\n* Save grid metrics with useful attributes.\r\n* Save immersed boundary information.\r\n* Properly support flat grids.\r\n* Work cleanly with `LagrangianParticles` output.\r\n* Allow for flexible dimension naming to satisfy desired naming conventions.\r\n* Write grid reconstruction metadata into a NetCDF group to support `FieldTimeSeries` construction from NetCDF (full support to be added in a subsequent PR).\r\n\r\nTests have been added for all these features. Thank you to @tomchor and @almacarolina for helpful discussions during this refactor!\r\n\r\nThere's still a little bit left to do, but if anyone has any thoughts or feedback and would like to leave a review I'd appreciate it! There are a lot of line additions but thankfully the changes are almost fully isolated to just two files.\r\n\r\nTODO:\r\n- [x] Output grid areas and volumes too? But maybe it would be nice to first have `xareas`, `volumes`, etc. via `KernelFunctionOperation`?\r\n- [x] Further improve the docstring and documentation for `NetCDFOutputWriter` to highlight all features.\r\n- [x] Use `NetCDFOutputWriter` + some fancier features in an example.\r\n- [x] Figure out which tests are missing.\r\n- [x] Watch out for failing tests/examples and fix them.\r\n\r\nSome comments:\r\n* I'm hoping to merge this PR and immediately work on adding support for NetCDF-backed `FieldTimeSeries`. I was planning on working on it here (as the branch name suggests) but it will involve refactoring `field_time_series.jl` which seems best suited for a separate PR.\r\n* Supporting output of the free surface height is a bit hacky. Since it's a regular `Field` but is kind of a `ReducedField` we cannot dispatch on its type and work with it correctly. Will open an issue to discuss.\r\n* I'm tagging v0.96.0 since this PR significantly changes the dimension names used in NetCDF files produced by `NetCDFOutputWriter`.\r\n\r\nResolves #1334 (via the dimension name generator)\r\nResolves #2248\r\nResolves #2770 (Maybe? You can save u, v, w, T, S, and \u03b7 in the same NetCDF file but it's a bit hacky, see above.)\r\nResolves #3997\r\n\r\nThis PR makes progress on issue #3935\r\nThis PR supercedes PR #2652",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU4MDA0MzUyNzM=",
+        "number": 1334,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/1334"
+      },
+      {
+        "id": "I_kwDOCRy_aM5D394e",
+        "number": 2248,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2248"
+      },
+      {
+        "id": "I_kwDOCRy_aM5TPzpe",
+        "number": 2770,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2770"
+      },
+      {
+        "id": "I_kwDOCRy_aM6jfOBS",
+        "number": 3997,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3997"
+      }
+    ],
+    "createdAt": "2025-01-16T00:33:51Z",
+    "deletions": 833,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2025-03-17T23:17:36Z",
+    "number": 4046,
+    "title": "(0.96.0) Improve the `NetCDFOutputWriter` experience"
+  }
+]

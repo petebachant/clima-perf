@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 180,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "This removes the Configuration concept. Instead of using a single keyword type `Configuration` and dispatching on the type of this for boundary conditions, source terms, boundary flows for the roots, etc, we are making things more explicit, and creating `boundary_conditions`, `source`, `transpiration` attributes that live inside `Soil` and `Roots` model, as makes sense for that model.  Then, for example, on the soil RHS, we could call `compute_source(source)`, rather than `compute_source(config)`. \r\n\r\nOur main motivation for this change is that it was unclear what \"Configurations\" was buying us, and it had the potential to be confusing, as it lumped a lot of related concepts together. \r\n\r\nOur goal is that the LSM constructor can than make the necessary source, boundary conditions, transpiration, and root extraction structs when it makes the soil model and root model. This could be using info the user passes in as needed.\r\n\r\nIn a way, this emphasizing a design based on standalone models - the LSM just constructs a version of the standalone model that is appropriate for running in LSM mode, and then runs many of these (snow, rivers, soil, etc) all together (and defines the appropriate methods, etc, to capture interaction exchanges). The alternative - based on Configurations - emphasizes the LSM mode (and a few \"configurations\" that are relevant for that). We can go back to that, as needed.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5DJx0o",
+        "number": 15,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/15"
+      }
+    ],
+    "createdAt": "2022-02-11T21:45:52Z",
+    "deletions": 191,
+    "labels": [],
+    "mergedAt": "2022-02-17T02:56:31Z",
+    "number": 18,
+    "title": "Config ideas"
+  }
+]

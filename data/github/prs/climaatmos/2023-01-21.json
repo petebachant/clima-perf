@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 178,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Purpose\r\nIt is hard to keep track of the different edmf configurations in the single column CI runs. This is especially true as we will be testing different implicit options, and moving cases from anelastic to compressible. A better solution to this problem would be a common config file (@dennisYatunin , @nefrathenrici). But for now, I'm just trying to just add some new line breaks into the command line args to group them better:\r\n\r\nthe first two lines being common among all test cases:\r\n`--config column --turbconv edmf --debugging_tc true --regression_test true`\r\n`--FLOAT_TYPE Float64 --hyperdiff false --apply_limiter false`\r\n\r\nthe second three lines being specific to the test case we are running:\r\n`--turbconv_case GABLS --edmf_coriolis GABLS`\r\n`--z_elem 8 --z_stretch false --z_max 400`\r\n`--t_end 9hours --dt_save_to_sol 5mins --dt_save_to_disk 5mins`\r\n\r\nthe remaining lines being different for each CI job:\r\n`--moist dry`\r\n`--job_id compressible_edmf_gabls`\r\n`--dt 4secs`\r\n\r\nCloses https://github.com/CliMA/ClimaAtmos.jl/issues/1243\r\n\r\n## To-do\r\n- Make sure that the new line syntax is correct and all the CI cases are running. ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5bmrZx",
+        "number": 1243,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1243"
+      }
+    ],
+    "createdAt": "2023-01-18T22:08:05Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "0D7C38",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ic7e_",
+        "name": "Continuous integration :gear:"
+      },
+      {
+        "color": "18EC4D",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs79cmfg",
+        "name": "ClimaParameters :control_knobs:"
+      }
+    ],
+    "mergedAt": "2023-01-21T00:09:02Z",
+    "number": 1247,
+    "title": "Cleanup CI command line arguments for single column edmf tests."
+  }
+]

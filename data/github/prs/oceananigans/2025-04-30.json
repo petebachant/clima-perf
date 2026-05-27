@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 210,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR does a few things:\r\n\r\n* add `grid` and `boundary` (eg `::Val{:north}`) as args to `default_auxiliary_bc(grid, boundary, loc, topo)`\r\n* excise the spurious additional Field constructor for TripolarGrid\r\n* fix the auxiliary / regularize distinction so that auxiliary fields have `sign=1` and only :u, :v get sign=-1\r\n* ~~change `fill_halo_regions!` so that it only touches halos, not the interior~~\r\n\r\nQuestions:\r\n\r\n* ~~What about :U, :V barotropic velocities? Do we need to fix those?~~ edit we checked\r\n* There is still an extra Field constructor for distributed tripolar --- can we get rid of that through further design?\r\n* ~~What is the definition of the grid --- are the top row of cells really redundant? Why can't we make it so just the halos are redundant (this is what we expect)?~~\r\n\r\nresolves https://github.com/CliMA/Oceananigans.jl/issues/4318\r\n\r\nTo follow up on crossed out items: One half of the top row of cells must be part of the grid, because they have to be \"owned\" by somebody (eg tendencies computed, prognostic fields advanced). The other half of the cells are auxiliary and not part of the grid. This necessitates touching interior cells during `fill_halo_regions!` to ensure that fields are consistent.\r\n\r\nThe above suggests that we should consider changing the name of `fill_halo_regions!` to `fill_auxiliary_cells!` or something.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6wlgRG",
+        "number": 4318,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4318"
+      }
+    ],
+    "createdAt": "2025-04-08T23:39:09Z",
+    "deletions": 226,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-04-30T03:42:45Z",
+    "number": 4368,
+    "title": "Remove assumption about X/YFaceField on TripolarGrid by generalizing `default_auxiliary_boundary_condition`"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-30T07:12:48Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2025-04-30T09:22:15Z",
+    "number": 4456,
+    "title": "Bugfix in RK3 previous fields"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "for `LatitudeLongitudeGrid`s spanning -90:90 with a `Nothing` location in the latitude direction.\r\n\r\nFor reference on main:\r\n```julia\r\njulia> grid = LatitudeLongitudeGrid(size = (600, 100, 1), latitude = (-90, 90), longitude = (0, 360), z = (0, 1))\r\n600\u00d7100\u00d71 LatitudeLongitudeGrid{Float64, Periodic, Bounded, Bounded} on CPU with 3\u00d73\u00d71 halo and with precomputed metrics\r\n\u251c\u2500\u2500 longitude: Periodic \u03bb \u2208 [0.0, 360.0)  regularly spaced with \u0394\u03bb=0.6\r\n\u251c\u2500\u2500 latitude:  Bounded  \u03c6 \u2208 [-90.0, 90.0] regularly spaced with \u0394\u03c6=1.8\r\n\u2514\u2500\u2500 z:         Bounded  z \u2208 [0.0, 1.0]    regularly spaced with \u0394z=1.0\r\n\r\njulia> minimum_xspacing(grid)\r\nERROR: ArgumentError: Cannot specify north boundary condition ValueBoundaryCondition: Oceananigans.BoundaryConditions.PolarValue{OffsetArrays.OffsetArray{Float64, 3, Array{Float64, 3}}, Symbol} on a field at nothing!\r\nStacktrace:\r\n  [1] validate_boundary_condition_location(bc::BoundaryCondition{\u2026}, loc::Nothing, side::Symbol)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:57\r\n  [2] validate_boundary_conditions(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, bcs::FieldBoundaryConditions{\u2026})\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:76\r\n  [3] #apply_regionally!#58\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:121 [inlined]\r\n  [4] apply_regionally!\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:118 [inlined]\r\n  [5] macro expansion\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:206 [inlined]\r\n  [6] Field(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, data::OffsetArrays.OffsetArray{\u2026}, bcs::FieldBoundaryConditions{\u2026}, indices::Tuple{\u2026}, op::Nothing, status::Nothing)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:101\r\n  [7] Field(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, T::DataType; indices::Tuple{\u2026}, data::OffsetArrays.OffsetArray{\u2026}, boundary_conditions::FieldBoundaryConditions{\u2026}, operand::Nothing, status::Nothing)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:194\r\n  [8] minimum(f::Function, c::KernelFunctionOperation{\u2026}; condition::Nothing, mask::Float64, dims::Function)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:710\r\n  [9] minimum\r\n    @ ~/development/Oceananigans.jl/src/Fields/field.jl:701 [inlined]\r\n [10] minimum\r\n    @ ~/development/Oceananigans.jl/src/Fields/field.jl:721 [inlined]\r\n [11] minimum_xspacing(grid::LatitudeLongitudeGrid{\u2026})\r\n    @ Oceananigans.Grids ~/development/Oceananigans.jl/src/Grids/nodes_and_spacings.jl:160\r\n [12] top-level scope\r\n    @ REPL[17]:1\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n\r\njulia>\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-30T12:31:02Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2025-04-30T18:28:10Z",
+    "number": 4457,
+    "title": "Bugfix BC default"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 2022,
+    "author": {
+      "id": "MDQ6VXNlcjEwNjczMDcw",
+      "is_bot": false,
+      "login": "bielim",
+      "name": ""
+    },
+    "body": "This PR is a major clean-up (goal: code hygiene and reduction of the insanely long precompile times, i.e., addressing #65) -- the following changes were made:\r\n\r\n(1) Deleted the modules `EKS.jl`, `GPR.jl`, `Histograms.jl`, `problems.jl`, and `spaces.jl`. These modules are not functional and not being developed anymore.\r\n\r\n(2) Deleted `test/EKS`, `test/Histograms`, `test/GPR`,  `test/L96m`, as well as `examples/GPR` and `examples/L96`, because they are based on non-functional modules or (in the case of `L96`) because they don't seem to demonstrate any CES functionality.\r\n\r\n(3) Deleted `test/Cloudy`, moved and renamed its content (`test/Cloudy/runtests.jl`) to `examples/Cloudy/Cloudy_example.jl`. The Cloudy \"test\" never was a proper test but rather an example, so it fits much better in the `examples` folder. The Cloudy notebook (`examples/Cloudy/calibrate_emulate_sample_Cloudy_demo.ipynb`) was deleted as it's basically just a more \"eye-friendly\" version of `Cloudy_example.jl`.\r\n\r\n(4) Moved `GModel.jl` to `examples/Cloudy`.  This module shows what a forward model G that maps the parameters u to G(u) could look like, but it does so using Cloudy as an example, and for that reason I never liked the fact that this module was there with all the general-purpose code in the first place. As a result of (3) and (4), there is no more Cloudy dependency in the tests or core CES code.\r\n\r\n(5) Generated separate `Project.toml` and `Manifest.toml` files for each example. With this setup, running the core CES code does not require to precompile packages that are only used in the examples (e.g., `DifferentialEquations.jl`) anymore.\r\n\r\n(6) Removed unused packages from the main `Project.toml` file\r\n\r\nFinally, I also changed the way the `ScikitLearn.jl` imports are handled in `GPEmulator.jl`. At least on my machine, this solves the problems with the seg faults that I mentioned in the discussion to PR #63.",
+    "changedFiles": 54,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-07-22T23:00:36Z",
+    "deletions": 3757,
+    "labels": [
+      {
+        "color": "c2e0c6",
+        "description": "Code clean-up and/or reorganization",
+        "id": "MDU6TGFiZWwyMjIzODk3ODA2",
+        "name": "cleanup"
+      }
+    ],
+    "mergedAt": "2020-07-23T23:21:14Z",
+    "number": 67,
+    "title": "Clean up CalibrateEmulateSample"
+  }
+]

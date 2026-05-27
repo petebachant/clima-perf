@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 147,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request introduces improvements to how scalar nonnegativity is enforced. The main focus is on ensuring that condensate mass variables remain physically valid (non-negative) throughout computations.\r\n\r\n**Naming convention update**\r\n- `dss.jl` is renamed to `constrain_state.jl` to reflect its broader usage\r\n- New top-level function `constrain_state!` is added, which is the function that is passed to ClimaTimeSteppers (TODO: Update CTS with new keyword argument for clarity)\r\n\r\n**Physical Constraints Enforcement:**\r\n\r\n* A new function `preserve_scalar_nonnegativity!` is introduced in `constrain_state!` (`src/prognostic_equations/constrain_state.jl`) to explicitly enforce nonnegativity for condensate mass fields (e.g., `\u03c1q_liq`, `\u03c1q_rai`, `\u03c1q_ice`, `\u03c1q_sno`, `\u03c1q_tot`). This function clips negative values to zero and applies the limiter, ensuring physically meaningful results for these quantities.\r\n* The call to `preserve_scalar_nonnegativity!` is added to the main `constrain_state!` routine, so nonnegativity is enforced every time `constrain_state!` runs.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-13T02:01:27Z",
+    "deletions": 53,
+    "labels": [],
+    "mergedAt": "2026-01-22T18:33:48Z",
+    "number": 4211,
+    "title": "nonnegativity element limiter"
+  },
+  {
+    "additions": 122,
+    "author": {
+      "id": "MDQ6VXNlcjUwOTk2OTI1",
+      "is_bot": false,
+      "login": "oalcabes",
+      "name": "Olivia Alcabes"
+    },
+    "body": "This PR updates the RCEMIPII ci test to use the most up to date diffusion, and also adds a config (not to ci) to run a single column RCEMIP setting with prognostic edmf + 1M. The SCM is considered to be RCEMIP but not RCEMIPII because RCEMIPII did not accept SCMs.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-21T21:37:11Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2026-01-22T23:11:47Z",
+    "number": 4229,
+    "title": "Update RCE configs"
+  }
+]

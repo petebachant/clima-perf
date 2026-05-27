@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 416,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds tests for `RegularLatitudeLongitudeGrid` which uncovered a couple of stupid bugs in the process.\r\n\r\nSorry everyone. I guess we shouldn't be approving important PRs without tests in the future.\r\n\r\nI've somehow convinced myself that we need `N\u03bb + 2H\u03bb + 1` grid points in longitude even when it's periodic (tests don't pass otherwise), but not sure why so maybe let's hold off on merging just yet.\r\n\r\nThis PR should fix things in PR #1404.\r\n\r\nAlso, I didn't like `test_grids.jl` so I refactored it.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-03-02T04:52:21Z",
+    "deletions": 213,
+    "labels": [],
+    "mergedAt": "2021-03-02T16:05:14Z",
+    "number": 1415,
+    "title": "Test and fix bugs in `RegularLatitudeLongitudeGrid`"
+  },
+  {
+    "additions": 632,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes a few bugfixes and improvments:\r\n\r\n1. Fixes a bug for `VectorInvariantEnstrophyConserving` Coriolis scheme for `HydrostaticSphericalCoriolis`\r\n2. Edits tracer advection operators so they run on curvilinear grids\r\n3. Adds `validation/solid_body_rotation/` based on [Williamson et al. 1992](https://www.sciencedirect.com/science/article/pii/S0021999105800166)\r\n\r\nThis PR also attempted to add a tracer advection test (using the solid body rotation solution), but this test fails. So we have some work to do to get tracer advection to work still.\r\n\r\nIt'd be nice to implement some quantitative measures of error for the solid body rotation test before merging.\r\n\r\nHere's a movie that illustrates what the solid body rotation test does (showing incorrect tracer advection):\r\n\r\nhttps://user-images.githubusercontent.com/15271942/109338288-0c9a3f80-7834-11eb-8189-9137cec2cd92.mp4\r\n\r\nAs a side note, it would be extremely useful to have a utility that computes a height field satisfying discrete geostrophic balance with some flow + Coriolis implementation.",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-02-26T18:11:59Z",
+    "deletions": 83,
+    "labels": [],
+    "mergedAt": "2021-03-02T20:06:17Z",
+    "number": 1404,
+    "title": "Bugfixes for HydrostaticSphericalCoriolis and solid body rotation validation experiment"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I am implementing immersed drag for a `SeaIceModel` [here](https://github.com/CliMA/ClimaSeaIce.jl/pull/84), but I noticed that the regularization for `ImmersedBoundaryCondition` is not correct because it assigns boundary conditions in `nothing` directions, for example, in https://github.com/CliMA/ClimaSeaIce.jl/pull/84 this happens:\r\n```julia\r\njulia> grid = RectilinearGrid(size = (10, 10, 1), x = (0, 1), y = (0, 1), z = (0, 1));\r\n\r\njulia> grid = ImmersedBoundaryGrid(grid, GridFittedBottom(rand(10, 10)));\r\n\r\njulia> u_bcs = FieldBoundaryConditions(grid, (Face, Center, Nothing); immersed = FluxBoundaryCondition(1));\r\n\r\njulia> model = SeaIceModel(grid; boundary_conditions = (; u = u_bcs));\r\n\r\njulia> model.velocities.u.boundary_conditions.immersed\r\nImmersedBoundaryCondition:\r\n\u251c\u2500\u2500 west: Nothing\r\n\u251c\u2500\u2500 east: Nothing\r\n\u251c\u2500\u2500 south: FluxBoundaryCondition: 1.0\r\n\u251c\u2500\u2500 north: FluxBoundaryCondition: 1.0\r\n\u251c\u2500\u2500 bottom: FluxBoundaryCondition: 1.0\r\n\u2514\u2500\u2500 top: FluxBoundaryCondition: 1.0\r\n```\r\nIn this case, `top` and `bottom` boundary conditions should be a `Nothing`, so this PR corrects this regularization",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-07-25T09:03:05Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2025-07-25T19:38:27Z",
+    "number": 4670,
+    "title": "Correct regularization for `ImmersedBoundaryCondition`"
+  }
+]

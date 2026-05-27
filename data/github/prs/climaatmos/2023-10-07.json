@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5zFiko",
+        "number": 2207,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2207"
+      }
+    ],
+    "createdAt": "2023-10-06T20:45:27Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "C5D970",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7v60-v",
+        "name": "Tests"
+      },
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      }
+    ],
+    "mergedAt": "2023-10-07T00:34:21Z",
+    "number": 2208,
+    "title": "Fix hardcoded paths in parameter tests"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-06T22:29:19Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2023-10-07T03:09:20Z",
+    "number": 2210,
+    "title": "update dependencies"
+  },
+  {
+    "additions": 185,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR:\r\n - Removes overloading of Fields on Integers (which is type piracy, and results in invalidations)\r\n - Applies the minimalistic fixes by interpolating integers into getproperty calls.\r\n\r\nAs a compromise, this PR only removes `getindex` on `Field`s and `Integer`s:\r\n```julia\r\nBase.@propagate_inbounds Base.getindex(field::FDFields, i::Integer) =\r\n    Base.getproperty(field, i)\r\n```\r\nWhich is the worst of the type pirated methods. The next will be for `Base.getindex(field::FaceFields, i::CCO.PlusHalf)` and `Base.setindex!(field::FaceFields, v, i::CCO.PlusHalf)`, however, that requires adding `Spaces.level` and such to a lot of places, which is just a bit more work.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-07T02:32:16Z",
+    "deletions": 161,
+    "labels": [],
+    "mergedAt": "2023-10-07T15:46:14Z",
+    "number": 2211,
+    "title": "Fix some type piracy"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR removes the old temporary time stepper components. I forgot to remove this in #2187.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-06T17:15:42Z",
+    "deletions": 292,
+    "labels": [
+      {
+        "color": "89D76B",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7wjPCy",
+        "name": "House cleaning :broom:"
+      }
+    ],
+    "mergedAt": "2023-10-07T17:29:11Z",
+    "number": 2204,
+    "title": "Remove temporary time stepper components"
+  }
+]

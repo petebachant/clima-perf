@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWe should be able to close O11.5 for coupler performance (see text below), since the latest [benchmark runs](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/269#_) show AMIP with diagnostic EDMF is less than 8% slower than the comparable atmos-only run, and [longruns](https://buildkite.com/clima/climacoupler-longruns/builds/977#_) show AMIP with integrated land is less than 5% slower than AMIP with the bucket.\r\n\r\nHowever I'd prefer to switch the benchmark runs over to use the integrated land before we fully resolve the OKR so we can precisely quantify the difference between atmos-only vs AMIP + integrated land.\r\n\r\n> O11.5: Identify and eliminate any remaining bottlenecks to achieve AMIP throughput (with land) within factor 1.5 of atmosphere-only model\r\n\r\nAfter review, I'll merge this PR without running CI since it only changes config files that aren't run during regular CI.\r\n\r\nSee some discussion of recent improvements to coupled integrated land performance in #1525 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T19:45:35Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-12-01T22:38:47Z",
+    "number": 1585,
+    "title": "use integrated land for benchmark AMIPs [skip ci]"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe CMIP longruns failed because the coupler dt was not divisible by the atmosphere dt ([here](https://buildkite.com/clima/climacoupler-longruns/builds/977#019ad3c7-b791-4974-ac9b-c9066e50b594)). This makes all the dts divisible by the smallest one, so they all line up at the end of a coupling step.\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T19:03:04Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2025-12-01T23:55:36Z",
+    "number": 1584,
+    "title": "make each dt divisible by the smallest"
+  }
+]

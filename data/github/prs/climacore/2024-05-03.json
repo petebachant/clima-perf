@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 557,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds support for the use of [MultiBroadcastFusion.jl](https://github.com/CliMA/MultiBroadcastFusion.jl), in order to allow users to fuse multiple broadcast expressions into a single kernel launch.\r\n\r\nWe'll be able to decorate multiple broadcasts with `@fused_direct`, e.g.,:\r\n\r\n```julia\r\n@fused_direct begin\r\n    @. y1 = x1+x2+x3\r\n    @. y2 = x1*x2*x3\r\nend\r\n```\r\nWhich will result in the compiler being able to hoist global memory reads, improving performance.\r\n\r\nI'll open an issue on expanding this for a few cases:\r\n\r\n - Support for more memory layouts\r\n - Support for more types of broadcast styles (right now, only point-wise kernels, with compatible broadcast types)\r\n\r\nBut I'd like to start with this simple case first, since there should be some low hanging fruit that we can leverage (and also see how things work in production).\r\n\r\nOnce https://github.com/JuliaRegistries/General/pull/102559 is merged, I'll update the PR to add the correct dependency.\r\n\r\nThis is a step towards https://github.com/CliMA/ClimaAtmos.jl/issues/2632.\r\n\r\nRight now, we are restricted to the following limitations:\r\n\r\n - Only similar field types can be fused, and no combinations of non-similar types are allowed in the left or right-hand side of the expression (they should error). For example, for following are not allowed\r\n - Vertical interpolation and finite difference operators are not (yet) supported.\r\n - Horizontal operators are not (yet) supported.\r\n\r\nSome examples summarizing this are below:\r\n\r\nThe following will error:\r\n```julia\r\n@fused_direct begin\r\n  @. center_field = 1\r\n  @. face_field = 1\r\nend\r\n```\r\nThe following will error:\r\n```julia\r\n@fused_direct begin\r\n  @. center_sphere = 1\r\n  @. center_column = 1\r\nend\r\n```\r\n\r\nThe following will error:\r\n```julia\r\n@fused_direct begin\r\n  @. center_field_1 = 1 * \u1d9cinterp(face_field)\r\n  @. center_field_2 = 2 *  \u1d9cinterp(face_field)\r\nend\r\n```\r\n\r\nThe following will error:\r\n```julia\r\n@fused_direct begin\r\n  @. center_field_1 = 1 * \u1d9cinterp(face_field)\r\n  @. center_field_2 = 2 *  \u1d9cinterp(face_field)\r\nend\r\n```\r\n\r\nThe following will work:\r\n```julia\r\n@fused_direct begin\r\n  @. center_field_1 = 2\r\n  @. center_field_2 = 1\r\nend\r\n```\r\n\r\nAny pointwise function should work, and it's advantageous to use `@fused_direct` when there is at least one variable that is shared across multiple broadcast expressions in any way. For example:\r\n\r\nconverting\r\n```julia\r\n    @. \u1d9c\u2207\u00b2u\u2095\u02b2s.:($$j) = C12(\u1d9c\u2207\u00b2u\u02b2s.:($$j))\r\n    @. \u1d9c\u2207\u00b2u\u1d65\u02b2s.:($$j) = C3(\u1d9c\u2207\u00b2u\u02b2s.:($$j))\r\n```\r\nto\r\n```julia\r\n@fused begin\r\n    @. \u1d9c\u2207\u00b2u\u2095\u02b2s.:($$j) = C12(\u1d9c\u2207\u00b2u\u02b2s.:($$j))\r\n    @. \u1d9c\u2207\u00b2u\u1d65\u02b2s.:($$j) = C3(\u1d9c\u2207\u00b2u\u02b2s.:($$j))\r\nend\r\n```\r\nwill reduce 1 memory read of because `\u1d9c\u2207\u00b2u\u02b2s.:($$j)` shows up in the right-hand side of both expressions. In addition, converting\r\n```julia\r\n    @. \u1d9cts = ts_gs(thermo_args..., \u1d9cspecific, \u1d9cK, \u1d9c\u03a6, Y.c.\u03c1)\r\n    @. \u1d9cp = TD.air_pressure(thermo_params, \u1d9cts)\r\n```\r\nto\r\n```julia\r\n@fused begin\r\n    @. \u1d9cts = ts_gs(thermo_args..., \u1d9cspecific, \u1d9cK, \u1d9c\u03a6, Y.c.\u03c1)\r\n    @. \u1d9cp = TD.air_pressure(thermo_params, \u1d9cts)\r\nend\r\n```\r\nWill result in the reuse of `\u1d9cts`, resulting in 1 fewer read, as the value computed in the first line can be reused in the second line.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-11T17:20:12Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-05-03T18:16:04Z",
+    "number": 1641,
+    "title": "Add support for MultiBroadcastFusion"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #1694. Supersedes #1712.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6G6Orz",
+        "number": 1694,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1694"
+      }
+    ],
+    "createdAt": "2024-05-03T20:03:26Z",
+    "deletions": 42,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      }
+    ],
+    "mergedAt": "2024-05-03T22:59:17Z",
+    "number": 1715,
+    "title": "Inline multiple_field_solve kernel"
+  }
+]

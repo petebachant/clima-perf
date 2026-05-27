@@ -1,0 +1,190 @@
+[
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #376 \r\nResolves #295 ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0NTk0NzI2MjI=",
+        "number": 295,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/295"
+      },
+      {
+        "id": "MDU6SXNzdWU0ODY1MTk2MDU=",
+        "number": 376,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/376"
+      }
+    ],
+    "createdAt": "2019-08-28T17:55:50Z",
+    "deletions": 37,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2019-08-29T11:52:16Z",
+    "number": 378,
+    "title": "Update CUDA packages to get rid of CUDA errors on CPU and use CUDAapi.has_cuda()"
+  },
+  {
+    "additions": 1508,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes a few major contributions:\r\n\r\n* Fixes a bug in Anisotropic Minimum Dissipation (AMD) type closures that led to (very) wrong subgrid-scale diffusivities.\r\n* Adds a new flavor of AMD proposed by [Verstappen (2018)](https://www.sciencedirect.com/science/article/abs/pii/S0045793016304005) and described in detail by [Vreugdenhil and Taylor (2018)](https://aip.scitation.org/doi/abs/10.1063/1.5037039). This new flavor of AMD, dubbed the \"Verstappen\" AMD, is now the default name bound to `AnisotropicMinimumDissipation`\r\n* The closure formerly known as `AnisotropicMinimumDissipation` is now called `RozemaAnisotropicMinimumDissipation` (it was first described by [Rozema et al. (2015)](https://aip.scitation.org/doi/abs/10.1063/1.4928700)). It is not exported, but can be accessed via `Oceananigans.RozemaAnisotropicMinimumDissipation`.\r\n* There is new Smagorinsky closure variant called `BlasiusSmagorinsky` which is untested and unexported. It can be accessed via `Oceananigans.BlasiusSmagorinsky`.\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-29T10:20:41Z",
+    "deletions": 807,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      }
+    ],
+    "mergedAt": "2019-08-29T15:12:40Z",
+    "number": 383,
+    "title": "New and more correct turbulence closures"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This fixes a bug in which halo regions were not filled for subgrid-scale LES diffusivities. \r\n\r\nTo do this robustly for various diffusivity structures with different nesting hierarchies, a recursive halo region filling functionality is implemented that dispatches on `bcs::NamedTuple{(:x, :y:, :z)}`, corresponding to a `FieldBoundaryCondition`. Thus, when `fill_halo_regions!(fields, bcs, grid)` is called with matching tuples for *both* `fields` and `bcs`, a simultaneous loop is done over the members of the two tuples. However, when `fill_halo_regions!(fields, bcs, grid)` is called and `bcs` is a `FieldBoundaryCondition`, a loop is performed over the members of `fields` *only*, and `bcs` is reused for every member of `fields`. Thus halo regions for fields embedded in nested structures (like diffusivities in `AnisotropicMinimumDissipation`) are all filled with a single call to `fill_halo_regions!`.\r\n\r\nFor now, the code uses temperature boundary conditions to determine the diffusivity boundary conditions. This will work until we implement the changes proposed in #371.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-29T16:13:06Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2019-08-29T18:51:33Z",
+    "number": 385,
+    "title": "Fill halo regions for diffusivity"
+  },
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-28T20:55:33Z",
+    "deletions": 40,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2019-08-29T18:52:25Z",
+    "number": 382,
+    "title": "Verbose flag for checkpointer"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Would be good to set this up with Slurm CI (PR #280) and start doing continuous performance testing to ensure we don't make mistakes that slow the model down.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-28T18:33:24Z",
+    "deletions": 155,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2019-08-29T19:17:23Z",
+    "number": 380,
+    "title": "Clean up benchmark scripts"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Reverts climate-machine/Oceananigans.jl#378",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-08-29T21:11:27Z",
+    "deletions": 32,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2019-08-29T21:37:23Z",
+    "number": 387,
+    "title": "Revert \"Update CUDA packages to get rid of CUDA errors on CPU and use CUDAapi.has_cuda()\""
+  }
+]

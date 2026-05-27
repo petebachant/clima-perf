@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 82,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR reverts #1197 and moves the try-catch into `thermo_state!`, since it's called in many places (e.g., `wfact!`, `precomputed_quantities!`, `implicit_vertical_advection_tendency!` (and in callbacks).\r\n\r\nUsing `time` instead of `debug`, could also be useful in determining when to use the cached air temperature (always unless it's the initial condition)",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-12T23:05:02Z",
+    "deletions": 51,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      },
+      {
+        "color": "654FD1",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs720iD8",
+        "name": "Debugging :mag::bug:"
+      }
+    ],
+    "mergedAt": "2022-12-13T02:49:13Z",
+    "number": 1200,
+    "title": "Move try-catch to thermo_state function"
+  },
+  {
+    "additions": 406,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Adds compat entries for ClimaTimesteppers\r\n - Updates the manifest files\r\n - Fixes update conflicts for the latest (breaking) version of ClimaTimesteppers, which should allow more incremental updates for coming changes.\r\n\r\nOne downside of recent changes I've realized is that, since we differentiate between tableaus and algorithms, we end up with variables during initialization that could be an algorithm (in OrdinaryDiffEq), or it could be a tableau (in ClimaTimesteppers). \r\n\r\nI think that this is just another indication that we need to further improve the clarity / simplicity of the ode integrator initialization.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-12-13T01:05:43Z",
+    "deletions": 385,
+    "labels": [
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      },
+      {
+        "color": "C7E925",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7igvqs",
+        "name": "Dependencies :spider_web:"
+      }
+    ],
+    "mergedAt": "2022-12-13T18:25:21Z",
+    "number": 1201,
+    "title": "Update version of ClimaTimesteppers"
+  }
+]

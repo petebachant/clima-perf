@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds the option to \"disable\" time-step alignment for simulations. This is useful when creating coupled models with nested simulations. In the scenario of nested simulation, we would like the \"main\" simulation to manage their child simulations. For this, it's useful to ensure that the child simulations do not align their time-steps.\r\n\r\nThis PR also simplifies `time_step!` and changes its behavior somewhat. After this PR, calling `time_step!(sim)` will always take a time-step; also, only `run!` will be responsible for \"stopping\" a simulation.\r\n\r\nNote that previously, `time_step!(sim)` would _not_ take a time-step if for some reason `sim.running == false` --- but only for the very first time-step. Even if `sim.running == false`, a simulation with `sim.initialized == true` would take a time-step. I think this behvior is a over-complicated and unnecessary. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-24T20:19:52Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2025-02-25T00:57:00Z",
+    "number": 4123,
+    "title": "Add option to turn off time-step alignment"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #4111. Thanks for the bugfind @kenflat2!\r\n\r\nBasically this implements boundary-aware reconstruction for Coriolis terms. Reconstruction is required for Coriolis terms on a staggered grid. Previously, reconstruction was not boundary-aware.\r\n\r\nNote, I am not sure about `ConstantCartesianCoriolis` or `NonTraditionalBetaPlane`. Probably there is some work to do there, but reconstruction is different for those so I left it out of this PR.\r\n\r\nHere's my updated script:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\nusing GLMakie\r\nusing Printf\r\n\r\nLx = 2000kilometers\r\nLy = 1000kilometers\r\nLz = 4kilometers\r\n\r\ngrid = RectilinearGrid(size = (128, 64, 64),\r\n                       x = (0, Lx),\r\n                       y = (0, Ly),\r\n                       z = (-Lz, 0),\r\n                       halo = (4, 4, 4),\r\n                       topology = (Periodic, Bounded, Bounded))\r\n\r\nridge(x, y) = -Lz + 1000meters * exp(-((x - Lx / 2)^2) / (100000kilometers^2))\r\nridge_grid = ImmersedBoundaryGrid(grid, GridFittedBottom(ridge))\r\n\r\ncoriolis = FPlane(f=-1e-4)\r\nmodel = HydrostaticFreeSurfaceModel(; grid = ridge_grid, coriolis, momentum_advection = WENO(order=5))\r\n\r\nu\u1d62(x, y, z) = 0.1 * exp(z / 500)\r\nset!(model, u=u\u1d62)\r\nsimulation = Simulation(model, \u0394t=20minutes, stop_iteration=100)\r\n\r\nwall_clock = Ref(time_ns())\r\n\r\nfunction progress(sim)\r\n    elapsed = 1e-9 * (time_ns() - wall_clock[])\r\n\r\n    msg = @sprintf(\"iteration: %d, time: %s, wall time: %s, max|u|: (%6.3e, %6.3e, %6.3e), m s\u207b\u00b9\\n\",\r\n                   iteration(sim), prettytime(sim), prettytime(elapsed),\r\n                   maximum(abs, sim.model.velocities.u),\r\n                   maximum(abs, sim.model.velocities.v),\r\n                   maximum(abs, sim.model.velocities.w))\r\n\r\n    wall_clock[] = time_ns()\r\n    @info msg\r\n\r\n    return nothing\r\nend\r\n\r\nadd_callback!(simulation, progress, IterationInterval(10))\r\n\r\nrun!(simulation)\r\n\r\nu, v, w = model.velocities\r\nheatmap(view(v, :, 32, :))\r\ncurrent_figure()\r\n```\r\n\r\n# on `main`\r\n\r\n![image](https://github.com/user-attachments/assets/da21b3dd-9609-4072-a399-2d08795b7a34)\r\n\r\n# this PR\r\n\r\n![image](https://github.com/user-attachments/assets/e5a04d07-98b1-4f81-bb98-dc78f847128b)\r\n\r\nI'm not sure how to test this, ideas welcome.\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6qurb2",
+        "number": 4111,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4111"
+      }
+    ],
+    "createdAt": "2025-02-19T21:56:25Z",
+    "deletions": 79,
+    "labels": [],
+    "mergedAt": "2025-02-25T01:01:05Z",
+    "number": 4112,
+    "title": "(0.95.13) Use active-weighted rather than naive reconstruction for f- and beta-plane Coriolis terms"
+  }
+]

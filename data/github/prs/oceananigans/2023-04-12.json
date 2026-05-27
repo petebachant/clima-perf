@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjc1ODEyMTAz",
+      "is_bot": false,
+      "login": "jbisits",
+      "name": "Josef Bisits"
+    },
+    "body": "This PR fixes the rendering of a LaTeX string and changes `eos = RoquetSeawaterPolynomial(:Freezing)` -> `eos = RoquetEquationOfState(:Freezing)` in the documentation for `buoyancy models and equation of state.md`. The reason for this change is that with the `eos` set as a `RoquetSeawaterPolynomial`,\r\n\r\n```julia\r\njulia> using SeawaterPolynomials.SecondOrderSeawaterPolynomials\r\n\r\njulia> eos = RoquetSeawaterPolynomial(:Freezing)\r\n0.7718 S\u1d2c - 0.0491 \u0398 + 0.0 \u0398\u00b2 - 2.5681e-5 \u0398 Z + 0.0 S\u1d2c\u00b2 - 0.005027 S\u1d2c Z + 0.0 S\u1d2c \u0398\r\n\r\njulia> buoyancy = SeawaterBuoyancy(equation_of_state=eos)\r\nSeawaterBuoyancy{Float64}:\r\n\u251c\u2500\u2500 gravitational_acceleration: 9.80665\r\n\u2514\u2500\u2500 equation of state: SecondOrderSeawaterPolynomial{Float64}\r\n```\r\n\r\nyou get an error (or at least I did, attached at the bottom of this PR) when setting `model(;  ... buoyancy)`. Instead if we have the `eos` set as a `RoquetEquationOfState`,\r\n\r\n```julia\r\njulia> eos = RoquetEquationOfState(:Freezing)\r\nBoussinesqEquationOfState{Float64}:\r\n    \u251c\u2500\u2500 seawater_polynomial: SecondOrderSeawaterPolynomial{Float64}\r\n    \u2514\u2500\u2500 reference_density: 1024.6\r\n    \r\njulia> eos.seawater_polynomial # the density anomaly\r\n\u03c1' = 0.7718 S\u1d2c - 0.0491 \u0398 - 0.005027 \u0398\u00b2 - 2.5681e-5 \u0398 Z + 0.0 S\u1d2c\u00b2 + 0.0 S\u1d2c Z + 0.0 S\u1d2c \u0398\r\n\r\njulia> buoyancy = SeawaterBuoyancy(equation_of_state=eos)\r\nSeawaterBuoyancy{Float64}:\r\n\u251c\u2500\u2500 gravitational_acceleration: 9.80665\r\n\u2514\u2500\u2500 equation of state: BoussinesqEquationOfState{Float64}\r\n```\r\n\r\nwe can then set this as the `buoyancy` in the model, `model(; buoyancy)`, without an error.\r\n\r\nAs of SeawaterPolynomials.jl v0.3.2 another idealised nonlinear eos has been added so the number available has been updated in `buoyancy models and equation of state.md`to reflect this and the compat entry has been updated.\r\n\r\n## Error from setting `buoyancy = SeawaterBuoyancy(equation_of_state= RoquetSeawaterPolynomial(:Freezing))`\r\n\r\n```julia\r\n        nested task error: MethodError: no method matching \u03c1\u2032(::Float64, ::Float64, ::Float64, ::SecondOrderSeawaterPolynomial{Float64})\r\n        Closest candidates are:\r\n          \u03c1\u2032(::Any, ::Any, ::Any, ::Any, ::Any, ::Any, ::Any) at ~/.julia/packages/Oceananigans/Zg9Bd/src/BuoyancyModels/nonlinear_equation_of_state.jl:27\r\n          \u03c1\u2032(::Any, ::Any, ::Any, ::SeawaterPolynomials.BoussinesqEquationOfState{<:SecondOrderSeawaterPolynomial}) at ~/.julia/packages/SeawaterPolynomials/ig7CR/src/SecondOrderSeawaterPolynomials.jl:65\r\n          \u03c1\u2032(::Any, ::Any, ::Any, ::SeawaterPolynomials.BoussinesqEquationOfState{<:SeawaterPolynomials.TEOS10.TEOS10SeawaterPolynomial}) at ~/.julia/packages/SeawaterPolynomials/ig7CR/src/TEOS10.jl:186\r\n```",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-29T03:47:29Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2023-04-12T06:38:23Z",
+    "number": 3035,
+    "title": "Updates `Docs/Buoyancy models and equation of state` + update SeawaterPolynomials to v0.3.2"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR is the first step to move the multigrid solvers from Oceananigans to https://github.com/CliMA/MultigridOceanSolvers.jl.\r\n\r\ncc @vchuravy ",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-06T00:06:16Z",
+    "deletions": 1256,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2023-04-12T11:37:54Z",
+    "number": 3052,
+    "title": "(v0.81.0) Remove AlgebraicMultigrid + AMGX deps"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3055 .",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5i7Fck",
+        "number": 3055,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3055"
+      }
+    ],
+    "createdAt": "2023-04-11T16:30:24Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2023-04-12T11:38:17Z",
+    "number": 3059,
+    "title": "(v0.81.0) Remove `year`(s) from `Units`"
+  }
+]

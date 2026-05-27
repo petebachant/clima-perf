@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "On main, if I try to read from a GPU-generated NetCDF file into a `FieldTimeSeries` I get the following error if I don't have a GPU:\r\n\r\n```\r\nERROR: MethodError: no method matching GPU()\r\nThe type `GPU` exists, but no method is defined for this combination of argument types when trying to construct it.\r\n\r\nClosest candidates are:\r\n  GPU(::D) where D\r\n   @ Oceananigans ~/repos/Oceananigans.jl/src/Architectures.jl:45\r\n\r\nStacktrace:\r\n  [1] top-level scope\r\n    @ none:1\r\n  [2] eval(m::Module, e::Any)\r\n    @ Core ./boot.jl:489\r\n  [3] materialize_from_netcdf\r\n    @ ~/repos/Oceananigans.jl/ext/OceananigansNCDatasetsExt/utils.jl:121 [inlined]\r\n  [4] (::OceananigansNCDatasetsExt.var\"#materialize_from_netcdf##0#materialize_from_netcdf##1\")(::Pair{String, String})\r\n    @ OceananigansNCDatasetsExt ./none:-1\r\n  [5] iterate\r\n    @ ./generator.jl:48 [inlined]\r\n  [6] grow_to!(dest::OrderedCollections.OrderedDict{\u2026}, itr::Base.Generator{\u2026})\r\n    @ Base ./abstractdict.jl:595\r\n  [7] dict_with_eltype(DT_apply::OrderedCollections.var\"#OrderedDict##0#OrderedDict##1\", kv::Base.Generator{\u2026}, t::Type)\r\n    @ Base ./abstractdict.jl:649\r\n  [8] OrderedDict\r\n    @ ~/.julia/packages/OrderedCollections/Xihhq/src/ordered_dict.jl:72 [inlined]\r\n  [9] materialize_from_netcdf\r\n    @ ~/repos/Oceananigans.jl/ext/OceananigansNCDatasetsExt/utils.jl:118 [inlined]\r\n [10] |>\r\n    @ ./operators.jl:972 [inlined]\r\n [11] reconstruct_grid(ds::NCDataset{Nothing, Missing})\r\n    @ OceananigansNCDatasetsExt ~/repos/Oceananigans.jl/ext/OceananigansNCDatasetsExt/grid_reconstruction.jl:318\r\n [12] FieldTimeSeries(typed_path::Oceananigans.OutputReaders.NetCDFPath, name::String; backend::InMemory{\u2026}, architecture::CPU, grid::Nothing, location::Nothing, boundary_conditions::Oceananigans.OutputReaders.UnspecifiedBoundaryConditions, time_indexing::Oceananigans.OutputReaders.Linear, iterations::Nothing, times::Nothing, reader_kw::@NamedTuple{})\r\n    @ OceananigansNCDatasetsExt ~/repos/Oceananigans.jl/ext/OceananigansNCDatasetsExt/output_readers.jl:44\r\n```\r\n\r\nThis PR makes it so that we can bypass this by passing an `arch`itecture keyword to `reconstruct_grid()` and, if the user passes it, we never have to instantiate the original architecture the file was written in.\r\n\r\nHere's a MWE for the record:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing NCDatasets\r\n\r\ngrid = RectilinearGrid(size=(4, 4, 4), extent=(1, 1, 1))\r\nmodel = NonhydrostaticModel(grid)\r\nsimulation = Simulation(model, \u0394t=0.1, stop_iteration=10)\r\nsimulation.output_writers[:nc] = NetCDFWriter(model, (; u = model.velocities.u),\r\n                            schedule=IterationInterval(1),\r\n                            filename = \"fake_gpu_output.nc\")\r\nrun!(simulation)\r\n\r\n# Now we're going to modify the NetCDF file to pretend it was written on a GPU\r\nds = NCDataset(\"fake_gpu_output.nc\", \"a\")\r\ngroup_args = ds.group[\"underlying_grid_reconstruction_args\"]\r\ngroup_args.attrib[\"architecture\"] = \"GPU()\"\r\nclose(ds)\r\n\r\nu = FieldTimeSeries(\"fake_gpu_output.nc\", \"u\", architecture=CPU())\r\nfor n in eachindex(u.times)\r\n    @show u[n][1, 1, 1]\r\nend\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-10T16:37:36Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2026-02-19T19:33:21Z",
+    "number": 5271,
+    "title": "Allow FieldTimeSeries to be read from NetCDF without reading the original architecture"
+  }
+]

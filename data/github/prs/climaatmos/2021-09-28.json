@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 121,
+    "author": {
+      "id": "MDQ6VXNlcjM4MDgzMzM0",
+      "is_bot": false,
+      "login": "LenkaNovak",
+      "name": ""
+    },
+    "body": "This addresses issue #122, and allows boundary fluxes to be prescribed externally. \r\n\r\nThe next iteration / PR should \r\n- abstract the currently hard-coded top BC for `uv`\r\n- generalist `get_boundary_flux` for any boundary. Currently all surface fluxes are applied at the bottom boundary via `first_interior(v)` \r\n- add a more general interface, such as that in Land's [rhs](https://github.com/CliMA/LandHydrology.jl/blob/c2e3fc1fd2b29d2381a5edfabd292ce1de6df3b3/src/SoilModel/right_hand_side.jl#L179) with their BCs specified [here](https://github.com/CliMA/LandHydrology.jl/blob/c2e3fc1fd2b29d2381a5edfabd292ce1de6df3b3/src/SoilModel/boundary_conditions.jl#L376). However, `ClimaSimulations` will most likely introduce a new way of prescribing BCs, so this point may depend on the interim needs of developers. \r\n - decide if `get_boundary_flux` is better than `set_boundary_flux!` (see discussion below)",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs47de2u",
+        "number": 122,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/122"
+      }
+    ],
+    "createdAt": "2021-09-21T06:23:53Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2021-09-28T02:30:32Z",
+    "number": 126,
+    "title": "Re-introducing model.boundary_conditions"
+  }
+]

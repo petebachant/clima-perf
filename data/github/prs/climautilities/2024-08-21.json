@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "`time_ns` because we are going through nanoseconds, not milliseconds ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-08-21T17:08:52Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2024-08-21T19:13:30Z",
+    "number": 100,
+    "title": "Fix typo"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This bug was found while working with ozone data. Ozone data is defined at non-clean times, eg 2010-07-17T14:11:30.422, and was leading to failures.\r\n\r\nThe reason for failures are due to moving between times and dates, with times being represented as floating points.\r\n\r\nFor Float64, times of order of O(few) years (~ 1e7-1e8 seconds) have errors of O(1-100) nanoseconds. As a result, dates like\r\n2010-07-17T14:11:30.422 can be misresolved to 2010-07-17T14:11:30.421 or 2010-07-17T14:11:30.423 when computed from a time. This results in errors because data that is expected to be found is not found.\r\n\r\nAs a workaround, this commit truncates processing to Milliseconds (because Milliseconds is the time resolution in DateTime) and adds a round operation to recover that resolution.\r\n\r\nIt is still possible for this workaround to fail: if the floating point error is very large, the round operation might round in the wrong direction.\r\n\r\nCloses #99 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6Tu3Ip",
+        "number": 99,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/99"
+      }
+    ],
+    "createdAt": "2024-08-21T20:56:33Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-08-21T21:49:23Z",
+    "number": 101,
+    "title": "Improve handling of floatin gpoint errors in DataHandling times"
+  }
+]

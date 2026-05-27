@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 287,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "CUDA 5 may have been causing some CI issues, so this PR downgrades back to CUDA 4.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-11T17:40:43Z",
+    "deletions": 543,
+    "labels": [
+      {
+        "color": "06CF1E",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABAlTlKw",
+        "name": "Dependencies"
+      }
+    ],
+    "mergedAt": "2023-10-11T20:35:53Z",
+    "number": 1495,
+    "title": "Downgrade to CUDA 4"
+  },
+  {
+    "additions": 2803,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\r\n\r\nThird PR of #1230. Adds an interface for specifying block matrices of matrix fields and solving linear systems with these matrices. This will replace what is currently in `ClimaAtmos.jl/src/prognostic_equations/implicit/schur_complement_W.jl`, generalizing it for implicit diffusion and implicit EDMF.\r\n\r\n## Content\r\n\r\n### Main Changes\r\n\r\n- Add the `FieldName` struct, which is a singleton type that represents a chain of `getproperty` calls\r\n  - Add the `@name` macro for constructing `FieldName`s, which checks whether its input expression is a syntactically valid chain of `getproperty` calls before calling the default constructor.\r\n  - A `name` can be used to access a property or sub-property of an object `x` by calling `get_field(x, name)`.\r\n  - An `internal_name` can be appended onto another `name` in order to access a property or sub-property of `get_field(x, name)`.\r\n- Add the `FieldNameDict` struct, which maps each key in a set of `FieldVectorKeys` or `FieldMatrixKeys` (see below) to a `Field` or some other object.\r\n  - There are currently four subtypes of `FieldNameDict`:\r\n    - `FieldMatrix` (the only user-facing subtype), which maps `NTuple{2, FieldName}`s to `ColumnwiseBandMatrixField`s or multiples of `LinearAlgebra.I`\r\n    - `FieldVectorView`, which maps `FieldName`s to `Field`s; this is used to wrap a `FieldVector` so that it can be used in conjunction with a `FieldMatrix`\r\n    - `FieldVectorViewBroadcasted` and `FieldMatrixBroadcasted`, each of which can store unevaluated `Base.AbstractBroadcasted` objects, in addition to what `FieldVectorView` and `FieldMatrix` can already store\r\n  - Supports standard `AbstractDict` functions like `keys` and `pairs`.\r\n  - An individual block of a `FieldNameDict` can be accessed by calling `dict[key]`, and a range of blocks can be accessed by calling `dict[set]`, where `set` is a `FieldNameSet`.\r\n  - Given a `FieldMatrix` `A`, a similar matrix that only contains identity matrix blocks can be constructed with `one(A)`.\r\n  - `FieldNameDict`s can be used in broadcast expressions, which support the following operations:\r\n    - `+`, `-`, or `*`, where each input is either a `FieldNameDict` or a `FieldVector`\r\n    - `inv`, where the input is a diagonal `FieldMatrix`\r\n  - The new methods for `Base.Broadcast.broadcasted` construct chains of `Field` broadcast expressions from `FieldNameDict` broadcast expressions on the fly, somewhat similarly to how broadcasting works for ClimaCore operators.\r\n- Add the `FieldMatrixSolver` struct, which solves an equation of the form `A * x = b`, where `A` is a `FieldMatrix` and where `x` and `b` are `FieldVector`s.\r\n  - Add the `field_matrix_solve!` function, which works just like `ldiv!(x, A, b)`, except that it also takes a `FieldMatrixSolver` as its first argument.\r\n  - Add four `FieldMatrixSolverAlgorithm`s, which can be nested inside of each other to build up more specialized algorithms:\r\n    - `BlockDiagonalSolve`, which runs a \"single field solver\" for each block of the block diagonal matrix `A`; the single field solver can handle the four types of blocks:\r\n      - Multiples of `LinearAlgebra.I`\r\n      - Diagonal `ColumnwiseBandMatrixField`s\r\n      - Tri-diagonal `ColumnwiseBandMatrixField`s (implementation of the Thomas algorithm)\r\n      - Penta-diagonal `ColumnwiseBandMatrixField`s (implementation of the PTRANS-I algorithm)\r\n    - `BlockLowerTriangularSolve`, which uses forward substitution to solve the equation for a block lower triangular matrix `A`\r\n    - `SchurComplementSolve`, which generalizes what is currently in ClimaAtmos's `schur_complement_W.jl` file to any block matrix `A` with a diagonal block in the top-left corner\r\n    - `ApproximateFactorizationSolve`, which lets us use \"operator splitting\" to approximately solve the equation for a diagonally dominant block matrix `A`\r\n- Add documentation for how to specify a `FieldMatrix` and use it in a linear solver, along with internal documentation for the new `FieldName`-based infrastructure.\r\n- Add unit tests for correctness, type stability, and allocations, and run them on both CPUs and GPUs through CI.\r\n  - Test each single field solver on both a cell-center and a cell-face field.\r\n  - Test each `FieldMatrixSolverAlgorithm` on block diagonal, block lower triangular, and block dense matrices.\r\n  - Test solvers with identical structures to what we will use in ClimaAtmos for the following examples:\r\n    - Dry dycore with implicit acoustic waves\r\n    - Dry dycore with implicit acoustic waves and diffusion\r\n    - Dry dycore + prognostic EDMF with implicit acoustic waves and SGS fluxes\r\n    - Moist dycore + prognostic EDMF + tracers with implicit acoustic waves and SGS fluxes\r\n\r\n### Internal Chagnes\r\n\r\n- Add a collection of \"unrolled functions\", whose return values can be inferred during compilation if their input values are all singleton types.\r\n  - These are all implemented as combinations of `unrolled_zip`, `unrolled_map`, and `unrolled_foldl`.\r\n  - Several of these need to have their recursion limits disabled for the unit tests to be type stable.\r\n- Add the `FieldNameTree` struct, which stores every `FieldName` that can be used to access `x` with `get_field(x, name)`.\r\n  - A `name` can be checked for validity by calling `has_subtree_at_name(tree, name)`.\r\n  - The children of `name` (the `FieldName`s that can be used to access the properties of `get_field(x, name)`) can be obtained by calling `child_names(name, tree)`.\r\n- Add the `FieldNameSet` struct, which stores a set of `FieldVectorKeys` (each of which is a `FieldName`) or a set of `FieldMatrixKeys` (each of which is an `NTuple{2, FieldName}`).\r\n  - Roughly equivalent to the built-in `KeySet` for `AbstractDict`s, but specialized for `FieldNameDict`s.\r\n  - Supports standard `AbstractSet` functions like `union` and `setdiff`, as well as custom functions like `set_complement` and `matrix_product_keys`.\r\n  - Handles overlaps between `FieldName`s (that is, situations where one property of `x` lies inside another property of `x`) by storing a `FieldNameTree` that contains all available `FieldName`s.\r\n- Disable the recursion limits for several functions used to manipulate `FieldName`s, `FieldNameTree`s, and `FieldNameSet`s, as this is necessary in order for the unit tests to be type stable.\r\n- Remove the methods for `RecursiveApply.rmul` that specialize on `Number`, which is also necessary in order for the unit tests to be type stable.\r\n  - These methods are no longer required, now that #1454 has been merged in.\r\n- Add support for calling `inv` on `BandMatrixRow`s.\r\n- Qualify the use of `CUDA.@allowscalar`, per Charlie's suggestion.\r\n- Fix some type instabilities in `matrix_field_test_utils.jl`.\r\n- Remove an unused variable name in `operator_matrices.jl`.\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-08-25T01:11:56Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2023-10-11T22:31:37Z",
+    "number": 1436,
+    "title": "Add FieldMatrix and linear solvers"
+  }
+]

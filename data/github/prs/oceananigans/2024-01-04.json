@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "Currently the user may pass `diffusivity_fields` into model constructors, but `Oceananigans.TurbulantClosures.DiffusivityFields` resets these to the value of `validate_field_tuple_grid` which nominally is `nothing`. I have changed this to return the field values if `validate_field_tuple_grid` does not error instead.\r\n\r\nE.g.\r\n\r\n```julia\r\n\r\nusing Oceananigans\r\nusing Oceananigans.TurbulenceClosures: DiffusivityFields\r\n\r\ngrid = RectilinearGrid(size = (64, 64, 16), extent = (150, 150, 10))\r\n\r\ntracers = (:T, :S)\r\n\r\nclosure = AnisotropicMinimumDissipation()\r\n\r\ndiffusivity_fields = diffusivity_fields = DiffusivityFields(grid, tracers, NamedTuple(), closure)\r\n\r\nmodel = NonhydrostaticModel(; grid,\r\n                              tracers,\r\n                              closure,\r\n                              diffusivity_fields)\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-10-29T16:32:29Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2024-01-04T18:19:38Z",
+    "number": 3367,
+    "title": "Fixes bug with pre-defining diffusivity fields"
+  }
+]

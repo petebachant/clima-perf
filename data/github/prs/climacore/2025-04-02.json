@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 211,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds FD shmem for `GradientC2F`, and infrastructure needed for all C2F stencil operators (as this was not added in the F2C shmem PR). The new code in [ext/cuda/operators_fd_shmem_common.jl](https://github.com/CliMA/ClimaCore.jl/compare/ck/fd_shmem_with_GradientC2F?expand=1#diff-a0d1b19a17169c7702fd7c699e279b0ffebc12923dd9c4c2b2098edaf553b29b) is exercised in the newly added test.\r\n\r\nI think it's worth adding a composite operator test, but hopefully the implementation doesn't need any changes.\r\n\r\nHere is a tested [build](https://buildkite.com/clima/climaatmos-ci/builds/23813) in ClimaAtmos.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-01T15:22:25Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "E31312",
+        "description": "",
+        "id": "MDU6TGFiZWwzMjgwMjU1MzY4",
+        "name": "performance"
+      },
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAABKKewDw",
+        "name": "GPU"
+      }
+    ],
+    "mergedAt": "2025-04-02T18:28:50Z",
+    "number": 2268,
+    "title": "Add shmem for GradientC2F"
+  },
+  {
+    "additions": 287,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "I don't know if I lost a commit or something in a previous PR, but\r\n`Remapping.interpolate` was missing some methods needed to make it useful. In this commit, I go over the methods for all the spaces and add what is missing (e.g., `interpolate(horizontal_space, target_hcoords)` instead of `interpolate(horizontal_space, target_hcoords, nothing).\r\n\r\nI also change the default behavior for `default_target_zcoords` to interpolate on levels instead of linear interpolation. I do this because this is a much more common type of workflow.\r\n\r\nWith this commit, plotting `Field`s becomes very easy. For example, plotting a surface values of a 3D field:\r\n```julia\r\nusing CairoMakie\r\nimport ClimaCore.Remapping: interpolate\r\nheatmap(interpolate(field)[:, :, 1])\r\n```\r\n\r\nThis commit also adds the defaults to the constructors for the `Remapper` too, so that creating a `Remapper` becomes easier:\r\n\r\n```julia\r\nimport ClimaCore.Remapping: Remapper\r\nremapper = Remapper(space)\r\n```\r\n\r\n(If one is fine with the defaults otherwise they can still pass the coordinates)\r\n\r\n\r\nIn the future, it might be nice to incorporate this into a `Makie` extension.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-01T23:28:24Z",
+    "deletions": 113,
+    "labels": [],
+    "mergedAt": "2025-04-02T18:42:24Z",
+    "number": 2272,
+    "title": "Clean up convenience `interpolate`"
+  }
+]

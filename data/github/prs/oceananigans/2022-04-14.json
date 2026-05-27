@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 631,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds two features:\r\n\r\n1. The ability to specify multiple forcing functions with a tuple (eg #2136)\r\n2. A new forcing function type `AdvectiveForcing` for adding advective terms as a forcing function. A few users want to model buoyant or sinking particles so we need a nice way to support this that doesn't require importing low-level Oceananigans kernel functions. This was discussed on Slack and in #2385 .\r\n\r\nSome notes:\r\n\r\n* `AdvectiveForcing` can also model advection of momentum, but this will only work for `NonhydrostaticModel` at the moment (because the kernel functions for momentum advection have different names for nonhydrostatic vs hydrostatic)\r\n* \"forcing tuples\" are wrapped in a lightweight `MultipleForcings` wrapper; this is just an internal convenience. However it does mean that we can more easily support alternative ways to \"combine\" forcings (other than just adding them) in the future if need be.\r\n\r\n### Example of multiple forcings\r\n\r\nFrom #2136, in model constructors:\r\n\r\n```julia\r\nforcing = (; u = (u_relaxation, u_sponge))\r\n```\r\n\r\n### Example of `AdvectiveForcing`\r\n\r\nFrom the docstring:\r\n\r\n```julia\r\n# Physical parameters\r\ngravitational_acceleration          = 9.81     # m s\u207b\u00b2\r\nocean_density                       = 1026     # kg m\u207b\u00b3\r\nmean_particle_density               = 2000     # kg m\u207b\u00b3\r\nmean_particle_radius                = 1e-3     # m\r\nocean_molecular_kinematic_viscosity = 1.05e-6  # m\u00b2 s\u207b\u00b9\r\n\r\n# Terminal velocity of a sphere in viscous flow\r\n\u0394b = gravitational_acceleration * (mean_particle_density - ocean_density) / ocean_density\r\n\u03bd = ocean_molecular_kinematic_viscosity\r\nR = mean_particle_radius\r\n\r\nw_Stokes = - 2/9 * \u0394b / \u03bd * R^2\r\n\r\nsettling = AdvectiveForcing(WENO5(), w=w_Stokes)\r\n```\r\n\r\nCloses #2136 \r\n\r\nTODO:\r\n- [x] Tests\r\n- [x] Validation case with simple sinking, reacting particle that combines `MultipleForcing` and `AdvectiveForcing`?",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM5BO1rf",
+        "number": 2136,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/2136"
+      }
+    ],
+    "createdAt": "2022-03-29T11:33:10Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2022-04-14T20:52:45Z",
+    "number": 2389,
+    "title": "Adds MultipleForcings and AdvectiveForcing"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Might help with one of the problems on #2415 .",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-14T11:39:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2022-04-14T23:49:53Z",
+    "number": 2436,
+    "title": "Support `+` as `UnaryOperation`"
+  }
+]

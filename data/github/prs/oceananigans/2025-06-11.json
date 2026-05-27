@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 54,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Based on a conversation with @glwagner and @xkykai, this PR removes the use of indices for storage in `PerturbationAdvection` and makes a couple of fixes and improvements. On main, this index sets up a hidden/secret storage for left open boundary conditions at `i=0` that saves the velocity of the previous timestep. This is not done for the right boundary, so this PR will make both left and right `PerturbationAdvectionOBC`s the same.\r\n\r\n@jagoosw I'm curious to hear your thoughts here. We went through the code and couldn't find the need for a storage for the velocity at a previous timestep. In fact, if I simply get rid of it (as this PR does) the results basically don't change, with the exception of the initial velocity. Here are two identical simulations, the only difference being the use of a stored velocity by one and not the other:\r\n\r\nhttps://github.com/user-attachments/assets/2009a808-1db7-48d6-9093-6db3538b4cd0\r\n\r\nhttps://github.com/user-attachments/assets/d6f19944-30ab-4cd7-b1ee-ba08eb3928e7",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-06-04T18:51:02Z",
+    "deletions": 60,
+    "labels": [],
+    "mergedAt": "2025-06-11T00:18:12Z",
+    "number": 4578,
+    "title": "Remove the use of indices for storage in `PerturbationAdvection`"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Resolves #4580. Thanks @xkykai for finding this.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM66EsAf",
+        "number": 4580,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4580"
+      }
+    ],
+    "createdAt": "2025-06-05T20:07:16Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2025-06-11T05:08:22Z",
+    "number": 4583,
+    "title": "Fix transform planning for uniform grids used by FourierTridiagonalPoissonSolver"
+  }
+]

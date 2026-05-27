@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 88,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdds a new function `read!` that reads in data to a preallocated space in the DataHandler, as opposed to allocating at each call as the existing `read` does. This requires the addition of a `preallocated_read_data` cache to the `DataHandler` object. \r\n\r\nIt also requires that `read` returns a copy of the data in the case of a cache hit to avoid overwriting data in the cache (this was the cause of the bug in the original implementation).\r\n\r\nNote that we expect higher allocations when using `read` due to the added `copy`, but lower allocations using `read!` over `read`. Internally, we now use `read!` now so users should see reduced allocations.\r\n\r\nThis feature was initially introduced in https://github.com/CliMA/ClimaUtilities.jl/pull/83/, but there was a bug in that implementation so it has been reworked here\r\n\r\ncloses #81 ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6RNPU7",
+        "number": 81,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/81"
+      }
+    ],
+    "createdAt": "2024-10-18T18:39:19Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2024-10-21T17:23:58Z",
+    "number": 119,
+    "title": "Add read! function"
+  },
+  {
+    "additions": 272,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "As more downstream packages are dealing with restart files, I started moving some shared functionalities to ClimaUtilities.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-18T21:03:12Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2024-10-21T21:04:48Z",
+    "number": 120,
+    "title": "Add detect_restart_file"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 104,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR changes the structure of BinaryOperations and the way that locations are inferred when constructing them.\r\n\r\nBefore this PR, BinaryOperations stored three interpolation operators: two for each argument, and a third interpolation function applied after the binary operation was computed. The motivation for this design was to ensure that products of fields were always computed at their shared location, while allowing abstract operations to be built at user-specified locations. In other words, users might want something like\r\n\r\n```julia\r\nusing Oceananigans\r\ngrid = RegularRectilinearGrid(size=(1, 1, 1), extent=(1, 1, 1))\r\nmodel = IncompressibleModel(architecture=CPU(), grid=grid)\r\nu, v, w = model.velocities\r\n\r\nuu = @at (Center, Center, Center) u * u\r\n\r\n# output\r\nBinaryOperation at (Center, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    * at (Center, Center, Center) via \u2111x\u1d9c\u1d43\u1d43\r\n \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 Field located at (Face, Center, Center)\r\n```\r\n\r\nwhich would compute `u * u` at `(Face, Center, Center)`, and subsequently interpolate to cell centers. The object `uu` would then be defined at cell centers.\r\n\r\nThe main issue of this design in terms of functionality is that it produces expression trees that interpolate \"too eagerly\". A common example is a turbulent kinetic energy computation:\r\n\r\n```julia\r\nU = AveragedField(u, dims=(1, 2))\r\nV = AveragedField(v, dims=(1, 2))\r\n\r\ntke = @at (Center, Center, Center) ((u - U)^2 + (v - V)^2 + w^2)\r\n```\r\n\r\nInspection of this object reveals that while `u - U` does not interpolate, the squaring `(u - U)^2` would be performed at cell centers:\r\n\r\n```julia\r\njulia> tke.args[1].b\r\n2\r\n\r\njulia> tke.args[1].a\r\nBinaryOperation at (Center, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    - at (Center, Center, Center) via identity\r\n \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 AveragedField over dims=(1, 2) located at (\u22c5, \u22c5, Center) of Field located at (Face, Center, Center)\r\n```\r\n\r\nThis isn't what we want (usually): instead, we want both `u - U` and subsequent squaring in `(u - U)^2` to be performed at `(Face, Center, Center)`.\r\n\r\nThis PR addresses this issue by getting rid of the third interpolation in `BinaryOperation`, and changing how locations for `BinaryOperation` are inferred. Now, when locations are specified via `@at`, they are taken as a \"suggestion\" that only acts if the two elements of the binary operation have different _concrete_ locations such that a difference needs to be resolved. In other cases (such as a binary operation between fields at common locations, or a binary operation between a field and a number), the location of the members of the operation is preserved. In this way, `BinaryOperations` are \"stubborn\". \r\n\r\nWe thus have results like\r\n\r\n```julia\r\njulia> *((Center, Center, Center), u, u)\r\nBinaryOperation at (Face, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    * at (Face, Center, Center)\r\n \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 Field located at (Face, Center, Center)\r\n```\r\n\r\nand\r\n\r\n```julia\r\njulia> tke = @at (Center, Center, Center) ((u - U)^2 + (v - V)^2 + w^2);\r\n\r\njulia> tke.arg.args[1]\r\nBinaryOperation at (Face, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    ^ at (Face, Center, Center)\r\n \u00a0\u00a0 \u251c\u2500\u2500 - at (Face, Center, Center)\r\n \u00a0\u00a0 \u2502\u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2502\u00a0\u00a0 \u2514\u2500\u2500 AveragedField over dims=(1, 2) located at (\u22c5, \u22c5, Center) of Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 2\r\n```\r\n\r\nAn added benefit is that the `BinaryOperation` object is simpler. This could help compilation as well...\r\n\r\nOf course, users do want to be able to specify the location of `BinaryOperations` for output. For this we change how `@at` works: now we wrap the entire user-prescribed expression in an interpolation operator that interpolates the result to the user-specified location. If the location of the underlying expression is already at the user-specified location, this is just an identity. But when the underlying operation is a \"stubborn\" `BinaryOperator`, we interpolate:\r\n\r\n```julia\r\njulia> uu = @at (Center, Center, Center) u * u\r\nUnaryOperation at (Center, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    identity at (Center, Center, Center) via \u2111x\u1d9c\u1d43\u1d43\r\n \u00a0\u00a0 \u2514\u2500\u2500 * at (Face, Center, Center)\r\n \u00a0\u00a0  \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0  \u00a0\u00a0 \u2514\u2500\u2500 Field located at (Face, Center, Center)\r\n\r\njulia> uu.arg\r\nBinaryOperation at (Face, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=1, Ny=1, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    * at (Face, Center, Center)\r\n \u00a0\u00a0 \u251c\u2500\u2500 Field located at (Face, Center, Center)\r\n \u00a0\u00a0 \u2514\u2500\u2500 Field located at (Face, Center, Center)\r\n```\r\n\r\nThis also means that operations between `ReducedField` and `Field` also end up at the right place, and we have no need to throw an error if a `BinaryOperation` has a `Nothing` location (in fact, this might be a useful abstraction for binary operations between `ReducedField`).",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-20T03:45:46Z",
+    "deletions": 77,
+    "labels": [],
+    "mergedAt": "2021-04-21T03:37:12Z",
+    "number": 1599,
+    "title": "Improved and simplified BinaryOperation with \"stubborn\" location inference"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Release notes:\r\n\r\n* Tests and fixes for `FFTBasedPoissonSolver` for topologies with `Flat` dimensions (#1560)\r\n* Improved `AbstractOperations` that are much more likely to compile on the GPU, with better \"location inference\" for `BinaryOperation` (#1595, #1599)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-21T03:44:41Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2021-04-21T13:41:34Z",
+    "number": 1600,
+    "title": "Bump to 0.55.0"
+  },
+  {
+    "additions": 611,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements barebones broadcasting for `AbstractField` by subtyping `AbstractArray` and defining `Base.copyto!(dest::AbstractField, bc::Broadcasted{Nothing})`. This allows computations like this:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = RegularRectilinearGrid(size=(2, 2, 1), extent=(1, 1, 1));\r\n\r\njulia> a, b, c = [CenterField(grid) for i = 1:3];\r\n\r\njulia> a .= rand(size(a)...)\r\n\r\njulia> b .= 2;\r\n\r\njulia> c .= a .* b\r\n```\r\n\r\nBroadcasting also works with `AbstractOperations`:\r\n\r\n\r\n```julia\r\njulia> d = Field(Face, Center, Center, CPU(), grid)\r\nField located at (Face, Center, Center)\r\n\u251c\u2500\u2500 data: OffsetArrays.OffsetArray{Float64,3,Array{Float64,3}}, size: (4, 4, 3)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=2, Ny=2, Nz=1)\r\n\u2514\u2500\u2500 boundary conditions: x=(west=Periodic, east=Periodic), y=(south=Periodic, north=Periodic), z=(bottom=ZeroFlux, top=ZeroFlux)\r\n\r\njulia> dx_c = \u2202x(c)\r\nDerivative at (Face, Center, Center)\r\n\u251c\u2500\u2500 grid: RegularRectilinearGrid{Float64, Periodic, Periodic, Bounded}(Nx=2, Ny=2, Nz=1)\r\n\u2502   \u2514\u2500\u2500 domain: x \u2208 [0.0, 1.0], y \u2208 [0.0, 1.0], z \u2208 [-1.0, 0.0]\r\n\u2514\u2500\u2500 tree: \r\n    \u2202x\u1da0\u1d9c\u1d43 at (Face, Center, Center) via identity\r\n \u00a0\u00a0 \u2514\u2500\u2500 Field located at (Center, Center, Center)\r\n\r\njulia> d .= 2 .* dx_c\r\n\r\njulia> interior(d)\r\n2\u00d72\u00d71 view(OffsetArray(::Array{Float64,3}, 0:3, 0:3, 0:2), 1:2, 1:2, 1:1) with eltype Float64:\r\n[:, :, 1] =\r\n  4.36713  3.46522\r\n -1.988    4.13932\r\n```\r\n\r\nUnder the hood we launch kernels, so broadcasting is multithreaded and works on the GPU as well as the CPU.\r\n\r\nThis is just the beginning I think. This PR only implements in-place broadcasting, but out-of-place (allocating) broadcasting would be useful for analysis of data via `AbstractField`. For this I think we need to define `Base.copy` in addition to `copyto!` (but this is simple since we already have `similar`...) ~~We also need to write a lot more code to make broadcasting robust: for example, we should check that broadcasted objects have the same location. We might also be able to implement interpolation correctly. This PR shows that all of this is possible.~~\r\n\r\nThis PR implements interpolated broadcasting by transforming `Base.Broadcast.Broadcasted` to `AbstractOperation`.\r\n\r\nNote: it also defines some new helper functions for `BinaryOperation` that should help with type inference and GPU compilation. This was necessary to get some of the broadcasting tests work (since broadcasting also uses `AbstractOperation`).",
+    "changedFiles": 39,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-04-16T20:24:38Z",
+    "deletions": 315,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      }
+    ],
+    "mergedAt": "2021-04-21T20:09:40Z",
+    "number": 1596,
+    "title": "Broadcasting for AbstractField, AbstractReducedField, and AbstractOperations"
+  }
+]

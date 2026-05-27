@@ -1,0 +1,79 @@
+[
+  {
+    "additions": 491,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Strange that we don't have this already but this PR refactors the operators to be truly finite volume. By using multiple dispatch we only have one operator rather than having a different operator for each grid.\r\n\r\nThe beautiful \u03b9\u0308 (`\\iota\\ddot`) now denotes interpolation. Thanks @sandreza!\r\n\r\nNeed to switch to using the `caa`, `afa`, etc. notation and introduce some composite operators from `closure_operators.jl`.\r\n\r\nJust opening this PR early so people can see what the new operators look like, get some feedback, etc.\r\n\r\nOnce this PR is merged, implementing a vertically stretched grid will be easy, and implementing wall bounded directions should be as simple as defining something like\r\n```julia\r\nAy(i, j, k, grid) = ifelse(j == 0, 0, \u0394x(i, j, k, grid) * \u0394z(i, j, k, grid))\r\n```\r\nbut still thinking about the best way to dispatch on e.g. `DoublyPeriodicDomain`, `ChannelDomain`, `TriplyPeriodicDomain`, etc.\r\n\r\nI will also release v0.7.0 once this PR is merged.\r\n\r\nResolves #115\r\nResolves #146 \r\nResolves #469",
+    "changedFiles": 11,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MTg1NjA5NTY=",
+        "number": 115,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/115"
+      },
+      {
+        "id": "MDU6SXNzdWU0MjM3NzYwNTI=",
+        "number": 146,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/146"
+      },
+      {
+        "id": "MDU6SXNzdWU1MDYyMzc4MTg=",
+        "number": 469,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/469"
+      }
+    ],
+    "createdAt": "2019-06-10T23:52:49Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2019-10-29T01:09:50Z",
+    "number": 283,
+    "title": "Finite volume operators through multiple dispatch"
+  }
+]

@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The `only_local_halos` and `async` kwargs are specific to fill halos and in particular they are active only for distributed grids. So in this PR I remove them from launch and move them in the BoundaryConditions module",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-13T09:28:44Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2024-11-14T06:58:02Z",
+    "number": 3922,
+    "title": "Remove `fill_halo_regions!` specific kwargs from `launch!`"
+  },
+  {
+    "additions": 1412,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/3637\r\n\r\nThis PR implements the scale-invariant dynamic Smagorinsky. My main reference for this was [Bou-Zeid et al. (2005)](https://dx.doi.org/10.1063/1.1839152), just because it's nicely summarized there.\r\n\r\nAs a refresher, the coefficient in this case is calculated as\r\n\r\n```math\r\nc_s^2 = \\frac{\\langle L_{ij} M_{ij}\\rangle}{\\langle M_{ij} M_{ij} \\rangle},\r\n```\r\nwhere $M_{ij}$ and $L_{ij}$ are obtained by applying the Germano identity and minimizing the error. $\\langle \\cdot \\rangle$ is an average which usually is implemented as planar averaging. I'm implementing it here with an arbitrary `DirectionalAveraging` procedure that can average in whatever direction the user wants. Following a suggestion by @glwagner in #3637, I'm also starting to put the pieces in place for a more general averaging procedure so that eventually we can add Lagrangian averaging as an option for this model.\r\n\r\nNote that this PR is related to https://github.com/CliMA/Oceananigans.jl/pull/3638. The rationale for having this PR in addition to #3638 is that for most LES are doubly periodic, in which case there's not much advantage in having the Lagrangian averaging that's implemented in #3638. In these cases I'd argue the model implemented here is more efficient, so having both types of models is probably desirable.\r\n\r\nAnother note is that, once this PR is merged, it should be very straightforward to implement a scale-_dependent_ version, which works better close to boundaries.\r\n\r\nThe model seems to be working. Here's an animation of an unforced 3D turbulence simulation on a 32\u00b3 grid. Left is vorticity and right is the strain rate modulus squared:\r\n\r\nhttps://github.com/CliMA/Oceananigans.jl/assets/13205162/7131a99d-df6c-4883-850d-d4a87988cdb7\r\n\r\nNote that the value of the calculated Smag coefficient $c_s$ (which I'm showing at the top of the plots above) is about 0.17, which is very close to the theoretical value obtained by Lilly of 0.16.\r\n\r\nI'm opening this as a draft PR for now because there are some things that need doing:\r\n\r\n- [x] Generalize the filter for stretched grids. For now it assumes a regular grid for simplicity, but it's trivial to generalize.\r\n- [x] Optimize the calculation of the coefficient. At the moment I'm creating four extra fields in order to calculate the Smag coefficient: `LM`, `MM` are 3D fields; and `LM_avg` and `MM_avg` are 1D or 2D. What I'm doing is to first calculate $L_{ij} M_{ij}$ and $M_{ij} M_{ij}$ pointwise, and then `LM_avg` and `MM_avg` receive their averages. We should be able to calculate everything without needing `LM`, `MM` are 3D fields, I just couldn't figure out how yet :)\r\n- [ ] Write docs\r\n- [x] Write tests\r\n- [x] Validate that model is working as intended\r\n\r\nCC @glwagner @simone-silvestri @xkykai @whitleyv \r\n\r\nFeel free to add more things to the to-do list that I may have forgotten.",
+    "changedFiles": 23,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6NNgM7",
+        "number": 3637,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3637"
+      }
+    ],
+    "createdAt": "2024-06-28T00:11:07Z",
+    "deletions": 285,
+    "labels": [],
+    "mergedAt": "2024-11-14T13:35:23Z",
+    "number": 3642,
+    "title": "Implement scale-invariant dynamic Smagorinsky"
+  },
+  {
+    "additions": 1165,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "refactoring of the `SplitExplicitFreeSurface` to comply with issue #3873 \r\n\r\nAdditional changes included in this PR not described in #3873:\r\n- the grid halos are extended automatically upon passing a grid with a `Connected` topology (`FullyConnected`, `RightConnected` or `LeftConnected`) so there is no need to extend the constructor for grids (such as distributed grids) that have connected topologies.\r\n- All the `ExplicitFreeSurface` relevant code has been moved in the `explicit_free_surface.jl` file",
+    "changedFiles": 31,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-01T08:58:33Z",
+    "deletions": 1151,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2024-11-14T19:09:32Z",
+    "number": 3894,
+    "title": "(0.94.1) Refactor `SplitExplicitFreeSurface`"
+  },
+  {
+    "additions": 724,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The spacings functions aren't working for `ImmersedBoundaryGrid`s on `main`. This PR fixes that.\r\n\r\nOn main:\r\n\r\n```julia\r\njulia> using Oceananigans\r\n\r\njulia> grid_base = RectilinearGrid(size=(4, 5, 6), extent=(1, 1, 1));\r\n\r\njulia> ibg = ImmersedBoundaryGrid(grid_base, GridFittedBottom((x, y) -> 1))\r\n4\u00d75\u00d76 ImmersedBoundaryGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo:\r\n\u251c\u2500\u2500 immersed_boundary: GridFittedBottom(min(h)=1.00e+00, max(h)=1.00e+00)\r\n\u251c\u2500\u2500 underlying_grid: 4\u00d75\u00d76 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0)  regularly spaced with \u0394x=0.25\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)  regularly spaced with \u0394y=0.2\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-1.0, 0.0] regularly spaced with \u0394z=0.166667\r\n\r\njulia> xspacings(ibg, Center())\r\nERROR: MethodError: no method matching xspacings(::ImmersedBoundaryGrid{Float64, Periodic, Periodic, Bounded, RectilinearGrid{Float64, Periodic, Periodic, Bounded, Float64, Float64, Float64, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, OffsetArrays.OffsetVector{Float64, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}, CPU}, GridFittedBottom{OffsetArrays.OffsetMatrix{Float64, Matrix{Float64}}, Oceananigans.ImmersedBoundaries.CenterImmersedCondition}, Nothing, CPU}, ::Center)\r\nClosest candidates are:\r\n  xspacings(::Any, ::Any, ::Any, ::Any; with_halos) at ~/repos/Oceananigans.jl/src/Grids/grid_utils.jl:363\r\n  xspacings(::Any, ::ImmersedBoundaryGrid) at ~/repos/Oceananigans.jl/src/ImmersedBoundaries/immersed_grid_metrics.jl:37\r\n  xspacings(::Oceananigans.Grids.XRegRectilinearGrid, ::Center; with_halos) at ~/repos/Oceananigans.jl/src/Grids/rectilinear_grid.jl:473\r\n  ...\r\nStacktrace:\r\n [1] top-level scope\r\n   @ REPL[18]:1\r\n```\r\n\r\nOn this branch:\r\n\r\n```julia\r\njulia> xspacings(ibg, Center())\r\n0.25\r\n\r\njulia> yspacings(ibg, Center())\r\n0.2\r\n\r\njulia> zspacings(ibg, Center())\r\n0.16666666666666666\r\n```",
+    "changedFiles": 26,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-06-13T23:02:35Z",
+    "deletions": 655,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2024-11-14T23:17:02Z",
+    "number": 3143,
+    "title": "(0.94.0) Overhaul spacings functions to return `KernelFunctionOperation`s"
+  }
+]

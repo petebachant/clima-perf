@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Summary\r\n- Add `test/ProjectDistributed.toml` \u2014 a lean test project without heavy dependencies (XESMF, Reactant, CairoMakie, Enzyme, NCDatasets, Metal, oneAPI, AMDGPU) and with `CUDA_Runtime_jll` as a proper dependency\r\n- Pipeline swaps it in with `mv` before running tests for faster resolution and precompilation\r\n- Detect local CUDA toolkit version from `nvidia-smi` and write `test/LocalPreferences.toml` directly from bash \u2014 no extra Julia startup needed\r\n- Remove `CUDA_Runtime_jll` from generic `test/Project.toml`\r\n- Fix `inject_halo_communication_boundary_conditions` call signature in distributed Poisson solver tests (added location tuple argument)\r\n\r\n## Motivation\r\nAfter #5466 removed `CUDA_Runtime_jll` from test deps, the distributed GPU tests could no longer find the correct CUDA runtime. This PR properly configures the local CUDA toolkit via `LocalPreferences.toml` and also slims down the distributed test environment to avoid precompiling packages that aren't needed for distributed testing.\r\n\r\n## Test plan\r\n- [x] Distributed CPU tests pass\r\n- [ ] <s>Distributed GPU tests pass <s/>",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-01T14:32:10Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-04-29T08:17:26Z",
+    "number": 5468,
+    "title": "Fix distributed tests: lean project, local CUDA detection, halo BC fix"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Oceananigans moves quite fast compared to other repos, so having only a 50 commit window in the benchmarks is quite restrictive. This data is simple text so it will not blow up the OceananigansBenchmarks repo too much. \r\n\r\nThis PR increases the history from 50 commits to 5000 commits",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-29T09:45:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-04-29T10:03:41Z",
+    "number": 5550,
+    "title": "Increment benchmarking commit history"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "Remove `Adapt.adapt_structure` for `CommunicationBuffers` (unused since individual buffer types all adapt to `nothing`) and fix the south/north argument order in `on_architecture` to match the struct field order (west, east, south, north, ...), as per https://github.com/CliMA/Oceananigans.jl/issues/5422#issuecomment-4116785493.\r\n\r\nCloses #5422\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM71nWGD",
+        "number": 5422,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5422"
+      }
+    ],
+    "createdAt": "2026-03-25T11:28:45Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-04-29T14:19:49Z",
+    "number": 5427,
+    "title": "Fix north/south buffer swap in CommunicationBuffers"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The type parameters in `IsopycnalSkewSymmetricDiffusivity` were scrambled after passing the `with_tracers` method. Leading to `required_halo_size` returning the type of the diffusivity rather than the actual required halo.\r\n\r\nThis PR fixes the bug\r\n\r\nFound by @lgloege and @tlangfor when running distributed NumericalEarth simulations",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-29T13:49:00Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-04-29T15:32:36Z",
+    "number": 5552,
+    "title": "(0.107.5) Bugfix `with_tracers` for `IsopycnalSkewSymmetricDiffusivity`"
+  }
+]

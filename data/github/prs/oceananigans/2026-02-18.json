@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 574,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-30T04:28:41Z",
+    "deletions": 184,
+    "labels": [],
+    "mergedAt": "2026-02-18T01:01:38Z",
+    "number": 5240,
+    "title": "Extend TabulatedFunction to support 2D and 3D interpolation."
+  },
+  {
+    "additions": 695,
+    "author": {
+      "id": "MDQ6VXNlcjE5NTI1MjYx",
+      "is_bot": false,
+      "login": "lazarusA",
+      "name": "Lazaro Alonso"
+    },
+    "body": "supersedes #5150\r\n\r\nLet's see if we can get a preview now.\r\n\r\n- https://clima.github.io/OceananigansDocumentation/previews/PR5159/\r\n\r\nok, from my side this is done. Please feel free to adjust/merge/update as needed if this moves forward.\r\n\r\n@navidcy @giordano @glwagner @simone-silvestri  @rafferrari \r\n\r\nA short recap:\r\n\r\n- [x] now DocumenterVitepress.jl is used to render the documentation.\r\n- [x] In normal Documenter `format = Documenter.HTML(..., canonical=)` was doing the connection to the deploying repo, here this is specified by using the option `deploy_decision = Documenter.deploy_folder(..., repo=)`.\r\n- [x] and now instead of `deploydocs` we use `DocumenterVitepress.deplodocs`, which mirrors the functionality to deploy different versions into different new folders, i.e, `dev`, `stable`, `previews/PR` and `tagged` versions. \r\n- [x] I grouped different topics into common sections in order to have a more user friendly experience when exploring the site, please see it in action in the preview (link from above). \r\n- [x] I `created dark/light palettes`, all in blue-ish tones, ocean-like inspiration \ud83d\udc99. Switch between the light and dark mode in the preview.\r\n- [x] I took  \ud83c\udf0a as the input prompt in chatgpt to create a logo. Looks quite good IMO.  Feel free to update or remove \ud83d\ude22.\r\n- [x] updated the landing page using the new logo, name of the package and description from readme. \r\n- [x] fixed some YouTube videos rendering issues \r\n   -  There are more (dead links), but those should be fixed in different PRs, since they are really not related to this setup. \r\n   - [x] math syntax needed an additional plugin, `@mdit/plugin-mathjax`\r\n\r\ncloses #4891 ",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7U5y2J",
+        "number": 4891,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4891"
+      }
+    ],
+    "createdAt": "2026-01-17T21:29:21Z",
+    "deletions": 113,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-02-18T02:43:34Z",
+    "number": 5159,
+    "title": "Setup vitepress for the docs"
+  },
+  {
+    "additions": 357,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR updates the implementation of the generalized vertical discretization (what we now call `MutableVerticalDiscretization`) so that horizontal derivatives are interpreted as horizontal derivatives at constant `z`. I believe this is necessary for code to produce similar / same outcomes for any vertical coordinate. In other words, if we have a static vertical discretization, we assume that horizontal derivatives apply at constant `z`. So when we change vertical coordinates, we need to specify that derivatives still should apply at constant `z`.\r\n\r\nThe fact that this simplifies the code is demonstrated in how it allows us to remove a term from the tendency. Previously we had a term `grid_slope_contribution_x`... which part of the horizontal pressure gradient. Now that term is incorporated into `\u2202x\u1da0\u1d9c\u1d9c`.\r\n\r\nAs an aside, I think it is more efficient to evaluate dpdz directly, rather than recomputing buoyancy (which can be expensive, eg involving a 55 term formula).\r\n\r\nI'm still not happy with how generalized coordinates are implemented, but I think additional changes should await a future PR and this is a good start.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-06T05:16:27Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2026-02-18T12:21:32Z",
+    "number": 5101,
+    "title": "Implement horizontal derivatives at constant z for `MutableVerticalDiscretization`"
+  },
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n- Adds a new \"Reduced-dimension fields with `indices`\" section to the Field tutorial (`docs/src/fields.md`)\n- Shows how to construct fields at a single index (e.g. surface slice) using the `indices` keyword\n- Demonstrates `set!` on reduced fields and using `indices` with field operations (`Field(\u2202x(v) - \u2202y(u), indices=...)`)\n- All examples use `jldoctest` blocks with verified outputs\n\nCloses #5206\n\n## Test plan\n- [x] Verify doctests pass: `julia --project -e 'using Pkg; Pkg.test(\"Oceananigans\", test_args=[\"doctest\"])'` or equivalent\n- [x] Build docs locally and check the new section renders correctly\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7l9H_3",
+        "number": 5206,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5206"
+      }
+    ],
+    "createdAt": "2026-02-18T00:43:08Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-02-18T12:21:52Z",
+    "number": 5308,
+    "title": "Add fields with non-default indices to Field tutorial"
+  }
+]

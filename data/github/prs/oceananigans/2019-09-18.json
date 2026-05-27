@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 876,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR adds docstrings for all exported functions (i.e. functions that will be part of the public API) so users can actually look up what functions do. In the next PR I will make sure all the necessary docstrings get compiled to documentation.\r\n\r\nI followed the guidelines on https://docs.julialang.org/en/v1.0.2/manual/documentation/ and limited docstrings to 92 character lines.\r\n\r\nI ended up documenting abstract types because although they aren't exported, they show up in the docstrings of many functions, so it's reasonable to expect that users may want to look them up.\r\n\r\nOne thing I noticed is how often we use this pattern where we define extra constructors like\r\n```julia\r\nthing(T=Float64; kwargs) = thing{T}(kwargs)\r\n```\r\nwhen it seems like we should just be using `thing{T}(kwargs)` which will help declutter the public user API a bit.\r\n\r\nI also noticed that using the prefix `Abstract` for all abstract types may reduce code readability (and isn't followed in Julia Base: see the abstract types `AbstractFloat`, `Number`, `Real`). So we might have to judge a little bit: `AbstractGrid` is probably a good idea but `AbstractBoundaryConditionType` is going a little far and `AbstractTensorDiffusivity` seems a little verbose. Not sure of the best guideline to stick to.\r\n\r\nSome things that still need to be done:\r\n1. Not sure of the proper citation(s) to use for `DeardorffSmagorinsky`. @glwagner\r\n2. Will wait for PR #409 before I write docstrings for `fields.jl`.\r\n3. While not part of the public user API, I'll write docstrings for the time stepping kernels as I think they'll prove to be valuable.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-09-15T19:13:07Z",
+    "deletions": 335,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2019-09-18T12:26:17Z",
+    "number": 410,
+    "title": "Docstrings everywhere!"
+  }
+]

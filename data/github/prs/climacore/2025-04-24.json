@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "ClimaLand [buildkite](https://buildkite.com/clima/climaland-ci/builds/7428) started failing with ClimaCore 0.14.31 with the following error:\r\n```julia\r\nGot exception outside of a @test\r\n  LoadError: ArgumentError: Illegal conversion of a CUDA.DeviceMemory to a Ptr{Bool}\r\n  Stacktrace:\r\n    [1] convert(T::Type{Ptr{Bool}}, mem::CUDA.DeviceMemory)\r\n      @ CUDA /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/CUDA/oymHm/lib/cudadrv/memory.jl:16\r\n    [2] convert(::Type{Ptr{Bool}}, managed::CUDA.Managed{CUDA.DeviceMemory})\r\n      @ CUDA /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/CUDA/oymHm/src/memory.jl:583\r\n    [3] unsafe_convert(typ::Type{Ptr{Bool}}, x::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory})\r\n      @ CUDA /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/CUDA/oymHm/src/array.jl:448\r\n    [4] unsafe_convert(::Type{Ptr{Nothing}}, a::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory})\r\n      @ Base ./pointer.jl:66\r\n    [5] h5a_write(attr_hid::HDF5.Attribute, mem_type_id::HDF5.Datatype, buf::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory})\r\n      @ HDF5.API /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/HDF5/Z859u/src/api/functions.jl:438\r\n    [6] write_attribute(attr::HDF5.Attribute, memtype::HDF5.Datatype, x::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory})\r\n      @ HDF5 /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/HDF5/Z859u/src/attributes.jl:154\r\n    [7] write_attribute(parent::HDF5.Dataset, name::String, data::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory}; pv::@Kwargs{})\r\n      @ HDF5 /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/HDF5/Z859u/src/attributes.jl:205\r\n    [8] write_attribute(parent::HDF5.Dataset, name::String, data::CUDA.CuArray{Bool, 4, CUDA.DeviceMemory})\r\n      @ HDF5\r\n      /central/scratch/esm/slurm-buildkite/climaland-ci/depot/default/packages/HDF5/Z859u/src/attributes.jl:202\r\n```\r\n\r\nI tracked this down to trying to write a CUArray as an attribute of an HDF5 file. To fix this, I first move the array to the CPU.\r\n\r\nAs far as I understand, attributes are meant to be small (`h5py` recommends keeping them under 64kb), so maybe the best solution would be to write them as datasets instead.\r\n\r\nThis also exposed that InputOutput is not tested on GPU (or not tested with a mask).\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-23T15:24:39Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2025-04-24T15:04:54Z",
+    "number": 2309,
+    "title": "Fix restarts with GPUs"
+  }
+]

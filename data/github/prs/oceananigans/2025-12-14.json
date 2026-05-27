@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5044.\r\n\r\nFor an example like\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.DistributedComputations: reconstruct_global_grid\r\nusing Oceananigans.Grids: with_number_type\r\n\r\nconst N = 16\r\n\r\narch = Distributed(CPU())\r\n\r\ngrid = RectilinearGrid(arch, Float64,\r\n                    size = (N, N, N), \r\n                    halo = (4, 4, 4),\r\n                    x = (0, 1),\r\n                    y = (0, 1),\r\n                    z = (0, 1),\r\n                    topology = (Bounded, Bounded, Bounded))\r\n\r\nslope(x, y) = 0.5\r\n\r\nreduced_precision_grid = with_number_type(Float64, grid)\r\ncopied_grid = deepcopy(grid)\r\n\r\n@info \"reduced_precision_grid = $reduced_precision_grid\"\r\n@info \"copied_grid = $copied_grid\"\r\n```\r\nin `main` right now the results we get are:\r\n```julia\r\n\u250c Info: reduced_precision_grid = 4\u00d716\u00d716 RectilinearGrid{Float64, LeftConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 LeftConnected  x \u2208 [0.75, 1.0] regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]        regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]        regularly spaced with \u0394z=0.0625\r\n\u250c Info: reduced_precision_grid = 4\u00d716\u00d716 RectilinearGrid{Float64, RightConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 RightConnected  x \u2208 [0.0, 0.25) regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]         regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]         regularly spaced with \u0394z=0.0625\r\n\u250c Info: copied_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, LeftConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 LeftConnected  x \u2208 [0.5, 1.0] regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]       regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]       regularly spaced with \u0394z=0.0625\r\n\u250c Info: copied_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, RightConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 RightConnected  x \u2208 [0.0, 0.5) regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]        regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]        regularly spaced with \u0394z=0.0625\r\n```\r\n\r\nNote that the `reduced_precision_grid` has been further split into two due to the wrong constructor arguments when https://github.com/CliMA/Oceananigans.jl/blob/b5d12644e8ed5f5b2a4e97886f8e8046b3f963a8/src/Grids/rectilinear_grid.jl#L431-L435 is dispatched.\r\n\r\nAfter this fix the output is\r\n```julia\r\n\u250c Info: reduced_precision_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, RightConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 RightConnected  x \u2208 [0.0, 0.5) regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]        regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]        regularly spaced with \u0394z=0.0625\r\n\u250c Info: reduced_precision_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, LeftConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 LeftConnected  x \u2208 [0.5, 1.0] regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]       regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]       regularly spaced with \u0394z=0.0625\r\n\u250c Info: copied_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, LeftConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 LeftConnected  x \u2208 [0.5, 1.0] regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]       regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]       regularly spaced with \u0394z=0.0625\r\n\u250c Info: copied_grid = 8\u00d716\u00d716 RectilinearGrid{Float64, RightConnected, Bounded, Bounded} on Distributed{CPU} with 4\u00d74\u00d74 halo\r\n\u2502 \u251c\u2500\u2500 RightConnected  x \u2208 [0.0, 0.5) regularly spaced with \u0394x=0.0625\r\n\u2502 \u251c\u2500\u2500 Bounded  y \u2208 [0.0, 1.0]        regularly spaced with \u0394y=0.0625\r\n\u2514 \u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0]        regularly spaced with \u0394z=0.0625\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7dy0bD",
+        "number": 5044,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5044"
+      }
+    ],
+    "createdAt": "2025-12-13T20:20:39Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-12-14T02:39:03Z",
+    "number": 5050,
+    "title": "Add with_number_type function for distributed grids for correct reconstruction"
+  }
+]

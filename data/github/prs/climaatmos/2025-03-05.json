@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "A fix in the restart test introduced a new bug where the error between was not correctly computed arrays, but only if both the arrays where finite.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-01T00:52:39Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2025-03-05T00:21:54Z",
+    "number": 3669,
+    "title": "Fix restart test"
+  },
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Otherwise it has random values including NaNs.\r\n\r\nWith @juliasloan25 and @Sbozzolo ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-22T00:08:45Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-03-05T00:49:42Z",
+    "number": 3650,
+    "title": "Zero out the surface momentum flux during initialization"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "A common pattern is to write:\r\n```julia\r\nconfig = AtmosConfig(file)\r\nsimulation = get_simulation(config)\r\n```\r\n\r\nThis commit adds a constructor `AtmosSimulation` to skip the intermediate step where the configuration is built.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-28T22:55:01Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2025-03-05T05:09:44Z",
+    "number": 3667,
+    "title": "Add constructor for AtmosSimulation"
+  },
+  {
+    "additions": 176,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nSurface flux was used as a boundary condition for vertical diffusion tendency. When using implicit diffusion, it causes errors in conservation as surface flux is accumulated in the explicit stage, but is updated in the implicit stage. This PR moves surface flux to fully explicit by adding an explicit boundary source and setting the boundary condition of diffusion flux to 0 (except for tke, which is treated slightly differently now but we are not considering tke in conservation). This should be ok as we don't take into account any Jacobian of surface flux in the implicit solver now.\r\n\r\nBecause the surface flux was used as a boundary condition, whether the surface flux tendency is applied was controlled by `vert_diff` or `edmfx_sgs_diffusive_flux`. The PR adds a flag `disable_surface_flux_tendency` that specifies whether surface flux is applied. This is independent from `surface_setup`, which specifies the calculation of surface conditions. We need a separate flag to control whether surface flux is applied because surface conditions may be needed for things other than surface flux, for example, mixing length in TKE-based diffusion and EDMF updraft boundary conditions.\r\n\r\nAlso changes `diffuse_momentum` to `disable_momentum_vertical_diffusion` to make things slightly simpler.\r\n\r\nTesting some longruns here: https://buildkite.com/clima/climaatmos-gpulongruns/builds/499\r\n\r\nCloses #3587 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 66,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6okd6x",
+        "number": 3587,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3587"
+      }
+    ],
+    "createdAt": "2025-03-02T08:05:59Z",
+    "deletions": 63,
+    "labels": [],
+    "mergedAt": "2025-03-05T08:00:47Z",
+    "number": 3670,
+    "title": "Make surface flux fully explicit"
+  }
+]

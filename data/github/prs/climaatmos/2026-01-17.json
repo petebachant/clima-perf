@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 1644,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "## Purpose\r\nAdds a new `AtmosSimulation` constructor, closes #3894.\r\n\r\nThe current `AtmosConfig`/`parsed_args` system is monolithic and hard to use programmatically. This PR introduces a more composable constructor that makes it easier to create simulations and reduces coupling between configuration parsing and simulation setup. The core changes are in `src/simulation/AtmosSimulations.jl`\r\n\r\n## Content\r\n\r\n### Core Changes\r\n\r\n- **New `AtmosSimulation{FT}` constructor**: Added a keyword-based constructor that doesn't require `AtmosConfig`/`parsed_args`, allowing programmatic simulation creation with explicit parameters\r\n- **Callback system refactoring**: Modularized callback creation into reusable functions:\r\n  - `default_model_callbacks`: Creates callbacks from model components\r\n  - `common_callbacks`: Standard simulation callbacks (progress logging, NaN checking, checkpointing, etc.)\r\n  - Individual callback builders in `get_callbacks.jl`\r\n- **Diagnostics setup**: Added `setup_diagnostics_and_writers` function to handle diagnostics initialization for both old and new constructors\r\n- Updated struct defaults in `types.jl` to match YAML config defaults:\r\n\r\n### Utilities\r\n- Added utility functions: `convert_time_args`, `handle_restart`, `extract_diagnostic_periods`, `validate_checkpoint_diagnostics_consistency`, `parse_checkpoint_frequency`\r\n- Separated `parsed_args` and `sim_info` from functions to enable reuse: `args_integrator`, `get_jacobian`, `ode_configuration`, `get_state_restart`, `get_diagnostics`, `get_callbacks`, `build_cache` \r\n- Added test for restart functionality with new constructor `test/restart_AtmosSimulation.jl`\r\n\r\n## Miscellaneous\r\n- Removed `_DEFAULT_ATMOS_MODEL_KWARGS` constant - defaults now handled by struct definitions\r\n- Removed some logging statements for cleaner output\r\n- Updated `core_default_diagnostics` to require `topography` parameter explicitly\r\n\r\n## TODOs\r\n- Add unit tests for new constructor\r\n\r\n## Future Work\r\n- Unify callback system - `get_callbacks` and `common_callbacks` have some redundancy\r\n- Add support for missing callbacks (SCM forcing, etc.)\r\n- Obtain tracers from model info automatically\r\n- Validate callback frequencies with `dt`\r\n- Add `netcdf_interpolation_num_points` and `netcdf_output_at_levels` to new constructor\r\n- Ensure `get_simulation` retains all desired logging\r\n- Add \"verbose\" option with all logging from `get_simulation`\r\n- Add more defaults for AtmosModel subtypes\r\n- Improve simulation validation with informative errors (currently nonsensical simulations fail later with confusing errors)\r\n- Catalog config options possible with `get_simulation` but not with new `AtmosSimulation` constructor\r\n- Improve remaining jacobian configuration\r\n- Improve callback configuration, further simplify builders\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs7BJK0d",
+        "number": 3894,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3894"
+      }
+    ],
+    "createdAt": "2025-09-02T22:08:35Z",
+    "deletions": 489,
+    "labels": [],
+    "mergedAt": "2026-01-17T05:07:51Z",
+    "number": 3999,
+    "title": "Add new `AtmosSimulation` constructor"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nMake a patch release that the coupler can use to test compability and stability.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-17T22:56:44Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-01-17T23:24:01Z",
+    "number": 4222,
+    "title": "bump patch version"
+  }
+]

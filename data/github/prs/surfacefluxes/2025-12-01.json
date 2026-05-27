@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 1237,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nCorrects errors in UniversalFunctions that led to discontinuities at the neutral limit\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n## Content\r\n* Corrects the (Businger-Dyer) similarity functions for the unstable regime to be continuous at the neutral limit with the stable Gryanik functions (there was an error in how Pr_0 entered that let to discontinuities for small zeta; this caused convergence problems and sensitivities)\r\n* Remove the `tol_neutral` catch that was introduced to deal with the discontinuities; this required one update in a regression test. (Left `tol_neutral` in top-level API for backward compatibility but removed it from internal APIs)\r\n* Corrects the tests for the universal functions to subtract the neutral limit in the stability function integrals (there were errors in the test design that compensated for the code errors)\r\n* Reduces code duplication by defining helpers for the (Businger) unstable limit and re-using them where needed\r\n* Explicitly uses the Businger parameters from ClimaParams for the unstable branches of Gryanik/Grachev, to ensure consistency with the Businger choices (so that changing just the stable branches does not affect the unstable branches)\r\n* Adds docstrings/code comments/documentation to make clearer how papers map to code\r\n* Some performance optimization and avoidance of catastrophic cancelation, e.g., by rewriting a few expressions using `cbrt` and reformulating `(1-x)^a` using `exp` and `log`. \r\n* Inlining of frequently called (but relatively small) functions to improve performance\r\n* Adds tests for continuity of stability functions at the neutral limit (which surfaced an incorrect formula used in the finite-volume case), for monotonicity, and for linearizations near neutral limit\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-26T04:20:04Z",
+    "deletions": 503,
+    "labels": [],
+    "mergedAt": "2025-12-01T19:26:18Z",
+    "number": 206,
+    "title": "UniversalFunctions corrections and optimizations"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Patch release following update to UniversalFunctions in the near-neutral limit (+ additional tests checking continuity and linearisation as `zeta` tends to 0). \r\n\r\nBug-fix introduced in #206 improves solutions in the near-neutral limit. (`if-else` branches to catch near-neutral stability as zeta approaches zero have now been removed).    \r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-01T21:27:07Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-12-01T22:25:45Z",
+    "number": 210,
+    "title": "Patch update: 0.14.1"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "One concern we've had recently is whether our tolerance for saturation adjustment is reasonable or not because it's a bit difficult to reason about. If the tolerance is occasionally poor, we could have convergence issues with reasonable inputs and, at the moment, it's a bit difficult to know that since the inputs are not in more intuitive variables like temperature. #128 is an attempt to make sure that we start with a reasonable guess, however, knowing whether this is a good idea or not requires collecting data from a real-world run, and we don't have a clean way to do that at the moment.\r\n\r\nThis PR adds a module dedicated to collecting data, to help us better understand statistics of some important information:\r\n - Maximum number of iterations performed\r\n - Average number of iterations performed\r\n - Number of converged and non-converged calls (if / when we set `TD.error_on_non_convergence() = false`)\r\n\r\nHere's a simple script for running the moist baroclinic wave in ClimaAtmos:\r\n\r\n```julia\r\nusing Revise; include(\"examples/hybrid/cli_options.jl\");\r\ndict = parsed_args_per_job_id();\r\nparsed_args = dict[\"sphere_baroclinic_wave_rhoe_equilmoist\"];\r\nparsed_args[\"enable_threading\"] = false\r\nimport Thermodynamics\r\nimport RootSolvers\r\nThermodynamics.solution_type() = RootSolvers.VerboseSolution()\r\ninclude(\"examples/hybrid/driver.jl\")\r\nThermodynamics.DataCollection.print_summary()\r\n```\r\n\r\nAt the moment, this produces\r\n\r\n```julia\r\njulia> Thermodynamics.DataCollection.print_summary()\r\n\u250c Info: Thermodynamics saturation_adjustment statistics:\r\n\u2502   max_iter = 1\r\n\u2502   call_counter = 15904225\r\n\u2502   average_max_iter = 6.287637404526156e-8\r\n\u2502   converged_counter = 15904225\r\n\u2514   non_converged_counter = 0\r\n```\r\nWhich seems pretty good, however, this is running at coarse resolution, for only 6 days (1152 `step!`s). Runtime was about 4 min, so we can definitely crank things up.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-19T23:36:03Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "E6E2A8",
+        "description": "",
+        "id": "LA_kwDODuejNs7YcpdD",
+        "name": "Performance monitoring :mag::rocket:"
+      },
+      {
+        "color": "2E0AF2",
+        "description": "",
+        "id": "LA_kwDODuejNs7YmTS3",
+        "name": "Performance :rocket:"
+      },
+      {
+        "color": "A0F19A",
+        "description": "",
+        "id": "LA_kwDODuejNs8AAAABEA6RRw",
+        "name": "Convergence"
+      }
+    ],
+    "mergedAt": "2022-09-28T00:25:26Z",
+    "number": 132,
+    "title": "Add data collection mechanism"
+  }
+]

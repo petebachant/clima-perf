@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 1343,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR implements boundary conditions for extrapolation of TimeVaryingInputs.\r\n\r\nBoundary conditions are specified with subtypes of `AbstractInterpolationMethod` and passed to the `InterpolationMethod`.\r\n\r\nCurrently, three boundary conditions are implemented:\r\n\r\n- `ThrowError`. This recovers the previous behavior and essentially means that extrapolation in time is not allowed\r\n- `Clamp`. This clamps extrapolated values to the closest edge.\r\n- `PeriodicCalendar`. More on this later.\r\n\r\n`ThrowError` and `Clamp` are implemented at the level of the main `evaluate!`, while `PeriodicCalendar` requires more infrastructure.\r\n\r\n`PeriodicCalendar` allows `TimeVaryingInput`s to repeat themself in a way that is somewhat aware of the time duration.\r\n\r\nConsider the example where we have data on the 15th of every month for the year 2024: 01/15/24, 02/15/24, ....., 12/15/24\r\n\r\n`PeriodicCalendar` \"repeats\" this year as it the data we had was 12/15/23, 01/15/24, 02/15/24, ....., 12/15/24, 01/15/25, ...\r\nwhere every year is identical to 2024.\r\n\r\n`PeriodicCalendar` can take two arguments: `period`, and `repeat_date`. `period` is a unitary `Dates.DatePeriod` (e.g.,\r\n`Dates.Year(1)`) that defines what the periodicity should be. `repeat_date` defines the date that should be repeated with the given `period` (e.g., `repeat_date = Dates.Date(1993, 11, 19)` and period `Dates.Year(1)` repeats the year 1993).\r\n\r\nWhen arguments are not provided, `PeriodicCalendar` assumes that the data is defined on one period.\r\n\r\nThis PR also includes two house keeping commits.\r\n\r\nCloses #73 ",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOKJvhPM6PD6t9",
+        "number": 73,
+        "repository": {
+          "id": "R_kgDOKJvhPA",
+          "name": "ClimaUtilities.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaUtilities.jl/issues/73"
+      }
+    ],
+    "createdAt": "2024-08-01T17:55:30Z",
+    "deletions": 221,
+    "labels": [],
+    "mergedAt": "2024-08-06T18:15:52Z",
+    "number": 84,
+    "title": "Add support for full PeriodicCalendar"
+  }
+]

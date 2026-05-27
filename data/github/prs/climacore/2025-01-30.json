@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Found with\r\n\r\n```julia\r\nfunction julia_files(root)\r\n\tall_files = String[]\r\n  for (root, dirs, files) in walkdir(root)\r\n      for file in files\r\n          endswith(file, \".jl\") && push!(all_files, joinpath(root, file))\r\n      end\r\n  end\r\n  return all_files\r\nend\r\n\r\nfunction find_unecessary_deps(root, deps)\r\n  found = Dict{String,Bool}()\r\n  for dep in deps\r\n    found[dep] = false\r\n  end\r\n  jl_files = julia_files(root)\r\n  N = length(jl_files)\r\n  @show N\r\n  for (i, file) in enumerate(jl_files)\r\n    percent = i / N\r\n  \tjl_contents = readlines(file)\r\n  \tfor dep in deps\r\n  \t\tfound[dep] = found[dep] || occursin(dep, join(jl_contents, \"\\n\"))\r\n  \tend\r\n  end\r\n  unfound = String[]\r\n  for k in keys(found)\r\n  \tif !found[k]\r\n  \t\tpush!(unfound, k)\r\n  \tend\r\n  end\r\n  return unfound\r\nend\r\n\r\ncontents = readlines(\".buildkite/Project.toml\");\r\n_deps = deleteat!(map(x->first(split(x, \" = \")), contents), 1);\r\ncompat_start = findfirst(x->x==\"\", _deps)\r\nif !isnothing(compat_start)\r\n  _deps = _deps[1:compat_start-1]\r\nend\r\n@show length(_deps)\r\nud = find_unecessary_deps(\".\", _deps)\r\nisempty(ud) || (using Pkg; Pkg.rm(ud))\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-01-30T15:15:20Z",
+    "deletions": 39,
+    "labels": [],
+    "mergedAt": "2025-01-30T17:14:32Z",
+    "number": 2168,
+    "title": "Remove some unused dependencies"
+  }
+]

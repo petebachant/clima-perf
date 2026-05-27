@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nhttps://github.com/CliMA/ClimaCore.jl/pull/2106 should have fixed the 2 GPU error described in https://github.com/CliMA/ClimaCoupler.jl/issues/687 (see that PR and issue for more details).\r\n\r\nThis PR changes the benchmark GPU runs to use 2 GPUs each, instead of 4, to test the behavior in coupled simulations. See [this run](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/218#_) for results (note that all CPU jobs were cancelled to reduce resource usage). All 2 GPU runs passed, except for the AMIP + diag EDMF run, which failed due to a CTS version error. I think this is evidence enough that 2 GPU runs are reliable, and we can switch benchmark runs from 4 to 2 GPUs to reduce resource usage.\r\n\r\n## SYPD changes [4 GPU](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/217#_) -> [2 GPU](https://buildkite.com/clima/climacoupler-cpu-gpu-benchmarks/builds/218#_)\r\n- Atmos without diagnostic EDMF: 4.112 -> 2.350\r\n- Atmos with diagnostic EDMF: 1.003 -> - (failed with CTS versioning error)\r\n- AMIP with diagnostic EDMF: 0.965 -> 0.618\r\n- AMIP with diagnostic EDMF + IO: 0.868 -> 0.587\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-20T01:04:11Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2025-01-31T18:11:55Z",
+    "number": 1092,
+    "title": "add 2 GPU runs to benchmarks"
+  }
+]

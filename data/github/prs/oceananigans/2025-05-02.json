@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/4416\r\n\r\nI also changed the metric names from `immersed_boundary_mask` to `peripheral_nodes`, which is what we use in the code.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6zHjOy",
+        "number": 4416,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4416"
+      }
+    ],
+    "createdAt": "2025-05-01T01:49:14Z",
+    "deletions": 64,
+    "labels": [],
+    "mergedAt": "2025-05-02T15:25:01Z",
+    "number": 4462,
+    "title": "(0.96.23) Make `NetCDFWriter` work with `PartialCellBottom` grids"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In #4457 we forgot `Face` fields that do not allow `ValueBoundaryConditions`. This PR introduces an equivalent `PolarOpenBoundaryCondition` for fields with `LY == Face` (and a couple more tests).\r\n\r\nfor reference on main:\r\n```julia\r\njulia> grid = LatitudeLongitudeGrid(size=(10, 10, 10), latitude=(-90, 90), longitude=(-10, 10), z = (0, 1))\r\n10\u00d710\u00d710 LatitudeLongitudeGrid{Float64, Bounded, Bounded, Bounded} on CPU with 3\u00d73\u00d73 halo and with precomputed metrics\r\n\u251c\u2500\u2500 longitude: Bounded  \u03bb \u2208 [-10.0, 10.0] regularly spaced with \u0394\u03bb=2.0\r\n\u251c\u2500\u2500 latitude:  Bounded  \u03c6 \u2208 [-90.0, 90.0] regularly spaced with \u0394\u03c6=18.0\r\n\u2514\u2500\u2500 z:         Bounded  z \u2208 [0.0, 1.0]    regularly spaced with \u0394z=0.1\r\n\r\njulia> v = YFaceField(grid)\r\nERROR: ArgumentError: Cannot specify north boundary condition ValueBoundaryCondition: Oceananigans.BoundaryConditions.PolarValue{OffsetArrays.OffsetArray{Float64, 3, Array{Float64, 3}}, Symbol} on a field at Face()!\r\nStacktrace:\r\n  [1] validate_boundary_condition_location(bc::BoundaryCondition{\u2026}, loc::Face, side::Symbol)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:57\r\n  [2] validate_boundary_conditions(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, bcs::FieldBoundaryConditions{\u2026})\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:76\r\n  [3] #apply_regionally!#58\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:121 [inlined]\r\n  [4] apply_regionally!\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:118 [inlined]\r\n  [5] macro expansion\r\n    @ ~/development/Oceananigans.jl/src/Utils/multi_region_transformation.jl:206 [inlined]\r\n  [6] Field(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, data::OffsetArrays.OffsetArray{\u2026}, bcs::FieldBoundaryConditions{\u2026}, indices::Tuple{\u2026}, op::Nothing, status::Nothing)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:101\r\n  [7] Field(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, T::DataType; indices::Tuple{\u2026}, data::OffsetArrays.OffsetArray{\u2026}, boundary_conditions::FieldBoundaryConditions{\u2026}, operand::Nothing, status::Nothing)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:194\r\n  [8] Field(loc::Tuple{\u2026}, grid::LatitudeLongitudeGrid{\u2026}, T::DataType)\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:185\r\n  [9] YFaceField\r\n    @ ~/development/Oceananigans.jl/src/Fields/field.jl:222 [inlined]\r\n [10] YFaceField(grid::LatitudeLongitudeGrid{\u2026})\r\n    @ Oceananigans.Fields ~/development/Oceananigans.jl/src/Fields/field.jl:222\r\n [11] top-level scope\r\n    @ REPL[4]:1\r\nSome type information was truncated. Use `show(err)` to see complete types.\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-01T08:00:36Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2025-05-02T17:13:44Z",
+    "number": 4463,
+    "title": "Some more fixing for polar BC"
+  },
+  {
+    "additions": 102,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This might prove useful for building bathymetry on RectilinearGrids for a particular place on the Earth, using ClimaOcean's metadata features to automate the process. For example we would do something like\r\n\r\n```julia\r\ngrid = RectilinearGrid(etc...)\r\ncorresponding_lat_lon = LatitudeLongitudeGrid(grid, origin=(210, 45))\r\nbottom_height = ClimaOcean.regrid_bathymetry(corresponding_lat_lon)\r\nibg = ImmersedBoundaryGrid(grid, GridFittedBottom(bottom_height))\r\n```\r\n\r\nI could also see us building this into ClimaOcean's Metadata utilities directly, eg so we can also initialize T, S from datasets. \r\n\r\ncc @tomchor \r\n\r\nAlso I just realized that we can construct the _exact_ grid for `OrthogonalSphericalShellGrid` (here, we have to make an approximation when computing the longitudes).\r\n\r\nI think this is useful and we have the tests, so I'll put off the corresponding OrthogonalSphericalShellGrid implementation for a future PR.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-05-02T14:01:55Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2025-05-02T18:00:33Z",
+    "number": 4465,
+    "title": "Add a constructor for LatitudeLongitudeGrid from RectilinearGrid"
+  }
+]

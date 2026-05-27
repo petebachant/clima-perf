@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n@ph-kev wrote This PR (https://github.com/JuliaGeo/CFTime.jl/pull/69) in CFTime broke this snippet of code in ClimaUtilities (https://github.com/CliMA/ClimaUtilities.jl/blob/34cb6fd78150e01f2ce1b5427f3da1a96b273561/ext/nc_common.jl#L14-L20).\r\n\r\nThere was a separate bug related to the latest CTS so this also restricts to CTS < 0.8.10\r\n## To-do\r\nremove CFTime dep and compat once ClimaUtilities is updated and released\r\nremove CTS compat restriction once the bug is fixed\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-23T16:23:37Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "LA_kwDOGiZe4s7ZTG-6",
+        "name": "bug"
+      }
+    ],
+    "mergedAt": "2026-03-23T18:27:19Z",
+    "number": 1682,
+    "title": "Add CFTime dep and compat to avoid bug in ClimaUtilities"
+  },
+  {
+    "additions": 170,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nOur current bare soil evaporation scheme doesn't have any calibration parameters. It is also annoying to implement fully correctly since it requires knowing the potential evaporation rate, which in principal should be a separate call to surface fluxes (to get the conductance for a saturated surface - which we don't do right now)  This changes the scheme so that we have two free parameters to calibrate. It also (with default parameters) reduces the biases as:\r\nH: 0.9 -> -0.7\r\nLE: -2 -> -0.2\r\nSW_u: 1.2 -> 1.7 # increase\r\nLW_u -> 1.1 -> 0.5\r\nwith minimal impact to RMSE:\r\nH: 11.3 -> 11.5\r\nLE: 11.5 -> 11.6\r\nSW_u: 9.5 -> 9.6\r\nLW_u: 5.3 -> 5.2 # decrease\r\nbased on the 2008 global run forced by ERA5.\r\n\r\n\r\nI can also try calibrating these parameters if preferred before we merge this\r\n\r\n## To-do\r\n\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6Vf3Ri",
+        "number": 755,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/755"
+      }
+    ],
+    "createdAt": "2026-03-07T00:00:51Z",
+    "deletions": 88,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2026-03-23T21:30:22Z",
+    "number": 1663,
+    "title": "Test different bare soil evaporation scheme with calibratable parameters"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nPicks the first committ of #1670 to allow for different beta values for c3 and c4. Adds flexibility we think should be there while preserving behavior.\r\n\r\ncode from @AlexisRenchon \r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-23T19:00:15Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2026-03-23T21:49:42Z",
+    "number": 1684,
+    "title": "Ar/kd/pmodel beta for c4"
+  }
+]

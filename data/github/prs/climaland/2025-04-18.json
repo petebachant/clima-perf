@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 603,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR removes the wind speed diagnostic from the `:long` diagnostics for the LandModel. This diagnostic is only available when running with a `PrescribedAtmosphere`, not `CoupledAtmosphere`, and including it as a default diagnostic prevents us from outputting long diagnostics when running with a `CoupledAtmosphere`. Since it's not used very often, I just removed it altogether.\r\n\r\nAlso tags v0.15.14 since we haven't made a release in a few weeks\r\n\r\ncloses #1112\r\n\r\n### Dependency updates\r\n```\r\n    Updating `~/clima/ClimaLand.jl/.buildkite/Project.toml`\r\n  [c7e460c6] + ArgParse v1.2.0\r\n  [052768ef] \u2191 CUDA v5.7.1 \u21d2 v5.7.3\r\n  [29b5916a] \u2191 ClimaAnalysis v0.5.15 \u21d2 v0.5.16\r\n  [d414da3d] \u2191 ClimaCore v0.14.29 \u21d2 v0.14.30\r\n  [1ecacbb8] \u2191 ClimaDiagnostics v0.2.12 \u21d2 v0.2.13\r\n  [08f4d4ce] ~ ClimaLand v0.15.13 `..` \u21d2 v0.15.14 `..`\r\n  [5c42b081] \u2191 ClimaParams v0.10.24 \u21d2 v0.10.27\r\n  [cd3eb016] \u2191 HTTP v1.10.15 \u21d2 v1.10.16\r\n  [7181ea78] \u2191 RootSolvers v0.4.3 \u21d2 v0.4.4\r\n  [0bca4576] \u2191 SciMLBase v2.81.0 \u21d2 v2.84.0\r\n  [b60c26fb] \u2191 Thermodynamics v0.12.10 \u21d2 v0.12.11\r\n```",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s6y1y6S",
+        "number": 1112,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1112"
+      }
+    ],
+    "createdAt": "2025-04-17T20:46:42Z",
+    "deletions": 662,
+    "labels": [],
+    "mergedAt": "2025-04-18T19:01:40Z",
+    "number": 1115,
+    "title": "remove LandModel wind speed diagnostic; tag v0.15.14"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "It occurred to a user wanting to make a 2 year simulation from December to December, that the last December did not have data for LAI. This was due to the latest LAI data point being in November, and not extrapolated because the next year of LAI data was not loaded. To consistently fix this issue, we add a year of data to be read to interpolate the last month with the first month of the next year. We also did this for era5 data file, where this error could also occur.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-18T16:49:09Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2025-04-18T20:20:15Z",
+    "number": 1117,
+    "title": "Grab an extra year of data for era5 and modis LAI"
+  }
+]

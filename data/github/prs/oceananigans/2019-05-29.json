@@ -1,0 +1,115 @@
+[
+  {
+    "additions": 382,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR is part 1 of _n_ implementing halo regions (originally PR #167). Here I just replace Arrays and CuArrays with OffsetArrays containing an Array or CuArray. \r\n\r\nAn important change is the introduction of the `data(::Field)` function which returns the data stored by the field, i.e. without halo data.\r\n\r\nLots of refactoring had to happen but it was mostly in updating the tests to use the `data` function.\r\n\r\nThe Poisson solver had to be refactored because FFTW and cuFFT won't work properly on an offset array containing halos. The Poisson solver now keeps track of the right-hand-side, Fourier coefficients, and solution using `solver.storage` which is a regular `Array` or `CuArray`. This cuts down memory usage as well.\r\n\r\nWorks on #104\r\n\r\nResolves #45\r\nResolves #122\r\nResolves #177",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU0MDkwNjgyMTc=",
+        "number": 45,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/45"
+      },
+      {
+        "id": "MDU6SXNzdWU0MjA0NjIxNDk=",
+        "number": 122,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/122"
+      },
+      {
+        "id": "MDU6SXNzdWU0MzMwMjQ5NjM=",
+        "number": 177,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/177"
+      }
+    ],
+    "createdAt": "2019-05-29T00:15:40Z",
+    "deletions": 334,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2019-05-29T18:31:54Z",
+    "number": 250,
+    "title": "Halo regions v2: switching to offset arrays"
+  },
+  {
+    "additions": 413,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR integrates the `TurbulenceClosures` module into time stepping and boundary conditions.\r\n\r\nThe need to abstractly deal with anisotropic transport coefficients for arbitrary boundaries introduces considerable complexity. This problem is solved by exporting `NamedTuples` that collect functions to calculate the diagonal components of viscosity and diffusivity at the necessary locations. The consequence of this implementation is viewed in the `apply_bcs!` function.\r\n\r\nOnly the `ConstantAnisotropicDiffusivity`closure (corresponding to the former default) is currently tested.\r\n\r\nIn the future, we should probably make `ConstantIsotropicDiffusivity` the default, and remove the option to set the horizontal and vertical diffusion tensor components in the `Model` constructor.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-27T19:27:03Z",
+    "deletions": 394,
+    "labels": [],
+    "mergedAt": "2019-05-29T20:24:07Z",
+    "number": 245,
+    "title": "Use stress divergence and diffusive flux divergence from Turbulence Closures"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2019-05-29T20:51:14Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2019-05-29T20:56:43Z",
+    "number": 252,
+    "title": "Fix implicit type conversions in Adams-Bashforth update kernel"
+  }
+]

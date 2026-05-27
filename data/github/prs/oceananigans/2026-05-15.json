@@ -1,0 +1,137 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR adds JULIA_CUDA_USE_COMPAT=false to both test and docs to get around the compatibility issues between CUDA drivers and older GPUs like Titan V GPUs",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-12T08:28:26Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-05-15T02:15:29Z",
+    "number": 5577,
+    "title": "Set `JULIA_CUDA_USE_COMPAT=false` in tests"
+  },
+  {
+    "additions": 84,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`schedule.actuations` are saved in the checkpointer, however, when restoring from the checkpointer on main, if the checkpointing `TimeInterval` has been changed, the `actuations` actually refer to the previous time interval so they might be out of sync.\r\n\r\nSpecifically, if we have decreased the checkpointing time interval, the checkpointer will fire at each time step until the `actuations` have synched up with `clock.time`. Much worse, If we have increased the checkpointing time interval, the actuations become too large for the new interval, pushing the new actuation well far in the future (the checkpointer will not fire until clock.time has catched up with the actuations).\r\n\r\nThis PR fixes this bug by not restoring schedule's details if we happen to have a situation where the `interval` changed, leaving the schedule without actuations (actuations = 0) and then skips ahead to catch up with clock.time in the first actuation.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-11T08:43:52Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-05-15T08:20:00Z",
+    "number": 5572,
+    "title": "Bugfix `actuations` for `TimeInterval`"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "solves https://github.com/NumericalEarth/NumericalEarth.jl/actions/runs/25851913723/job/75960269183",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-14T16:39:49Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-05-15T14:07:07Z",
+    "number": 5585,
+    "title": "Disambiguate `FractionalIndices`"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In main we continue the tripolar grid's metric south of the limit using a `LatitudeLongitudeGrid`.\r\nThis is not necessarily right as the `LatitudeLongitudeGrid` is topologically different from the `TripolarGrid`. \r\nIt is probably better to just keep the same metrics and copy the j-row over to the halos given that the last j-row is always bounded and we cannot reach -90 degrees anyways by construction\r\n\r\nThis PR also fixes a bug for which the metrics at `j == 1`, so _inside_ the prognostic domain, were substituted with the different halo metrics",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-06T12:39:21Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2026-05-15T14:08:20Z",
+    "number": 5565,
+    "title": "Change behavior for halo metrics for a `TripolarGrid` + bugfix at `j == 1`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Creates problems with CI. https://github.com/JuliaGeo/ConservativeRegridding.jl already has an Oceananigans extension, so what we were achieving with XESMF can be done with\r\n```julia\r\nusing Oceananigans\r\nusing ConservativeRegridding\r\n```\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-15T07:08:03Z",
+    "deletions": 289,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-05-15T14:42:40Z",
+    "number": 5590,
+    "title": "Remove xesmf extension"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "`CUDA.CUFFT` is [deprecated](https://github.com/JuliaGPU/CUDA.jl/blob/0ad0204a2e4b65dfaae6d699deb978e2247226cb/lib/cufft/src/cuFFT.jl#L61) in favour of `CUDA.cuFFT`.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-15T15:43:43Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2026-05-15T22:04:17Z",
+    "number": 5597,
+    "title": "Avoid deprecation warning about `CUFFT` in `CUDA` extension"
+  }
+]

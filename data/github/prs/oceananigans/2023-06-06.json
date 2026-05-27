@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 392,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "I've had a go at fixing #2928 which doesn't seem to be as hard as I thought it would be using @glwagner's idea for `SumOfFields. So far I've only done the nonhydrostatic model kernels but it wasn't much work and looks like its worked. Using the same code as https://github.com/CliMA/Oceananigans.jl/issues/2928#issuecomment-1433398895 I now get:\r\n\r\nhttps://user-images.githubusercontent.com/26657828/227528544-2f786e88-4243-40b6-850e-1992b1e2d8d9.mp4\r\n\r\nWhich I believe is what we were expecting.\r\n\r\nI wasn't sure where to put the `SumOfFields` struct so currently have it in the `Fields.jl` file. These changes also negate the need for `biogeochemistry_rhs` since we don't need the advection to be with the biogeochemical tendencies (I think we origionally did this so we didn't need to change all of the kernels, but not we have todo that anyway), it does prevent us from using different advection schemes for the `biogeochemical_drift_velocity`.\r\n\r\nTo do:\r\n\r\n- [x] Hydrostatic free surface kernels\r\n- [x] Shallow water kernels\r\n- [x] Tests\r\n- [x] Benchmark\r\n- [x] Fix particle advection",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-03-24T13:08:29Z",
+    "deletions": 274,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2023-06-06T20:13:06Z",
+    "number": 3027,
+    "title": "(v0.82.0) Fixes inconsistent advection from \"different\" velocities"
+  }
+]

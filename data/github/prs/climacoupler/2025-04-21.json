@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR fixes the longrun calibration test, closes #1265\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n- Re-run the longrun test from this commit to ensure that the tests pass. In-progress build [here](https://buildkite.com/clima/climacoupler-longruns/builds/861). An existing passing build is [here](https://buildkite.com/clima/climacoupler-longruns/builds/857)\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Fixed the parameter filepath argument in `model_interface.jl` and the filepath in the observation generation. These changes alone fix the calibration test.\r\n- Use Unscented Kalman Inversion instead of the default scheme, reducing the number of ensemble members and resources required to run the test\r\n- Set a lower horizontal resolution and a higher timestep for the model config\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6x2Tzo",
+        "number": 1265,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1265"
+      }
+    ],
+    "createdAt": "2025-04-21T16:28:07Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2025-04-21T18:52:13Z",
+    "number": 1283,
+    "title": "Fix calibration test, lower resource requirements"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "\ud83e\udd16 Beep boop. I am GabrieleBOT. \ud83e\udd16\n\nI received an update so that I can inform you directly of the changes (but feel free to check the [release notes](https://github.com/CliMA/ClimaModules/blob/main/NEWS.md)).\n\nThe most recent version of climacommon uses the newly released Julia 1.11.4.\n\nThis version is needed to use CUDA 5.7, so I would recommend updating.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-18T22:41:32Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2025-04-21T19:41:25Z",
+    "number": 1229,
+    "title": "Update climacommon to 2025_03_18"
+  },
+  {
+    "additions": 171,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "After making PartitionedStateFluxes default, this PR removes the CombinedStateFluxes option. This also allows us to remove more code that was only needed for `CombinedStateFluxes`.\r\n\r\nThere is still some code left to be removed.\r\n\r\nCloses #1269 ",
+    "changedFiles": 56,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6yMd0L",
+        "number": 1269,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1269"
+      }
+    ],
+    "createdAt": "2025-04-17T15:09:11Z",
+    "deletions": 489,
+    "labels": [],
+    "mergedAt": "2025-04-21T20:50:47Z",
+    "number": 1276,
+    "title": "Remove CombinedStateFluxes"
+  },
+  {
+    "additions": 271,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nSet up an AMIP simulation using the integrated land model and try running it! Let's see what happens.\r\n\r\nSuccessful 1 month build [here](https://buildkite.com/clima/climacoupler-ci/builds/6185#_)\r\n\r\n[Longrun with bucket](https://buildkite.com/clima/climacoupler-longruns/builds/860) - runs for 1 year (not tested for longer)\r\n[Longrun with land](https://buildkite.com/clima/climacoupler-longruns/builds/858) - unstable after 4.5 months\r\n\r\ncloses #1245 \r\n\r\n## To-do\r\n- [x] add CLI option for land model type, `land_model`\r\n- [x] small fixes to run integrated land in full simulation\r\n- [x] add AMIP run with integrated land to CI\r\n- [x] run AMIP + integrated land\r\n\r\n## Remaining work (for separate PRs)\r\n- [ ] add AMIP longrun with integrated land to CI\r\n- [ ] improve initial conditions used in land model constructor\r\n- [ ] the `compute_surface_fluxes!` method for `ClimaLandSimulation` needs to provide `L_MO`, `ustar`, `buoyancy_flux` to update these properties in the atmosphere. This is high priority because it's currently incorrect. This will require changes in ClimaLand.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc6wfS9l",
+        "number": 1245,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1245"
+      }
+    ],
+    "createdAt": "2025-04-01T20:34:44Z",
+    "deletions": 50,
+    "labels": [],
+    "mergedAt": "2025-04-21T23:51:14Z",
+    "number": 1254,
+    "title": "run AMIP with the integrated land model"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "Prior to this commit, the macro CUDA.@cuda was still being parsed, leading to failures when CUDA was not available. I tried adding another `@static` to protect this evaluation, but found that it doesn't work because `Base.get_extension(ClimaComms, :ClimaCommsCUDAExt`) is `nothing`. The reason for this is, I think, `@static` runs at the macro-expansion phase, so when the conditional for `@static` is evaluated, `CUDA` has not been imported yet because `CUDA` is imported with another macro (`ClimaComms.@import_required_backends`). \r\n\r\nThe solution I came up with is to put CUDA in an extension for `ClimaUtilities`. This works, but it is a little bit dissatisfying for two reasons. Given that extensions cannot easily use types across each other, I could not add a dispatch over the correct type. Second, ideally, `ClimaUtilities` should be backend-agnostic, so maybe it is up to `ClimaComms` to implement a way to launch kernels.\r\n\r\nCloses #51 \r\n\r\nTested in ClimaLand: https://buildkite.com/clima/climaland-ci/builds/3892",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-05T03:59:23Z",
+    "deletions": 52,
+    "labels": [],
+    "mergedAt": "2024-05-08T19:46:00Z",
+    "number": 54,
+    "title": "Fix compatibility with ClimaComms 0.6"
+  }
+]

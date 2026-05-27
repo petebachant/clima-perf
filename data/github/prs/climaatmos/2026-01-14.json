@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwOTk2OTI1",
+      "is_bot": false,
+      "login": "oalcabes",
+      "name": "Olivia Alcabes"
+    },
+    "body": "This PR changes the default threshold for condensate to be considered a cloud from 0 to a tunable parameter when running with NonEq. This is necessary because as is, we have very high cloud fraction in regions with very small mass due to the prevalence of small positives throughout the domain and into the stratosphere. This PR is still very rough and I would love input on:\r\n\r\n- As of now, cloud fraction is computed by calculating whether cli + clw > 0. Therefore, when there is very negative clw but positive cli, cl = 0. Do we want to consider adding a negative mask when computing this fraction rather than just adding them together?\r\n- The default value for this threshold is currently set to a constant 1e-8. Other models like CESM make the threshold a function dependent on qv and qsi. Do we want to consider doing that, or is a constant okay for our purposes?\r\n- Where I'm actually putting this in parameters - I placed this with a previous cloud fraction parameter from Julian. Should these be located outside of turbulence and convection parameters?\r\n- Naming convention of parameter. I'm using a parameter that used to be in ClimaParams I created for the cloud top diagnostic that has yet to be added -- should I revisit that parameter?\r\n\r\nThanks for your input!\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-09T20:27:49Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-14T01:41:44Z",
+    "number": 4206,
+    "title": "Add cloud fraction threshold for noneq"
+  }
+]

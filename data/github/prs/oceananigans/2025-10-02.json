@@ -1,0 +1,90 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "See issue #4826 \r\nIn this branch, the MWE in [comment](https://github.com/CliMA/Oceananigans.jl/issues/4826#issuecomment-3355474437) returns\r\n```julia\r\nssilvest@tartarus:/storage4/simone/TestsScaling/Oceananigans.jl$ for i in $(seq 1 3); do echo \"\"; echo \"RUNNING with rank $i\"; echo \"\"; ../openmpi/bin/mpirun -np $i julia --project -O0 test_memory.jl \"latitude\" \"\"; echo \"\"; echo \"\"; done\r\n\r\nRUNNING with rank 1\r\n\r\nNo protocol specified\r\n[ Info: Rank 0 running on device:\r\n[ Info: CuDevice(0)\r\n\r\n\r\n\r\nRUNNING with rank 2\r\n\r\nNo protocol specified\r\n[ Info: Rank 0 running on device:\r\n[ Info: CuDevice(0)\r\n[ Info: Rank 1 running on device:\r\n[ Info: CuDevice(1)\r\n\r\n\r\n\r\nRUNNING with rank 3\r\n\r\nNo protocol specified\r\n[ Info: Rank 0 running on device:\r\n[ Info: CuDevice(0)\r\n[ Info: Rank 1 running on device:\r\n[ Info: CuDevice(1)\r\n[ Info: Rank 2 running on device:\r\n[ Info: CuDevice(2)\r\n```\r\n\r\n@taimoorsohail can you test that this fixes your issue?\r\ncloses #4826 ",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7O8V_I",
+        "number": 4826,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4826"
+      }
+    ],
+    "createdAt": "2025-10-01T09:27:59Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2025-10-02T07:23:41Z",
+    "number": 4827,
+    "title": "Fix ranks not seeing the correct device"
+  },
+  {
+    "additions": 339,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR will eventually replace the \"model setup\" docs category. This will take time, however, and this is intended only to be the start.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-09-17T01:06:05Z",
+    "deletions": 442,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2025-10-02T09:00:47Z",
+    "number": 4790,
+    "title": "Add a new tutorial for Models"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR should solve https://github.com/CliMA/ClimaOcean.jl/issues/634 by including `AbstractFields`s in distributed reductions, as `x_minimum` used to compute the number of substeps is a `minimum` of a `KernelFunctionOperation` which should be communicated to all workers\r\n\r\n@xkykai and @taimoorsohail does this PR solve your issue?",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-10-02T08:27:56Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2025-10-02T10:20:25Z",
+    "number": 4829,
+    "title": "Include `AbstractOperations` in distributed reductions"
+  }
+]

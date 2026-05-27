@@ -1,0 +1,120 @@
+[
+  {
+    "additions": 96,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-25T02:21:58Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2025-02-28T03:55:44Z",
+    "number": 4125,
+    "title": "More README info about citing and model development papers"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #3758\r\n\r\nIdeally we should regenerate these benchmarks.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6VMsCJ",
+        "number": 3758,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3758"
+      }
+    ],
+    "createdAt": "2025-02-28T04:06:40Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-02-28T13:58:57Z",
+    "number": 4147,
+    "title": "Remove wrong statements from README about parallelization"
+  },
+  {
+    "additions": 666,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR adds a `PertubationAdvection` open boundary condition which assumes that there is some mean flow (i.e. prescribed in a channel or from a coarser resolution model) which is homogeneous on the boundary but can vary in time.\r\n\r\nOn the boundary, we approximate (for an x-boundary) to:\r\n```math\r\n\\frac{\\partial u}{\\partial t} \\approx -U\\frac{\\partial u\\prime}{\\partial x},\r\n```\r\nwhere $u=u\\prime+U$\r\nI have chosen to take an explicit/backwards Euler step:\r\n```math\r\n\\frac{u\\prime(t^{n+1}) - u\\prime(t^n)}{\\Delta t} + \\frac{U\\prime(t^{n+1}) - U\\prime(t^n)}{\\Delta t} \\approx -U\\frac{u\\prime(x_b, t^{n+1}) - u\\prime(x_{b-1}, t^{n+1})}{\\Delta x},\r\n```\r\nbecause then we don't have to store any other information (i.e. if we did a forward step we would need $u\\prime(x_{b-1}, t^n)$ ). This results in:\r\n\r\n```math\r\nu(t^{n+1}) = \\frac{u^n+\\tilde{U}u(x_{b-1}, t^{n+1})}{1+\\tilde{U}},\r\n```\r\nwhere $\\tilde{U}=\\min\\left(1, U\\Delta t / \\Delta x\\right)$. I have also added restoring to $U$ (i.e. damping $u\\prime\\to0$) in some timescale $\\tau$ which can be different for inflow and outflow to allow the scheme to work when there is inflow, which results in:\r\n```math\r\nu(t^{n+1}) = \\frac{u^n+\\tilde{U}u(x_{b-1}, t^{n+1}) + U\\tilde{\\tau}}{1+\\tilde{U}+\\tilde{\\tau}},\r\n```\r\nwhere $\\tilde{\\tau}=\\Delta t / \\tau$.\r\n\r\nThis has the limitation that if we want to extend to have wall tangent mean velocity ($\\partial_t u \\approx -(\\vec{U}\\cdot\\nabla) u$) then we either have to solve the whole boundary at once since every point is going to depend on its boundary neighbours, or we need to take a forward Euler step in which case we need the first interior point at the previous time step.\r\n\r\nI think we probably will need to address this for real nesting cases at some point.\r\n\r\n\r\nhttps://github.com/user-attachments/assets/e37fb984-fba2-47b0-a528-1b22d4c9e93d\r\n\r\n\r\nFor now, it seems to be working okay (left plot vorticity, right plot x-velocity):\r\n<details>\r\n<summary>(old plot)</summary>\r\nhttps://github.com/user-attachments/assets/21ae3eb2-5d3b-4c08-86fb-bb9c222e8e6a\r\n</details>\r\nand the drag coefficient is ~1.4 at Re = 100 and I'm running a case at Re=1000 now.\r\n\r\nI have also checked the [Strouhal number](https://en.wikipedia.org/wiki/Strouhal_number) which matches exactly to the expected values (~0.17).",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-06T19:01:09Z",
+    "deletions": 81,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2025-02-28T16:28:27Z",
+    "number": 3977,
+    "title": "Adds a pertubation advection open boundary matching scheme"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Captures #3977 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-02-28T16:30:12Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2025-02-28T16:30:22Z",
+    "number": 4149,
+    "title": "Bump to 0.95.14"
+  }
+]

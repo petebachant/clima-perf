@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 537,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "This PR adds in a HybridBox domain for the soil model. The code is essentially copied over from Clima Atmos:\r\nhttps://github.com/CliMA/ClimaAtmos.jl/blob/9816afbb9679a3b4dfea5efe5b83c0dae89d5170/src/Domains/make_function_space.jl#L46\r\n\r\nI also took many of the domain unit tests from ClimaAtmos. thank you @akshaysridhar @bischtob @jiahe23 and everyone else who worked on that code. \r\n________\r\n@jb-mackay  With the addition of non-Column domains, we needed to modify our `coordinates` function. Prior to this, we only had a Column domain, and we would return only `coordinates.z` when we called `coordinates(column::Column)`. In other domains, coordinates has other entries, and we want all of them (not just z).\r\n\r\n\r\nso, `coordinates` now returns something that behaves like a NamedTuple, with (x,y,z) entries for the HybridBox and only z for the column. This required us to slightly modify how we initialize the state and aux vectors. We can no longer do `similar(coords)`, but rather\r\n```\r\nzero_state = map(_ -> zero(FT), coords)\r\nsimilar(zero_state)\r\n```\r\n(the zero_state command is something ClimaAtmos does - where we could eventually replace zero(FT) with the type for a specific variable, as needed).\r\n\r\nThis works regardless of the entries in coords.\r\n____________\r\nI added in a `Plane` domain. Im not 100% sure we need this, but the box domain is made from a 2d domain/mesh/topology/space and a 1d domain/mesh/topology/space, so we can use it to make the Box domain. I also thought this might come in handy for surface models. We can get a single point by given nelements = (1,1) and npolynomial = 0, or a 2d grid of coordinate points.\r\n\r\n\r\n________\r\nLastly, we can then run a soil problem in 3d. Thanks to @akshaysridhar  and @jiahe23  for taking a look at the horizontal tendency terms in our RHS.\r\n\r\nTo test that the horizontal operators are used correctly in the RHS for the 3d soil problem, I created a test with initial conditions in vertical hydrostatic eq, but not in equilibrium in the horizontal. Then I computed the RHS horizontal terms analytically, and compared to the dY coming from our ode function. These agree as well as they do in the case of purely vertical derivative terms contributing. It was tested in both the saturated and unsaturated zone.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-02T17:47:05Z",
+    "deletions": 90,
+    "labels": [],
+    "mergedAt": "2022-03-18T16:15:08Z",
+    "number": 22,
+    "title": "Soil 3d"
+  },
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjY1NDE5NTA3",
+      "is_bot": false,
+      "login": "jb-mackay",
+      "name": "Ben Mackay"
+    },
+    "body": "Adds a single point domain for surface models that will interact with 1D column models.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-03-18T19:15:46Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2022-03-18T21:13:49Z",
+    "number": 28,
+    "title": "Add Point domain."
+  }
+]

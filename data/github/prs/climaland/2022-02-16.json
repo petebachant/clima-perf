@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 266,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "1. This recognizes that we will have different types of soil, vegetation, etc models, and so it may be helpful to define an `AbstractSoilModel`, `AbstractVegetationModel`, which inherit from `AbstractModel`. (this may be unnecessary, but it adds some organization, especially once we have `RichardsModel`, `SoilEnergyWaterModel` (or whatever), etc)\r\n\r\n2. If we think of different Land Surface Models, with different components in them, as different types of `LandModel`, it might also be useful to introduce an `AbstractLandModel` type and make different concrete types. For example, a `LandHydrologyLSM`, `BiopshereLSM`, `LSM`. Then these types would have preset components, and we wouldnt need the `NotIncluded` types. We hadn't done this before because (IIRC) we wanted to have default behavior for `initialize(land::LandModel)`, `make_update_aux(land::LandModel)`, etc. But we can still do that using `land::AbstractLandModel`.\r\n\r\n3. Orthogonal to the above changes, this PR makes it so we `map` over the components of the land model, to automate the `make_ode_function`, `make_update_aux`, and `initialize` methods for land. If we keep all components in a single `LandModel` type, and keep the `NotIncluded` type, this should still work fine.\r\n\r\n4. For clarity, I also moved all the abstract model functions to a `models.jl` file, in anticipation of this being a separate module or repo at some point.\r\n\r\n\r\nTBD on how to finesse `Configurations`",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s5DJztN",
+        "number": 16,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/16"
+      }
+    ],
+    "createdAt": "2022-02-10T22:11:12Z",
+    "deletions": 318,
+    "labels": [],
+    "mergedAt": "2022-02-16T19:11:46Z",
+    "number": 17,
+    "title": "created different land versions"
+  }
+]

@@ -1,0 +1,115 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #3898",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6c_E2S",
+        "number": 3898,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/3898"
+      }
+    ],
+    "createdAt": "2024-11-05T22:00:26Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2024-11-10T03:36:20Z",
+    "number": 3902,
+    "title": "For output readers, make `reader_kw` default to an empty `NamedTuple`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-31T08:31:59Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-11-10T03:36:47Z",
+    "number": 3887,
+    "title": "Correct error message in `validate_lat_lon_grid_args`"
+  },
+  {
+    "additions": 89,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR refactors the names we export publically. I think that many names have been added that are poorly motivated --- for example, MultiRegionGrid and cubed sphere grid are _very_ experimental yet still exported.\r\n\r\nThis PR mostly removes exports. Most of the removals are motivated by one of two reasons: (i) the feature is experimental or (ii) the feature is not commonly used. For (i) we would like to avoid export because as an experimental feature we would like to fix bugs or change the API without incurring an \"officially breaking change\". For (ii), the purpose is merely to avoid over-polluting the namespace. For example, `XPartition` for `MultiRegionGrid` is very easily confused with `Partition` for `DistributedComputations` (the API here should probably be reconsidered, cc @simone-silvestri). More than once I have lost cluster time because I confused `YPartition(N)` with `Partition(y=N)`. But `YPartition` isn't really useful so there's little benefit to exporting this.\r\n\r\nOf course these changes are up for debate so I welcome comments.\r\n\r\nMore detail:\r\n\r\n* Remove `OceananigansLogger`: rarely used\r\n* Add `PartialCellBottom`: we are using it in an example, indicating that it is ready for use (not necessarily completely bug-free but we would like to bring it into regular / default use now)\r\n* Remove `WENOThirdOrder`, `WENOFifthOrder`: the syntax `WENO(order=5)` is preferred (same for `Centered` and `UpwindBiased`)\r\n* Remove `location`: this is a low-level function that does not need to be part of the API\r\n* Add `CATKEVerticalDiffusivity`: this is ready for use, a publication is imminent.\r\n* Remove `StateChecker`: not used as far as I know.\r\n* Remove multi-region and cubed sphere functionality: these are experimental.\r\n* Remove `apply_regionally!, construct_regionally, @apply_regionally, MultiRegionObject`: experimental.\r\n* Remove `Time`: too low-level.",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-26T19:57:23Z",
+    "deletions": 138,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-11-10T08:20:14Z",
+    "number": 3872,
+    "title": "(0.94.0) Refactor exported names"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Before this PR, a simple two-dimensional turbulence simulation emits the following display:\r\n\r\n```julia\r\njulia> model = NonhydrostaticModel(; grid, advection=WENO(order=5), tracers=:c)\r\n[ Info: Using the advection scheme Upwind Biased reconstruction order 1 in the x-direction because size(grid, 3) = 1\r\nNonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 128\u00d7128\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Flat} on CPU with 3\u00d73\u00d70 halo\r\n\u251c\u2500\u2500 timestepper: RungeKutta3TimeStepper\r\n\u251c\u2500\u2500 advection scheme: FluxFormAdvection{3, Float64, WENO{3, Float64, Nothing, Nothing, Nothing, Nothing, WENO{2, Float64, Nothing, Nothing, Nothing, Nothing, UpwindBiased{1, Float64, Nothing, Nothing, Nothing, Nothing, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}, Centered{2, Float64, Nothing, Nothing, Nothing, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}}, WENO{3, Float64, Nothing, Nothing, Nothing, Nothing, WENO{2, Float64, Nothing, Nothing, Nothing, Nothing, UpwindBiased{1, Float64, Nothing, Nothing, Nothing, Nothing, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}, Centered{2, Float64, Nothing, Nothing, Nothing, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}}, UpwindBiased{1, Float64, Nothing, Nothing, Nothing, Nothing, Centered{1, Float64, Nothing, Nothing, Nothing, Nothing}}}\r\n\u251c\u2500\u2500 tracers: c\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: Nothing\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n```\r\n\r\nAfter this PR we see\r\n\r\n```julia\r\njulia> model = NonhydrostaticModel(; grid, advection=WENO(order=5), tracers=:c)\r\nNonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 128\u00d7128\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Flat} on CPU with 3\u00d73\u00d70 halo\r\n\u251c\u2500\u2500 timestepper: RungeKutta3TimeStepper\r\n\u251c\u2500\u2500 advection scheme: WENO(order=5)\r\n\u251c\u2500\u2500 tracers: c\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: Nothing\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n```\r\n\r\nif the grid is `Flat` in the vertical. Also if we _do_ adapt the advection order, it cleans this up:\r\n\r\n```julia\r\njulia> model = NonhydrostaticModel(; grid, advection=WENO(order=5), tracers=:c)\r\n[ Info: Using the advection scheme UpwindBiased(order=1) in the x-direction because size(grid, 3) = 1\r\nNonhydrostaticModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 128\u00d7128\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d71 halo\r\n\u251c\u2500\u2500 timestepper: RungeKutta3TimeStepper\r\n\u251c\u2500\u2500 advection scheme: FluxFormAdvection(x=WENO(order=5), y=WENO(order=5), z=UpwindBiased(order=1))\r\n\u251c\u2500\u2500 tracers: c\r\n\u251c\u2500\u2500 closure: Nothing\r\n\u251c\u2500\u2500 buoyancy: Nothing\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n```",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-07T16:31:52Z",
+    "deletions": 59,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-11-10T10:29:23Z",
+    "number": 3908,
+    "title": "Dont adapt Flat direction advection scheme plus better summary for FluxFormAdvection"
+  }
+]

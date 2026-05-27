@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 651,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\nAdds the ability to add boundary condition specific variables to the cache/aux state for the soil model. This is not required for other standalone models currently. This \r\n1. is required for runoff, since that requires additional global parameter fields (assuming these will be stored in aux!)\r\n2.  adds clarity in atmos-driven soil runs regarding where soil SHF, LHF, E, Rn get stored [now in `p.soil` instead of `p`]\r\n\r\n## Content\r\nSource files changed: `soil_canopy_model.jl`, `Soil/boundary_conditions.jl`, `Soil/rre.jl`, `Soil/energy_hydrology.jl`\r\nTests added\r\nChanges propagated to experiments and docs\r\n\r\nSource code changes:\r\n1. Add `boundary_var` types, names, and domains functions (soil standalone files). This follows the style we use for setting aux variables for any model, but dispatches off of the type of BC set for the soil model. The default is to have only the top_bc and bottom_bc as variables.\r\n2. These aux vars are updated prior in `update_boundary_fluxes!`\r\n3. Removes the \"soil_SHF\", \"soil_LHF\" etc. fields from the interaction variables of the integrated model, since these can now be stored in `p.soil` instead of in `p` directly.\r\n\r\n\r\n\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s51FBb5",
+        "number": 364,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/364"
+      }
+    ],
+    "createdAt": "2023-11-06T18:15:27Z",
+    "deletions": 341,
+    "labels": [],
+    "mergedAt": "2023-12-18T23:46:36Z",
+    "number": 371,
+    "title": "add boundary variables for the soil model"
+  }
+]

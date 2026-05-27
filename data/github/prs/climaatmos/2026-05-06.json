@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Claude does not use AGENTS.md, unlike the other\r\nmajor agent players.\r\n\r\n\r\n\r\n## To-do\r\n- I think this works, but maybe I should test it further\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-01T18:32:11Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-05-06T00:13:35Z",
+    "number": 4456,
+    "title": "Add CLAUDE.md that points to AGENTS.md"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Use two substeps for computing grid-mean microphysics tendencies to avoid fluctuations. These fluctuations can lead to instabilities in AMIP simulations.\r\n- Pass `w^0 = 0` to entrainment and detrainment to avoid artificial area fraction growth when `w^j = 0`\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-05T22:52:59Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-05-06T02:00:16Z",
+    "number": 4465,
+    "title": "Stabilize snow-induced fluctuations"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOCixB3A",
+      "is_bot": false,
+      "login": "jefftyoder",
+      "name": "Jeffrey Yoder"
+    },
+    "body": "Quick typo fix.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-29T21:17:24Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-05-06T05:06:32Z",
+    "number": 4451,
+    "title": "Fix double header for default config"
+  },
+  {
+    "additions": 277,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "As discussed - we wanted to check if adding similar clipping of negative microphysics tracers would help with diagnostic EDMF 1M stability.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-02T00:55:57Z",
+    "deletions": 114,
+    "labels": [],
+    "mergedAt": "2026-05-06T22:20:16Z",
+    "number": 4460,
+    "title": "Add fixers to diagnostic EDMF 1M"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "## Purpose \r\n\r\nremove a type conversion from `0` equality in orographic wave parameterization. \r\nThe comparison is equivalent even without converting to FT. The `FT` conversion is actually omitted in llvm:\r\n\r\n```julia\r\njulia> test(x) = x == 0\r\ntest (generic function with 1 method)\r\n\r\njulia> test2(x) = x == eltype(x)(0)\r\ntest2 (generic function with 1 method)\r\n\r\njulia> @code_llvm test(0.0)\r\n; Function Signature: test(Float64)\r\n;  @ REPL[1]:1 within `test`\r\ndefine i8 @julia_test_1357(double %\"x::Float64\") #0 {\r\ntop:\r\n; \u250c @ float.jl:661 within `==` @ float.jl:621\r\n   %0 = fcmp oeq double %\"x::Float64\", 0.000000e+00\r\n; \u2502 @ float.jl:661 within `==`\r\n; \u2502\u250c @ bool.jl:40 within `&`\r\n    %1 = zext i1 %0 to i8\r\n    ret i8 %1\r\n; \u2514\u2514\r\n}\r\n\r\njulia> @code_llvm test2(0.0)\r\n; Function Signature: test2(Float64)\r\n;  @ REPL[2]:1 within `test2`\r\ndefine i8 @julia_test2_1390(double %\"x::Float64\") #0 {\r\ntop:\r\n; \u250c @ float.jl:621 within `==`\r\n   %0 = fcmp oeq double %\"x::Float64\", 0.000000e+00\r\n   %1 = zext i1 %0 to i8\r\n   ret i8 %1\r\n; \u2514\r\n}\r\n```\r\n\r\nI think the best way to do it should be to use `iszero` but I am not sure how it will play with the ClimaCore machinery.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-05T18:17:10Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-05-06T23:38:23Z",
+    "number": 4464,
+    "title": "remove type conversion from `0` comparison"
+  }
+]

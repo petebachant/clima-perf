@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 190,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR\r\n - Adds microbenchmarks, which apply `BenchmarkTools.@benchmark` to individual thermo constructor calls\r\n - utilities, in `perf/common_micro_bm.jl` for extracting constructor inputs for various conditions (e.g., dry, moist, inputs that require saturation adjustment, and freezing)\r\n\r\nIt's a bit easier to identify certain issues (e.g., allocations) when calling a single constructor because we can see that allocations can be eliminated. Also, the added tools should be very easy to extend for all of our constructors.\r\n\r\nThis should help more precisely identify where we experience performance issues, and some of this will also be useful for applying JET to different conditions (which we can add in a later PR). PrettyTables is used to tabulate the results for each constructor + condition:\r\n\r\n```\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Constructor               \u2502    Memory \u2502   allocs \u2502       Time \u2502       Time \u2502       Time \u2502       Time \u2502 N-samples \u2502\r\n\u2502 (+conditions)             \u2502  estimate \u2502 estimate \u2502        min \u2502        max \u2502       mean \u2502     median \u2502           \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 PhaseEquil_\u03c1eq_dry        \u2502   0 bytes \u2502        0 \u2502 272.610 ns \u2502 497.890 ns \u2502 273.817 ns \u2502 272.969 ns \u2502     10000 \u2502\r\n\u2502 PhaseEquil_\u03c1eq_sat_adjust \u2502 176 bytes \u2502        6 \u2502   1.831 \u03bcs \u2502   4.441 \u03bcs \u2502   1.883 \u03bcs \u2502   1.841 \u03bcs \u2502     10000 \u2502\r\n\u2502 PhaseEquil_peq_dry        \u2502   0 bytes \u2502        0 \u2502 273.433 ns \u2502   4.096 \u03bcs \u2502 275.223 ns \u2502 273.987 ns \u2502     10000 \u2502\r\n\u2502 PhaseEquil_peq_sat_adjust \u2502   0 bytes \u2502        0 \u2502   5.576 \u03bcs \u2502  38.949 \u03bcs \u2502   5.612 \u03bcs \u2502   5.583 \u03bcs \u2502     10000 \u2502\r\n\u2502 PhaseEquil_p\u03b8q_dry        \u2502   0 bytes \u2502        0 \u2502 385.695 ns \u2502 509.069 ns \u2502 388.378 ns \u2502 387.079 ns \u2502     10000 \u2502\r\n\u2502 PhaseEquil_p\u03b8q_sat_adjust \u2502   0 bytes \u2502        0 \u2502   2.104 \u03bcs \u2502   3.626 \u03bcs \u2502   2.113 \u03bcs \u2502   2.106 \u03bcs \u2502     10000 \u2502\r\n\u2502 PhaseEquil_pTq_dry        \u2502   0 bytes \u2502        0 \u2502 142.900 ns \u2502 173.041 ns \u2502 143.615 ns \u2502 143.207 ns \u2502     10000 \u2502\r\n\u2502 PhaseEquil_pTq_moist      \u2502   0 bytes \u2502        0 \u2502 142.904 ns \u2502 182.007 ns \u2502 143.596 ns \u2502 143.171 ns \u2502     10000 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-23T17:44:23Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "E6E2A8",
+        "description": "",
+        "id": "LA_kwDODuejNs7YcpdD",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-05-23T18:17:24Z",
+    "number": 102,
+    "title": "Add microbenchmarks"
+  },
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This should help with experimenting / identifying why the `PhaseEquil_\u03c1eq` is allocating (which is significantly worse in #100, for some reason).",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-23T19:34:19Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "E6E2A8",
+        "description": "",
+        "id": "LA_kwDODuejNs7YcpdD",
+        "name": "Performance monitoring :mag::rocket:"
+      }
+    ],
+    "mergedAt": "2022-05-23T19:59:49Z",
+    "number": 103,
+    "title": "Add JET tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "The new release of RootSolvers.jl should allow us to remove the broken tests \ud83c\udf89",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-05-23T23:06:12Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2022-05-23T23:41:03Z",
+    "number": 104,
+    "title": "Fix broken tests via upgrading RootSolvers"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 816,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Hijacking @christophernhill's branch and work!\r\n\r\n@jm-c set up the same velocity halo exchange from https://github.com/CliMA/Oceananigans.jl/blob/7cc147bbf831fe4de66584d812e56debcfa6e43f/test/test_cubed_sphere_halo_exchange.jl#L378-L382 in MITgcm from which we were able to figure out where the Oceananigans cubed sphere halo exchange was going wrong.\r\n\r\nThere were a several discrepancies (all at halo corners or adjacent to the halo corners).\r\n\r\n```\r\nu face 1: 2 discrepancies\r\nv face 1: 3 discrepancies\r\nu face 2: 2 discrepancies\r\nv face 2: 3 discrepancies\r\nu face 3: 1 discrepancies\r\nv face 3: 2 discrepancies\r\nu face 4: 1 discrepancies\r\nv face 4: 3 discrepancies\r\nu face 5: 0 discrepancies\r\nv face 5: 2 discrepancies\r\nu face 6: 0 discrepancies\r\nv face 6: 2 discrepancies\r\nu: 6 discrepancies\r\nv: 15 discrepancies\r\n```\r\n\r\nNot totally sure why our halo exchange algorithm isn't filling these correctly so for now we fix each one after filling all the velocity halos.\r\n\r\nNow that our halo exchange exactly matches MITgcm's we might want to add some extra tests to make sure we're testing each of these points. Some existing tests need to be cleaned up too.\r\n\r\nAfter this fix the Rossby-Haurwitz validation seems pretty happy (it used to exhibit numerical artifacts at some corners then blow up after a few days).\r\n\r\nhttps://user-images.githubusercontent.com/20099589/118747990-0317e680-b829-11eb-94c3-40002f928e52.mp4\r\n\r\nThe eddying aquaplanet validation from PR #1602 doesn't look as happy so it might still have setup issues (and maybe also plotting issues since vorticity is at the corners).",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-05-19T02:38:10Z",
+    "deletions": 703,
+    "labels": [],
+    "mergedAt": "2021-05-25T22:51:40Z",
+    "number": 1669,
+    "title": "Fix cubed sphere velocity halo exchange at/near corners"
+  }
+]

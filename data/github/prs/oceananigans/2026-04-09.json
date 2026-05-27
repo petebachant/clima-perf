@@ -1,0 +1,93 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjk4MjQyNDQ=",
+      "is_bot": false,
+      "login": "Pangoraw",
+      "name": "Paul Berg"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-08T22:01:48Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-04-09T00:54:21Z",
+    "number": 5480,
+    "title": "Define reactant_offset_data for TracedRArray"
+  },
+  {
+    "additions": 649,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This PR fixes the distributed tripolar fold with no extra MPI passes, for both UPivot and FPivot topologies. The current distributed UPivot on main is broken (halos don't match the serial case), so this PR addresses that and adds FPivot support.\r\n\r\n## Key changes\r\n\r\n### New distributed fold topologies\r\n\r\nDoing this without extra MPI passes requires local y-topologies that encode more information than just `FullyConnected`. This is accomplished by introducing 4 new topology types for distributed tripolar grid fold boundaries:\r\n- `LeftConnectedRightCenterFolded` (1xN slab UPivot)\r\n- `LeftConnectedRightFaceFolded` (1xN slab FPivot)\r\n- `LeftConnectedRightCenterConnected` (MxN pencil UPivot)\r\n- `LeftConnectedRightFaceConnected` (MxN pencil FPivot)\r\n\r\nThese replace the previous `FullyConnected` y-topology on northernmost distributed ranks.\r\n\r\n### Fold-aware MPI communication buffers\r\n\r\nThree buffer types encode fold geometry for the distributed zipper for pencil partitions (slab partitions use the serial fold BC directly):\r\n- `TwoDZipperBuffer` \u2014 interior-width x-reversal with `FL`/`WFL` flags controlling fold-line inclusion and write ownership based on pivot position.\r\n- `ZipperCornerBuffer` \u2014 NW/NE corner halos where the fold intersects x-boundaries between ranks.\r\n- `TripolarXBuffer` \u2014 X-direction halos adjacent to the fold with matching fold-line awareness.\r\n\r\n### Worksize-based kernel coverage for FPivot\r\n\r\nAdded `worksize` override for distributed FPivot grids returning `(Nx, Ny+1, Nz)`, matching the serial override from #5408. Extended the async distributed buffer tendency kernel parameters to also use `worksize(grid)` instead of `size(grid)`, closing a coverage gap at the fold line that caused serial/distributed divergence after 2 time steps.\r\n\r\n## TODO: extend testing\r\n\r\nI have a bunch of extra tests that I have run locally, and which seem to pass. I intend to include some here, in particular to cover the FPivot topology. Future commits could add to CI:\r\n- FPivot versions of existing distributed tripolar tests (grid/field reconstruction, boundary conditions, simulations)\r\n- Index-tracing halo verification for all field locations \u00d7 partitions \u00d7 fold topologies\r\n- Per-rank local field + halo comparison against serial parent array. This is a bit like the index-tracing vizualizations for each rank (see example below).\r\n\r\n## Pivot point mismatch\r\n\r\nThere is one single point where serial and distributed halo-filling don't match: the pivot points. That's because it is a very special case that would need special handling, and I don't think we should \"waste\" lines of codes for it since it will always be covered by land. Take the ranks A and B \"touching\" the central pivot point pictured below (for a FPivot pencil partition; the star represents the pivot point, which is at FF location for this topology). When you fill the halos of A around the pivot, you use the north, corner, and x buffers. The buffers all have nice \"rectangle like\" shapes. But the pivot point must come from B, despite being on a row coming from A itself through the corner buffer. And this only happens at the pivot, so for any partition (Rx,Ry) where Rx>2 it would need an extra type/encoding to correctly fill that single point only for this rank next to the pivot. So I think it's not worth it, but happy to be convinced otherwise.\r\n\r\n![IMG_233B6A9D9E52-1](https://github.com/user-attachments/assets/4e031ad8-0af1-43f2-8e63-48fac28f062e)\r\n\r\n## Visual verification\r\n\r\nThe fold is verified visually using index-tracking fields with half-circles representing 180\u00b0 rotation around pivot points. For a 4x2 UPivot 20x20 grid with `Hx=Hy=3`:\r\n\r\n<img width=\"2400\" height=\"2800\" alt=\"image\" src=\"https://github.com/user-attachments/assets/2fdd5857-80d5-4cfc-a6a0-ba0cd9b120e5\" />\r\n\r\n**The fold is correct if all halos are filled and the circles are centered around the stars (= the pivot points).**\r\n\r\n---\r\n\r\nFor a 4x2 FPivot:\r\n\r\n<img width=\"2400\" height=\"2800\" alt=\"image\" src=\"https://github.com/user-attachments/assets/08d66a1f-c7c3-4b50-92fa-cfd1334f3c28\" />\r\n\r\n---\r\n\r\nAnd I also checked the halos for each rank, e.g., 4x2 UPivot rank 7:\r\n\r\n<img width=\"2400\" height=\"2800\" alt=\"image\" src=\"https://github.com/user-attachments/assets/597c3002-deb2-4cae-ab8c-21ab5716073d\" />\r\n\r\n---\r\n\r\nFor the record, it currently looks like that for the main branch, missing top halo row and fold line for example + some incorrectly pivoted cells (non-concentric circles):\r\n\r\n<img width=\"2400\" height=\"2800\" alt=\"image\" src=\"https://github.com/user-attachments/assets/e75c465c-be66-4f4a-a122-63837cc16b92\" />\r\n\r\n---\r\n\r\nSo overall I think that the src/ part is ready for review. \r\n\r\n---\r\n\r\nFollows from #5408.\r\nSupersedes #5381.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-27T11:13:22Z",
+    "deletions": 238,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-04-09T01:42:31Z",
+    "number": 5439,
+    "title": "Fix distributed tripolar fold"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This is another maybe-bikeshedding PR from a Slack discussion for renaming `BoundedTopology` to `FaceExtendedTopology`.\r\n\r\n`BoundedTopology` is a type union used for extending the fields at face-locations by 1. But currently it is a bit of misnomer as it contains the `RightFaceFolded` topology and its distributed consorts, which are _not_ bounded. Since it is used solely for extending sizes of face locations, I proposed `FaceExtendedTopology`.\r\n\r\nThis is just a variable renaming so it should not break anything.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-09T04:54:39Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2026-04-09T10:29:08Z",
+    "number": 5482,
+    "title": "`BoundedTopology` -> `FaceExtendedTopology`"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "This tiny PR just renames:\r\n- `old_bcs` to `global_bcs`\r\n- `new_bcs` to `local_bcs`\r\n\r\nso that the names are more explicit about what these BCs are. I should have submitted this PR 2 months ago, after discussing it on Slack with @glwagner, but it slipped through... Sorry about that!",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-09T02:58:49Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2026-04-09T13:29:59Z",
+    "number": 5481,
+    "title": "`old_bcs` -> `global_bcs` and `new_bcs` -> `local_bcs`"
+  }
+]

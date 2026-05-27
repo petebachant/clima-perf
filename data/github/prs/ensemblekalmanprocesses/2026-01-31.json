@@ -1,0 +1,133 @@
+[
+  {
+    "additions": 1025,
+    "author": {
+      "id": "MDQ6VXNlcjg4MDk1NTg3",
+      "is_bot": false,
+      "login": "rgjini",
+      "name": "Rebecca Gjini"
+    },
+    "body": "## Purpose \r\n \r\nCloses #530\r\nCloses #541\r\n\r\n\r\n## Content\r\n list of proposed tasks\r\n- Add Lorenz63 example\r\n- Add Lorenz96 constant forcing example\r\n- Add Lorenz96 spatially dependent forcing example\r\n- Add Lorenz96 Spatially dependent forcing example with neural network approximation\r\n- Saves many precomputed quantities (e.g. the estimated covariances) from initial run for time savings on future runs\r\n- Saves output results for ingestion by plotting scripts.\r\n- Plotting scripts have been written to display the distribution of iterations / model runs over the race\r\n\r\n## Misc\r\n- Bugfixed the (actually no-longer used here) `avg_rmse` computation\r\n\r\n\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD587aKBSZ",
+        "number": 530,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/530"
+      },
+      {
+        "id": "I_kwDOEreD587jp1h_",
+        "number": 541,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/541"
+      }
+    ],
+    "createdAt": "2025-11-24T19:00:22Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-31T00:03:54Z",
+    "number": 531,
+    "title": "Adding EKI race examples"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCloses #544 \r\n\r\nThis comes at a moderate cost as seen in unit tests, (order 100s for `10^6 x 500` matrix) and constant for varying observation size if `# observations > # samples`. But `svd` is _much_ more stable than `tsvd`\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- replaced TSVD usage with julia's `svd()`. \r\n- removed the `TSVD` package dependency\r\n- Add unit tests to test the SVD more, and to report timings for increasing observation size\r\n\r\n## MISC\r\nResults from the MWE of #544 \r\n```julia\r\nusing EnsembleKalmanProcesses\r\nusing LinearAlgebra, Statistics, Random\r\n\r\nRandom.seed!(0) \r\n\r\noutput_dims = [100, 1000, 2000, 5000]\r\nn_trials   = [10, 100, 500]\r\n\r\nfor od in output_dims\r\n    for nt in n_trials\r\n        Y = randn(od, nt)\r\n        Y = Y .- mean(Y, dims = 2)\r\n        internal_cov = tsvd_cov_from_samples(Y)\r\n        C_ref = Y * permutedims(Y, (2,1)) / (nt - 1)\r\n        error = Matrix(internal_cov) - C_ref       \r\n        @info norm(error) / norm(C_ref)\r\n    end\r\nend\r\n```\r\n#### Used to produce \r\n_(ignoring warnings for od>nt)_\r\n ```\r\n [ Info: 6.006218070811779e-12\r\n[ Info: 0.6608619639267335\r\n[ Info: 3.2431817175375246e-15\r\n[ Info: 2.133990635930445e-13\r\n[ Info: 0.9636350358850441\r\nERROR: no convergence \r\n...\r\n ```\r\n#### Now Produces\r\n```\r\n[ Info: 1.6933651519984539e-15\r\n[ Info: 3.2568498870648987e-15\r\n[ Info: 3.915919798479966e-15\r\n[ Info: 2.1600626393840296e-15\r\n[ Info: 4.024388279436191e-15\r\n[ Info: 3.5119150745363716e-15\r\n[ Info: 1.2757723994854526e-15\r\n[ Info: 3.588975742556161e-15\r\n[ Info: 3.653162035490746e-15\r\n[ Info: 1.5471092098731933e-15\r\n[ Info: 3.6194247226729415e-15\r\n[ Info: 3.846413160565572e-15\r\n```\r\n\r\nUbuntu unit test:\r\n```\r\n[ Info: tsvd_from_cov_sample() timings for K x 100 matrix at different K\r\n[ Info:     K=1000:  0.018959978\r\n[ Info:     K=10000:  0.103420424\r\n[ Info:     K=100000:  1.245226671\r\n[ Info:     K=1000000:  18.030386854\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEreD587le0iW",
+        "number": 544,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTQwMTY3NDM=",
+          "name": "EnsembleKalmanProcesses.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/544"
+      }
+    ],
+    "createdAt": "2026-01-30T00:23:18Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2026-01-31T06:12:48Z",
+    "number": 545,
+    "title": "removed TSVD usage and dependency. just use SVD instead for tsvd_cov_from_samples"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE0OTQ3NDAx",
+      "is_bot": false,
+      "login": "cmbengue",
+      "name": "Cheikh Mbengue"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nThis PR updates the CLA Actions workflow trigger from `pull_request` to `pull_request_target`.\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-31T01:57:23Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-31T07:06:39Z",
+    "number": 546,
+    "title": "chore: changes the CLA action trigger to pull_request_target"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-31T06:13:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-31T17:17:05Z",
+    "number": 547,
+    "title": "Update Project.toml to 2.7.1"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-31T19:38:36Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-01-31T19:38:59Z",
+    "number": 548,
+    "title": "(correction) Update Project.toml to 2.7.0"
+  }
+]

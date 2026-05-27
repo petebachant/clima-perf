@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 157,
+    "author": {
+      "id": "MDQ6VXNlcjI3OTk5MjAx",
+      "is_bot": false,
+      "login": "ray-chew",
+      "name": ""
+    },
+    "body": "# See #3761 for code review and discussions\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nUpdated features and documentation of the non-orographic gravity module. The main features are:\r\n\r\n1. Non-orographic gravity-wave tendencies are now diagnostic variables.\r\n2. Non-orographic gravity-wave tendencies are only updated every `dt_nogw` for better computational efficiency, but the tendencies are still added after every dycore timestep.\r\n\r\nCloses #3434 \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n1. Add docstrings for non-orographic gravity-wave methods\r\n2. Complete going through `gravity_wave.md`\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n1. ~~Added output diagnostics to the non-orographic config yaml files.~~ (Doesn't seem to be necessary)\r\n3. Extended diagnostics to output (non-orographic) gravity-wave tendencies.\r\n4. Fixed a typo in the example of `diagnostics.md`.\r\n5. Slightly refactored `non_orographic_gravity_wave.jl`.\r\n6. Changed all instances of `NonOrograph**y**GravityWave` type to `NonOrograph**ic**GravityWave`, to be consistent with the `OrographicGravityWave` type.\r\n7. 1. Added `dt_nogw` as a default config. \r\n    3. The callback method `non_orographic_gravity_wave_compute_tendency!` now computes and updates the non-orographic tendencies every timestep size of `dt_nogw`.\r\n    4. The tendencies are still called and updated every dycore timestep via `remanining_tendency.jl`.\r\n8. Added an elaboration for $\\epsilon$ in `gravity_wave.md`.\r\n9. ~~Added `ClimaCoreTempestRemap` to `Project.toml` for orographic gravity wave unit tests.~~ (Not necessary if I use the correct project.)\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs6eLYJy",
+        "number": 3434,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/3434"
+      }
+    ],
+    "createdAt": "2025-04-16T00:01:48Z",
+    "deletions": 35,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA3",
+        "name": "enhancement"
+      },
+      {
+        "color": "428C04",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7ibYPH",
+        "name": "Refactor"
+      },
+      {
+        "color": "B9F512",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABVTK-eA",
+        "name": "gravity wave"
+      },
+      {
+        "color": "91E248",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABdddRuA",
+        "name": "Diagnostics"
+      }
+    ],
+    "mergedAt": "2025-04-16T23:36:42Z",
+    "number": 3775,
+    "title": "Support for intermittent calls to update non-orographic gravity wave tendencies (Replacement for #3761)"
+  }
+]

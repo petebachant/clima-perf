@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 129,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR refactors the `NetCDFOutputWriter` constructor by getting rid of the `write_grid_and_attributes` function and by changing the boolean `clobber` keyword argument to `mode`, which is passed to NCDatasets.jl and takes on the values `\"c\"` for create/clobber or `\"a\"` for append.\r\n\r\nPassing `mode=\"a\"` allows you to append to an existing NetCDF file. I added some tests for this.\r\n\r\nThis is important if we want to keep using the same NetCDF file after restoring from a checkpoint.\r\n\r\ncc @suyashbire1 \r\n\r\nResolves #913",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2OTMyNDIyMjg=",
+        "number": 913,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/913"
+      }
+    ],
+    "createdAt": "2020-09-04T18:11:21Z",
+    "deletions": 112,
+    "labels": [],
+    "mergedAt": "2020-09-08T14:18:30Z",
+    "number": 915,
+    "title": "Fix appending to NetCDF file"
+  },
+  {
+    "additions": 83,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #908 ",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "MDU6SXNzdWU2OTIwNzg0NDI=",
+        "number": 908,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/908"
+      }
+    ],
+    "createdAt": "2020-09-03T18:01:03Z",
+    "deletions": 37,
+    "labels": [],
+    "mergedAt": "2020-09-08T14:21:19Z",
+    "number": 910,
+    "title": "Fix computation work layout for faces along bounded dimensions"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "OK so looks like this will have to be the JOSS release and include the JOSS paper in the repository (#564).\r\n\r\nI'd also like to include PRs #910 and #915 in this release.\r\n\r\n@glwagner Do you want to include any PRs in v0.36.0?\r\n\r\nRelease notes:\r\n\r\nThis release coincides with the publication of the Oceananigans.jl Journal of Open Source Software (JOSS) paper.\r\n\r\nChangelog:\r\n* Simplified boundary condition interface, types, and constructors. (@glwagner do you want add to this, maybe include a list of breaking changes?)\r\n* Support for a `NonTraditionalBetaPlane` Coriolis force implementation.\r\n* The `AnisotropicBiharmonicDiffusivity` closure now works properly in closed domains with zero `Flux` boundary conditions, as higher-order boundary conditions are enforced.\r\n* Bug fix: Appending to NetCDF files with `NetCDFOutputWriter` works now.\r\n* Bug fix: Computations of abstract operations compute the right end point of face-centered fields along bounded dimensions.\r\n* Bug fix: Averages `with_halos=false` return results with the correct dimensions for face-centered results along bounded dimensions.\r\n* Small bug fixes for `show` methods.\r\n\r\nBreaking changes:\r\n* When constructing a `NetCDFOutputWriter`, use `mode=\"c\"` instead of `clobber=true` and `mode=\"a\"` instead of `clobber=false`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-04T18:24:33Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2020-09-08T15:17:28Z",
+    "number": 916,
+    "title": "Bump v0.36.0 (JOSS release)"
+  },
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR cleans up the `Fields` module: previously, `zeros` was overloaded in a confusing way that would return either `Array` / `CuArray` or an `OffsetArray` depending on the arguments. \r\n\r\nThis PR introduces a function `new_data` that returns an `OffsetArray`. `new_data` is intended to build `OffsetArrays` that hold the data associated with a field, using the architecture, grid eltype, and the field location to determine array type, size, and indexing.\r\n\r\nThis PR moves the vanilla `zeros` definitions (convenience methods that use `eltype(grid)` to determine floating point type and `arch` to determine whether or not an array is converted to `CuArray`) to `Fields.jl` top-level.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-09-04T17:19:34Z",
+    "deletions": 113,
+    "labels": [],
+    "mergedAt": "2020-09-08T17:23:41Z",
+    "number": 914,
+    "title": "Clean up Fields module"
+  }
+]

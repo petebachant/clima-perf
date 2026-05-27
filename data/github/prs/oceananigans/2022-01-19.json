@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR implements a new schedule called `ConsecutiveIterations`. This schedule is constructed with a \"parent schedule\" as an argument and an optional second argument specifying the \"number\" of consecutive iterations to actuate for:\r\n\r\n```julia\r\nschedule = ConsecutiveIterations(TimeInterval(100))\r\n\r\nschedule = ConsecutiveIterations(IterationInterval(4))\r\n\r\nschedule = ConsecutiveIterations(IterationInterval(20), 3)\r\n```\r\n\r\nThe schedule will then actuated (ie, triggering output writing or callback execution) at _both_ the moment specified by the parent schedule, and for `N` iterations consecutive to that one, where `N=1` by default.\r\n\r\nThis PR also adds a property `offset` to `IterationInterval`. Together, this allows one to compute time-derivatives (either forward derivative, or, if using `IterationInterval(N, offset=-1)`, a centered difference).\r\n\r\ncc @whitleyv \r\n\r\nTODO\r\n\r\n- [ ] Test\r\n\r\nThis could also maybe be called `SubsequentIterations`... ?",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2021-12-06T17:17:42Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2022-01-19T03:39:20Z",
+    "number": 2100,
+    "title": "Implements a `ConsecutiveIterations` schedule"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "I believe there were two superfluous lines in the Shallow water example there were leftover from an earlier version. I removed these lines.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-19T01:13:57Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2022-01-19T03:46:09Z",
+    "number": 2153,
+    "title": "Cleans `examples/shallow_water_Bickley_jet.jl`"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "PR #2121 changed some function signatures, which broke functionality provided by `single_column_model_mode.jl` that sets `model.free_surface = nothing`. This PR restores that functionality.\r\n\r\nI think we could add a test, but the experimental nature of `single_column_model_mode.jl` could also mean it'd be better to wait.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-18T22:41:23Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2022-01-19T22:15:59Z",
+    "number": 2152,
+    "title": "Small fix for single column model mode"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-19T19:20:46Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2022-01-19T22:26:41Z",
+    "number": 2155,
+    "title": "Fixes BuoyancyField when isnothing(model.buoyancy)"
+  }
+]

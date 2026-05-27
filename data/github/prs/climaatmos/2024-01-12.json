@@ -1,0 +1,167 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n- Set first level MSE instead of h_tot for EDMF\r\n- Use a new threshold for updraft w in diagnostic EDMF to avoid too small w and therefore too large a.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-11T19:34:01Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2024-01-12T00:06:22Z",
+    "number": 2513,
+    "title": "change the threshold on updraft w in diagnostic EDMF"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Follow up PR to #2349. \r\nUses the new stability dependent diffusion option introduced in PR2349 to the long-run pipeline. (Affects aquaplanet long-run cases)\r\n\r\nUpdates `type_getters` to summarize + print list of scheduled diagnostics. \r\nDiagnostics summary : @Sbozzolo. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-09T21:07:11Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2024-01-12T00:56:37Z",
+    "number": 2501,
+    "title": "Update long-run builds and add summary of scheduled diagnostics."
+  },
+  {
+    "additions": 243,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This PR introduces a new option `netcdf_output_at_levels`. When this configuration is set to true, the output diagnostics for the NetCDF files are evaluated on the vertical levels (as opposed to a collection of prescribed vertical points). This option is incompatible with `netcdf_interpolate_z_over_msl` (which is used to interpret `z` as elevation from mean sea level as opposed to elevation from the surface).\r\n\r\nThis feature is implemented using the very same infrastructure used for the general case with vertical interpolation but passing as target points the grid points. As a result, the vertical interpolation still happens and floating point arithmetic leads to evaluation that might not precisely on the grid centers, but within 0.01 % of it (as empirically measured). I chose this approach because it is much simpler to implement than not doing the interpolation at all. \r\n\r\nAs a bonus, this PR adds the option to have a list of `short_name` in the `diagnostic` section of the YAML file, as in\r\n```\r\ndiagnostics:\r\n  - short_name: [pfull, wa, ra, rv]\r\n    period: 1days\r\n```\r\nIt also fixes https://github.com/CliMA/ClimaAtmos.jl/issues/2505.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs57m-eM",
+        "number": 2505,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/2505"
+      }
+    ],
+    "createdAt": "2024-01-05T23:44:54Z",
+    "deletions": 112,
+    "labels": [],
+    "mergedAt": "2024-01-12T00:56:37Z",
+    "number": 2489,
+    "title": "Add option to evaluate the diagnostics on the vertical levels"
+  },
+  {
+    "additions": 404,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR adds a couple of missing blocks to the dycore Jacobian and modifies the linear solver to handle them. This improves the stability of two longrun simulations that were previously failing (Held-Suarez with topography and aquaplanet with topography).\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Account for the $\\dfrac{\\partial u^3}{\\partial u_h}$ derivative, which scales with $g^{3h}$ and is therefore significant in simulations with topography. This adds the tridiagonal $\\dfrac{\\partial\\mathcal{E}\\rho}{\\partial u_h}$, $\\dfrac{\\partial\\mathcal{E}\\rho e_{tot}}{\\partial u_h}$, and $\\dfrac{\\partial\\mathcal{E}\\rho\\chi}{\\partial u_h}$ blocks to the Jacobian.\r\n- Account for the $\\dfrac{\\partial\\kappa}{\\partial u_h}$ derivative. This scales with $g^{hh}$ and $g^{3h}$, so it is relevant both with and without topography. However, it only adds the bidiagonal $\\dfrac{\\partial\\mathcal{E}u_3}{\\partial u_h}$ block to the Jacobian, which, along with the $\\dfrac{\\partial\\mathcal{E}u_3}{\\partial u_3}$ block, is smaller than similar blocks by a factor of roughly $(\\dfrac{u}{c})^2$. In the future, we might want to drop both of these blocks if they do not significantly improve stability. Since they do not affect the structure of the linear solver, we will keep them in for now.\r\n- Account for the $\\dfrac{\\partial p}{\\partial\\rho q_{tot}}$ derivative, which is significant in simulations with moisture. This adds the bidiagonal $\\dfrac{\\partial\\mathcal{E}u_3}{\\partial\\rho q_{tot}}$ block to the Jacobian, along with the tridiagonal $\\dfrac{\\partial\\mathcal{E}\\rho e_{tot}}{\\partial\\rho q_{tot}}$ block in simulations with implicit diffusion.\r\n- Account for the $\\dfrac{\\partial e_{tot}}{\\partial\\rho}$ and $\\dfrac{\\partial\\chi}{\\partial\\rho}$ derivatives. These add the tridiagonal $\\dfrac{\\partial\\mathcal{E}\\rho e_{tot}}{\\partial\\rho}$ and $\\dfrac{\\partial\\mathcal{E}\\rho\\chi}{\\partial\\rho}$ blocks to the Jacobian in simulations with implicit diffusion.\r\n- Simplify `update_implicit_equation_jacobian!` and cache several matrix Fields in order to improve performance. Remove outdated code comments (new documentation will be ported from Overleaf in a future PR).\r\n- Slightly increase the allocation limits of some performance tests and bump the ref counter.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-12-12T00:49:31Z",
+    "deletions": 357,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwzMDk1MzU0MjA3",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2024-01-12T07:14:41Z",
+    "number": 2427,
+    "title": "Add missing blocks to the dycore Jacobian"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "An accident of a missing rebase\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-12T02:05:28Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2024-01-12T16:18:39Z",
+    "number": 2516,
+    "title": "Remove duplicated code"
+  },
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Supersedes #2481.\r\n\r\nUsing a sentinel file seems to be a fine option for non MPI jobs. Can we merge this for now and open an issue on making this MPI-friendly?",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-11T19:08:08Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2024-01-12T16:21:40Z",
+    "number": 2511,
+    "title": "Add graceful exit feature as a callback"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-12T07:16:47Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-01-12T17:31:40Z",
+    "number": 2518,
+    "title": "Bump minor version"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjkxNjc0ODU=",
+      "is_bot": false,
+      "login": "Sbozzolo",
+      "name": "Gabriele Bozzola"
+    },
+    "body": "This fixes the problem reported by @akshaysridhar by forcing a write to disk every time we save new NetCDF ouput. Normally, NetCDF buffers writes, and the actual writing happens upon closing the file. It seems that sometimes the write doesn't happen, so the data is never really saved. This ensures that the data is saved to disk every time is ready.\r\n\r\n@akshaysridhar, could you please double check that this fixes the issue?\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-01-12T02:40:14Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2024-01-12T19:42:41Z",
+    "number": 2517,
+    "title": "Do not buffer NetCDF writes"
+  }
+]

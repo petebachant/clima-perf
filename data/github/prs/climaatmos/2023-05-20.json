@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Remove specialised use of z_interior (Reasonable for \"flat\" configurations, unreasonable otherwise).\r\nz_{interior} in the expression for exchange coefficients is appropriate if the surface elevation is zero. \r\nThe general expression for bulk formula coefficients should be evaluated with the local `dz` taken into account. ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-05-19T18:29:23Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2023-05-20T03:14:42Z",
+    "number": 1692,
+    "title": "Fix exchange coefficient expression in vertical diffusion tendency. "
+  },
+  {
+    "additions": 201,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis PR fixes bugs in the `wfact!` function, both of which only become relevant when using topography. It also removes some unused code from `wfact!`, updates the code comments, and makes some other minor cosmetic changes.\r\n\r\nCloses #1670 \r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Take the correct derivative of `vertical_transport!` with respect to `u\u2083_data`, accounting for the fact that `\u2202(u\u00b3_data)/\u2202(u\u2083_data) = g\u00b3\u00b3`.\r\n- Take the correct derivative of kinetic energy with respect to `u\u2083_data`, accounting for the derivative of the `dot(CT123(\u1d9cu\u2095), \u1d9cinterp(C123(\u1da0u\u2083)))` cross term.\r\n- Remove the `\u2202\u1da0\ud835\udd44\u209c\u2202\u1d9c\u03c1_mode` Jacobian flag, since have never used Oswald's `grad\u03a6_shenanigans` approximation.\r\n- Format the `Wfact!` function so that it looks more similar to the `implicit_tendency!` function, and make sure that it uses the type-stable `matching_subfields` function.\r\n- Update all of the Jacobian block derivations in the code comments to reflect the current implicit tendency. Replace `w` with `u\u2083` in all code comments. Rename the variable `\u2202\u1d9cK\u2202\u1da0w_data` to `\u2202\u1d9cK\u2202\u1da0u\u2083_data`, and rename the function `vertical_transport_jac!` to `set_\u2202\u1d9c\u03c1\u03c7\u209c\u2202\u1da0u\u2083!`.\r\n- Decrease the `dt`s for two of the SSP longruns because they appear to be crashing due to (hopefully) unrelated numerical issues.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs5l-Kz-",
+        "number": 1670,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/1670"
+      }
+    ],
+    "createdAt": "2023-05-11T00:32:00Z",
+    "deletions": 238,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2023-05-20T05:16:43Z",
+    "number": 1660,
+    "title": "Fix topography bugs in implicit solver"
+  }
+]

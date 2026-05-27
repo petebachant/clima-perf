@@ -1,0 +1,107 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "Until #409 is resolved",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-21T15:30:21Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2022-01-21T16:21:41Z",
+    "number": 460,
+    "title": "disable the OrdinaryDiffEq Implict test as it fails post v6.4.2"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This explains why things were working when I thought #455 would fix the missing parameter sent into `rhs!`-- we are currently exiting the julia session, so we only run this script to the noted line\r\n\r\n```julia\r\n# Launch with `julia --project --track-allocation=user`\r\nimport Pkg\r\nPkg.develop(path = \".\")\r\n\r\nimport Profile\r\n\r\ncase_name = ENV[\"ALLOCATION_CASE_NAME\"]\r\nENV[\"CI_PERF_SKIP_RUN\"] = true # we only need haskey(ENV, \"CI_PERF_SKIP_RUN\") == true\r\n\r\n\r\ninclude(case_name)      #  <------------------- We exit in here and accidentally skip the rest of the script\r\n\r\n\r\nrhs!(dYdt, Y, nothing, 0.0) # compile first\r\nProfile.clear_malloc_data()\r\nrhs!(dYdt, Y, nothing, 0.0)\r\n\r\n# Quit julia (which generates .mem files), then call\r\n#=\r\nimport Coverage\r\nallocs = Coverage.analyze_malloc(\"src\")\r\n=#\r\n```\r\n\r\nThis PR should reveal the true allocations occurring in the ClimaCore `rhs!` functions.\r\n\r\n@jakebolewski / @simonbyrne, is it alright to use `try` / `catch` here like this? I was hoping to keep these performance parts as minimally invasive as possible",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-21T00:46:35Z",
+    "deletions": 41,
+    "labels": [
+      {
+        "color": "8F85ED",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7dwAlq",
+        "name": "Performance monitoring :mag::rocket:"
+      },
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2022-01-21T18:56:50Z",
+    "number": 458,
+    "title": "Fix allocation monitoring"
+  },
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjY1NDE5NTA3",
+      "is_bot": false,
+      "login": "jb-mackay",
+      "name": "Ben Mackay"
+    },
+    "body": "There may be a cleaner way to do this, but this uses `ClimaCore` tools I'm familiar with.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-20T00:33:22Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyODk5ODQwNjIy",
+        "name": "enhancement"
+      },
+      {
+        "color": "E84594",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7Kyj9l",
+        "name": "visualization"
+      }
+    ],
+    "mergedAt": "2022-01-21T19:58:26Z",
+    "number": 456,
+    "title": "Add 1D field plotting."
+  },
+  {
+    "additions": 219,
+    "author": {
+      "id": "MDQ6VXNlcjExNTc3OTg=",
+      "is_bot": false,
+      "login": "jakebolewski",
+      "name": "Jake Bolewski"
+    },
+    "body": "",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-01-21T03:40:32Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyODk5ODQwNjIy",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2022-01-21T23:06:45Z",
+    "number": 459,
+    "title": "add generalized exp stretching and interval mesh tests"
+  }
+]

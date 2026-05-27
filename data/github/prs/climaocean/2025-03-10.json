@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This allows to avoid having to do something like this\r\n```julia\r\n# No fluxes\r\nstruct ZeroFluxes{N, B}\r\n    solver_stop_criteria :: N\r\n    bulk_velocity :: B\r\nend\r\n\r\nimport ClimaOcean.OceanSeaIceModels.InterfaceComputations: compute_interface_state\r\nusing ClimaOcean.OceanSeaIceModels.InterfaceComputations: zero_interface_state\r\n\r\n@inline compute_interface_state(::ZeroFluxes, args...) = zero_interface_state(Float64)\r\n```\r\nwhere we need to add a `bulk_velocity` to the flux formulation even if it does not necessarily need it.\r\nI will open a new PR for cleaning up the `solver_stop_criteria`",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-10T10:27:59Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2025-03-10T16:28:51Z",
+    "number": 394,
+    "title": "Add `velocity_formulation` to the interface properties"
+  }
+]

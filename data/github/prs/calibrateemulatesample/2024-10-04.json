@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 788,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- To introduce the Darcy flow example to help validate higher-dimensional methods for Emulation and sampling.\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\nCloses #323\r\nCloses #324 \r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- Add the Darcy flow example from EnsembleKalmanProcesses.jl (See [here](https://clima.github.io/EnsembleKalmanProcesses.jl/dev/examples/darcy/)), learning a permeability field from some discrete pressure observations\r\n- Modify `src/MarkovChainMonteCarlo` `get_posterior(` to handle loading the function parameter\r\n- reduced brittleness of a condition-number test on matrix\r\n## Example output\r\nfrom the calibration: \r\n\r\nprior\r\n![output_prior](https://github.com/user-attachments/assets/4abc6fcd-45a5-42d9-9876-b0cb9854e81a)\r\nfinal iteration \r\n![output_it_5](https://github.com/user-attachments/assets/ed8cdc5c-98b3-499c-803c-f7350fa64c76)\r\ntruth\r\n![output_true](https://github.com/user-attachments/assets/10115f49-e409-4c5a-b25c-ee357fbee747)\r\n\r\nnote these are not seeded so the randomness likely will change the result each time.\r\n\r\nfrom the emulate_sample.jl\r\nEmulator check:\r\n```\r\nML prediction on true parameters: \r\n[27.037408018242395, 38.87046139907847, 44.20165141698669, 44.81967460948412, 37.95762890768021, 27.084696766779054, 14.284342254286276, 41.225315659861174, 65.20877142866557, 75.4871734698289, 75.89983759897456, 65.89528866862894, 48.64379706569926, 26.77602042655126, 52.41126175374155, 83.2144993558748, 97.42776407311258, 98.3148676162914, 85.31481608662372, 63.293498366057726, 34.74875453547942, 61.561746712433695, 94.74782841985235, 112.44553354480084, 116.54156132625108, 99.5182177748717, 73.15942728881657, 39.47475688708078, 60.271179410024565, 97.02765814231405, 116.51247982894408, 121.15894751771309, 106.44717126532579, 80.16419988957492, 44.630376135296885, 54.25445794702326, 89.28033820768455, 107.54747440965036, 111.84523353382397, 101.5759088113121, 79.98653047792462, 47.54441991685336, 38.62524359313755, 61.82144722190585, 74.33157261921035, 78.27094847216169, 72.00563201011728, 58.548161131379715, 37.136865856168434]\r\ntrue data: \r\n[23.84984138170094, 34.07464189113868, 45.416933138479166, 44.07931284195099, 33.65233298120436, 33.01615021178614, 15.077839776390611, 46.858281713105896, 67.01867480773103, 78.536759250763, 80.4860269350031, 66.12220208826437, 48.72938148448155, 26.687674306444382, 52.68364578726671, 87.6429536245335, 101.59518527623275, 98.06482852584509, 84.48714624938796, 61.315687335509736, 33.372651588657256, 53.66877549346963, 88.99212547729059, 112.40516507316904, 114.08675602624477, 95.55222700277633, 73.39447680369074, 43.254623784078646, 64.2228045937796, 95.41500420534308, 112.70626702034014, 117.75064097762899, 103.06978425812935, 77.76447284695995, 44.869216531401364, 54.90382329022393, 89.94842682627534, 105.36102533892421, 113.34730085341785, 105.18675551571583, 82.26396614996443, 46.369884629910466, 34.33466615937397, 63.802573464988754, 75.41489892667848, 77.25768123625558, 71.50004108831035, 62.207867252294854, 41.076630593780834]\r\n ML predicted standard deviation\r\n[2.609234092147626, 2.6059894762299933, 2.607473226550132, 2.612071197290017, 2.613743191102169, 2.614594101414251, 2.6135702847721385, 2.600191409539615, 2.600558328408845, 2.6002529606771305, 2.599717195096206, 2.6137828393644242, 2.615427558326809, 2.614288407835236, 2.6135301648397196, 2.61622373875433, 2.616501522987768, 2.6153526510313894, 2.599263431097443, 2.6142356710712096, 2.6150421836682884, 2.6190301454640474, 2.6174928501072725, 2.6184783694424563, 2.619186848031698, 2.615045216646557, 2.6120309645626043, 2.6152856355464835, 2.6153003997900885, 2.6171139124799914, 2.6192066232734224, 2.6192030742448265, 2.6157746075086825, 2.6012162999103468, 2.614387290585893, 2.6007390677078344, 2.6153682904050264, 2.6176116959855107, 2.6176292392538443, 2.615466725101344, 2.6101420829569135, 2.615154402007166, 2.615674479178309, 2.60132642271825, 2.6152681106034272, 2.616475362834447, 2.611383358599127, 2.6146592701107996, 2.61786014770975]\r\nML MSE (truth): \r\n9.649540741225902\r\nML MSE (next ensemble): \r\n0.013397421420773633\r\n```\r\nand the UQ check :\r\n```\r\npost_mean\r\n[0.983561876339554; -0.9581797789308962; 0.9485901106700727; 1.2076572098239085; -0.5724392937657472;;]\r\npost_cov\r\n[0.001240363115299256 0.0007521635791415857 0.0009539072667421793 7.79372640360373e-5 8.636512376624956e-5; 0.0007521635791415857 0.005702149781800616 -0.00041195632220727507 -0.004067959894947535 -0.0005367145219895543; 0.0009539072667421793 -0.00041195632220727507 0.004952320816263619 0.0010380776193430995 -0.0008631261725693903; 7.79372640360373e-5 -0.004067959894947535 0.0010380776193430995 0.029750884482751237 5.5897073597492775e-5; 8.636512376624956e-5 -0.0005367145219895543 -0.0008631261725693903 5.5897073597492775e-5 0.02958700649705789]\r\nD util\r\n4.917659459703968e10\r\n```\r\npointwise uq - (mean should be similar to calibrate result, but uncertainty is usually a larger magnitude variance in colourbar). Pushed forward mean permeability to get pressure here for now\r\n![GP_posterior_pointwise_uq](https://github.com/user-attachments/assets/6b7b055f-8ed4-4e8c-9c7f-ebad95d648d1)\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCrQRN86Y_er7",
+        "number": 323,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/323"
+      },
+      {
+        "id": "I_kwDOCrQRN86Y_etK",
+        "number": 324,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNzk1NzMwNDc=",
+          "name": "CalibrateEmulateSample.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CalibrateEmulateSample.jl/issues/324"
+      }
+    ],
+    "createdAt": "2024-08-20T00:12:48Z",
+    "deletions": 98,
+    "labels": [],
+    "mergedAt": "2024-10-04T16:46:14Z",
+    "number": 316,
+    "title": "Function Parameters within CES & Darcy example"
+  }
+]

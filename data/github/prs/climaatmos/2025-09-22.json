@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 266,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This pull request adds support for the 2-moment microphysics scheme with P3 ice microphysics (\"2MP3\") to the codebase, including a new test configuration, initial condition, diagnostics, and all required model infrastructure. The changes ensure that the new scheme is handled correctly throughout the precipitation, cache, initial condition, and diagnostic modules, and integrates it into CI and post-processing.\r\n\r\n**Support for 2MP3 microphysics scheme:**\r\n\r\n* Added the `Microphysics2MomentP3` model throughout the codebase, including imports, cache allocation, precipitation tendencies, and diagnostics, enabling full support for the new scheme. [[1]](diffhunk://#diff-6ca9085fa8b57bc6250457214e83fae1feae11991d710726d9fa0a9ebfb65efbR8) [[2]](diffhunk://#diff-803c87116ce03f68c5228f901e3e4ca9b47860e1902febd0ba2ed2d00d49a0d0R37) [[3]](diffhunk://#diff-d65467c8c173fed5e8d0cadd4a43471684441e4f462c04a5cb24ddcc20cc4563R11) [[4]](diffhunk://#diff-471fb2001bc0d6f84924896fd8c99bd3d4edcc84bd5d79da9e9f35afef17f9cdL116-R118) [[5]](diffhunk://#diff-471fb2001bc0d6f84924896fd8c99bd3d4edcc84bd5d79da9e9f35afef17f9cdR131-R153) [[6]](diffhunk://#diff-6ca9085fa8b57bc6250457214e83fae1feae11991d710726d9fa0a9ebfb65efbR191-R265) [[7]](diffhunk://#diff-6ca9085fa8b57bc6250457214e83fae1feae11991d710726d9fa0a9ebfb65efbR504-R545) [[8]](diffhunk://#diff-6ca9085fa8b57bc6250457214e83fae1feae11991d710726d9fa0a9ebfb65efbR635-R639) [[9]](diffhunk://#diff-d0a794bb7170232a067c333961596286b59d804fa1456eb19a08ca6ee56c4b93R754-R792) [[10]](diffhunk://#diff-57c063b5bee29a371edd7a85f7fe4006a1c9d7aa08965a2327c7e043a9b5ad5eR262-R297) [[11]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R741) [[12]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R778) [[13]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R812) [[14]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L841-R848) [[15]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L872-R883) [[16]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L903-R914) [[17]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L934-R945) [[18]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L1557-R1570)\r\n\r\n**New test configuration and initial condition:**\r\n\r\n* Added a new single-column test configuration file for the 2MP3 scheme (`single_column_precipitation_2MP3_test.yml`), and created the corresponding initial condition `ColdPrecipitatingColumn` and state types (`PrecipState2MP3`). [[1]](diffhunk://#diff-5e50b12fc8ed006800a2dc6b050e5675889d153b30666b4244069c22e925d4f9R1-R22) [[2]](diffhunk://#diff-129521b7d73944a04f165ea2d06b601eca86f361553d5203f6df5d457b01ca4fR1317-R1368) [[3]](diffhunk://#diff-db3c8ac786cf9b4b142bc6330101c2cdf0ecc5b2d921d9bd481a4c4f0ca955d0R122-R126) [[4]](diffhunk://#diff-00a778ba054a93aba25a13e24d9a88ef8bc801cb578e34c07749b635783b2ef4R137-R153)\r\n\r\n**Continuous integration and post-processing updates:**\r\n\r\n* Integrated the new test into the CI pipeline and post-processing plotting routines, ensuring automated testing and visualization for the 2MP3 scheme. (.buildkite/pipeline.yml, [post_processing/ci_plots.jlR627](diffhunk://#diff-e4cba714c103063a9c604a1ab7a5e42151936b5ba5dce44fc5df390d42ee00e6R627))\r\n\r\n**Parameter infrastructure updates:**\r\n\r\n* Extended the parameters struct to include `microphysics_2mp3_params` for the new scheme. [[1]](diffhunk://#diff-befd0462e59148ffd45bcc4e5a154c3ba2acc53c9f8accab9d3b0a66835db6f0R72) [[2]](diffhunk://#diff-befd0462e59148ffd45bcc4e5a154c3ba2acc53c9f8accab9d3b0a66835db6f0R86)\r\n\r\n**Diagnostics and output compatibility:**\r\n\r\n* Updated diagnostics functions to correctly handle the new scheme, ensuring all relevant output variables are available for 2MP3 runs. [[1]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R741) [[2]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R778) [[3]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83R812) [[4]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L841-R848) [[5]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L872-R883) [[6]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L903-R914) [[7]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L934-R945) [[8]](diffhunk://#diff-e8c07a94c97c4fc3823154d810842bbf05dfd6af22ca6d322da76a9f590d7a83L1557-R1570)",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-08-20T04:34:05Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2025-09-22T21:22:44Z",
+    "number": 3959,
+    "title": "feat: add P3 ice microphysics model"
+  }
+]

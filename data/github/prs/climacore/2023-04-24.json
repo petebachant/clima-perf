@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "This PR stores local target indices in `LinearMap` instead of the unique indices used by TempestRemap. This will make the `remap!` function cleaner and isolate these internals to `generate_map`.\r\n\r\nNote: This function includes one workaround which is not ideal but will be removed in the next implementation. On each process, the source indices, target indices, and weight vectors stored in `LinearMap` have to have the same length so that the values align in the correct positions to perform the multiplication in `remap!`. However, if each process only stored its local source/target indices, these vectors would be smaller than the weights. To get around this, I set the entire target index vector to 0 on each process and only filled in the correct values for local indices. In the next implementation, we will instead store only the local values of the indices and weights on each process.\r\n\r\nThis closes #1191.\r\n\r\n## Quality assurance\r\nDistribued remapping is compared against serial remapping (i.e. the previous implementation), as well as the analytical solution. The distributed and serial solutions are quantitatively found to have error of less than 10^-20, and are also compared visually in the following plots:\r\n\r\n<img width=\"360\" alt=\"regrid_source_data\" src=\"https://user-images.githubusercontent.com/51397186/233468508-8ba368f7-254e-4c5b-97ef-125c619d5288.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_mpi\" src=\"https://user-images.githubusercontent.com/51397186/233468531-03ef7ea5-5412-4abc-81fc-e339bb830836.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_serial\" src=\"https://user-images.githubusercontent.com/51397186/233468544-17510286-0256-4324-88e2-759dbc0ef5a6.png\">\r\n<img width=\"360\" alt=\"regrid_target_data_analytical\" src=\"https://user-images.githubusercontent.com/51397186/233468561-1a4b1bdc-a06d-4d3a-bd3b-29e52c0057f1.png\">\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5jfBd3",
+        "number": 1191,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1191"
+      }
+    ],
+    "createdAt": "2023-04-15T02:04:26Z",
+    "deletions": 55,
+    "labels": [],
+    "mergedAt": "2023-04-24T20:19:04Z",
+    "number": 1192,
+    "title": "Distr. regridding - local indices in LinearMap"
+  }
+]

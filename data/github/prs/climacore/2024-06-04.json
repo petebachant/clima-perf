@@ -1,0 +1,125 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Closes #1772.\r\n\r\nI've also removed type parameters from some of the other methods, since they are unused.\r\n\r\nI'm actually a bit flabbergasted that this didn't require MSE changes (https://github.com/CliMA/ClimaAtmos.jl/pull/3058).\r\n\r\nMy thoughts on this are one of the following must be true:\r\n - This somehow (miraculously) worked due to `Nq`/`Nv` (though I doubt this)\r\n - ClimaAtmos' regression tests are insufficient or no longer working as expected (possible, though seems less likely)\r\n - The code that seems like it should break badly (below) is not actually executed/exercised (certainly possible)\r\n\r\nCode that looks like it should break if `Nv` was sent in as `Nq`\r\n```julia\r\nBase.IteratorEltype(::Type{Perimeter2D{Nq}}) where {Nq} = Base.HasEltype()\r\nBase.eltype(::Type{Perimeter2D{Nq}}) where {Nq} = Tuple{Int, Int}\r\n\r\nBase.IteratorSize(::Type{Perimeter2D{Nq}}) where {Nq} = Base.HasLength()\r\nBase.length(::Perimeter2D{Nq}) where {Nq} = 4 + (Nq - 2) * 4\r\n\r\nfunction Base.iterate(perimeter::Perimeter2D{Nq}, loc = 1) where {Nq}\r\n    if loc <= 4\r\n        return (vertex_node_index(loc, Nq), loc + 1)\r\n    elseif loc \u2264 length(perimeter)\r\n        f = cld(loc - 4, Nq - 2)\r\n        n = mod(loc - 4, Nq - 2) == 0 ? (Nq - 2) : mod(loc - 4, Nq - 2)\r\n        return (face_node_index(f, Nq, 1 + n), loc + 1)\r\n    else\r\n        return nothing\r\n    end\r\nend\r\n\r\nfunction Base.getindex(perimeter::Perimeter2D{Nq}, loc = 1) where {Nq}\r\n    if loc < 1 || loc > length(perimeter)\r\n        return (-1, -1)\r\n    elseif loc <= 4\r\n        return vertex_node_index(loc, Nq)\r\n    else\r\n        f = cld(loc - 4, Nq - 2)\r\n        n = mod(loc - 4, Nq - 2) == 0 ? (Nq - 2) : mod(loc - 4, Nq - 2)\r\n        return face_node_index(f, Nq, 1 + n)\r\n    end\r\nend\r\n```\r\n\r\nRegardless, it would be nice if we somehow added tests for `Perimeter2D`. That said, the example that failed is a bit difficult to test precisely because we simply sent in the wrong integer into `Perimeter2D`'s type space. I don't think we should overcomplicate `Perimeter2D` for the sake of testing, but we should be able to somehow test `dss!` to take this into account. cc @sriharshakandala",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6K1EQb",
+        "number": 1772,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1772"
+      }
+    ],
+    "createdAt": "2024-06-03T23:47:34Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-06-04T01:16:25Z",
+    "number": 1778,
+    "title": "Fix dss type param"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "Followup fix to https://github.com/CliMA/ClimaCore.jl/commit/1b84475b2405b8e0d2014e32fda5a7914cf9794e and https://github.com/CliMA/ClimaCore.jl/pull/1778",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-06-04T18:07:37Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-06-04T19:13:12Z",
+    "number": 1779,
+    "title": "Use Nv in VIJFH create_ghost_buffer type construction"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR applies some of #1011 with some tests to check the validity of the bug fixes. `RecursiveApply.rdiv((w\u207a \u22a0 a\u207a) \u229e (w\u207b \u22a0 a\u207b), (w\u207a \u229e w\u207b))` has already been corrected in main, so I've skipped that change.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-22T01:06:36Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2024-06-04T19:41:35Z",
+    "number": 1655,
+    "title": "Test reapply some of 1011 with tests"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "This pull request changes the compat entry for the `KrylovKit` package from `0.6` to `0.6, 0.7`.\nThis keeps the compat entries for earlier versions.\n\n\n\nNote: I have not tested your package with this new compat entry.\nIt is your responsibility to make sure that your package tests pass before you merge this pull request.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-15T14:03:44Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-06-04T19:49:20Z",
+    "number": 1645,
+    "title": "CompatHelper: bump compat for KrylovKit to 0.7, (keep existing compat)"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjY1NDE5NTA3",
+      "is_bot": false,
+      "login": "jb-mackay",
+      "name": "Ben Mackay"
+    },
+    "body": "Adds `F` dimension checks on backing data arrays for `DataLayouts`. See #664 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-04-14T17:50:54Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "52C059",
+        "description": "",
+        "id": "LA_kwDOFT2Pms7eKbJ1",
+        "name": "bugfix"
+      }
+    ],
+    "mergedAt": "2024-06-04T22:25:19Z",
+    "number": 665,
+    "title": "`DataLayouts` F Dimension Constructor Checks"
+  }
+]

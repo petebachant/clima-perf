@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This is a small nicety for friendliness^TM. For safety^TM we throw a warning if we reshaped. Just in case it wasn't intended.\r\n\r\nThis allows things like\r\n\r\n```julia\r\njulia> grid = RectilinearGrid(size=(2, 3, 4), x=(0, 1), y=(0, 1), z=(0, 1))\r\n2\u00d73\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [0.0, 1.0) regularly spaced with \u0394x=0.5\r\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0) regularly spaced with \u0394y=0.333333\r\n\u2514\u2500\u2500 Bounded  z \u2208 [0.0, 1.0] regularly spaced with \u0394z=0.25\r\n\r\njulia> c = Field{Nothing, Nothing, Center}(grid)\r\n1\u00d71\u00d74 Field{Nothing, Nothing, Center} reduced over dims = (1, 2) on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 2\u00d73\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Nothing, east: Nothing, south: Nothing, north: Nothing, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 1\u00d71\u00d710 OffsetArray(::Array{Float64, 3}, 1:1, 1:1, -2:7) with eltype Float64 with indices 1:1\u00d71:1\u00d7-2:7\r\n    \u2514\u2500\u2500 max=0.0, min=0.0, mean=0.0\r\n\r\njulia> set!(c, rand(4))\r\n\u250c Warning: Reshaped 4-element Vector{Float64} to set! its data to\r\n\u2502 1\u00d71\u00d74 Field{Nothing, Nothing, Center} reduced over dims = (1, 2) on RectilinearGrid on CPU\r\n\u2514 @ Oceananigans.Fields ~/Projects/Oceananigans.jl/src/Fields/set!.jl:86\r\n1\u00d71\u00d74 Field{Nothing, Nothing, Center} reduced over dims = (1, 2) on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 2\u00d73\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d73 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Nothing, east: Nothing, south: Nothing, north: Nothing, bottom: ZeroFlux, top: ZeroFlux, immersed: ZeroFlux\r\n\u2514\u2500\u2500 data: 1\u00d71\u00d710 OffsetArray(::Array{Float64, 3}, 1:1, 1:1, -2:7) with eltype Float64 with indices 1:1\u00d71:1\u00d7-2:7\r\n    \u2514\u2500\u2500 max=0.172696, min=0.00231136, mean=0.0906944\r\n```\r\n\r\nwhich is nice when working with 1D data.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-04-03T22:11:57Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2024-04-04T13:56:23Z",
+    "number": 3535,
+    "title": "Automatically try to reshape arrays when encountering DimensionMismatch"
+  },
+  {
+    "additions": 695,
+    "author": {
+      "id": "MDQ6VXNlcjEyOTI2NzY4",
+      "is_bot": false,
+      "login": "siddharthabishnu",
+      "name": "Sid"
+    },
+    "body": "This PR fills the halos of the grid metrics of the conformal cubed sphere panels at face-face locations using a dedicated function instead of hard-coded values, similar to the existing approach for center-center, face-center, and center-face locations.\r\n\r\ncc @navidcy",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-03-01T06:32:04Z",
+    "deletions": 279,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "f9d0c4",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABJBBvzw",
+        "name": "cubed sphere \ud83e\uddca\ud83c\udf0e"
+      }
+    ],
+    "mergedAt": "2024-04-04T17:24:51Z",
+    "number": 3488,
+    "title": "Fill halos of conformal cubed sphere grid coordinates and metrics in a single pass"
+  }
+]

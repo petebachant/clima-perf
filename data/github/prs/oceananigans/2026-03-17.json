@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/5365\r\n\r\nEDIT: For the record, this is the MWE:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Random: seed!\r\nseed!(426) # Maximize reproducibility\r\n\r\ngrid = RectilinearGrid(size = (4, 4, 4), extent = (1, 1, 1))\r\nmodel = NonhydrostaticModel(grid, closure = DynamicSmagorinsky())\r\nset!(model, u = (x, y, z) -> randn())\r\n@show model.closure_fields.\u03bd\u2091\r\n```",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7vsv3i",
+        "number": 5365,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5365"
+      }
+    ],
+    "createdAt": "2026-03-04T12:26:16Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-03-17T22:20:20Z",
+    "number": 5366,
+    "title": "(0.105.5) Fix `initialize_closure_fields!()` use with `DynamicSmagorinsky`"
+  },
+  {
+    "additions": 128,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Tests that all 9 advective momentum flux kernels return zero at immersed peripheral nodes, for Centered(2), UpwindBiased(3), and WENO(5). This documents the expected behavior after PR #4987 removed the explicit conditional_flux zeroing from _advective_momentum_flux_* on ImmersedBoundaryGrid, relying instead on velocity masking in immersed cells and the no-penetration BC at the boundary face.\r\n\r\ncc @simone-silvestri ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-16T09:55:38Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-03-17T22:20:44Z",
+    "number": 5402,
+    "title": "(0.105.5) Add unit test for zero momentum flux at immersed peripheral nodes"
+  }
+]

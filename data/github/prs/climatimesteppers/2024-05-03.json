@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 265,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "This PR adds a benchmark utility. Users can call it with: `CTS.benchmark_step(integrator::CTS.DistributedODEIntegrator, device::ClimaComms.AbstractDevice)`. This is CPU and GPU compatible, and the GPU path also prints output from CUDA's `@profile`, which shows information like threads, blocks, and registers used. The output looks like:\r\n\r\n```\r\n[ Info: (#)x entries have been multiplied by corresponding factors in order to compute percentages\r\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\r\n\u2502 Function            \u2502     Memory \u2502   allocs \u2502       Time \u2502       Time \u2502       Time \u2502       Time \u2502 N-samples \u2502 step! percentage \u2502\r\n\u2502                     \u2502   estimate \u2502 estimate \u2502        min \u2502        max \u2502       mean \u2502     median \u2502           \u2502                  \u2502\r\n\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\r\n\u2502 Wfact (3x)          \u2502    0 bytes \u2502        0 \u2502  43.508 ms \u2502  59.366 ms \u2502  48.653 ms \u2502  48.098 ms \u2502        10 \u2502          29.4579 \u2502\r\n\u2502 ldiv! (3x)          \u2502    0 bytes \u2502        0 \u2502  11.045 ms \u2502  12.610 ms \u2502  11.510 ms \u2502  11.518 ms \u2502        10 \u2502          7.47847 \u2502\r\n\u2502 T_imp! (3x)         \u2502    0 bytes \u2502        0 \u2502   3.913 ms \u2502   4.719 ms \u2502   4.042 ms \u2502   3.954 ms \u2502        10 \u2502          2.64903 \u2502\r\n\u2502 T_exp_T_lim! (4x)   \u2502    0 bytes \u2502        0 \u2502  50.576 ms \u2502  59.781 ms \u2502  55.508 ms \u2502  56.181 ms \u2502        10 \u2502          34.2435 \u2502\r\n\u2502 lim! (4x)           \u2502    0 bytes \u2502        0 \u2502   0.004 ns \u2502   1.168 \u03bcs \u2502 200.002 ns \u2502 164.000 ns \u2502        10 \u2502       2.70827e-9 \u2502\r\n\u2502 dss! (4x)           \u2502    0 bytes \u2502        0 \u2502   6.888 ms \u2502  12.564 ms \u2502   8.014 ms \u2502   7.538 ms \u2502        10 \u2502          4.66364 \u2502\r\n\u2502 post_explicit! (3x) \u2502  120 bytes \u2502        9 \u2502   9.724 ms \u2502  15.792 ms \u2502  12.280 ms \u2502  11.730 ms \u2502        10 \u2502          6.58398 \u2502\r\n\u2502 post_implicit! (4x) \u2502  160 bytes \u2502       12 \u2502  12.793 ms \u2502  14.665 ms \u2502  13.484 ms \u2502  13.276 ms \u2502        10 \u2502          8.66139 \u2502\r\n\u2502 step! (1x)          \u2502 106.22 KiB \u2502      211 \u2502 147.696 ms \u2502 341.617 ms \u2502 189.741 ms \u2502 169.543 ms \u2502        10 \u2502            100.0 \u2502\r\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\r\n```\r\n\r\nA good deal of this came from ClimaAtmos' benchmark script, which happened to be pretty general. I added a frequency component, via `n_calls_per_step`, so that users know immediately what the percentage breakdown is per ClimaODEFunction. cc @cmbengue \r\n\r\ngpu output coming...",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-02T18:25:22Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2024-05-03T14:06:39Z",
+    "number": 277,
+    "title": "Add benchmark utility extension"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4ODA2NDE=",
+      "is_bot": false,
+      "login": "charleskawczynski",
+      "name": "Charles Kawczynski"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-05-03T14:48:29Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-05-03T14:48:35Z",
+    "number": 279,
+    "title": "Bump patch version"
+  }
+]
