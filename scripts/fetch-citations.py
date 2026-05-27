@@ -44,6 +44,14 @@ MAILTO = os.environ.get("OPENALEX_MAILTO", "petebachant@gmail.com")
 RECENT_YEARS = 2
 PER_PAGE = 200
 
+# Canonical software-paper DOIs that aren't linked from the CliMA publications
+# page but should still be tracked. The Oceananigans JOSS paper is the
+# headline case — most of Oceananigans' citation signal is on that DOI but
+# the page only links to the newer GPU JAMES paper and the arXiv preprint.
+ADDITIONAL_DOIS = [
+    "10.21105/joss.02018",  # Ramadhan et al. 2020, Oceananigans JOSS
+]
+
 # Matches a doi.org URL and captures the DOI itself. DOIs can contain almost
 # any character; we stop at whitespace / quote / closing angle or paren so
 # we don't over-eat the surrounding HTML.
@@ -179,7 +187,16 @@ def main() -> int:
     except requests.RequestException as err:
         print(f"  ERROR scraping publications page: {err}", file=sys.stderr)
         return 1
-    print(f"  found {len(dois)} unique DOIs")
+    print(f"  found {len(dois)} unique DOIs on the publications page")
+
+    # Union in DOIs that aren't on the publications page but we still want
+    # to track (canonical software papers, mostly).
+    have = {d.lower() for d in dois}
+    for extra in ADDITIONAL_DOIS:
+        if extra.lower() not in have:
+            dois.append(extra)
+            have.add(extra.lower())
+    print(f"  total DOIs to fetch (with ADDITIONAL_DOIS): {len(dois)}")
 
     # --- Pass 1: fetch each work, build CliMA-author union ------------------
     print("Pass 1: fetching OpenAlex works + collecting CliMA author IDs...")
@@ -219,19 +236,32 @@ def main() -> int:
             print(f"  WARN: {doi} citing-works -> {err}", file=sys.stderr)
             summary["citing_works_status"] = f"error: {err}"
             summary["cited_by_count_external"] = None
+            summary["citing_works"] = []
         else:
             ext_n = 0
             ext_by_q: dict[str, int] = {}
+            citing_records: list[dict] = []
             for cw in citing:
-                if author_ids(cw) & clima_authors:
+                is_internal = bool(author_ids(cw) & clima_authors)
+                q = quarter_of(cw)
+                # Slim per-citing-work record so the analyze notebook can
+                # build event-level CSVs without re-querying OpenAlex.
+                citing_records.append({
+                    "openalex_id": cw.get("id"),
+                    "publication_date": cw.get("publication_date"),
+                    "publication_year": cw.get("publication_year"),
+                    "quarter": q,
+                    "is_internal": is_internal,
+                })
+                if is_internal:
                     continue
                 ext_n += 1
-                q = quarter_of(cw)
                 if q:
                     ext_by_q[q] = ext_by_q.get(q, 0) + 1
             summary["citing_works_fetched"] = len(citing)
             summary["cited_by_count_external"] = ext_n
             summary["external_by_quarter"] = dict(sorted(ext_by_q.items()))
+            summary["citing_works"] = citing_records
 
         ext_disp = summary.get("cited_by_count_external")
         print(

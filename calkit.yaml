@@ -148,6 +148,8 @@ pipeline:
       inputs:
         - runs/amip
         - buildkite
+        - data/github
+        - data/openalex
       outputs:
         - path: results/amip.csv
           storage: git
@@ -157,12 +159,25 @@ pipeline:
           storage: git
         - path: figures/amip-speedup.json
           storage: git
+        - path: figures/external-engagement.json
+          storage: git
+        - path: results/external-citations.csv
+          storage: git
+        - path: results/github-engagement.csv
+          storage: git
 
 figures:
   - path: figures/amip-speedup.json
     title: Flagship AMIP speedup
     description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over time
       normalized by the start of performance tracking.
+    stage: analyze
+  - path: figures/external-engagement.json
+    title: External engagement
+    description: Three-panel summary — total external citations / quarter,
+      software-paper citations stacked by CliMA package / quarter, and
+      GitHub engagement (stars + forks + issues + merged PRs from non-CliMA,
+      non-bot logins) stacked by repo / quarter.
     stage: analyze
 
 notebooks:
@@ -189,6 +204,19 @@ datasets:
     title: Flagship AMIP benchmark results
     description: Results from the flagship AMIP benchmark (16 horiz. elem.)
       over time.
+    stage: analyze
+  - path: results/external-citations.csv
+    title: External citation events
+    description: One row per external citing work (OpenAlex), tagged with
+      the cited CliMA paper's DOI + software package (if any) and the citing
+      work's quarter. Internal self-citations (any author shared with any
+      scraped CliMA paper) are excluded.
+    stage: analyze
+  - path: results/github-engagement.csv
+    title: GitHub engagement events
+    description: One row per external star / fork / opened issue / merged
+      PR (login is non-CliMA-org, non-bot), with repo, event type, login,
+      timestamp, and quarter.
     stage: analyze
   - path: buildkite
     title: Buildkite flagship AMIP jobs

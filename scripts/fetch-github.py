@@ -427,6 +427,120 @@ def fetch_projecttoml_commits() -> None:
 
 # --- static-ish -------------------------------------------------------------
 
+def fetch_stargazers() -> None:
+    """Per-repo stargazer events (append-only JSONL, deduped by login).
+
+    GitHub returns starred_at when we send the ``vnd.github.v3.star+json``
+    Accept header. We paginate the whole list each run and dedup against
+    what we already have; stars whose ``starred_at`` is in the current
+    UTC day are excluded so we only ever commit complete days.
+
+    Worth noting: a user who unstars and re-stars will keep their original
+    entry (we dedup by login). For trend analysis at quarterly granularity
+    this is fine.
+    """
+    print("→ Stargazers (append-only)")
+    base_dir = DATA_ROOT / "stargazers"
+    for repo in STATS_REPOS:
+        repo_lc = repo.lower()
+        out_path = base_dir / f"{repo_lc}.jsonl"
+        existing = read_jsonl(out_path)
+        seen = {e.get("login") for e in existing}
+        try:
+            out = gh(
+                "api", "--paginate",
+                "-H", "Accept: application/vnd.github.v3.star+json",
+                f"repos/CliMA/{repo}.jl/stargazers?per_page=100",
+            ).strip()
+        except subprocess.CalledProcessError as err:
+            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
+            print(f"  WARN: stargazers {repo}: {tail[0]}", file=sys.stderr)
+            continue
+        pages: list = []
+        if out:
+            decoder = json.JSONDecoder()
+            idx = 0
+            while idx < len(out):
+                obj, end = decoder.raw_decode(out, idx)
+                if isinstance(obj, list):
+                    pages.extend(obj)
+                else:
+                    pages.append(obj)
+                idx = end
+                while idx < len(out) and out[idx].isspace():
+                    idx += 1
+        new = 0
+        for s in pages:
+            user = s.get("user") or {}
+            login = user.get("login")
+            if not login or login in seen:
+                continue
+            starred = s.get("starred_at") or ""
+            if starred and starred >= TODAY_UTC_START_ISO:
+                continue
+            existing.append({
+                "repo": f"{repo}.jl",
+                "login": login,
+                "user_type": user.get("type"),
+                "starred_at": starred,
+            })
+            seen.add(login)
+            new += 1
+        if new:
+            existing.sort(key=lambda e: e.get("starred_at") or "")
+            write_jsonl(out_path, existing)
+        print(f"  stargazers {repo}: +{new} (total {len(existing)})")
+
+
+def fetch_clima_members() -> None:
+    """Snapshot the CliMA GitHub org's members for the internal-user filter.
+
+    Tries the authenticated ``orgs/CliMA/members`` endpoint first — when the
+    caller's token belongs to a CliMA member this returns *all* members
+    including private ones. In CI the workflow's ``GITHUB_TOKEN`` isn't a
+    CliMA member, so that endpoint 404s and we fall back to
+    ``orgs/CliMA/public_members``.
+
+    To avoid forgetting private members we already discovered: we union the
+    fetched set with whatever's already in ``clima_members.json``. A past
+    local run by a real member can therefore enrich the file for all later
+    CI runs.
+    """
+    print("→ CliMA org members")
+    out_path = DATA_ROOT / "clima_members.json"
+    existing: set[str] = set()
+    if out_path.exists():
+        try:
+            existing.update(json.loads(out_path.read_text()).get("members", []))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    fetched: set[str] = set()
+    for endpoint in ("orgs/CliMA/members", "orgs/CliMA/public_members"):
+        try:
+            out = gh(
+                "api", "--paginate",
+                f"{endpoint}?per_page=100",
+                "--jq", ".[].login",
+            ).strip()
+        except subprocess.CalledProcessError as err:
+            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
+            print(f"  WARN: {endpoint}: {tail[0]}", file=sys.stderr)
+            continue
+        fetched.update(ln.strip() for ln in out.splitlines() if ln.strip())
+        if fetched:
+            print(f"  fetched {len(fetched)} from {endpoint}")
+            break
+
+    new = fetched - existing
+    merged = sorted(existing | fetched)
+    out_path.write_text(json.dumps({"members": merged}, indent=2))
+    print(
+        f"  wrote {len(merged)} members "
+        f"({len(new)} new this run, {len(existing)} preserved)"
+    )
+
+
 def fetch_repo_creation_dates() -> None:
     """Single JSONL refreshed each run; the data is effectively static
     once a repo exists but we refresh anyway in case repos are added."""
@@ -467,8 +581,10 @@ def main() -> int:
     fetch_repo_stats()
     fetch_forks()
     fetch_releases()
+    fetch_stargazers()
     fetch_projecttoml_commits()
     fetch_repo_creation_dates()
+    fetch_clima_members()
     write_marker(completed_marker, LAST_DAY)
     print("✓ Done.")
     return 0
