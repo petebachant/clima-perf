@@ -8073,7 +8073,9 @@ a.anchor-link {
 <span class="n">members_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"clima_members.json"</span>
 <span class="n">clima_members</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CliMA"</span><span class="p">}</span>
 <span class="k">if</span> <span class="n">members_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="n">clima_members</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">members_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"members"</span><span class="p">,</span> <span class="p">[]))</span>
+    <span class="n">clima_members</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">members_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"members"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="p">)</span>
 
 
 <span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
@@ -8178,7 +8180,10 @@ a.anchor-link {
         <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
             <span class="k">continue</span>
         <span class="n">fk</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner_type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Organization"</span> <span class="ow">and</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CliMA"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner_type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Organization"</span>
+            <span class="ow">and</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CliMA"</span>
+        <span class="p">):</span>
             <span class="k">continue</span>
         <span class="n">login</span> <span class="o">=</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">):</span>
@@ -8213,7 +8218,9 @@ a.anchor-link {
 
 <span class="c1"># ----- Aggregations driving the figure (built from the event tables) --</span>
 <span class="n">all_by_q</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">cit_events_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cit_events_df</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="n">cit_events_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cit_events_df</span><span class="o">.</span><span class="n">empty</span>
+    <span class="k">else</span> <span class="p">{}</span>
 <span class="p">)</span>
 <span class="n">sw_pivot</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">cit_events_df</span><span class="p">[</span><span class="n">cit_events_df</span><span class="p">[</span><span class="s2">"cited_package"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">]</span>
@@ -8238,9 +8245,13 @@ a.anchor-link {
     <span class="n">eng_pivot</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="n">sw_totals</span> <span class="o">=</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="n">sw_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">sw_order</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="p">]</span>
 <span class="n">eng_totals</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="n">eng_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">eng_order</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="p">]</span>
 
 <span class="c1"># Unified color map (Oceananigans gets blue if it ranks first across the</span>
 <span class="c1"># combined software-citations + engagement totals).</span>
@@ -8270,9 +8281,9 @@ a.anchor-link {
     <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.06</span><span class="p">,</span>
     <span class="n">subplot_titles</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">"All external citations / quarter"</span><span class="p">,</span>
-        <span class="s2">"Software-paper citations / quarter"</span><span class="p">,</span>
-        <span class="s2">"GitHub engagement / quarter"</span><span class="p">,</span>
+        <span class="s2">"All paper citations"</span><span class="p">,</span>
+        <span class="s2">"Software paper citations"</span><span class="p">,</span>
+        <span class="s2">"GitHub stars/forks/issues/PRs"</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.30</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">],</span>
 <span class="p">)</span>
@@ -8321,9 +8332,9 @@ a.anchor-link {
     <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
     <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">tracegroupgap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
 <span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Events"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Events/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># ----- Persist figure + event-level CSVs ------------------------------</span>
@@ -8331,12 +8342,12 @@ a.anchor-link {
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/external-engagement.json"</span><span class="p">)</span>
 
-<span class="n">cit_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"cited_doi"</span><span class="p">,</span> <span class="s2">"citing_openalex_id"</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-    <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/external-citations.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">)</span>
-<span class="n">eng_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"event_type"</span><span class="p">,</span> <span class="s2">"event_at"</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-    <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/github-engagement.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">)</span>
+<span class="n">cit_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"cited_doi"</span><span class="p">,</span> <span class="s2">"citing_openalex_id"</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/external-citations.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">eng_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
+    <span class="p">[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"event_type"</span><span class="p">,</span> <span class="s2">"event_at"</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/github-engagement.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span>
     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cit_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> citation events, "</span>
