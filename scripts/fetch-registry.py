@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -32,11 +32,23 @@ REGISTRY_URL = "https://github.com/JuliaRegistries/General"
 # Packages we track as "the CliMA stack" in the registry. A registry entry
 # whose Deps.toml lists any of these is a dependent.
 CLIMA_PKGS = {
-    "ClimaAtmos", "ClimaCore", "ClimaParams", "Thermodynamics",
-    "CloudMicrophysics", "ClimaCoupler", "ClimaLand", "ClimaOcean",
-    "ClimaUtilities", "ClimaDiagnostics", "ClimaTimeSteppers",
-    "ClimaComms", "SurfaceFluxes", "Insolation", "RRTMGP",
-    "ClimaAnalysis", "ClimaCalibrate",
+    "ClimaAtmos",
+    "ClimaCore",
+    "ClimaParams",
+    "Thermodynamics",
+    "CloudMicrophysics",
+    "ClimaCoupler",
+    "ClimaLand",
+    "ClimaOcean",
+    "ClimaUtilities",
+    "ClimaDiagnostics",
+    "ClimaTimeSteppers",
+    "ClimaComms",
+    "SurfaceFluxes",
+    "Insolation",
+    "RRTMGP",
+    "ClimaAnalysis",
+    "ClimaCalibrate",
 }
 
 
@@ -75,11 +87,13 @@ def parse_registry(registry_path: Path) -> dict:
 
         for clima_pkg in CLIMA_PKGS:
             if clima_pkg in deps_in_file:
-                dependents[clima_pkg].append({
-                    "name": pkg_name,
-                    "repo": repo,
-                    "is_clima": is_clima,
-                })
+                dependents[clima_pkg].append(
+                    {
+                        "name": pkg_name,
+                        "repo": repo,
+                        "is_clima": is_clima,
+                    }
+                )
 
     return {
         "dependents": dependents,
@@ -112,7 +126,9 @@ def main() -> int:
     summary["fetched_at"] = datetime.now(timezone.utc).isoformat()
     out_path.write_text(json.dumps(summary, indent=2, sort_keys=True))
 
-    print(f"Total packages in registry: {summary['total_packages_in_registry']}")
+    print(
+        f"Total packages in registry: {summary['total_packages_in_registry']}"
+    )
     for pkg in sorted(CLIMA_PKGS):
         deps = summary["dependents"][pkg]
         external = sum(1 for d in deps if not d["is_clima"])
