@@ -8001,14 +8001,14 @@ a.anchor-link {
 <span class="c1"># page has no DOI at all) implicitly fall outside the software-stacked panel</span>
 <span class="c1"># but are still counted in the "all citations" total.</span>
 <span class="n">PACKAGE_BY_DOI</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"10.21105/joss.02018"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>             <span class="c1"># Ramadhan et al. 2020, JOSS</span>
-    <span class="s2">"10.1029/2024ms004465"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>            <span class="c1"># Silvestri et al. 2024, JAMES</span>
-    <span class="s2">"10.48550/arxiv.2502.14148"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>       <span class="c1"># Wagner et al. 2025, arXiv preprint</span>
+    <span class="s2">"10.21105/joss.02018"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Ramadhan et al. 2020, JOSS</span>
+    <span class="s2">"10.1029/2024ms004465"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Silvestri et al. 2024, JAMES</span>
+    <span class="s2">"10.48550/arxiv.2502.14148"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Wagner et al. 2025, arXiv preprint</span>
     <span class="s2">"10.21105/joss.04869"</span><span class="p">:</span> <span class="s2">"EnsembleKalmanProcesses"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2022, JOSS</span>
-    <span class="s2">"10.21105/joss.06372"</span><span class="p">:</span> <span class="s2">"CalibrateEmulateSample"</span><span class="p">,</span>   <span class="c1"># Dunbar et al. 2024, JOSS</span>
-    <span class="s2">"10.1029/2025ms005118"</span><span class="p">:</span> <span class="s2">"ClimaLand"</span><span class="p">,</span>               <span class="c1"># Deck et al. 2026, JAMES</span>
-    <span class="s2">"10.1029/2025ms005014"</span><span class="p">:</span> <span class="s2">"ClimaCore"</span><span class="p">,</span>               <span class="c1"># atmosphere dynamical core</span>
-    <span class="s2">"10.5194/gmd-15-6259-2022"</span><span class="p">:</span> <span class="s2">"ClimaAtmos"</span><span class="p">,</span>          <span class="c1"># ClimateMachine v0.2.0 lineage</span>
+    <span class="s2">"10.21105/joss.06372"</span><span class="p">:</span> <span class="s2">"CalibrateEmulateSample"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2024, JOSS</span>
+    <span class="s2">"10.1029/2025ms005118"</span><span class="p">:</span> <span class="s2">"ClimaLand"</span><span class="p">,</span>  <span class="c1"># Deck et al. 2026, JAMES</span>
+    <span class="s2">"10.1029/2025ms005014"</span><span class="p">:</span> <span class="s2">"ClimaCore"</span><span class="p">,</span>  <span class="c1"># atmosphere dynamical core</span>
+    <span class="s2">"10.5194/gmd-15-6259-2022"</span><span class="p">:</span> <span class="s2">"ClimaAtmos"</span><span class="p">,</span>  <span class="c1"># ClimateMachine v0.2.0 lineage</span>
 <span class="p">}</span>
 
 
@@ -8023,10 +8023,14 @@ a.anchor-link {
 <span class="c1"># the works citing them, deduped). clima-pubs is the slim extras keyed by</span>
 <span class="c1"># openalex_id — join on openalex_id to recover full CliMA-pub records.</span>
 <span class="n">openalex_dir</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"openalex"</span>
-<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"resolved-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span>
+    <span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"resolved-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 <span class="n">clima_extras_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"clima-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">citation_edges_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"citations.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">clima_pubs_df</span> <span class="o">=</span> <span class="n">clima_extras_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">resolved_pubs_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">clima_pubs_df</span> <span class="o">=</span> <span class="n">clima_extras_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+    <span class="n">resolved_pubs_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span>
+<span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span>
     <span class="sa">f</span><span class="s2">"resolved_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | clima_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clima_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | "</span>
     <span class="sa">f</span><span class="s2">"citation_edges=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">citation_edges_df</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
@@ -8069,6 +8073,26 @@ a.anchor-link {
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">-Q</span><span class="si">{</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">date_to_quarter</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Accepts str ("YYYY-MM-DD"), pandas Timestamp, or NaN. pd.read_json</span>
+    <span class="c1"># autoconverts ISO-date strings to Timestamps, so we coerce defensively.</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)[:</span><span class="mi">10</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">-Q</span><span class="si">{</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span>
+
+
 <span class="c1"># Anything before 2018-Q1 is noise from old papers that predate the CliMA</span>
 <span class="c1"># packaging effort; the time-series axis is cropped to that floor.</span>
 <span class="n">MIN_QUARTER</span> <span class="o">=</span> <span class="s2">"2018-Q1"</span>
@@ -8084,8 +8108,7 @@ a.anchor-link {
 
 
 <span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
-<span class="c1"># are clearly automated — usually Julia ecosystem bots. Extend this set if</span>
-<span class="c1"># new ones appear in the engagement CSV.</span>
+<span class="c1"># are clearly automated — usually Julia ecosystem bots.</span>
 <span class="n">EXTRA_BOTS</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JuliaTagBot"</span><span class="p">,</span> <span class="s2">"attobot"</span><span class="p">}</span>
 
 
@@ -8112,7 +8135,7 @@ a.anchor-link {
     <span class="k">return</span> <span class="n">camel_by_lc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
 
-<span class="c1"># ----- Citation event table (built from the normalized OpenAlex tables) -</span>
+<span class="c1"># ----- Citation event table -------------------------------------------</span>
 <span class="c1"># "Internal" = the citing pub shares any author OpenAlex ID with any CliMA</span>
 <span class="c1"># pub. Computed downstream so the filter can be tuned without refetching.</span>
 <span class="n">clima_author_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -8124,11 +8147,6 @@ a.anchor-link {
         <span class="k">lambda</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ids</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">&amp;</span> <span class="n">clima_author_ids</span><span class="p">)</span>
     <span class="p">)</span>
 <span class="p">)</span>
-
-<span class="c1"># Join edges -&gt; citing-pub metadata (from resolved-pubs) -&gt; cited-pub</span>
-<span class="c1"># DOI/package. resolved-pubs is the single source of truth for shared</span>
-<span class="c1"># per-work fields; clima-pubs supplies the CliMA-specific extras (here just</span>
-<span class="c1"># the cited-side DOI).</span>
 <span class="n">cited_lookup</span> <span class="o">=</span> <span class="n">clima_pubs_df</span><span class="p">[[</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">]]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
     <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"openalex_id"</span><span class="p">:</span> <span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">:</span> <span class="s2">"cited_doi"</span><span class="p">}</span>
 <span class="p">)</span>
@@ -8139,11 +8157,9 @@ a.anchor-link {
     <span class="n">on</span><span class="o">=</span><span class="s2">"citing_openalex_id"</span><span class="p">,</span>
     <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
 <span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">cited_lookup</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-
 <span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="o">~</span><span class="n">joined</span><span class="p">[</span><span class="s2">"is_internal"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="kc">False</span><span class="p">)]</span>
 <span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_QUARTER</span><span class="p">)]</span>
 <span class="n">joined</span><span class="p">[</span><span class="s2">"cited_package"</span><span class="p">]</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="s2">"cited_doi"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">package_for_doi</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
-
 <span class="n">cit_events_df</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span>
     <span class="p">[</span>
         <span class="s2">"quarter"</span><span class="p">,</span>
@@ -8181,7 +8197,6 @@ a.anchor-link {
     <span class="p">)</span>
 
 
-<span class="c1"># Stars</span>
 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"stargazers"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.jsonl"</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
@@ -8193,7 +8208,6 @@ a.anchor-link {
         <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">((</span><span class="n">ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
         <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"star"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"starred_at"</span><span class="p">))</span>
 
-<span class="c1"># Forks</span>
 <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"forks"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.jsonl"</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
@@ -8210,7 +8224,6 @@ a.anchor-link {
         <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">((</span><span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
         <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"fork"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_created"</span><span class="p">))</span>
 
-<span class="c1"># Issues</span>
 <span class="k">for</span> <span class="n">repo_dir</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"issues"</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">repo_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
@@ -8221,7 +8234,6 @@ a.anchor-link {
                 <span class="k">continue</span>
             <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"issue"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">iss</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"createdAt"</span><span class="p">))</span>
 
-<span class="c1"># Merged PRs</span>
 <span class="n">prs_root</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"prs"</span>
 <span class="k">for</span> <span class="n">repo_dir</span> <span class="ow">in</span> <span class="n">prs_root</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">repo_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -8234,6 +8246,28 @@ a.anchor-link {
             <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"pr_merged"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mergedAt"</span><span class="p">))</span>
 
 <span class="n">eng_events_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">eng_event_rows</span><span class="p">)</span>
+
+<span class="c1"># ----- New external Julia-registry dependents -------------------------</span>
+<span class="c1"># Read the event-log table written by fetch-registry. Group by the quarter</span>
+<span class="c1"># of ``first_seen_at`` to get "new external dependents per quarter, by</span>
+<span class="c1"># CliMA package". External = the dependent's repo is not in the CliMA org.</span>
+<span class="n">deps_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"julia-registry"</span> <span class="o">/</span> <span class="s2">"dependents.jsonl"</span>
+<span class="n">deps_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">deps_path</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">deps_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+    <span class="n">deps_df</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span><span class="o">~</span><span class="n">deps_df</span><span class="p">[</span><span class="s2">"is_clima"</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span><span class="s2">"first_seen_at"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">date_to_quarter</span><span class="p">)</span>
+    <span class="n">deps_df</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span>
+        <span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_QUARTER</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="n">deps_pivot</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">deps_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"clima_package"</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span>
+    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+<span class="p">)</span>
 
 <span class="c1"># ----- Aggregations driving the figure --------------------------------</span>
 <span class="n">all_by_q</span> <span class="o">=</span> <span class="p">(</span>
@@ -8256,33 +8290,40 @@ a.anchor-link {
 <span class="p">)</span>
 
 <span class="n">all_quarters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-    <span class="nb">set</span><span class="p">(</span><span class="n">all_by_q</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">sw_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">eng_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="nb">set</span><span class="p">(</span><span class="n">all_by_q</span><span class="p">)</span>
+    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">sw_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">eng_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">deps_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
     <span class="n">sw_pivot</span> <span class="o">=</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
     <span class="n">eng_pivot</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+    <span class="n">deps_pivot</span> <span class="o">=</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="n">sw_totals</span> <span class="o">=</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">sw_order</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="p">]</span>
-<span class="n">eng_totals</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="n">eng_totals</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">eng_order</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <span class="p">]</span>
+<span class="n">deps_totals</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">deps_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">deps_order</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">deps_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="p">]</span>
 
-<span class="c1"># Unified color map so Oceananigans (etc.) keeps the same color across the</span>
-<span class="c1"># software-citations and GitHub-engagement panels.</span>
+<span class="c1"># Unified color map: same package name gets the same color across the</span>
+<span class="c1"># software-citations, GitHub-engagement, and registry-dependents panels.</span>
 <span class="n">combined_totals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">combined_totals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">combined_totals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="p">(</span><span class="n">sw_totals</span><span class="p">,</span> <span class="n">eng_totals</span><span class="p">,</span> <span class="n">deps_totals</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">combined_totals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
 <span class="n">unified_order</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined_totals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="n">combined_totals</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
 
 <span class="n">palette</span> <span class="o">=</span> <span class="p">(</span>
@@ -8297,16 +8338,17 @@ a.anchor-link {
 
 <span class="c1"># ----- Figure ---------------------------------------------------------</span>
 <span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
-    <span class="n">rows</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">rows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
     <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.06</span><span class="p">,</span>
+    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
     <span class="n">subplot_titles</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"All paper citations"</span><span class="p">,</span>
         <span class="s2">"Software paper citations"</span><span class="p">,</span>
         <span class="s2">"GitHub stars/forks/issues/PRs"</span><span class="p">,</span>
+        <span class="s2">"New Julia registry dependents"</span><span class="p">,</span>
     <span class="p">),</span>
-    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.30</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">],</span>
+    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">],</span>
 <span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
@@ -8346,17 +8388,31 @@ a.anchor-link {
     <span class="p">)</span>
     <span class="n">legend_shown</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
 
+<span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">deps_order</span><span class="p">:</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">all_quarters</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">deps_pivot</span><span class="p">[</span><span class="n">pkg</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="n">marker_color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">pkg</span><span class="p">],</span>
+        <span class="n">legendgroup</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
+        <span class="n">showlegend</span><span class="o">=</span><span class="n">pkg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">legend_shown</span><span class="p">,</span>
+        <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">legend_shown</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
+
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
     <span class="n">barmode</span><span class="o">=</span><span class="s2">"stack"</span><span class="p">,</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">"External engagement"</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">720</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
     <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
     <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">tracegroupgap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
 <span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Events/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"New deps/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># ----- Persist figure + event-level CSVs ------------------------------</span>
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -8369,10 +8425,23 @@ a.anchor-link {
 <span class="n">eng_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
     <span class="p">[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"event_type"</span><span class="p">,</span> <span class="s2">"event_at"</span><span class="p">]</span>
 <span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/github-engagement.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+    <span class="n">deps_df</span><span class="p">[</span>
+        <span class="p">[</span>
+            <span class="s2">"quarter"</span><span class="p">,</span>
+            <span class="s2">"clima_package"</span><span class="p">,</span>
+            <span class="s2">"dependent_name"</span><span class="p">,</span>
+            <span class="s2">"dependent_repo"</span><span class="p">,</span>
+            <span class="s2">"first_seen_at"</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"clima_package"</span><span class="p">,</span> <span class="s2">"dependent_name"</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+        <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/new-registry-dependents.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cit_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> citation events, "</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eng_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> engagement events"</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cit_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> citation events | "</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eng_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> engagement events | "</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">deps_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> new external registry dependents"</span>
 <span class="p">)</span>
 <span class="n">fig</span>
 </pre></div>
@@ -8387,7 +8456,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>2312 citation events, 3908 engagement events
+<pre>2312 citation events | 3908 engagement events | 27 new external registry dependents
 </pre>
 </div>
 </div>
