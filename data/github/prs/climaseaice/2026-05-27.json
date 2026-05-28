@@ -1,0 +1,71 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "Closes #136 \r\n\r\n## Purpose \r\n\r\n--> Ensure inactive sea-ice cells have zero velocity instead of free-drift velocity, so velocities outside active ice do not affect tracer advection, CFL diagnostics, or boundary/halo behavior. \r\n\r\nThis PR splits the sea ice momentum into three buckets: \r\n\r\n1) Active sea ice, where behaviour is unchanged; \r\n2) Marginal sea ice, where free drift velocity is used based on a concentration threshold of `minimum_concentration = 1e-3` and `minimum_mass = 1.0`.\r\n3) 0 sea ice concentration (within machine precision), where zero velocity is used. \r\n\r\n## To-do\r\n\r\n--> Add or update focused tests for inactive-cell velocity behavior.\r\n\r\n## Content\r\n--> Updated explicit momentum stepping to set u and v to zero when ice mass or concentration are below active thresholds.\r\n--> Updated split-explicit momentum stepping with the same inactive-cell zeroing behavior.\r\n--> Updated momentum equation documentation to state that below-threshold velocities are set to zero.\r\n--> Verified with a small smoke test that both ExplicitSolver and SplitExplicitSolver keep u/v at zero with nonzero configured free drift and zero ice.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOJN11r88AAAABCNFtww",
+        "number": 136,
+        "repository": {
+          "id": "R_kgDOJN11rw",
+          "name": "ClimaSeaIce.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaSeaIce.jl/issues/136"
+      }
+    ],
+    "createdAt": "2026-05-14T03:33:12Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Why doesn't my code work!",
+        "id": "LA_kwDOJN11r88AAAABPEs0Nw",
+        "name": "\ud83d\udd77\ufe0f bug"
+      },
+      {
+        "color": "CCCFF6",
+        "description": "When you've reached the frontier of knowledge",
+        "id": "LA_kwDOJN11r88AAAABziDhkQ",
+        "name": "\ud83e\uddca science and physics"
+      },
+      {
+        "color": "8DA8DF",
+        "description": "",
+        "id": "LA_kwDOJN11r88AAAACA_cuQA",
+        "name": "\ud83e\uddee numerics"
+      }
+    ],
+    "mergedAt": "2026-05-27T07:06:00Z",
+    "number": 135,
+    "title": "Zero inactive sea ice velocities"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-23T00:26:06Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-05-27T22:59:11Z",
+    "number": 143,
+    "title": "Update citation for ClimaSeaIce version to v0.5.0"
+  }
+]

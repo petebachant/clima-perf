@@ -1,0 +1,69 @@
+[
+  {
+    "additions": 1117,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR implements a new advection configuration, an AdaptiveImplicitVerticalAdvection \r\n<s>that wraps around an advection scheme (`scheme = AdaptiveImplicitVerticalAdvection(explicit_scheme = WENO(), cfl = 0.7)` for example)</s>\r\nconstructed by adding a `time_discretization` kwarg to the advection schemes (by default `ExplicitTimeDiscretization()`) enabled (for example) by passing `AdaptiveImplicitTimeDiscretization(; maximum_explicit_cfl)`\r\n```julia\r\nWENO(; time_discretization = AdaptiveImplicitTimeDiscretization(cfl = 0.5))\r\n``` \r\n to treat implicitly part of vertical advection.\r\n\r\nIn particular it split the advection in an explicit part that advects with the `scheme` using a vertical velocity `we = w * max(cfl / scheme.cfl)` and an implicit part that advects with an upwind first order scheme using a velocity of `wi = w - we`.\r\n\r\nWe reuse the implicit tridiagonal solver to advect implicitly. A caveat (for the moment), is that the vertical velocity itself does not participate in this split. An example of a comparison between a reference, a fully explicit scheme and AIVA can be found in the validation/implicit_vertical_advection folder. It advects a gaussian, these are the results:\r\n```julia\r\njulia> include(\"validation/implicit_vertical_advection/comparison_implicit_explicit_advection.jl\"); fig\r\n[ Info: \u0394z_min = 0.00023788883447073417, w\u2080 = 1.0\r\n[ Info: AIVA \u0394t = 0.0023788883447073417 (CFL \u2248 10.0), 168 steps\r\n[ Info: Ref  \u0394\u03c4 = 0.00011894441723536708 (CFL \u2248 0.5), 3363 steps\r\n\r\n=== AIVA stability + correctness validation ===\r\ngrid: Nz=128, \u0394z_min=2.379e-04, \u0394z_max=2.355e-02\r\nAIVA \u0394t = 2.3789e-03 (CFL \u2248 10.00), reference \u0394\u03c4 = 1.1894e-04 (CFL \u2248 0.50)\r\nFinal time = 3.9965e-01 (168 AIVA steps = 3360 reference steps)\r\n\r\n--- Stability ---\r\nExplicit UpwindBiased(order=5) at AIVA \u0394t: BLEW UP at step 12 (t = 2.855e-02)\r\nAIVA at large \u0394t: completed 168 steps, max|c| = 9.965e-01 (initial 9.998e-01)\r\n\r\n--- Correctness (vs analytical translation) ---\r\nAnalytical: max|c| = 9.988e-01, mass = 1.4122e-01, centroid = -0.1510 (target -0.1503)\r\nReference:  max|c| = 9.966e-01, mass = 1.4124e-01, centroid = -0.1510, L\u00b2-rel = 2.008e-03, L\u221e = 2.209e-03\r\nAIVA:       max|c| = 9.965e-01, mass = 1.5073e-01, centroid = -0.1447, L\u00b2-rel = 9.845e-02, L\u221e = 1.267e-01\r\nAIVA vs reference: L\u00b2 = 3.104e-02\r\n\r\n--- Mass conservation (\u222bc dz) ---\r\nInitial:        AIVA = 1.418014e-01, reference = 1.418014e-01\r\nFinal:          AIVA = 1.507308e-01, reference = 1.412434e-01\r\nDrift (final/initial \u2212 1): AIVA = +6.297e-02, reference = -3.935e-03\r\nMin/max during AIVA run: 1.418014e-01 / 1.507308e-01\r\n```\r\n\r\nand the figure it produces:\r\n<img width=\"693\" height=\"778\" alt=\"image\" src=\"https://github.com/user-attachments/assets/deab9a0e-af92-43b0-9565-e2f965db3d5e\" />\r\n",
+    "changedFiles": 52,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-18T20:15:31Z",
+    "deletions": 273,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-05-27T13:56:16Z",
+    "number": 5604,
+    "title": "Adaptive implicit vertical advection"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "Currently, `restore_prognostic_state!()` errors if the `OutputWriter` schedule is changed from a `TimeInterval` to an `IterationInterval`. This PR addresses this incompatibility. ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-27T02:00:46Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-05-27T18:27:29Z",
+    "number": 5629,
+    "title": "Allow changing schedule from `TimeInterval` --> `IterationInterval` on pickup"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Cause of breaking changes made since 0.108 (`time_discretization`)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-27T17:44:48Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-27T20:35:49Z",
+    "number": 5632,
+    "title": "Bump version from 0.108.1 to 0.109.0"
+  }
+]

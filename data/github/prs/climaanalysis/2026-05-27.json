@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 586,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaAnalysis.jl/issues/279\r\n\r\nThis PR implements a subset of the split-apply-combine pattern which are supporting reductions, single group split, and seasonal splits. This allows the users to be more expressive with the kind of reductions that they can do. The implementation of the split-apply-combine pattern also keep the dimension that is reduced over which can be helpful for calibration (e.g. certain calibration functionality such as `ObservationRecipe` requires a time dimension).\r\n\r\nHere's a list of concerns that I have for this PR:\r\n\r\n1. I wasn't sure if this should be in a module or not. I decided against it since putting the functionality in a module isn't a breaking change as long as I export the fucntion.\r\n2. I couldn't get the docs for the struct behaving as a function working properly. I think the example is sufficient.\r\n3. There is no support for reductions that require knowledge of the dimension values. This can be done in a later PR if the need arises and can be implemented as another `AbstractApplyOperation`.\r\n4. Error handling happens at materialization instead of at the construction of the `SplitApplyVar`. This can be changed later without it being a breaking change.\r\n5. The element of the new dimension is always the first element of each group. I don't think there need to be support for anything else, since I can't think of another use case for this.\r\n6. The attributes and dimension attributes are not updated. I wasn't too sure about this.\r\n\r\nIn the future, for the split operations, there would be support for arbitrary splits that the user can supply. Additionally, the apply operations can also include transformations (which keep the size of the array the same) and filter (requires adding a new dimension). An example of a transformation is doing a z-score transformation each group (e.g. seasons) and an example of a filter is getting the top k elements of each group. Both use cases are not needed right now, so they are not included in this PR.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc633gwx",
+        "number": 279,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/279"
+      }
+    ],
+    "createdAt": "2026-05-15T00:38:27Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-05-27T22:13:54Z",
+    "number": 396,
+    "title": "Implement subset of split-apply-combine pattern"
+  }
+]
