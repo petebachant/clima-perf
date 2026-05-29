@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 3561,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- As with https://github.com/CliMA/EnsembleKalmanProcesses.jl/issues/561 , This will implement and apply some initial AI tools\r\n- Stem for skills copied from https://github.com/CliMA/EnsembleKalmanProcesses.jl/pull/562\r\n\r\n## Content\r\n- Create Claude `settings.json` - it encourages users to use skills and subagents. It prevents Claude using non-read-type git commands.\r\n- Build some skills\r\n  - build the following skills (using skill-creator from anthropic) from the wishlist:\r\n    - `base-show` adds show and summary methods to structs\r\n    - `docstrings` manages the docstring formatting and manages `docs/src/API`\r\n    - `error-message-manager` manages the error messaging format, to ensure actionable, context-laden messages\r\n- I then used these skills on the repository:\r\n  - `base-show` was used to create show and summary methods for all structs. Includes both a compact and full show-type method (e.g. so that in arrays the compact 1-line show() method is used). unit tests are also written for this.\r\n  - `docstrings` methods was used to overhaul the docstrings.\r\n  -  `error-message-manager` was used to remove `@assert` and update all error messages, it also adds `test_throw` error messages tested in the unit tests. Any duplicate errors, or those longer `>3 line` message is now put into a helper function `_throw_xyz` that are listed at the bottom of files. These have tests\r\n  - The skills have a request to self-improve after different applications.\r\n\r\n## Examples\r\n\r\n### base-show\r\nNeat base.show methods with some useful information and a compact 1-liner for vectors\r\n```julia\r\njulia> emulator\r\nEmulator\r\n  machine_learning_tool : GaussianProcess\r\n  input_dim             : 8\r\n  output_dim            : 49\r\n  n_train               : 120 samples\r\n  encoder (input)      : 8 \u2192 8  Decorrelator\r\n  encoder (output)     : 49 \u2192 47  Decorrelator\r\n\r\njulia> [emulator, emulator]\r\n2-element Vector{Emulator{Float64, Vector{Any}}}:\r\n Emulator (GaussianProcess, 8\u219249)\r\n Emulator (GaussianProcess, 8\u219249)\r\n\r\njulia> mcmc\r\nMCMCWrapper\r\n  prior_dim        : 8 parameters\r\n  obs_dim          : 49\r\n  n_obs            : 1 sample\r\n  sampler          : RWMetropolisHastings\r\n  encoder (input)  : 8 \u2192 8  Decorrelator\r\n  encoder (output): 49 \u2192 47  Decorrelator\r\n\r\njulia> (mcmc,mcmc)\r\n(MCMCWrapper (8 params, RWMetropolisHastings), MCMCWrapper (8 params, RWMetropolisHastings))\r\n```\r\n\r\n### docstrings\r\nStruct and method definitions now more have structured formats. structs include recommended factories.\r\n```julia\r\n\"\"\"\r\nWrapper that stores an explicit forward map `f` in place of a trained `Emulator`.\r\nWhen `predict` is called this object evaluates `E_out \u2218 f \u2218 c(x)`, where `c` is the\r\nconstraint transformation from the prior and `E_out` is the output encoder.\r\n\r\n$(TYPEDEF)\r\n\r\n# Fields\r\n\r\n$(TYPEDFIELDS)\r\n\r\n# Constructors\r\n\r\nPrefer the [`forward_map_wrapper`](@ref) factory function for construction \u2014 it\r\nbuilds and initialises the encoder schedule automatically from training data.\r\n\r\n$(METHODLIST)\r\n\"\"\"\r\n```\r\n\r\n```julia\r\n\"\"\"\r\n$(TYPEDSIGNATURES)\r\n\r\nConstruct an `Emulator` from a machine-learning tool and paired training data, fitting\r\nthe encoder schedule and building the underlying model in encoded space.\r\n\r\n# Arguments\r\n\r\n- `machine_learning_tool`: the `MachineLearningTool` to train (e.g. `GaussianProcess`, `ScalarRandomFeatureInterface`).\r\n- `input_output_pairs`: training data as a `PairedDataContainer`.\r\n- `encoder_schedule` (keyword, default `nothing`): encoding/decoding pipeline passed to\r\n  [`create_encoder_schedule`](@ref). `nothing` builds a default schedule using\r\n  [`decorrelate_sample_cov`](@ref) for both input and output, or\r\n  `(decorrelate_sample_cov(), decorrelate_structure_mat())` when `:obs_noise_cov` is\r\n  present in `encoder_kwargs`. Pass `[]` to disable encoding.\r\n- `encoder_kwargs` (keyword, default `NamedTuple()`): forwarded to\r\n  [`initialize_and_encode_with_schedule!`](@ref).\r\n- Additional keywords are forwarded to the machine-learning tool initialiser.\r\n\"\"\"\r\n```\r\n\r\n\r\n### error-message-manager\r\n\r\nAdds context to error messages, and helpers for longer/duplicated error messages\r\n```julia\r\n# inline \r\n# in predict(...ForwardMapWrapper,...)\r\nsize(new_inputs, 1) != check_dim &&\r\n        _throw_input_dim_mismatch(size(new_inputs, 1), check_dim; caller = :ForwardMapWrapper)\r\n# in predict(...Emulator...)\r\nsize(new_inputs, 1) != check_dim && _throw_input_dim_mismatch(size(new_inputs, 1), check_dim; caller = :Emulator)\r\n\r\n# later\r\n@noinline function _throw_input_dim_mismatch(actual::Int, expected::Int; caller::Symbol)\r\n    throw(DimensionMismatch(\"\"\"\r\n$caller: new_inputs row count does not match the expected input dimension.\r\n\r\nExpected:\r\n    size(new_inputs, 1) == $expected\r\n\r\nGot:\r\n    size(new_inputs, 1) = $actual\r\n\r\nSuggestion:\r\n    Pass new_inputs with $expected rows (one per input dimension).\r\n    If inputs are already in the encoded space, pass `encode = \"in\"` to predict(...).\r\n\"\"\"))\r\nend\r\n```\r\nThese come with tests that test some message items, and the suggestion if it is concrete and actionable\r\n```julia\r\nlet thrown = @test_throws DimensionMismatch EM.predict(fmw, x_test')\r\n        @test contains(thrown.value.msg, \"ForwardMapWrapper\")\r\n        @test contains(thrown.value.msg, \"new_inputs row count\")\r\nend\r\n# passing already-encoded inputs with encode = \"in\" must not throw\r\n@test EM.predict(fmw, encode_data(fmw, x_test, \"in\"); encode = \"in\") isa Tuple\r\n```\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 29,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-25T05:35:17Z",
+    "deletions": 427,
+    "labels": [],
+    "mergedAt": "2026-05-28T21:34:39Z",
+    "number": 424,
+    "title": "Settings and Skills for Claude. Initial application"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n- update readme for with new api\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- add `encoder_kwargs_from(ensemble_kalman_process,prior)`\r\n\r\nI have verified that the results are unchanged, and example is still \"copy-pasteable\"\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-28T21:50:43Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-28T21:59:57Z",
+    "number": 426,
+    "title": "Update README.md"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-28T22:00:41Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-28T23:16:28Z",
+    "number": 427,
+    "title": "Update Project.toml to v1.1"
+  }
+]

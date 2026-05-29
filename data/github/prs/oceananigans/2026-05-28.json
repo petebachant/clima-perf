@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 314,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\r\n\r\nWhen https://github.com/CliMA/Oceananigans.jl/pull/5314 introduced the possibility to use `PerturbationAdvection` tracers, it didn't actually change the calculation of the advection velocity.\r\n\r\nThis PR takes a closer look at that and fixes two independent problems.\r\n\r\n### 1. Advecting velocity\r\n\r\nThe radiation phase speed was computed from the field's *own* exterior value:\r\n\r\n```julia\r\nc = \u03c8\u0304 + c\u2605\r\n```\r\n\r\nFor a boundary-normal velocity component, `\u03c8\u0304` *is* the advecting velocity, so this is correct. For a tracer, `\u03c8\u0304` is the tracer value (e.g. a temperature), and using it as an advection speed is physically meaningless \u2014 the inflow/outflow timescale selection (`\u03c8\u0304 >= 0`) was likewise testing the sign of the *tracer* rather than of the *flow*.\r\n\r\nThe scheme now takes the **boundary-normal flow velocity** as the phase speed. `step_right/left_open_boundary!` accept an explicit advecting velocity:\r\n\r\n- velocity (`Face`) halo methods pass `nothing` and fall back to `\u03c8\u0304` \u2192 **momentum behavior is byte-for-byte unchanged**;\r\n- tracer (`Center`) halo methods pass the normal velocity component (`u`/`v`/`w`) read from `model_fields` at the boundary face (no transverse interpolation needed \u2014 the normal velocity is already center-located in the transverse directions).\r\n\r\n### 2. Vertical (top/bottom) boundaries\r\n\r\n`_fill_top_halo!` / `_fill_bottom_halo!` only had methods for `Face`-located fields. A tracer with a `PerturbationAdvection` BC on `top`/`bottom` silently fell through to the generic open-BC halo fill (a plain prescribed-value condition). Added the missing `Center` methods.\r\n\r\n## Tests\r\n\r\nAdded `test_perturbation_advection_tracer_open_boundary_conditions` to `test/test_boundary_conditions_integration.jl`, run alongside the existing velocity test in the `Open boundary conditions` testset. It uses `HydrostaticFreeSurfaceModel` (the model that fills tracer open boundaries):\r\n\r\n- **Lateral (east/west):** a uniform flow makes one x-boundary inflow and the other outflow. Inflow relaxes instantly to the exterior value; outflow radiates and preserves the uniform interior. Same tracer config, opposite velocity \u2192 opposite results \u2014 the case that fails on the old code.\r\n- **Vertical (top/bottom):** in a quiescent column the scheme freezes the boundary, so a uniform tracer stays uniform \u2014 confirming the new `Center` top/bottom methods run the radiation scheme instead of the plain value-BC fallback.\r\n\r\nVerified locally (CPU): the new tracer test and the existing velocity regression test both pass (15/15 `@test`s). `test_quality_assurance.jl` left to CI.\r\n\r\n## Scope / follow-ups\r\n\r\nDeliberately **not** in this PR:\r\n\r\n- **West/south/bottom `Center` index asymmetry** \u2014 the low-side `Center` halo methods write the first interior cell rather than the halo cell. Pre-existing; should be addressed separately.\r\n- **`NonhydrostaticModel` plumbing** \u2014 tracer halos are filled there with `fill_open_bcs=false`, so tracer open BCs are currently inert in the nonhydrostatic model. `HydrostaticFreeSurfaceModel` already fills them (`fill_open_bcs=true`). Enabling the nonhydrostatic path is a time-stepping change for a separate PR.\r\n- **Density-weighted advecting velocity** \u2014 for anelastic models with prognostic `\u03c1u`, the extracted `U` would be momentum, not velocity; converting it via `to_intensive` is left as follow-up.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T13:52:03Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2026-05-28T00:14:58Z",
+    "number": 5617,
+    "title": "Support tracers in `PerturbationAdvection` open boundary conditions"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I think before we had a regularization that was made based on the location (i.e. fields on edges had sign -1 while fields on nodes and centers 1), I think we lost it along the way. It might make sense to bring it back since also ClimaSeaIce is now wrong.\r\n\r\nHowever, this is a quickfix in the meantime that we still require.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-27T20:19:24Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-05-28T08:25:06Z",
+    "number": 5633,
+    "title": "Regularize correctly `U` and `V` bc for a `TripolarGrid`"
+  }
+]

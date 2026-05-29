@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 494,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Refactor `BulkMicrophysicsTendencies`\r\n\r\n### Motivation\r\n\r\nThe 1-moment `bulk_microphysics_tendencies` (raw) and `_bulk_microphysics_linearized_operator` (implicit solver) both called every microphysical process independently, duplicating ~100 lines of process-call logic. Adding or modifying a process required updating two locations at the same time.\r\n\r\n### Changes\r\n\r\n**New internal helpers** eliminate the duplication:\r\n- `_microphysics_source_terms` \u2014 single source of truth for all process calls; returns ~17 scalar source terms as a NamedTuple\r\n- `_aggregate_tendencies` \u2014 accumulates source terms into `dq_*_dt` totals (one location)\r\n- `_linearize` \u2014 builds the sparse `M, e` operator from pre-computed source terms (no process calls)\r\n- `_linearized_implicit_step` \u2014 renamed from `_average_bulk_microphysics_tendencies`; now calls `_microphysics_source_terms` \u2192 `_linearize` \u2192 solve\r\n\r\n**New `TendencyMode` dispatch** unifies the public API:\r\n- `bulk_microphysics_tendencies(Instantaneous(), ...)` \u2014 replaces old `bulk_microphysics_tendencies(Microphysics1Moment(), ...)`\r\n- `bulk_microphysics_tendencies(LinearizedAverage(), ..., \u0394t, nsub)` \u2014 replaces old `average_bulk_microphysics_tendencies(...)`\r\n- `bulk_microphysics_tendencies(InstantaneousVerbose(), ...)` \u2014 **new**: returns individual source terms alongside aggregated tendencies for model diagnostics\r\n\r\n### Breaking changes\r\n- `average_bulk_microphysics_tendencies` is removed; use `bulk_microphysics_tendencies(LinearizedAverage(), ...)` instead\r\n- `bulk_microphysics_tendencies(::Microphysics1Moment, ...)` now requires a `TendencyMode` as first argument\r\n- 0M and 2M signatures are unchanged\r\n\r\n### Tests\r\n- All existing bulk tendency tests updated and passing (154 tests, Float32 + Float64)\r\n- Performance benchmarks: zero allocations for all three modes\r\n- Type stability tests added for `LinearizedAverage` and `InstantaneousVerbose` (116 tests total)\r\n- GPU test kernels updated\r\n- Added a consistency test between `Instantaneous` and `LinearizedAverage` options for small dt\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-26T21:12:46Z",
+    "deletions": 297,
+    "labels": [
+      {
+        "color": "dfaaf4",
+        "description": "Large-scale code improvement",
+        "id": "LA_kwDOFzm_uM8AAAABDFgzqw",
+        "name": "Refactor :star2:"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-05-28T20:54:30Z",
+    "number": 718,
+    "title": "Cleanup in 1M bulk tendency"
+  }
+]
