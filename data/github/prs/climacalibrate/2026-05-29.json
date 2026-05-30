@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR sets GPU ranks for PBS jobs via a bash script adapted from Derecho's `/opt/utils/bin/set_gpu_rank`.\r\n\r\nWe currently use the external `/opt/utils/bin/set_gpu_rank` script on Derecho to set GPU ranks.\r\n\r\nThe script hosted on Derecho runs `exec $*` at the end which word-splits and drops the quoting on the `-e` body . The call `set_gpu_rank julia --project=... -e import ClimaCalibrate; ...` gets parsed as `julia --project.. -e import ClimaCalibrate;...` so julia just evaluates `import` and errors. See [build](https://buildkite.com/clima/climacoupler-calibration/builds/11#019e5718-18ef-479c-b68d-9a3a7f6a4a4a) and error below. \r\n\r\nThe script added here runs `exec \"$@\"` instead, which does not drop the quotes.\r\n```\r\n\u2502 set_gpu_rank: using cray-mpich MPI library with 1 accelerators per node on 1 hosts...\r\n\u2502 set_gpu_rank: setting MPICH_GPU_SUPPORT_ENABLED=1, MPICH_OFI_NIC_POLICY=GPU\r\n\u2502 set_gpu_rank: host deg0038 / global rank 0 / local rank 0 / CUDA_VISIBLE_DEVICES 0\r\n\u2502 ERROR: ParseError:\r\n\u2502 # Error @ none:1:7\r\n\u2502 import\r\n\u2502 #     \u2514 \u2500\u2500 premature end of input\r\n\u2502 Stacktrace:\r\n\u2502  [1] top-level scope\r\n\u2502    @ none:1\r\n\u2502  [2] eval(m::Module, e::Any)\r\n\u2502    @ Core ./boot.jl:489\r\n\u2502  [3] exec_options(opts::Base.JLOptions)\r\n\u2502    @ Base ./client.jl:283\r\n\u2502  [4] _start()\r\n\u2502    @ Base ./client.jl:550\r\n\u2502 deg0038.hsn.de.hpc.ucar.edu: rank 0 exited with code 1\r\n\u2514 @ ClimaCalibrate.Calibration /glade/derecho/scratch/nefrathe/slurm-buildkite/climacoupler-calibration/11/depot/default/packages/ClimaCalibrate/7Y2sG/src/calibration.jl:317\r\n```\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-26T21:03:53Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-05-29T17:00:21Z",
+    "number": 317,
+    "title": "Set GPU rank for PBS jobs"
+  }
+]
