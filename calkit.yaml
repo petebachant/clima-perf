@@ -175,7 +175,7 @@ pipeline:
         - path: results/new-registry-dependents.csv
           storage: git
     analyze-dev-speed:
-      description: Analyze things like PR resolution speed to see 
+      description: Analyze things like PR resolution speed to see
         changes over time.
       kind: jupyter-notebook
       notebook_path: notebooks/analyze-dev-speed.ipynb
@@ -193,24 +193,25 @@ pipeline:
 figures:
   - path: figures/amip-speedup.json
     title: Flagship AMIP speedup
-    description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over 
+    description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over
       time normalized by the start of performance tracking.
     stage: analyze
   - path: figures/external-engagement.json
     title: External engagement
-    description: External engagement with CliMA's products on a 
+    description: External engagement with CliMA's products on a
       quarterly basis.
     stage: analyze
   - path: figures/pr-ttm.json
     title: Pull request time-to-merge
-    description: Median time-to-merge for pull requests over CliMA's 
-      entire ecosystem. There is one trace for each repository, and 
+    stage: analyze-dev-speed
+    description: Median time-to-merge for pull requests over CliMA's
+      entire ecosystem. There is one trace for each repository, and
       the thick gray line is computed over all repos.
 
 notebooks:
   - path: notebooks/analyze.ipynb
     title: Analysis
-    description: Analyze and plot the flagship AMIP benchmark (16 
+    description: Analyze and plot the flagship AMIP benchmark (16
       horiz. elem.) SYPD over time.
     stage: analyze
   - path: notebooks/buildkite.ipynb
@@ -229,26 +230,26 @@ showcase:
 datasets:
   - path: results/amip.csv
     title: Flagship AMIP benchmark results
-    description: Results from the flagship AMIP benchmark (16 horiz. 
+    description: Results from the flagship AMIP benchmark (16 horiz.
       elem.) over time.
     stage: analyze
   - path: results/external-citations.csv
     title: External citation events
-    description: One row per external citing work (OpenAlex), tagged 
+    description: One row per external citing work (OpenAlex), tagged
       with the cited CliMA paper's DOI + software package (if any) and
-      the citing work's quarter. Internal self-citations (any author 
+      the citing work's quarter. Internal self-citations (any author
       shared with any scraped CliMA paper) are excluded.
     stage: analyze
   - path: results/github-engagement.csv
     title: GitHub engagement events
-    description: One row per external star / fork / opened issue / 
-      merged PR (login is non-CliMA-org, non-bot), with repo, event 
+    description: One row per external star / fork / opened issue /
+      merged PR (login is non-CliMA-org, non-bot), with repo, event
       type, login, timestamp, and quarter.
     stage: analyze
   - path: results/new-registry-dependents.csv
     title: New external Julia-registry dependents
     description: One row per (CliMA package, external dependent) pair,
-      with the dependent's repo URL and the quarter when it first 
+      with the dependent's repo URL and the quarter when it first
       appeared in the Julia General registry as a dependent.
     stage: analyze
   - path: buildkite
@@ -258,11 +259,11 @@ datasets:
     stage: fetch-buildkite
   - path: runs/amip
     title: Raw AMIP benchmark runs
-    description: Raw outputs (logs, manifests, repo revisions used) 
+    description: Raw outputs (logs, manifests, repo revisions used)
       from the flagship AMIP benchmark runs.
     stage: benchmark-amip
   - path: results/pr-ttm.csv
     title: Pull request time-to-merge
-    description: Quarterly median time-to-merge for pull requests 
+    description: Quarterly median time-to-merge for pull requests
       across CliMA's GitHub repos.
     stage: analyze-dev-speed
