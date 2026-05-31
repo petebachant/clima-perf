@@ -7511,7 +7511,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=79f81048">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=78e445cc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7521,13 +7521,13 @@ a.anchor-link {
 each merged PR's <em>time-to-merge</em> (the wall-clock time from when it was opened to
 when it was merged) and track the <strong>median time-to-merge per quarter</strong> over
 time, both per repository and across the whole ecosystem.</p>
-<p>Bot-authored PRs (CompatHelper, TagBot, Dependabot, GitHub Actions, etc.) are
-excluded so the metric reflects human development speed rather than automated
-dependency bumps.</p>
+<p>All merged PRs are counted, including bot-authored ones (CompatHelper, TagBot,
+Dependabot, GitHub Actions, etc.): automated dependency PRs that sit unmerged
+for a long time are part of the resolution-speed picture we want to surface.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bccedb8c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=83bc07bd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7555,7 +7555,7 @@ dependency bumps.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8c60f169">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f9ec2efa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7567,7 +7567,7 @@ dependency bumps.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=08494f77">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=044dff9c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7583,6 +7583,7 @@ dependency bumps.</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.subplots</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_subplots</span>
 
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"data"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"clima-perf"</span> <span class="o">/</span> <span class="s2">"data"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -7597,21 +7598,6 @@ dependency bumps.</p>
 <span class="c1"># Minimum number of merged PRs in a repo-quarter for that point to be</span>
 <span class="c1"># plotted; medians over only one or two PRs are too noisy to be useful.</span>
 <span class="n">MIN_PRS_PER_POINT</span> <span class="o">=</span> <span class="mi">3</span>
-
-<span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
-<span class="c1"># are clearly automated (Julia ecosystem bots).</span>
-<span class="n">EXTRA_BOTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JuliaTagBot"</span><span class="p">,</span> <span class="s2">"attobot"</span><span class="p">}</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">is_bot</span><span class="p">(</span><span class="n">author</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="n">login</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
-    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
-        <span class="n">author</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_bot"</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">login</span> <span class="ow">in</span> <span class="n">EXTRA_BOTS</span>
-        <span class="ow">or</span> <span class="n">login</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"[bot]"</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">login</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"app/"</span><span class="p">)</span>
-    <span class="p">)</span>
-
 
 <span class="c1"># CamelCase repo lookup so legend labels match the canonical package names.</span>
 <span class="n">camel_by_lc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -7652,8 +7638,6 @@ dependency bumps.</p>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()):</span>
                 <span class="n">author</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-                <span class="k">if</span> <span class="n">is_bot</span><span class="p">(</span><span class="n">author</span><span class="p">):</span>
-                    <span class="k">continue</span>
                 <span class="n">created_raw</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"createdAt"</span><span class="p">)</span>
                 <span class="n">merged_raw</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mergedAt"</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">created_raw</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">merged_raw</span><span class="p">:</span>
@@ -7680,7 +7664,7 @@ dependency bumps.</p>
 
 <span class="n">prs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">prs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> merged non-bot PRs across "</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">prs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> merged PRs across "</span>
     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prs_df</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">prs_df</span><span class="o">.</span><span class="n">empty</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2"> repos"</span>
 <span class="p">)</span>
 <span class="n">prs_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -7696,7 +7680,7 @@ dependency bumps.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>11904 merged non-bot PRs across 22 repos
+<pre>12228 merged PRs across 22 repos
 </pre>
 </div>
 </div>
@@ -7754,6 +7738,16 @@ dependency bumps.</p>
 <tr>
 <th>2</th>
 <td>CalibrateEmulateSample</td>
+<td>318</td>
+<td>app/github-actions</td>
+<td>2024-08-30T00:16:38Z</td>
+<td>2024-09-07T20:37:13Z</td>
+<td>2024-Q3</td>
+<td>8.847627</td>
+</tr>
+<tr>
+<th>3</th>
+<td>CalibrateEmulateSample</td>
 <td>223</td>
 <td>odunbar</td>
 <td>2023-07-12T17:28:38Z</td>
@@ -7762,7 +7756,7 @@ dependency bumps.</p>
 <td>0.075521</td>
 </tr>
 <tr>
-<th>3</th>
+<th>4</th>
 <td>CalibrateEmulateSample</td>
 <td>253</td>
 <td>bielim</td>
@@ -7770,16 +7764,6 @@ dependency bumps.</p>
 <td>2023-12-11T22:37:22Z</td>
 <td>2023-Q4</td>
 <td>28.275694</td>
-</tr>
-<tr>
-<th>4</th>
-<td>CalibrateEmulateSample</td>
-<td>246</td>
-<td>odunbar</td>
-<td>2023-11-01T19:51:15Z</td>
-<td>2023-11-01T20:49:48Z</td>
-<td>2023-Q4</td>
-<td>0.040660</td>
 </tr>
 </tbody>
 </table>
@@ -7789,20 +7773,22 @@ dependency bumps.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a573cbfe">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f9eaf75f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Median-time-to-merge-per-quarter">Median time-to-merge per quarter<a class="anchor-link" href="#Median-time-to-merge-per-quarter">¶</a></h2><p>We bin merged PRs by the quarter they were merged in and take the median
-time-to-merge. One trace is drawn per repository (only quarters with at least
-<code>MIN_PRS_PER_POINT</code> merged PRs are plotted), and a thick gray line shows the
-median computed over <em>all</em> repositories' PRs combined.</p>
+<h2 id="Time-to-merge-per-quarter">Time-to-merge per quarter<a class="anchor-link" href="#Time-to-merge-per-quarter">¶</a></h2><p>We bin merged PRs by the quarter they were merged in and summarize the
+time-to-merge with two statistics: the <strong>median (p50)</strong>, which tracks the
+typical PR, and the <strong>90th percentile (p90)</strong>, which exposes the slow tail of
+PRs that sit unmerged for a long time. One trace is drawn per repository (only
+quarters with at least <code>MIN_PRS_PER_POINT</code> merged PRs are plotted), and a thick
+gray line shows the statistic computed over <em>all</em> repositories' PRs combined.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=135dde2b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=76f42be9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7812,27 +7798,28 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">empty</span> <span class="o">=</span> <span class="n">prs_df</span><span class="o">.</span><span class="n">empty</span>
 
-<span class="c1"># Per-repo, per-quarter median time-to-merge + PR count.</span>
-<span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
-    <span class="n">repo_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">]</span>
-    <span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">repo_q</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])[</span><span class="s2">"ttm_days"</span><span class="p">]</span>
-        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n_prs</span><span class="o">=</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">median_ttm_days</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">,</span> <span class="s2">"p90_ttm_days"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="n">grouped</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">grouped</span><span class="p">[</span><span class="s2">"ttm_days"</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+        <span class="n">n_prs</span><span class="o">=</span><span class="s2">"size"</span><span class="p">,</span>
+        <span class="n">median_ttm_days</span><span class="o">=</span><span class="s2">"median"</span><span class="p">,</span>
+        <span class="n">p90_ttm_days</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.9</span><span class="p">),</span>
     <span class="p">)</span>
 
-<span class="c1"># Ecosystem-wide median over all repos, per quarter.</span>
+
+<span class="c1"># Per-repo, per-quarter statistics + PR count.</span>
 <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
-    <span class="n">all_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">])</span>
+    <span class="n">repo_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">COLUMNS</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="n">all_q</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)[</span><span class="s2">"ttm_days"</span><span class="p">]</span>
-        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n_prs</span><span class="o">=</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">median_ttm_days</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-    <span class="p">)</span>
+    <span class="n">repo_q</span> <span class="o">=</span> <span class="n">summarize</span><span class="p">(</span><span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">]))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+<span class="c1"># Ecosystem-wide statistics over all repos, per quarter.</span>
+<span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+    <span class="n">all_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">COLUMNS</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">all_q</span> <span class="o">=</span> <span class="n">summarize</span><span class="p">(</span><span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
     <span class="n">all_q</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"All repos"</span><span class="p">)</span>
 
 <span class="n">ttm_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">repo_q</span><span class="p">,</span> <span class="n">all_q</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -7840,7 +7827,8 @@ median computed over <em>all</em> repositories' PRs combined.</p>
     <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 <span class="p">)</span>
 <span class="n">ttm_df</span> <span class="o">=</span> <span class="n">ttm_df</span><span class="p">[</span>
-    <span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"quarter_start"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">]</span>
+    <span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"quarter_start"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span>
+     <span class="s2">"median_ttm_days"</span><span class="p">,</span> <span class="s2">"p90_ttm_days"</span><span class="p">]</span>
 <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -7889,6 +7877,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <th>quarter_start</th>
 <th>n_prs</th>
 <th>median_ttm_days</th>
+<th>p90_ttm_days</th>
 </tr>
 </thead>
 <tbody>
@@ -7899,6 +7888,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <td>2018-10-01</td>
 <td>5</td>
 <td>0.004931</td>
+<td>0.188382</td>
 </tr>
 <tr>
 <th>1</th>
@@ -7907,6 +7897,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <td>2019-01-01</td>
 <td>27</td>
 <td>0.170949</td>
+<td>1.361903</td>
 </tr>
 <tr>
 <th>2</th>
@@ -7915,6 +7906,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <td>2019-04-01</td>
 <td>71</td>
 <td>0.139456</td>
+<td>5.614525</td>
 </tr>
 <tr>
 <th>3</th>
@@ -7923,6 +7915,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <td>2019-07-01</td>
 <td>115</td>
 <td>0.173380</td>
+<td>3.379785</td>
 </tr>
 <tr>
 <th>4</th>
@@ -7931,6 +7924,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 <td>2019-10-01</td>
 <td>181</td>
 <td>0.104514</td>
+<td>10.854468</td>
 </tr>
 </tbody>
 </table>
@@ -7939,7 +7933,7 @@ median computed over <em>all</em> repositories' PRs combined.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=341cd332">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=563f8507">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7966,7 +7960,20 @@ median computed over <em>all</em> repositories' PRs combined.</p>
     <span class="n">repo</span><span class="p">:</span> <span class="n">palette</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">repo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">repo_order</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+<span class="c1"># Row 1 = median (p50), row 2 = 90th percentile (p90). Each repo's two</span>
+<span class="c1"># traces share a legendgroup so toggling a repo hides it in both panels;</span>
+<span class="c1"># the legend entry is shown only once (on the p50 panel).</span>
+<span class="n">METRICS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">,</span> <span class="s2">"Median (p50)"</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">"p90_ttm_days"</span><span class="p">,</span> <span class="s2">"p90"</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
+    <span class="n">rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">repo_order</span><span class="p">:</span>
     <span class="n">sub</span> <span class="o">=</span> <span class="n">repo_q</span><span class="p">[</span>
@@ -7975,51 +7982,63 @@ median computed over <em>all</em> repositories' PRs combined.</p>
     <span class="k">if</span> <span class="n">sub</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
         <span class="k">continue</span>
     <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">sub</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
-        <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
-            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">"median_ttm_days"</span><span class="p">],</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
-            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
-            <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-            <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
-            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
-                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
-                <span class="s2">"Median TTM: %</span><span class="si">{y:.1f}</span><span class="s2"> days&lt;br&gt;"</span>
-                <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">METRICS</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                <span class="n">legendgroup</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="n">row</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+                <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
+                    <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> TTM: %</span><span class="se">{{</span><span class="s2">y:.1f</span><span class="se">}}</span><span class="s2"> days&lt;br&gt;"</span>
+                    <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                <span class="p">),</span>
             <span class="p">),</span>
+            <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+            <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="p">)</span>
 
-<span class="c1"># Thick gray ecosystem-wide line, drawn last so it sits on top.</span>
+<span class="c1"># Thick gray ecosystem-wide line, added last so it sits on top in both rows.</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">all_q</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
     <span class="n">all_sorted</span> <span class="o">=</span> <span class="n">all_q</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
-        <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
-            <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">all_sorted</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]],</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[</span><span class="s2">"median_ttm_days"</span><span class="p">],</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
-            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-            <span class="n">customdata</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
-            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">"&lt;b&gt;All repos&lt;/b&gt;&lt;br&gt;"</span>
-                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
-                <span class="s2">"Median TTM: %</span><span class="si">{y:.1f}</span><span class="s2"> days&lt;br&gt;"</span>
-                <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+    <span class="n">all_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">all_sorted</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">METRICS</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">all_x</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+                <span class="n">legendgroup</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="n">row</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"&lt;b&gt;All repos&lt;/b&gt;&lt;br&gt;"</span>
+                    <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> TTM: %</span><span class="se">{{</span><span class="s2">y:.1f</span><span class="se">}}</span><span class="s2"> days&lt;br&gt;"</span>
+                    <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                <span class="p">),</span>
             <span class="p">),</span>
+            <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+            <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
     <span class="n">title</span><span class="o">=</span><span class="s2">"Pull request time-to-merge"</span><span class="p">,</span>
-    <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span>
-    <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">"Median time-to-merge (days)"</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
     <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
 <span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Median TTM (days)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"p90 TTM (days)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/pr-ttm.json"</span><span class="p">)</span>
