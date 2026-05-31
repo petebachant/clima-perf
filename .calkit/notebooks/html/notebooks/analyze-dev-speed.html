@@ -7511,19 +7511,30 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=78e445cc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=624693cd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Analyzing-CliMA-development-speed">Analyzing CliMA development speed<a class="anchor-link" href="#Analyzing-CliMA-development-speed">¶</a></h1><p>How quickly does CliMA's ecosystem turn pull requests around? Here we measure
-each merged PR's <em>time-to-merge</em> (the wall-clock time from when it was opened to
-when it was merged) and track the <strong>median time-to-merge per quarter</strong> over
-time, both per repository and across the whole ecosystem.</p>
+<h1 id="Analyzing-CliMA-development-throughput">Analyzing CliMA development throughput<a class="anchor-link" href="#Analyzing-CliMA-development-throughput">¶</a></h1><p>How productive is CliMA's ecosystem, and how quickly does it turn pull requests
+around? Here we track four quarterly metrics over time, both per repository and
+across the whole ecosystem:</p>
+<ol>
+<li><strong>Median time-to-merge (p50)</strong> — the typical PR's wall-clock time from open
+to merge.</li>
+<li><strong>90th-percentile time-to-merge (p90)</strong> — the slow tail of PRs that sit
+unmerged for a long time.</li>
+<li><strong>PR merge rate</strong> — merged PRs per quarter.</li>
+<li><strong>Release rate</strong> — published releases per quarter.</li>
+</ol>
 <p>All merged PRs are counted, including bot-authored ones (CompatHelper, TagBot,
 Dependabot, GitHub Actions, etc.): automated dependency PRs that sit unmerged
 for a long time are part of the resolution-speed picture we want to surface.</p>
+<p>For the count-based panels (merge rate and release rate), the ecosystem-wide
+("All repos") line is normalized by the total number of repositories, so it
+reads as a per-repo average and stays on the same scale as the individual repo
+traces.</p>
 </div>
 </div>
 </div>
@@ -7826,10 +7837,20 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
 <span class="n">ttm_df</span><span class="p">[</span><span class="s2">"quarter_start"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ttm_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
     <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 <span class="p">)</span>
-<span class="n">ttm_df</span> <span class="o">=</span> <span class="n">ttm_df</span><span class="p">[</span>
-    <span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"quarter_start"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span>
-     <span class="s2">"median_ttm_days"</span><span class="p">,</span> <span class="s2">"p90_ttm_days"</span><span class="p">]</span>
-<span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ttm_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ttm_df</span><span class="p">[</span>
+        <span class="p">[</span>
+            <span class="s2">"repo"</span><span class="p">,</span>
+            <span class="s2">"quarter"</span><span class="p">,</span>
+            <span class="s2">"quarter_start"</span><span class="p">,</span>
+            <span class="s2">"n_prs"</span><span class="p">,</span>
+            <span class="s2">"median_ttm_days"</span><span class="p">,</span>
+            <span class="s2">"p90_ttm_days"</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">]</span>
+    <span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ttm_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/pr-ttm.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -7933,7 +7954,19 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=563f8507">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6fe968c6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Releases-per-quarter">Releases per quarter<a class="anchor-link" href="#Releases-per-quarter">¶</a></h2><p>We also count published GitHub releases per quarter, per repository and across
+the ecosystem, as a second productivity signal alongside the PR merge rate.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2b49e51b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7941,14 +7974,145 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># fetch-github stores one release per line in</span>
+<span class="c1"># data/github/releases/&lt;repo&gt;.jsonl. We count non-draft releases by the</span>
+<span class="c1"># quarter they were published in, per repo and across the ecosystem.</span>
+<span class="n">RELEASES_ROOT</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"releases"</span>
+
+<span class="n">rel_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">if</span> <span class="n">RELEASES_ROOT</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">RELEASES_ROOT</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.jsonl"</span><span class="p">)):</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="k">continue</span>
+            <span class="n">rel</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"draft"</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">published</span> <span class="o">=</span> <span class="n">rel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"published_at"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_at"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">published</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">quarter</span> <span class="o">=</span> <span class="n">quarter_of</span><span class="p">(</span><span class="n">parse_iso</span><span class="p">(</span><span class="n">published</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">quarter</span> <span class="o">&lt;</span> <span class="n">MIN_QUARTER</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">rel_rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">:</span> <span class="n">quarter</span><span class="p">})</span>
+
+<span class="n">releases_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rel_rows</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">releases_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+    <span class="n">rel_repo_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_releases"</span><span class="p">])</span>
+    <span class="n">rel_all_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_releases"</span><span class="p">])</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">rel_repo_q</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">releases_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])</span>
+        <span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"n_releases"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rel_all_q</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">releases_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"n_releases"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">rel_all_q</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"All repos"</span><span class="p">)</span>
+
+<span class="n">n_rel_repos</span> <span class="o">=</span> <span class="n">releases_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">releases_df</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="mi">0</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">releases_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> releases across </span><span class="si">{</span><span class="n">n_rel_repos</span><span class="si">}</span><span class="s2"> repos"</span><span class="p">)</span>
+<span class="n">rel_repo_q</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>1642 releases across 34 repos
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[4]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>repo</th>
+<th>quarter</th>
+<th>n_releases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>ArtifactWrappers</td>
+<td>2021-Q2</td>
+<td>2</td>
+</tr>
+<tr>
+<th>1</th>
+<td>ArtifactWrappers</td>
+<td>2022-Q3</td>
+<td>2</td>
+</tr>
+<tr>
+<th>2</th>
+<td>CalibrateEmulateSample</td>
+<td>2022-Q2</td>
+<td>1</td>
+</tr>
+<tr>
+<th>3</th>
+<td>CalibrateEmulateSample</td>
+<td>2022-Q4</td>
+<td>1</td>
+</tr>
+<tr>
+<th>4</th>
+<td>CalibrateEmulateSample</td>
+<td>2023-Q3</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=563f8507">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Repos ordered by total merged-PR volume (busiest first) for a stable,</span>
-<span class="c1"># meaningful legend order.</span>
+<span class="c1"># meaningful legend order; any release-only repos are appended at the end.</span>
 <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
     <span class="n">repo_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="n">repo_order</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">prs_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-    <span class="p">)</span>
+    <span class="n">repo_order</span> <span class="o">=</span> <span class="n">prs_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="n">rel_repos</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">releases_df</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">rel_repo_q</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="n">repo_order</span> <span class="o">=</span> <span class="n">repo_order</span> <span class="o">+</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_repos</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">repo_order</span><span class="p">]</span>
 
 <span class="n">palette</span> <span class="o">=</span> <span class="p">(</span>
     <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Plotly</span><span class="p">)</span>
@@ -7960,56 +8124,116 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
     <span class="n">repo</span><span class="p">:</span> <span class="n">palette</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">repo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">repo_order</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="c1"># Row 1 = median (p50), row 2 = 90th percentile (p90). Each repo's two</span>
-<span class="c1"># traces share a legendgroup so toggling a repo hides it in both panels;</span>
-<span class="c1"># the legend entry is shown only once (on the p50 panel).</span>
-<span class="n">METRICS</span> <span class="o">=</span> <span class="p">[</span>
+<span class="c1"># The count-based panels (merge rate, releases) normalize the ecosystem-wide</span>
+<span class="c1"># line by the total number of repos so it reads as a per-repo average and</span>
+<span class="c1"># stays on the same scale as the individual repo traces.</span>
+<span class="n">n_pr_repos</span> <span class="o">=</span> <span class="n">prs_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">empty</span> <span class="k">else</span> <span class="mi">0</span>
+<span class="n">n_rel_repos</span> <span class="o">=</span> <span class="n">releases_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">releases_df</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="mi">0</span>
+
+<span class="c1"># Row 1 = median (p50), row 2 = p90, row 3 = PR merge rate, row 4 = releases.</span>
+<span class="c1"># Each repo's traces share a legendgroup so toggling a repo hides it in every</span>
+<span class="c1"># panel; the single legend entry lives on the merge-rate panel (row 3), which</span>
+<span class="c1"># every repo with merged PRs appears in.</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
+    <span class="n">rows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">TTM_METRICS</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">,</span> <span class="s2">"Median (p50)"</span><span class="p">),</span>
     <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">"p90_ttm_days"</span><span class="p">,</span> <span class="s2">"p90"</span><span class="p">),</span>
 <span class="p">]</span>
 
-<span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
-    <span class="n">rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-    <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span>
-<span class="p">)</span>
-
 <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">repo_order</span><span class="p">:</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">]</span>
+
+    <span class="c1"># p50 / p90 panels: only quarters with enough merged PRs to be meaningful.</span>
     <span class="n">sub</span> <span class="o">=</span> <span class="n">repo_q</span><span class="p">[</span>
         <span class="p">(</span><span class="n">repo_q</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span> <span class="o">==</span> <span class="n">repo</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">repo_q</span><span class="p">[</span><span class="s2">"n_prs"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_PRS_PER_POINT</span><span class="p">)</span>
     <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">sub</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-        <span class="k">continue</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">sub</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
-    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">METRICS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sub</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">sub</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">TTM_METRICS</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                    <span class="n">legendgroup</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                    <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+                    <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+                    <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
+                        <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> TTM: %</span><span class="se">{{</span><span class="s2">y:.1f</span><span class="se">}}</span><span class="s2"> days&lt;br&gt;"</span>
+                        <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+                <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Merge-rate panel: every quarter the repo had merged PRs. The repo's</span>
+    <span class="c1"># legend entry lives here so even low-PR-volume repos are listed.</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">repo_q</span><span class="p">[</span><span class="n">repo_q</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span> <span class="o">==</span> <span class="n">repo</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rate</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
             <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
-                <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-                <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="n">col</span><span class="p">],</span>
+                <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">rate</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]],</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">rate</span><span class="p">[</span><span class="s2">"n_prs"</span><span class="p">],</span>
                 <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
                 <span class="n">legendgroup</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
-                <span class="n">showlegend</span><span class="o">=</span><span class="n">row</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
                 <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-                <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">rate</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">]],</span>
                 <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
                     <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> TTM: %</span><span class="se">{{</span><span class="s2">y:.1f</span><span class="se">}}</span><span class="s2"> days&lt;br&gt;"</span>
-                    <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                    <span class="s2">"Merged PRs: %</span><span class="si">{y}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
                 <span class="p">),</span>
             <span class="p">),</span>
-            <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+            <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
             <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
-<span class="c1"># Thick gray ecosystem-wide line, added last so it sits on top in both rows.</span>
+    <span class="c1"># Releases panel.</span>
+    <span class="n">rel</span> <span class="o">=</span> <span class="n">rel_repo_q</span><span class="p">[</span><span class="n">rel_repo_q</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span> <span class="o">==</span> <span class="n">repo</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rel</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">rel</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]],</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">rel</span><span class="p">[</span><span class="s2">"n_releases"</span><span class="p">],</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                <span class="n">legendgroup</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+                <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">rel</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">]],</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
+                    <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                    <span class="s2">"Releases: %</span><span class="si">{y}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="c1"># Thick gray ecosystem-wide lines, added last so they sit on top. The TTM</span>
+<span class="c1"># panels show the statistic over all PRs combined; the count panels show the</span>
+<span class="c1"># per-repo average (total / number of repos).</span>
 <span class="k">if</span> <span class="ow">not</span> <span class="n">all_q</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
     <span class="n">all_sorted</span> <span class="o">=</span> <span class="n">all_q</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
     <span class="n">all_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">all_sorted</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
-    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">METRICS</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">TTM_METRICS</span><span class="p">:</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
             <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
                 <span class="n">x</span><span class="o">=</span><span class="n">all_x</span><span class="p">,</span>
@@ -8017,7 +8241,7 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
                 <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
                 <span class="n">legendgroup</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
-                <span class="n">showlegend</span><span class="o">=</span><span class="n">row</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
                 <span class="n">customdata</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
                 <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
@@ -8030,18 +8254,64 @@ gray line shows the statistic computed over <em>all</em> repositories' PRs combi
             <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
             <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_pr_repos</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">all_x</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[</span><span class="s2">"n_prs"</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_pr_repos</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"All repos (aggregated)"</span><span class="p">,</span>
+                <span class="n">legendgroup</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">customdata</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">"&lt;b&gt;All repos&lt;/b&gt;&lt;br&gt;"</span>
+                    <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                    <span class="s2">"Avg merged PRs/repo: %</span><span class="si">{y:.1f}</span><span class="s2">&lt;br&gt;"</span>
+                    <span class="s2">"Total merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">rel_all_q</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">n_rel_repos</span><span class="p">:</span>
+    <span class="n">rel_all_sorted</span> <span class="o">=</span> <span class="n">rel_all_q</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+        <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">rel_all_sorted</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">rel_all_sorted</span><span class="p">[</span><span class="s2">"n_releases"</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_rel_repos</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+            <span class="n">legendgroup</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+            <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+            <span class="n">customdata</span><span class="o">=</span><span class="n">rel_all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_releases"</span><span class="p">]],</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"&lt;b&gt;All repos&lt;/b&gt;&lt;br&gt;"</span>
+                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                <span class="s2">"Avg releases/repo: %</span><span class="si">{y:.2f}</span><span class="s2">&lt;br&gt;"</span>
+                <span class="s2">"Total releases: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"Pull request time-to-merge"</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Software development throughput"</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
     <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
 <span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Median TTM (days)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"p90 TTM (days)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"PRs merged/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Releases/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/pr-ttm.json"</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/dev-throughput.json"</span><span class="p">)</span>
 <span class="n">fig</span>
 </pre></div>
 </div>
