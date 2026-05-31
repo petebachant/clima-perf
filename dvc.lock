@@ -408,18 +408,18 @@ stages:
       nfiles: 86
     - path: data/github
       hash: md5
-      md5: 155373049d0fd0d0eff48b74fa97e23f.dir
-      size: 19124908
-      nfiles: 9290
+      md5: 1bbf2595cb9cc458e98203247ed09dd8.dir
+      size: 19140179
+      nfiles: 9295
     - path: data/julia-registry
       hash: md5
-      md5: 3e39822c43dd26bfc025f67c54d56ca7.dir
+      md5: aeb690d9dabc6177fcbb59fc0021eddf.dir
       size: 33700
       nfiles: 2
     - path: data/openalex
       hash: md5
-      md5: b804cfbaf3c28c66f1021f50efb6b7d3.dir
-      size: 2877455
+      md5: 8088201b7885bc6a02cbb954b32a6aa0.dir
+      size: 2878347
       nfiles: 6
     - path: runs/amip
       hash: md5
@@ -429,20 +429,20 @@ stages:
     outs:
     - path: .calkit/notebooks/executed/notebooks/analyze.ipynb
       hash: md5
-      md5: 9666d2dab64d3eb5a525212b00d016e2
-      size: 161157
+      md5: d122f2c86987b28952929ab59fe26552
+      size: 161145
     - path: .calkit/notebooks/html/notebooks/analyze.html
       hash: md5
-      md5: 7a4c493dfeb07ee3ef31aaaf1f8be6ea
-      size: 406016
+      md5: d26eec150de0758a644d50136ab43a0c
+      size: 398716
     - path: figures/amip-speedup.json
       hash: md5
       md5: 111c4e35d00e70b21008e351801cd1c2
       size: 12079
     - path: figures/external-engagement.json
       hash: md5
-      md5: e86ce34688f53af7a33bdacd85397eb9
-      size: 35262
+      md5: cdd714861bffb87f202ed12eb702e060
+      size: 35263
     - path: results/amip-repo-diff-links.md
       hash: md5
       md5: 031133b8cbbd2aefffecce2104c93704
@@ -453,8 +453,8 @@ stages:
       size: 60847
     - path: results/external-citations.csv
       hash: md5
-      md5: cdf9b814010f554a4ba82bed29b5e446
-      size: 177414
+      md5: aec2dac27f5ba443d5feb26b870e5931
+      size: 180792
     - path: results/github-engagement.csv
       hash: md5
       md5: b5474000bd7b99a5bdc8eac793573b70
@@ -687,12 +687,12 @@ stages:
     outs:
     - path: .calkit/notebooks/executed/notebooks/buildkite.ipynb
       hash: md5
-      md5: acad6ef4383bc7abfb05d3e24dbe01c1
-      size: 9583
+      md5: bc9ad2bd453485228663857ed6282f4d
+      size: 9581
     - path: .calkit/notebooks/html/notebooks/buildkite.html
       hash: md5
-      md5: 032ee5288a1600b1e5e44505739920d0
-      size: 296051
+      md5: 47361a5a52694357335574a8efea4ec9
+      size: 288760
     - path: buildkite
       hash: md5
       md5: 3eaa66bdeb8ef04f242cf9b1590e1398.dir
@@ -819,7 +819,7 @@ stages:
     outs:
     - path: data/julia-registry
       hash: md5
-      md5: 3e39822c43dd26bfc025f67c54d56ca7.dir
+      md5: aeb690d9dabc6177fcbb59fc0021eddf.dir
       size: 33700
       nfiles: 2
   fetch-citations:
@@ -837,8 +837,8 @@ stages:
     outs:
     - path: data/openalex
       hash: md5
-      md5: b804cfbaf3c28c66f1021f50efb6b7d3.dir
-      size: 2877455
+      md5: 8088201b7885bc6a02cbb954b32a6aa0.dir
+      size: 2878347
       nfiles: 6
   fetch-github:
     cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-github.py
@@ -854,6 +854,41 @@ stages:
     outs:
     - path: data/github
       hash: md5
-      md5: 155373049d0fd0d0eff48b74fa97e23f.dir
-      size: 19124908
-      nfiles: 9290
+      md5: 1bbf2595cb9cc458e98203247ed09dd8.dir
+      size: 19140179
+      nfiles: 9295
+  analyze-dev-speed:
+    cmd: calkit nb execute --environment analyze --no-check --to html 
+      "notebooks/analyze-dev-speed.ipynb"
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: bd4ac862a0f5408617ddc484d346527e.dir
+      size: 2229
+      nfiles: 2
+    - path: .calkit/notebooks/cleaned/notebooks/analyze-dev-speed.ipynb
+      hash: md5
+      md5: 1215267e033dcc62fb09ed0635e78a06
+      size: 12414
+    - path: data/github
+      hash: md5
+      md5: 1bbf2595cb9cc458e98203247ed09dd8.dir
+      size: 19140179
+      nfiles: 9295
+    outs:
+    - path: .calkit/notebooks/executed/notebooks/analyze-dev-speed.ipynb
+      hash: md5
+      md5: b41a6d47581074c317fc60e67bd8a22f
+      size: 93927
+    - path: .calkit/notebooks/html/notebooks/analyze-dev-speed.html
+      hash: md5
+      md5: 18801796d6690addce16a855acb07793
+      size: 313419
+    - path: figures/pr-ttm.json
+      hash: md5
+      md5: 5411f2316d81df0ee54efceae0cd0487
+      size: 36920
+    - path: results/pr-ttm.csv
+      hash: md5
+      md5: cdff2f743adcfc8e1ca562979a14be33
+      size: 23085

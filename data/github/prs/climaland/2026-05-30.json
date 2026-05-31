@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 572,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR refactors the data sources for the leaderboard to use the struct `DataLoader`s. This replaces the dictionary that map names to functions which then takes a start date to materialize the `OutputVar`. This is currently being used for the coupler calibration (see https://github.com/CliMA/ClimaCoupler.jl/blob/main/src/CalibrationTools.jl).\r\n\r\nThis PR is one step towards attempting to keep the interface for the coupler and land calibration pipelines roughly the same.\r\n\r\nThe PR reverts the downgrade test to use v1 instead of v2 since it is simpler to understand and debug. There were also problems with the Project.toml.\r\n\r\n- Downloads is a standard library, so the version should be 1 instead of 1.6.\r\n- Flux 0.15 and 0.16 is not compatible with Julia 1.12. See https://github.com/FluxML/Flux.jl/issues/2583.\r\n- Dataframes needed to be updated due to ClimaTimeSteppers and Dataframes depending on PrettyTables.\r\n\r\nTODO\r\n- [x] Update documentation",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-13T23:04:58Z",
+    "deletions": 477,
+    "labels": [
+      {
+        "color": "fbca04",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACL-BGHw",
+        "name": "Run test calibration"
+      }
+    ],
+    "mergedAt": "2026-05-30T01:11:00Z",
+    "number": 1746,
+    "title": "Refactor data sources for leaderboard"
+  }
+]

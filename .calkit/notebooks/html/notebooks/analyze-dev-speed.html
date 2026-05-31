@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>analyze</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>analyze-dev-speed</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7511,17 +7511,23 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=90684771">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=79f81048">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Analyzing-CliMA-performance">Analyzing CliMA performance<a class="anchor-link" href="#Analyzing-CliMA-performance">¶</a></h1>
+<h1 id="Analyzing-CliMA-development-speed">Analyzing CliMA development speed<a class="anchor-link" href="#Analyzing-CliMA-development-speed">¶</a></h1><p>How quickly does CliMA's ecosystem turn pull requests around? Here we measure
+each merged PR's <em>time-to-merge</em> (the wall-clock time from when it was opened to
+when it was merged) and track the <strong>median time-to-merge per quarter</strong> over
+time, both per repository and across the whole ecosystem.</p>
+<p>Bot-authored PRs (CompatHelper, TagBot, Dependabot, GitHub Actions, etc.) are
+excluded so the metric reflects human development speed rather than automated
+dependency bumps.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bccedb8c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7549,17 +7555,19 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c2043bc0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8c60f169">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Speeding-up-AMIP">Speeding up AMIP<a class="anchor-link" href="#Speeding-up-AMIP">¶</a></h2>
+<h2 id="Load-merged-pull-requests">Load merged pull requests<a class="anchor-link" href="#Load-merged-pull-requests">¶</a></h2><p><code>fetch-github</code> stores merged PRs under <code>data/github/prs/&lt;repo&gt;/&lt;YYYY-MM-DD&gt;.json</code>
+(one file per UTC day a PR was merged in that repo). Each record carries
+<code>createdAt</code> and <code>mergedAt</code>, from which we derive the time-to-merge.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=08494f77">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7567,343 +7575,115 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
 
 <span class="n">ROOT</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"runs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"clima-perf"</span> <span class="o">/</span> <span class="s2">"runs"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"data"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"clima-perf"</span> <span class="o">/</span> <span class="s2">"data"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
     <span class="n">ROOT</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"clima-perf"</span>
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"data"</span>
+<span class="n">PRS_ROOT</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"prs"</span>
 
-<span class="n">logs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"runs/amip/*/output.log"</span><span class="p">))</span>
+<span class="c1"># Anything before 2018-Q1 predates the CliMA packaging effort; the time</span>
+<span class="c1"># axis is cropped to that floor (matches the analyze notebook).</span>
+<span class="n">MIN_QUARTER</span> <span class="o">=</span> <span class="s2">"2018-Q1"</span>
 
-<span class="n">REPOS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"ClimaAtmos"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/ClimaAtmos.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaCore"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/ClimaCore.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaCoupler"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/ClimaCoupler.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaTimesteppers"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/ClimaTimesteppers.jl"</span><span class="p">,</span>
-    <span class="s2">"RRTMGP"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/RRTMGP.jl"</span><span class="p">,</span>
-    <span class="s2">"Thermodynamics"</span><span class="p">:</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"repos/Thermodynamics.jl"</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="c1"># Minimum number of merged PRs in a repo-quarter for that point to be</span>
+<span class="c1"># plotted; medians over only one or two PRs are too noisy to be useful.</span>
+<span class="n">MIN_PRS_PER_POINT</span> <span class="o">=</span> <span class="mi">3</span>
 
-<span class="n">GITHUB_REPOS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"ClimaAtmos"</span><span class="p">:</span> <span class="s2">"CliMA/ClimaAtmos.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaCore"</span><span class="p">:</span> <span class="s2">"CliMA/ClimaCore.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaCoupler"</span><span class="p">:</span> <span class="s2">"CliMA/ClimaCoupler.jl"</span><span class="p">,</span>
-    <span class="s2">"ClimaTimesteppers"</span><span class="p">:</span> <span class="s2">"CliMA/ClimaTimeSteppers.jl"</span><span class="p">,</span>
-    <span class="s2">"RRTMGP"</span><span class="p">:</span> <span class="s2">"CliMA/RRTMGP.jl"</span><span class="p">,</span>
-    <span class="s2">"Thermodynamics"</span><span class="p">:</span> <span class="s2">"CliMA/Thermodynamics.jl"</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
+<span class="c1"># are clearly automated (Julia ecosystem bots).</span>
+<span class="n">EXTRA_BOTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JuliaTagBot"</span><span class="p">,</span> <span class="s2">"attobot"</span><span class="p">}</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">fetch_repo_history</span><span class="p">(</span><span class="n">repo_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">is_shallow</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="s2">"git"</span><span class="p">,</span>
-                    <span class="s2">"-C"</span><span class="p">,</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span>
-                    <span class="s2">"rev-parse"</span><span class="p">,</span>
-                    <span class="s2">"--is-shallow-repository"</span><span class="p">,</span>
-                <span class="p">],</span>
-                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="o">==</span> <span class="s2">"true"</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_shallow</span><span class="p">:</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="s2">"git"</span><span class="p">,</span>
-                    <span class="s2">"-C"</span><span class="p">,</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span>
-                    <span class="s2">"fetch"</span><span class="p">,</span>
-                    <span class="s2">"--unshallow"</span><span class="p">,</span>
-                    <span class="s2">"origin"</span><span class="p">,</span>
-                <span class="p">],</span>
-                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span> <span class="s2">"fetch"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"--prune"</span><span class="p">],</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-        <span class="c1"># Continue with local history if fetch is unavailable/fails</span>
-        <span class="k">pass</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_bot</span><span class="p">(</span><span class="n">author</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>
+        <span class="n">author</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_bot"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">login</span> <span class="ow">in</span> <span class="n">EXTRA_BOTS</span>
+        <span class="ow">or</span> <span class="n">login</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"[bot]"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">login</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"app/"</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
-<span class="k">for</span> <span class="n">repo_path</span> <span class="ow">in</span> <span class="n">REPOS</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-    <span class="n">fetch_repo_history</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span>
+<span class="c1"># CamelCase repo lookup so legend labels match the canonical package names.</span>
+<span class="n">camel_by_lc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">creation_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"repo_creation_dates.jsonl"</span>
+<span class="k">if</span> <span class="n">creation_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">creation_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)[</span><span class="s2">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">camel_by_lc</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">name</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">parse_iso_datetime</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
-    <span class="c1"># Handle both YYYY-MM-DDTHH:MM:SS and ...Z forms consistently in UTC</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">camel</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">camel_by_lc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_iso</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">dt</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">parse_sypd</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">"n_steps_completed = 40"</span> <span class="ow">in</span> <span class="n">line</span>
-            <span class="ow">or</span> <span class="s2">"n_steps_completed = 41"</span> <span class="ow">in</span> <span class="n">line</span>
-        <span class="p">):</span>
-            <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">found_step_40</span> <span class="ow">and</span> <span class="s2">"estimated_sypd = "</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">sypd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"estimated_sypd = "</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">break</span>
-    <span class="k">return</span> <span class="n">sypd</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quarter_of</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">-Q</span><span class="si">{</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span>
 
 
-<span class="n">rev_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quarter_start</span><span class="p">(</span><span class="n">quarter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+    <span class="n">year</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">quarter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-Q"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">year</span><span class="p">),</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">git_rev_at_time</span><span class="p">(</span><span class="n">repo_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span> <span class="n">dt</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">rev_cache</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">rev_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="n">rev</span> <span class="o">=</span> <span class="s2">""</span>
-    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"origin/main"</span><span class="p">,</span> <span class="s2">"main"</span><span class="p">]:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">rev</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="s2">"git"</span><span class="p">,</span>
-                    <span class="s2">"-C"</span><span class="p">,</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">repo_path</span><span class="p">),</span>
-                    <span class="s2">"rev-list"</span><span class="p">,</span>
-                    <span class="s2">"-1"</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">"--before=</span><span class="si">{</span><span class="n">dt</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                    <span class="n">ref</span><span class="p">,</span>
-                <span class="p">],</span>
-                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">rev</span><span class="p">:</span>
-                <span class="k">break</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-            <span class="n">rev</span> <span class="o">=</span> <span class="s2">""</span>
-    <span class="n">rev_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">rev</span> <span class="ow">or</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="n">rev_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+<span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">if</span> <span class="n">PRS_ROOT</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">repo_dir</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">PRS_ROOT</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">repo_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()):</span>
+                <span class="n">author</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">is_bot</span><span class="p">(</span><span class="n">author</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">created_raw</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"createdAt"</span><span class="p">)</span>
+                <span class="n">merged_raw</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mergedAt"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">created_raw</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">merged_raw</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">created</span> <span class="o">=</span> <span class="n">parse_iso</span><span class="p">(</span><span class="n">created_raw</span><span class="p">)</span>
+                <span class="n">merged</span> <span class="o">=</span> <span class="n">parse_iso</span><span class="p">(</span><span class="n">merged_raw</span><span class="p">)</span>
+                <span class="n">ttm_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">merged</span> <span class="o">-</span> <span class="n">created</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">86400.0</span>
+                <span class="k">if</span> <span class="n">ttm_days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">quarter</span> <span class="o">=</span> <span class="n">quarter_of</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">quarter</span> <span class="o">&lt;</span> <span class="n">MIN_QUARTER</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
+                        <span class="s2">"number"</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"number"</span><span class="p">),</span>
+                        <span class="s2">"author"</span><span class="p">:</span> <span class="n">author</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">),</span>
+                        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">created_raw</span><span class="p">,</span>
+                        <span class="s2">"merged_at"</span><span class="p">:</span> <span class="n">merged_raw</span><span class="p">,</span>
+                        <span class="s2">"quarter"</span><span class="p">:</span> <span class="n">quarter</span><span class="p">,</span>
+                        <span class="s2">"ttm_days"</span><span class="p">:</span> <span class="n">ttm_days</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">repo_revs_for_time</span><span class="p">(</span>
-    <span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">climacoupler_override</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="n">revs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">repo_name</span><span class="p">,</span> <span class="n">repo_path</span> <span class="ow">in</span> <span class="n">REPOS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">revs</span><span class="p">[</span><span class="n">repo_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">git_rev_at_time</span><span class="p">(</span><span class="n">repo_path</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">climacoupler_override</span><span class="p">:</span>
-        <span class="n">revs</span><span class="p">[</span><span class="s2">"ClimaCoupler"</span><span class="p">]</span> <span class="o">=</span> <span class="n">climacoupler_override</span>
-    <span class="k">return</span> <span class="n">revs</span>
-
-
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
-    <span class="n">run_date</span> <span class="o">=</span> <span class="n">parse_iso_datetime</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"date"</span><span class="p">:</span> <span class="n">run_date</span><span class="p">,</span>
-        <span class="s2">"run_from"</span><span class="p">:</span> <span class="s2">"calkit"</span><span class="p">,</span>
-        <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">parse_sypd</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span>
-        <span class="s2">"buildkite_commit"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="p">{</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_rev"</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">repo_revs_for_time</span><span class="p">(</span><span class="n">run_date</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="p">)</span>
-    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-
-<span class="c1"># Now read any fetched Buildkite logs</span>
-<span class="n">bk_jobs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"buildkite/*.json"</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">job_fpath</span> <span class="ow">in</span> <span class="n">bk_jobs</span><span class="p">:</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">job_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="n">run_date</span> <span class="o">=</span> <span class="n">parse_iso_datetime</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">])</span>
-    <span class="n">sypd</span> <span class="o">=</span> <span class="n">parse_sypd</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"raw_log_txt"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">))</span>
-    <span class="n">commit</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commit"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">commit</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">commit</span><span class="p">:</span>
-        <span class="n">commit</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"date"</span><span class="p">:</span> <span class="n">run_date</span><span class="p">,</span>
-        <span class="s2">"run_from"</span><span class="p">:</span> <span class="s2">"buildkite"</span><span class="p">,</span>
-        <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">sypd</span><span class="p">,</span>
-        <span class="s2">"buildkite_commit"</span><span class="p">:</span> <span class="n">commit</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_rev"</span><span class="p">:</span> <span class="n">v</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">repo_revs_for_time</span><span class="p">(</span>
-                <span class="n">run_date</span><span class="p">,</span>
-                <span class="n">climacoupler_override</span><span class="o">=</span><span class="n">commit</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="c1"># Keep a stable schema if no input rows are found</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-        <span class="n">schema</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"date"</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Datetime</span><span class="p">(</span><span class="n">time_zone</span><span class="o">=</span><span class="s2">"UTC"</span><span class="p">),</span>
-            <span class="s2">"run_from"</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Utf8</span><span class="p">,</span>
-            <span class="s2">"sypd"</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span>
-            <span class="s2">"buildkite_commit"</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Utf8</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-
-<span class="c1"># Add normalized SYPD column; normalize by the first non-null SYPD value</span>
-<span class="n">non_null_sypd</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">df</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">()</span>
-    <span class="k">if</span> <span class="s2">"sypd"</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
-    <span class="k">else</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">Float64</span><span class="p">)</span>
+<span class="n">prs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">prs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> merged non-bot PRs across "</span>
+    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prs_df</span><span class="p">[</span><span class="s1">'repo'</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">prs_df</span><span class="o">.</span><span class="n">empty</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2"> repos"</span>
 <span class="p">)</span>
-<span class="n">first_sypd</span> <span class="o">=</span> <span class="n">non_null_sypd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_null_sypd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">first_sypd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">then</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"sypd"</span><span class="p">)</span> <span class="o">/</span> <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">first_sypd</span><span class="p">))</span>
-    <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"speedup"</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># Ensure revision columns exist even in empty-data scenarios</span>
-<span class="k">for</span> <span class="n">repo_name</span> <span class="ow">in</span> <span class="n">GITHUB_REPOS</span><span class="p">:</span>
-    <span class="n">rev_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s2">_rev"</span>
-    <span class="k">if</span> <span class="n">rev_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Utf8</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">rev_col</span><span class="p">))</span>
-
-<span class="c1"># Compute diff URLs relative to PREVIOUS PLOTTED POINT (non-null speedup),</span>
-<span class="c1"># then join those URLs back to the full dataframe by stable row id</span>
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pdf</span><span class="p">[</span><span class="s2">"__row_id"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pdf</span><span class="p">))</span>
-<span class="n">plot_pdf</span> <span class="o">=</span> <span class="n">pdf</span><span class="p">[</span><span class="n">pdf</span><span class="p">[</span><span class="s2">"speedup"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="k">for</span> <span class="n">repo_name</span><span class="p">,</span> <span class="n">gh_repo</span> <span class="ow">in</span> <span class="n">GITHUB_REPOS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">rev_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s2">_rev"</span>
-    <span class="n">diff_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s2">_diff_url"</span>
-    <span class="n">prev_rev</span> <span class="o">=</span> <span class="n">plot_pdf</span><span class="p">[</span><span class="n">rev_col</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="p">(</span><span class="n">plot_pdf</span><span class="p">[</span><span class="n">rev_col</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">())</span>
-        <span class="o">&amp;</span> <span class="p">(</span><span class="n">prev_rev</span><span class="o">.</span><span class="n">notna</span><span class="p">())</span>
-        <span class="o">&amp;</span> <span class="p">(</span><span class="n">plot_pdf</span><span class="p">[</span><span class="n">rev_col</span><span class="p">]</span> <span class="o">!=</span> <span class="n">prev_rev</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">plot_pdf</span><span class="p">[</span><span class="n">diff_col</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">plot_pdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">changed</span><span class="p">,</span> <span class="n">diff_col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">"https://github.com/"</span>
-        <span class="o">+</span> <span class="n">gh_repo</span>
-        <span class="o">+</span> <span class="s2">"/compare/"</span>
-        <span class="o">+</span> <span class="n">prev_rev</span><span class="p">[</span><span class="n">changed</span><span class="p">]</span>
-        <span class="o">+</span> <span class="s2">"..."</span>
-        <span class="o">+</span> <span class="n">plot_pdf</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">changed</span><span class="p">,</span> <span class="n">rev_col</span><span class="p">]</span>
-    <span class="p">)</span>
-
-<span class="n">diff_cols</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">_diff_url"</span> <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">GITHUB_REPOS</span><span class="p">]</span>
-<span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"repos_changed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_pdf</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
-    <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">repo</span>
-            <span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">GITHUB_REPOS</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">_diff_url"</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">_diff_url"</span><span class="p">]</span>
-        <span class="p">]</span>
-    <span class="p">),</span>
-    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Hover text shows only repo names (not links).</span>
-<span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"hover_repo_changes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"repos_changed"</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
-    <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="s2">"No repo revision changes vs previous plotted point"</span>
-    <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s2">"None"</span>
-    <span class="k">else</span> <span class="sa">f</span><span class="s2">"Repos changed: </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"percent_change"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"speedup"</span><span class="p">]</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">plot_pdf</span><span class="p">[</span><span class="s2">"speedup"</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="mf">100.0</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-    <span class="n">plot_pdf</span><span class="p">[[</span><span class="s2">"__row_id"</span><span class="p">,</span> <span class="o">*</span><span class="n">diff_cols</span><span class="p">,</span> <span class="s2">"repos_changed"</span><span class="p">]],</span>
-    <span class="n">on</span><span class="o">=</span><span class="s2">"__row_id"</span><span class="p">,</span>
-    <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"__row_id"</span><span class="p">])</span>
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">df</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/amip.csv"</span><span class="p">)</span>
-
-<span class="c1"># Export markdown table</span>
-<span class="n">latest_plot_pdf</span> <span class="o">=</span> <span class="n">plot_pdf</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"date"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">md_lines</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"| Date | Speedup | Change | Repo diffs |"</span><span class="p">,</span>
-    <span class="s2">"|---|---:|---:|---|"</span><span class="p">,</span>
-<span class="p">]</span>
-<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">latest_plot_pdf</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-    <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">repo_name</span> <span class="ow">in</span> <span class="n">GITHUB_REPOS</span><span class="p">:</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s2">_diff_url"</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">url</span><span class="p">:</span>
-            <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
-    <span class="n">repo_diff</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">links</span><span class="p">)</span> <span class="k">if</span> <span class="n">links</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="n">pct_change</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"percent_change"</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">pct_change</span> <span class="o">==</span> <span class="n">pct_change</span><span class="p">:</span>
-        <span class="n">rounded_pct_change</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">pct_change</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">pct_change_text</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">""</span> <span class="k">if</span> <span class="n">rounded_pct_change</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rounded_pct_change</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">%"</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">pct_change_text</span> <span class="o">=</span> <span class="s2">"None"</span>
-    <span class="n">md_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"| </span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">'</span><span class="p">)</span><span class="si">}</span><span class="s2"> | "</span>
-        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">'speedup'</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">pct_change_text</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">repo_diff</span><span class="si">}</span><span class="s2"> |"</span>
-    <span class="p">)</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/amip-repo-diff-links.md"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">md_lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-
-<span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span> <span class="o">=</span> <span class="n">plot_pdf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">"date"</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">"speedup"</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"Flagship AMIP benchmark (16 horiz. elem.)"</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="s2">"plotly"</span><span class="p">,</span>
-<span class="p">)</span>  <span class="c1"># type: ignore</span>
-
-<span class="c1"># Use lines and markers; hover notes changed repos only</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span>
-    <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
-    <span class="n">customdata</span><span class="o">=</span><span class="n">plot_pdf</span><span class="p">[[</span><span class="s2">"hover_repo_changes"</span><span class="p">,</span> <span class="s2">"sypd"</span><span class="p">]],</span>
-    <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">"Date: %</span><span class="si">{x}</span><span class="s2">&lt;br&gt;"</span>
-        <span class="s2">"Speedup: %</span><span class="si">{y:.3f}</span><span class="s2">&lt;br&gt;"</span>
-        <span class="s2">"SYPD: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;br&gt;"</span>
-        <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
-    <span class="p">),</span>
-<span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">yaxis_title</span><span class="o">=</span><span class="s2">"Speedup"</span><span class="p">,</span> <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">"Date"</span><span class="p">)</span>
-
-<span class="c1"># Save as PNG and JSON</span>
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/amip-speedup.json"</span><span class="p">)</span>
-<span class="n">fig</span>
+<span class="n">prs_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -7916,71 +7696,113 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>shape: (100, 18)
-┌────────────┬───────────┬───────┬────────────┬───┬────────────┬───────────┬───────────┬───────────┐
-│ date       ┆ run_from  ┆ sypd  ┆ buildkite_ ┆ … ┆ ClimaTimes ┆ RRTMGP_di ┆ Thermodyn ┆ repos_cha │
-│ ---        ┆ ---       ┆ ---   ┆ commit     ┆   ┆ teppers_di ┆ ff_url    ┆ amics_dif ┆ nged      │
-│ datetime[μ ┆ str       ┆ f64   ┆ ---        ┆   ┆ ff_url     ┆ ---       ┆ f_url     ┆ ---       │
-│ s, UTC]    ┆           ┆       ┆ str        ┆   ┆ ---        ┆ str       ┆ ---       ┆ f64       │
-│            ┆           ┆       ┆            ┆   ┆ str        ┆           ┆ str       ┆           │
-╞════════════╪═══════════╪═══════╪════════════╪═══╪════════════╪═══════════╪═══════════╪═══════════╡
-│ 2025-10-15 ┆ calkit    ┆ null  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-01 ┆ calkit    ┆ 0.059 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-02 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-03 ┆ calkit    ┆ 0.048 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-04 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ …          ┆ …         ┆ …     ┆ …          ┆ … ┆ …          ┆ …         ┆ …         ┆ …         │
-│ 2026-05-22 ┆ buildkite ┆ 0.238 ┆ 17da857bee ┆ … ┆ https://gi ┆ null      ┆ null      ┆ 3.0       │
-│ 02:01:10.8 ┆           ┆       ┆ 772d6cc045 ┆   ┆ thub.com/C ┆           ┆           ┆           │
-│ 81 UTC     ┆           ┆       ┆ 12ca9778ce ┆   ┆ liMA/Clima ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆ …          ┆           ┆           ┆           │
-│ 2026-05-26 ┆ buildkite ┆ 0.245 ┆ c194c320e9 ┆ … ┆ null       ┆ https://g ┆ null      ┆ 4.0       │
-│ 02:01:08.5 ┆           ┆       ┆ 749174d7d4 ┆   ┆            ┆ ithub.com ┆           ┆           │
-│ 85 UTC     ┆           ┆       ┆ 03c09bd0a0 ┆   ┆            ┆ /CliMA/RR ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆ TMG…      ┆           ┆           │
-│ 2026-05-27 ┆ buildkite ┆ 0.244 ┆ d8776ab5cf ┆ … ┆ null       ┆ null      ┆ null      ┆ 2.0       │
-│ 02:01:09.3 ┆           ┆       ┆ 95f73ec583 ┆   ┆            ┆           ┆           ┆           │
-│ 40 UTC     ┆           ┆       ┆ e6d45c6c93 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-05-28 ┆ buildkite ┆ 0.245 ┆ 44fcb38b98 ┆ … ┆ null       ┆ null      ┆ null      ┆ 3.0       │
-│ 02:01:08.2 ┆           ┆       ┆ ed31d753c4 ┆   ┆            ┆           ┆           ┆           │
-│ 63 UTC     ┆           ┆       ┆ 64b54a2b9a ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-05-29 ┆ buildkite ┆ 0.241 ┆ 44fcb38b98 ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
-│ 02:01:10.2 ┆           ┆       ┆ ed31d753c4 ┆   ┆            ┆           ┆           ┆           │
-│ 62 UTC     ┆           ┆       ┆ 64b54a2b9a ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-└────────────┴───────────┴───────┴────────────┴───┴────────────┴───────────┴───────────┴───────────┘
+<pre>11904 merged non-bot PRs across 22 repos
 </pre>
 </div>
 </div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>repo</th>
+<th>number</th>
+<th>author</th>
+<th>created_at</th>
+<th>merged_at</th>
+<th>quarter</th>
+<th>ttm_days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>CalibrateEmulateSample</td>
+<td>85</td>
+<td>jakebolewski</td>
+<td>2020-11-18T00:57:16Z</td>
+<td>2020-11-18T01:10:02Z</td>
+<td>2020-Q4</td>
+<td>0.008866</td>
+</tr>
+<tr>
+<th>1</th>
+<td>CalibrateEmulateSample</td>
+<td>83</td>
+<td>agarbuno</td>
+<td>2020-11-03T03:29:19Z</td>
+<td>2020-11-18T17:14:16Z</td>
+<td>2020-Q4</td>
+<td>15.572882</td>
+</tr>
+<tr>
+<th>2</th>
+<td>CalibrateEmulateSample</td>
+<td>223</td>
+<td>odunbar</td>
+<td>2023-07-12T17:28:38Z</td>
+<td>2023-07-12T19:17:23Z</td>
+<td>2023-Q3</td>
+<td>0.075521</td>
+</tr>
+<tr>
+<th>3</th>
+<td>CalibrateEmulateSample</td>
+<td>253</td>
+<td>bielim</td>
+<td>2023-11-13T16:00:22Z</td>
+<td>2023-12-11T22:37:22Z</td>
+<td>2023-Q4</td>
+<td>28.275694</td>
+</tr>
+<tr>
+<th>4</th>
+<td>CalibrateEmulateSample</td>
+<td>246</td>
+<td>odunbar</td>
+<td>2023-11-01T19:51:15Z</td>
+<td>2023-11-01T20:49:48Z</td>
+<td>2023-Q4</td>
+<td>0.040660</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cefceaaa">
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a573cbfe">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Indicators-of-external-value-creation">Indicators of external value creation<a class="anchor-link" href="#Indicators-of-external-value-creation">¶</a></h2><p>In this section we try to estimate how CliMA is impacting the external  world by looking at engagement on GitHub, dependents in the Julia registry, and article citations.</p>
+<h2 id="Median-time-to-merge-per-quarter">Median time-to-merge per quarter<a class="anchor-link" href="#Median-time-to-merge-per-quarter">¶</a></h2><p>We bin merged PRs by the quarter they were merged in and take the median
+time-to-merge. One trace is drawn per repository (only quarters with at least
+<code>MIN_PRS_PER_POINT</code> merged PRs are plotted), and a thick gray line shows the
+median computed over <em>all</em> repositories' PRs combined.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f7419b3d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=135dde2b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7988,53 +7810,43 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">empty</span> <span class="o">=</span> <span class="n">prs_df</span><span class="o">.</span><span class="n">empty</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="c1"># Per-repo, per-quarter median time-to-merge + PR count.</span>
+<span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+    <span class="n">repo_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">]</span>
+    <span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">repo_q</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])[</span><span class="s2">"ttm_days"</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n_prs</span><span class="o">=</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">median_ttm_days</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="p">)</span>
 
-<span class="n">DATA</span> <span class="o">=</span> <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"data"</span>
+<span class="c1"># Ecosystem-wide median over all repos, per quarter.</span>
+<span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+    <span class="n">all_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">])</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">all_q</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">prs_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)[</span><span class="s2">"ttm_days"</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">n_prs</span><span class="o">=</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">median_ttm_days</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">all_q</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"All repos"</span><span class="p">)</span>
 
-<span class="c1"># Hand-curated map: canonical paper DOI (lowercased) -&gt; CliMA software package.</span>
-<span class="c1"># Used to color the software-paper panel of the external-engagement figure.</span>
-<span class="c1"># Papers whose DOI is not in this map (or whose entry on the publications</span>
-<span class="c1"># page has no DOI at all) implicitly fall outside the software-stacked panel</span>
-<span class="c1"># but are still counted in the "all citations" total.</span>
-<span class="n">PACKAGE_BY_DOI</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"10.21105/joss.02018"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Ramadhan et al. 2020, JOSS</span>
-    <span class="s2">"10.1029/2024ms004465"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Silvestri et al. 2024, JAMES</span>
-    <span class="s2">"10.48550/arxiv.2502.14148"</span><span class="p">:</span> <span class="s2">"Oceananigans"</span><span class="p">,</span>  <span class="c1"># Wagner et al. 2025, arXiv preprint</span>
-    <span class="s2">"10.21105/joss.04869"</span><span class="p">:</span> <span class="s2">"EnsembleKalmanProcesses"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2022, JOSS</span>
-    <span class="s2">"10.21105/joss.06372"</span><span class="p">:</span> <span class="s2">"CalibrateEmulateSample"</span><span class="p">,</span>  <span class="c1"># Dunbar et al. 2024, JOSS</span>
-    <span class="s2">"10.1029/2025ms005118"</span><span class="p">:</span> <span class="s2">"ClimaLand"</span><span class="p">,</span>  <span class="c1"># Deck et al. 2026, JAMES</span>
-    <span class="s2">"10.1029/2025ms005014"</span><span class="p">:</span> <span class="s2">"ClimaCore"</span><span class="p">,</span>  <span class="c1"># atmosphere dynamical core</span>
-    <span class="s2">"10.5194/gmd-15-6259-2022"</span><span class="p">:</span> <span class="s2">"ClimaAtmos"</span><span class="p">,</span>  <span class="c1"># ClimateMachine v0.2.0 lineage</span>
-<span class="p">}</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">package_for_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="n">PACKAGE_BY_DOI</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">doi</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
-
-
-<span class="c1"># Load the four normalized OpenAlex tables written by fetch-citations.</span>
-<span class="c1"># resolved-pubs is the master pubs table (every work fetched, CliMA pubs +</span>
-<span class="c1"># the works citing them, deduped). clima-pubs is the slim extras keyed by</span>
-<span class="c1"># openalex_id — join on openalex_id to recover full CliMA-pub records.</span>
-<span class="n">openalex_dir</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"openalex"</span>
-<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span>
-    <span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"resolved-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span>
+<span class="n">ttm_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">repo_q</span><span class="p">,</span> <span class="n">all_q</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ttm_df</span><span class="p">[</span><span class="s2">"quarter_start"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ttm_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 <span class="p">)</span>
-<span class="n">clima_extras_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"clima-pubs.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">citation_edges_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">openalex_dir</span> <span class="o">/</span> <span class="s2">"citations.jsonl"</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">clima_pubs_df</span> <span class="o">=</span> <span class="n">clima_extras_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-    <span class="n">resolved_pubs_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"resolved_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | clima_pubs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">clima_pubs_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> | "</span>
-    <span class="sa">f</span><span class="s2">"citation_edges=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">citation_edges_df</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
+<span class="n">ttm_df</span> <span class="o">=</span> <span class="n">ttm_df</span><span class="p">[</span>
+    <span class="p">[</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"quarter_start"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">,</span> <span class="s2">"median_ttm_days"</span><span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ttm_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/pr-ttm.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wrote </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ttm_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows to results/pr-ttm.csv"</span><span class="p">)</span>
+<span class="n">ttm_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8047,13 +7859,87 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>resolved_pubs=2671 | clima_pubs=118 | citation_edges=3511
+<pre>wrote 424 rows to results/pr-ttm.csv
 </pre>
 </div>
 </div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>repo</th>
+<th>quarter</th>
+<th>quarter_start</th>
+<th>n_prs</th>
+<th>median_ttm_days</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>All repos</td>
+<td>2018-Q4</td>
+<td>2018-10-01</td>
+<td>5</td>
+<td>0.004931</td>
+</tr>
+<tr>
+<th>1</th>
+<td>All repos</td>
+<td>2019-Q1</td>
+<td>2019-01-01</td>
+<td>27</td>
+<td>0.170949</td>
+</tr>
+<tr>
+<th>2</th>
+<td>All repos</td>
+<td>2019-Q2</td>
+<td>2019-04-01</td>
+<td>71</td>
+<td>0.139456</td>
+</tr>
+<tr>
+<th>3</th>
+<td>All repos</td>
+<td>2019-Q3</td>
+<td>2019-07-01</td>
+<td>115</td>
+<td>0.173380</td>
+</tr>
+<tr>
+<th>4</th>
+<td>All repos</td>
+<td>2019-Q4</td>
+<td>2019-10-01</td>
+<td>181</td>
+<td>0.104514</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4c26f1ec">
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=341cd332">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8061,270 +7947,14 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plotly.subplots</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_subplots</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pc</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">parse_iso</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">quarter_key</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">-Q</span><span class="si">{</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">date_to_quarter</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Accepts str ("YYYY-MM-DD"), pandas Timestamp, or NaN. pd.read_json</span>
-    <span class="c1"># autoconverts ISO-date strings to Timestamps, so we coerce defensively.</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-        <span class="k">pass</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)[:</span><span class="mi">10</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">y</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[:</span><span class="mi">4</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">])</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">-Q</span><span class="si">{</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span>
-
-
-<span class="c1"># Anything before 2018-Q1 is noise from old papers that predate the CliMA</span>
-<span class="c1"># packaging effort; the time-series axis is cropped to that floor.</span>
-<span class="n">MIN_QUARTER</span> <span class="o">=</span> <span class="s2">"2018-Q1"</span>
-
-
-<span class="c1"># ----- Internal-user set (canonical CliMA org members) ---------------</span>
-<span class="n">members_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"clima_members.json"</span>
-<span class="n">clima_members</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CliMA"</span><span class="p">}</span>
-<span class="k">if</span> <span class="n">members_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="n">clima_members</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">members_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"members"</span><span class="p">,</span> <span class="p">[])</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Repos ordered by total merged-PR volume (busiest first) for a stable,</span>
+<span class="c1"># meaningful legend order.</span>
+<span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+    <span class="n">repo_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">repo_order</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">prs_df</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
     <span class="p">)</span>
-
-
-<span class="c1"># Bot accounts whose ``is_bot`` field is false on the GitHub API but which</span>
-<span class="c1"># are clearly automated — usually Julia ecosystem bots.</span>
-<span class="n">EXTRA_BOTS</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JuliaTagBot"</span><span class="p">,</span> <span class="s2">"attobot"</span><span class="p">}</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">login</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">login</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"[bot]"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">login</span> <span class="ow">in</span> <span class="n">EXTRA_BOTS</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">return</span> <span class="n">login</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clima_members</span>
-
-
-<span class="c1"># ----- CamelCase repo lookup -----------------------------------------</span>
-<span class="n">camel_by_lc</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">creation_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"repo_creation_dates.jsonl"</span>
-<span class="k">if</span> <span class="n">creation_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">creation_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)[</span><span class="s2">"name"</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-        <span class="n">camel_by_lc</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">name</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">camel</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">camel_by_lc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
-
-
-<span class="c1"># ----- Citation event table -------------------------------------------</span>
-<span class="c1"># "Internal" = the citing pub shares any author OpenAlex ID with any CliMA</span>
-<span class="c1"># pub. Computed downstream so the filter can be tuned without refetching.</span>
-<span class="n">clima_author_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">clima_pubs_df</span><span class="p">[</span><span class="s2">"author_ids"</span><span class="p">]:</span>
-    <span class="n">clima_author_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ids</span> <span class="ow">or</span> <span class="p">[])</span>
-
-<span class="n">resolved_pubs_df</span> <span class="o">=</span> <span class="n">resolved_pubs_df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
-    <span class="n">is_internal</span><span class="o">=</span><span class="n">resolved_pubs_df</span><span class="p">[</span><span class="s2">"author_ids"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-        <span class="k">lambda</span> <span class="n">ids</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ids</span> <span class="ow">or</span> <span class="p">[])</span> <span class="o">&amp;</span> <span class="n">clima_author_ids</span><span class="p">)</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">cited_lookup</span> <span class="o">=</span> <span class="n">clima_pubs_df</span><span class="p">[[</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">]]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
-    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"openalex_id"</span><span class="p">:</span> <span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="s2">"doi"</span><span class="p">:</span> <span class="s2">"cited_doi"</span><span class="p">}</span>
-<span class="p">)</span>
-<span class="n">joined</span> <span class="o">=</span> <span class="n">citation_edges_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-    <span class="n">resolved_pubs_df</span><span class="p">[</span>
-        <span class="p">[</span><span class="s2">"openalex_id"</span><span class="p">,</span> <span class="s2">"publication_date"</span><span class="p">,</span> <span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"is_internal"</span><span class="p">]</span>
-    <span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"openalex_id"</span><span class="p">:</span> <span class="s2">"citing_openalex_id"</span><span class="p">}),</span>
-    <span class="n">on</span><span class="o">=</span><span class="s2">"citing_openalex_id"</span><span class="p">,</span>
-    <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">cited_lookup</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">"cited_openalex_id"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
-<span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="o">~</span><span class="n">joined</span><span class="p">[</span><span class="s2">"is_internal"</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="kc">False</span><span class="p">)]</span>
-<span class="n">joined</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">joined</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_QUARTER</span><span class="p">)]</span>
-<span class="n">joined</span><span class="p">[</span><span class="s2">"cited_package"</span><span class="p">]</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="s2">"cited_doi"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">package_for_doi</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
-<span class="n">cit_events_df</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span>
-    <span class="p">[</span>
-        <span class="s2">"quarter"</span><span class="p">,</span>
-        <span class="s2">"cited_doi"</span><span class="p">,</span>
-        <span class="s2">"cited_package"</span><span class="p">,</span>
-        <span class="s2">"citing_openalex_id"</span><span class="p">,</span>
-        <span class="s2">"publication_date"</span><span class="p">,</span>
-    <span class="p">]</span>
-<span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># ----- Event-level GitHub engagement rows -----------------------------</span>
-<span class="n">eng_event_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">add_eng_event</span><span class="p">(</span>
-    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">login</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">iso_ts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">iso_ts</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">dt</span> <span class="o">=</span> <span class="n">parse_iso</span><span class="p">(</span><span class="n">iso_ts</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="n">q</span> <span class="o">=</span> <span class="n">quarter_key</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="n">MIN_QUARTER</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="n">eng_event_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="s2">"quarter"</span><span class="p">:</span> <span class="n">q</span><span class="p">,</span>
-            <span class="s2">"repo"</span><span class="p">:</span> <span class="n">repo</span><span class="p">,</span>
-            <span class="s2">"event_type"</span><span class="p">:</span> <span class="n">event_type</span><span class="p">,</span>
-            <span class="s2">"login"</span><span class="p">:</span> <span class="n">login</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
-            <span class="s2">"event_at"</span><span class="p">:</span> <span class="n">iso_ts</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-
-
-<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"stargazers"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.jsonl"</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="n">ev</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="n">login</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">((</span><span class="n">ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-        <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"star"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"starred_at"</span><span class="p">))</span>
-
-<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"forks"</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.jsonl"</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="k">continue</span>
-        <span class="n">fk</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner_type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Organization"</span>
-            <span class="ow">and</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"CliMA"</span>
-        <span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">login</span> <span class="o">=</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_owner"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">):</span>
-            <span class="k">continue</span>
-        <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">((</span><span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"repo"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">".jl"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-        <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"fork"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">fk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fork_created"</span><span class="p">))</span>
-
-<span class="k">for</span> <span class="n">repo_dir</span> <span class="ow">in</span> <span class="p">(</span><span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"issues"</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
-    <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">repo_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">iss</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()):</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">iss</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">login</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_bot"</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"issue"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">iss</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"createdAt"</span><span class="p">))</span>
-
-<span class="n">prs_root</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"github"</span> <span class="o">/</span> <span class="s2">"prs"</span>
-<span class="k">for</span> <span class="n">repo_dir</span> <span class="ow">in</span> <span class="n">prs_root</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
-    <span class="n">repo</span> <span class="o">=</span> <span class="n">camel</span><span class="p">(</span><span class="n">repo_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">repo_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read_text</span><span class="p">()):</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">login</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"login"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_bot"</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_external</span><span class="p">(</span><span class="n">login</span><span class="p">):</span>
-                <span class="k">continue</span>
-            <span class="n">add_eng_event</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s2">"pr_merged"</span><span class="p">,</span> <span class="n">login</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mergedAt"</span><span class="p">))</span>
-
-<span class="n">eng_events_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">eng_event_rows</span><span class="p">)</span>
-
-<span class="c1"># ----- New external Julia-registry dependents -------------------------</span>
-<span class="c1"># Read the event-log table written by fetch-registry. Group by the quarter</span>
-<span class="c1"># of ``first_seen_at`` to get "new external dependents per quarter, by</span>
-<span class="c1"># CliMA package". External = the dependent's repo is not in the CliMA org.</span>
-<span class="n">deps_path</span> <span class="o">=</span> <span class="n">DATA</span> <span class="o">/</span> <span class="s2">"julia-registry"</span> <span class="o">/</span> <span class="s2">"dependents.jsonl"</span>
-<span class="n">deps_df</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">deps_path</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">deps_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="n">deps_df</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span><span class="o">~</span><span class="n">deps_df</span><span class="p">[</span><span class="s2">"is_clima"</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span><span class="s2">"first_seen_at"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">date_to_quarter</span><span class="p">)</span>
-    <span class="n">deps_df</span> <span class="o">=</span> <span class="n">deps_df</span><span class="p">[</span>
-        <span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">deps_df</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_QUARTER</span><span class="p">)</span>
-    <span class="p">]</span>
-<span class="n">deps_pivot</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">deps_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"clima_package"</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-<span class="p">)</span>
-
-<span class="c1"># ----- Aggregations driving the figure --------------------------------</span>
-<span class="n">all_by_q</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">cit_events_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">cit_events_df</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">else</span> <span class="p">{}</span>
-<span class="p">)</span>
-<span class="n">sw_pivot</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">cit_events_df</span><span class="p">[</span><span class="n">cit_events_df</span><span class="p">[</span><span class="s2">"cited_package"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">]</span>
-    <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"cited_package"</span><span class="p">])</span>
-    <span class="o">.</span><span class="n">size</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">cit_events_df</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-<span class="p">)</span>
-<span class="n">eng_pivot</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">eng_events_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_events_df</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-<span class="p">)</span>
-
-<span class="n">all_quarters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-    <span class="nb">set</span><span class="p">(</span><span class="n">all_by_q</span><span class="p">)</span>
-    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">sw_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">eng_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-    <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">deps_pivot</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="n">sw_pivot</span> <span class="o">=</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="n">eng_pivot</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="n">deps_pivot</span> <span class="o">=</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">all_quarters</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="n">sw_totals</span> <span class="o">=</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sw_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="n">sw_order</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sw_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
-<span class="p">]</span>
-<span class="n">eng_totals</span> <span class="o">=</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">eng_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="n">eng_order</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">r</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">eng_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
-<span class="p">]</span>
-<span class="n">deps_totals</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">deps_pivot</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">deps_pivot</span><span class="o">.</span><span class="n">empty</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="n">deps_order</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">deps_totals</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
-<span class="p">]</span>
-
-<span class="c1"># Unified color map: same package name gets the same color across the</span>
-<span class="c1"># software-citations, GitHub-engagement, and registry-dependents panels.</span>
-<span class="n">combined_totals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="p">(</span><span class="n">sw_totals</span><span class="p">,</span> <span class="n">eng_totals</span><span class="p">,</span> <span class="n">deps_totals</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">combined_totals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-<span class="n">unified_order</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined_totals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="n">combined_totals</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
 
 <span class="n">palette</span> <span class="o">=</span> <span class="p">(</span>
     <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Plotly</span><span class="p">)</span>
@@ -8332,117 +7962,67 @@ a.anchor-link {
     <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Light24</span><span class="p">)</span>
     <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Dark24</span><span class="p">)</span>
 <span class="p">)</span>
-<span class="n">color_for</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">palette</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unified_order</span><span class="p">)</span>
+<span class="n">color_for</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="n">palette</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">repo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">repo_order</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="c1"># ----- Figure ---------------------------------------------------------</span>
-<span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
-    <span class="n">rows</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-    <span class="n">cols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">shared_xaxes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-    <span class="n">subplot_titles</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">"All paper citations"</span><span class="p">,</span>
-        <span class="s2">"Software paper citations"</span><span class="p">,</span>
-        <span class="s2">"GitHub stars/forks/issues/PRs"</span><span class="p">,</span>
-        <span class="s2">"New Julia registry dependents"</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">row_heights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">,</span> <span class="mf">0.24</span><span class="p">],</span>
-<span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
 
-<span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">"All papers"</span><span class="p">,</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">all_quarters</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">all_by_q</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">all_quarters</span><span class="p">],</span>
-    <span class="n">marker_color</span><span class="o">=</span><span class="s2">"#888"</span><span class="p">,</span>
-    <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">legend_shown</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">sw_order</span><span class="p">:</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">all_quarters</span><span class="p">,</span>
-        <span class="n">y</span><span class="o">=</span><span class="n">sw_pivot</span><span class="p">[</span><span class="n">pkg</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-        <span class="n">marker_color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">pkg</span><span class="p">],</span>
-        <span class="n">legendgroup</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
-        <span class="n">showlegend</span><span class="o">=</span><span class="n">pkg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">legend_shown</span><span class="p">,</span>
-        <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">repo_order</span><span class="p">:</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">repo_q</span><span class="p">[</span>
+        <span class="p">(</span><span class="n">repo_q</span><span class="p">[</span><span class="s2">"repo"</span><span class="p">]</span> <span class="o">==</span> <span class="n">repo</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">repo_q</span><span class="p">[</span><span class="s2">"n_prs"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MIN_PRS_PER_POINT</span><span class="p">)</span>
+    <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sub</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">sub</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]]</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+        <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">"median_ttm_days"</span><span class="p">],</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines+markers"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">1.5</span><span class="p">),</span>
+            <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+            <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"&lt;b&gt;</span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s2">&lt;/b&gt;&lt;br&gt;"</span>
+                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                <span class="s2">"Median TTM: %</span><span class="si">{y:.1f}</span><span class="s2"> days&lt;br&gt;"</span>
+                <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
     <span class="p">)</span>
-    <span class="n">legend_shown</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">repo</span> <span class="ow">in</span> <span class="n">eng_order</span><span class="p">:</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">all_quarters</span><span class="p">,</span>
-        <span class="n">y</span><span class="o">=</span><span class="n">eng_pivot</span><span class="p">[</span><span class="n">repo</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-        <span class="n">marker_color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">repo</span><span class="p">],</span>
-        <span class="n">legendgroup</span><span class="o">=</span><span class="n">repo</span><span class="p">,</span>
-        <span class="n">showlegend</span><span class="o">=</span><span class="n">repo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">legend_shown</span><span class="p">,</span>
-        <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="c1"># Thick gray ecosystem-wide line, drawn last so it sits on top.</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">all_q</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+    <span class="n">all_sorted</span> <span class="o">=</span> <span class="n">all_q</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"quarter"</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+        <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">quarter_start</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">all_sorted</span><span class="p">[</span><span class="s2">"quarter"</span><span class="p">]],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[</span><span class="s2">"median_ttm_days"</span><span class="p">],</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"All repos"</span><span class="p">,</span>
+            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#666666"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+            <span class="n">customdata</span><span class="o">=</span><span class="n">all_sorted</span><span class="p">[[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"n_prs"</span><span class="p">]],</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"&lt;b&gt;All repos&lt;/b&gt;&lt;br&gt;"</span>
+                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;br&gt;"</span>
+                <span class="s2">"Median TTM: %</span><span class="si">{y:.1f}</span><span class="s2"> days&lt;br&gt;"</span>
+                <span class="s2">"Merged PRs: %</span><span class="si">{customdata[1]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
     <span class="p">)</span>
-    <span class="n">legend_shown</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">deps_order</span><span class="p">:</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">add_bar</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">all_quarters</span><span class="p">,</span>
-        <span class="n">y</span><span class="o">=</span><span class="n">deps_pivot</span><span class="p">[</span><span class="n">pkg</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-        <span class="n">marker_color</span><span class="o">=</span><span class="n">color_for</span><span class="p">[</span><span class="n">pkg</span><span class="p">],</span>
-        <span class="n">legendgroup</span><span class="o">=</span><span class="n">pkg</span><span class="p">,</span>
-        <span class="n">showlegend</span><span class="o">=</span><span class="n">pkg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">legend_shown</span><span class="p">,</span>
-        <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-        <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">legend_shown</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
-    <span class="n">barmode</span><span class="o">=</span><span class="s2">"stack"</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"External engagement"</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
-    <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
-    <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">tracegroupgap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Pull request time-to-merge"</span><span class="p">,</span>
+    <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span>
+    <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">"Median time-to-merge (days)"</span><span class="p">,</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+    <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">itemsizing</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">)),</span>
 <span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Citations/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Events/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"New deps/quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Quarter"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># ----- Persist figure + event-level CSVs ------------------------------</span>
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/external-engagement.json"</span><span class="p">)</span>
-
-<span class="n">cit_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
-    <span class="p">[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"cited_doi"</span><span class="p">,</span> <span class="s2">"citing_openalex_id"</span><span class="p">]</span>
-<span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/external-citations.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">eng_events_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
-    <span class="p">[</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"repo"</span><span class="p">,</span> <span class="s2">"event_type"</span><span class="p">,</span> <span class="s2">"event_at"</span><span class="p">]</span>
-<span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/github-engagement.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">deps_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-    <span class="n">deps_df</span><span class="p">[</span>
-        <span class="p">[</span>
-            <span class="s2">"quarter"</span><span class="p">,</span>
-            <span class="s2">"clima_package"</span><span class="p">,</span>
-            <span class="s2">"dependent_name"</span><span class="p">,</span>
-            <span class="s2">"dependent_repo"</span><span class="p">,</span>
-            <span class="s2">"first_seen_at"</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"quarter"</span><span class="p">,</span> <span class="s2">"clima_package"</span><span class="p">,</span> <span class="s2">"dependent_name"</span><span class="p">])</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-        <span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"results/new-registry-dependents.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cit_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> citation events | "</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eng_events_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> engagement events | "</span>
-    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">deps_df</span><span class="p">)</span><span class="si">}</span><span class="s2"> new external registry dependents"</span>
-<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">ROOT</span> <span class="o">/</span> <span class="s2">"figures/pr-ttm.json"</span><span class="p">)</span>
 <span class="n">fig</span>
 </pre></div>
 </div>
@@ -8453,13 +8033,6 @@ a.anchor-link {
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>2376 citation events | 3920 engagement events | 27 new external registry dependents
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 </div>

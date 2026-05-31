@@ -137,3 +137,23 @@ stages:
           cache: false
     desc: Automatically generated from the 'analyze' stage in 
       calkit.yaml. Changes made here will be overwritten.
+  analyze-dev-speed:
+    cmd: calkit nb execute --environment analyze --no-check --to html 
+      "notebooks/analyze-dev-speed.ipynb"
+    deps:
+      - .calkit/notebooks/cleaned/notebooks/analyze-dev-speed.ipynb
+      - data/github
+      - .calkit/env-locks/analyze
+    outs:
+      - results/pr-ttm.csv:
+          cache: false
+          persist: false
+      - figures/pr-ttm.json:
+          cache: false
+          persist: false
+      - .calkit/notebooks/executed/notebooks/analyze-dev-speed.ipynb:
+          cache: false
+      - .calkit/notebooks/html/notebooks/analyze-dev-speed.html:
+          cache: false
+    desc: Automatically generated from the 'analyze-dev-speed' stage 
+      in calkit.yaml. Changes made here will be overwritten.
