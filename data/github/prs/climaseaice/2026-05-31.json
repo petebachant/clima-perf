@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 128,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n`SemiImplicitStress` (used for ice-ocean and ice-atmosphere drag) caches per-cell implicit-stress coefficients in its `\u03c4\u1d62\u1d64`/`\u03c4\u1d62\u1d65` Fields. They are written by `compute_implicit_stress_coefficients!` inside the EVP substep loop and read by `_compute_sea_ice_ocean_stress!` (via `implicit_\u03c4x_coefficient`) **every time** the coupled `update_state!` runs \u2014 including the call triggered by `initialize_simulation!` on a restored simulation.\n\n`prognostic_state(::SeaIceMomentumEquation)` previously only walked `auxiliaries.fields` and skipped `external_momentum_stresses`, so those caches did not round-trip. In a coupled ocean-sea-ice simulation this manifests as a ~1e-9 per-step drift in ocean velocities after a checkpoint restore (the first post-restore `update_state!` reads zero caches, computes a wrong sea-ice \u2192 ocean stress, and writes a wrong ocean surface BC). It was caught by failures in NumericalEarth.jl's `test/test_checkpointer.jl` (https://github.com/NumericalEarth/NumericalEarth.jl/pull/220).\n\n## Structure\n\nThis PR is split into two commits:\n\n1. **Add failing test** (`test/test_checkpointing.jl`) \u2014 a focused `Checkpointing SemiImplicitStress caches` testset that builds a `SeaIceModel` with `SemiImplicitStress` top + bottom drag, runs the EVP loop, checkpoints, restores into a fresh model, and asserts the \u03c4\u1d62\u1d64/\u03c4\u1d62\u1d65 caches round-trip bit-exact. On `main` this fails 4/6 assertions (caches are zero post-restore, non-zero pre-checkpoint).\n\n2. **Fix** (`src/SeaIceDynamics/sea_ice_momentum_equations.jl` + version bump 0.5.4 \u2192 0.5.5) \u2014 extend `prognostic_state(::SeaIceMomentumEquation)` to also serialize the `\u03c4\u1d62\u1d64`/`\u03c4\u1d62\u1d65` caches on each `external_momentum_stresses` entry, with a `hasproperty` guard in `restore_prognostic_state!` for backwards-compatibility with checkpoint files written before this PR.\n\n## Test plan\n\n- [x] `TEST_GROUP=checkpointing julia --project=test test/runtests.jl` \u2014 passes all 198 checkpoint assertions with the fix (124 existing + 31 snow + 43 new SemiImplicitStress)\n- [x] Verified the test fails on `main` (4/6 assertions in the new testset)\n- [x] Verified the fix makes NumericalEarth.jl's `test/test_checkpointer.jl` go from 29/34 \u2192 34/34 passing\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-30T20:52:24Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-05-31T11:14:12Z",
+    "number": 151,
+    "title": "(0.5.5) Save SemiImplicitStress caches across checkpoint"
+  }
+]
