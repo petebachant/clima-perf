@@ -185,7 +185,7 @@ pipeline:
       inputs:
         - data/github
       outputs:
-        - path: results/pr-ttm.csv
+        - path: results/dev-throughput.csv
           storage: git
         - path: figures/dev-throughput.json
           storage: git
@@ -264,8 +264,9 @@ datasets:
     description: Raw outputs (logs, manifests, repo revisions used)
       from the flagship AMIP benchmark runs.
     stage: benchmark-amip
-  - path: results/pr-ttm.csv
-    title: Pull request time-to-merge
-    description: Quarterly median time-to-merge for pull requests
-      across CliMA's GitHub repos.
+  - path: results/dev-throughput.csv
+    title: Software development throughput
+    description: One row per (repo, quarter) plus an "All repos"
+      aggregate, with merged-PR count, p50/p90 time-to-merge, and
+      release count across CliMA's GitHub repos.
     stage: analyze-dev-speed
