@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 794,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Addressing some comments from https://github.com/CliMA/CloudMicrophysics.jl/pull/714. We will do more refactoring later. \r\n\r\nThis PR consolidates the 1-moment microphysics API around having two names:\r\n-  one name for each physical process (i.e. what is happening?). Done via abstract type + function\r\n-  one name for each parameterization of that process (i.e. how it is represented in the model. Done via concrete parameterization type. \r\n\r\nEvery microphysical process is now represented by a concrete option type that:\r\n- **carries its own parameters** (e.g. collision efficiency `e`, relaxation timescale `\u03c4_relax`)\r\n- **is used directly for dispatch** (no separate singleton)\r\n- **lives inside `Microphysics1MOptions`**, a field of `Microphysics1MParams`\r\n\r\nDisabling a process is done by setting its option to `nothing`; a `::Nothing` method returns `zero(FT)`.\r\n\r\n### Process \u2192 method naming\r\n\r\n| Process (abstract type) | Methods (concrete types) |\r\n|---|---|\r\n| `CloudLiquidFormation` | `CloudLiquidFormation` (constant timescale) |\r\n| `CloudIceFormation` | `ConstantTimescale`, `TemperatureDependent` |\r\n| `RainAutoconversion` | `Kessler1M`, `PrescribedNd` |\r\n| `SnowAutoconversion` | `NoSupersaturation`, `WithSupersaturation` |\r\n| `Accretion` (various) | `CloudLiquidRainAccretion`, `CloudLiquidSnowAccretion`, `CloudIceRainAccretion`, `CloudIceSnowAccretion`, `RainSnowAccretion` |\r\n\r\nRemoved redundant fields from particle structs:\r\n\r\n- \u03c4_relax from CloudLiquid and CloudIce \u2192 moved to option types\r\n- acnv1M, r0 from Rain and Snow \u2192 moved to option types / deleted (unused)\r\n- T_freeze from Snow \u2192 use TDI.T_freeze(tps) from Thermodynamics\r\n- CollisionEff struct \u2192 collision efficiencies moved into each accretion option's e field\r\n- autoconv_2M, frostenberg2023, collision from Microphysics1MParams \u2192 moved to options",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-28T22:47:56Z",
+    "deletions": 676,
+    "labels": [],
+    "mergedAt": "2026-06-01T16:05:44Z",
+    "number": 719,
+    "title": "Address comments from previos PR"
+  }
+]

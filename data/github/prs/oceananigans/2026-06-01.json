@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 75,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\nTracer `OpenBoundaryCondition`s are **silently never applied** during `NonhydrostaticModel` time stepping. The prescribed boundary value \u2014 or a matching scheme such as `PerturbationAdvection` \u2014 is ignored after the initial `set!`. The same open BC works on a velocity, and the same tracer open BC works in `HydrostaticFreeSurfaceModel`. No error, no warning.\n\n## Root cause\n\nIn `NonhydrostaticModel`'s `update_state!`, velocities and tracers were halo-filled together with `fill_open_bcs = false`:\n\n```julia\n# src/Models/NonhydrostaticModels/update_nonhydrostatic_model_state.jl\nfill_halo_regions!(merge(model.velocities, model.tracers), model.clock, fields(model);\n                   fill_open_bcs = false, async = true)\n```\n\n`fill_open_bcs = false` turns the open-boundary kernels into no-ops (`fill_halo_event!` in `fill_halo_regions_open.jl`). Velocities recover because they're re-filled with open BCs later, in `compute_pressure_correction!` (which must run after the pressure-corrected state is known). **Tracers were never re-filled**, so their open boundaries never updated during stepping.\n\n`HydrostaticFreeSurfaceModel` already does it correctly \u2014 its `update_state!` fills tracers with the default `fill_open_bcs = true` and defers only the velocity/free-surface fill. The deferral is intentional and velocity-specific; the nonhydrostatic model simply lumped tracers into the velocity (`fill_open_bcs = false`) call by mistake.\n\n## Why it matters now\n\n`PerturbationAdvection` recently gained `Center`-located methods (#5617), so Oceananigans now ships a tracer-capable open-boundary scheme that nevertheless never fired in a `NonhydrostaticModel`. A plain `OpenBoundaryCondition(value)` on a tracer is affected too.\n\n**Downstream symptom:** in a stratified run, the unapplied tracer open boundary lets the near-boundary tracer (hence density) drift, driving a spurious pressure gradient. The velocity field then grows without bound, even when the interior is initialized in exact balance with the prescribed exterior. The blow-up is delayed (slowly-growing), making it easy to misattribute to advection/CFL.\n\n## Fix\n\nMirror `HydrostaticFreeSurfaceModel`: keep the velocity fill deferred, but fill tracer halos with the default `fill_open_bcs = true`:\n\n```julia\nfill_halo_regions!(model.velocities, model.clock, fields(model); fill_open_bcs=false, async=true)\nfill_halo_regions!(model.tracers,    model.clock, fields(model); async=true)\n```\n\nThis also means `compute_tendencies!` now sees the correct open-boundary tracer value rather than a stale halo.\n\n**Cadence note:** `update_state!` runs once per RK substage, so tracer open BCs are applied per substage \u2014 matching `HydrostaticFreeSurfaceModel`. Fine for relaxation/radiation schemes; stateful schemes with per-step history should be aware of the cadence.\n\n## Test\n\nAdds `test_nonhydrostatic_tracer_open_boundary_is_applied` (in the `Open boundary conditions` testset): pokes a sentinel into the east boundary cell of a tracer and a velocity (each with a prescribed-value open BC), steps 5\u00d7 with no manual halo fill, and asserts both recover. The boundary cell is a halo the tendency never writes, so it can only return to its prescribed value if the open-boundary fill runs.\n\nVerified locally (CPU):\n- **without** the fix \u2192 `1 Pass, 1 Fail` (tracer stuck at the sentinel `999`, velocity recovers to `1`)\n- **with** the fix \u2192 `2 Pass` (tracer recovers to `-1`, velocity to `1`)\n\nGPU-safe accessors (`Array(view(parent(c), i, 1, 1))[]`, `grid.Hx`) so it runs under `TEST_ARCHITECTURE=GPU` too.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-29T03:02:52Z",
+    "deletions": 56,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2026-06-01T00:04:30Z",
+    "number": 5646,
+    "title": "(0.109.2) Apply tracer open boundary conditions in `NonhydrostaticModel`"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjM5MTkyMTc1",
+      "is_bot": false,
+      "login": "vopikamm",
+      "name": "David Kamm"
+    },
+    "body": "Addresses #5636. `ZarrWriter` is available for IO benchmark and chunk size can be passed as commandline argument.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABDpC_YQ",
+        "number": 5636,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5636"
+      }
+    ],
+    "createdAt": "2026-05-28T12:28:14Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-06-01T15:34:06Z",
+    "number": 5638,
+    "title": "add zarr writer and chunk size as option to io benchmark"
+  }
+]
