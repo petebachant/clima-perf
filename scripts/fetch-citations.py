@@ -468,10 +468,29 @@ def main() -> int:
         elif aid in cached_authors:
             final_authors[aid] = cached_authors[aid]
 
-    n_resolved = write_jsonl(OUT_DIR / "resolved-pubs.jsonl", final_resolved.values())
-    n_clima = write_jsonl(OUT_DIR / "clima-pubs.jsonl", clima_extras_rows)
-    n_edges = write_jsonl(OUT_DIR / "citations.jsonl", final_edges)
-    n_authors = write_jsonl(OUT_DIR / "authors.jsonl", final_authors.values())
+    # Sort every table by a stable key before writing. The in-memory order is
+    # set/dict-iteration order, which Python randomizes per process, so writing
+    # it raw reshuffles all four files on every run and buries the real daily
+    # delta (a handful of rows) under a full-file diff.
+    n_resolved = write_jsonl(
+        OUT_DIR / "resolved-pubs.jsonl",
+        sorted(final_resolved.values(), key=lambda r: r["openalex_id"]),
+    )
+    n_clima = write_jsonl(
+        OUT_DIR / "clima-pubs.jsonl",
+        sorted(clima_extras_rows, key=lambda r: r["openalex_id"]),
+    )
+    n_edges = write_jsonl(
+        OUT_DIR / "citations.jsonl",
+        sorted(
+            final_edges,
+            key=lambda e: (e["cited_openalex_id"], e["citing_openalex_id"]),
+        ),
+    )
+    n_authors = write_jsonl(
+        OUT_DIR / "authors.jsonl",
+        sorted(final_authors.values(), key=lambda r: r["openalex_id"]),
+    )
     if unresolved:
         (OUT_DIR / "unresolved-pubs.jsonl").write_text(
             "".join(json.dumps(u, sort_keys=True) + "\n" for u in unresolved)
