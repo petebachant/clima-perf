@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 350,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nRefactors the boundary-condition classification system so that the *matching scheme* concept is shared symmetrically between the boundary-normal-velocity condition and the value condition, as discussed in #5647 and the thread on #5646.\n\n1. **Renames the `Open` classification to `NormalFlow`.** This restores the original historical name for this boundary condition (see #703, #848, #1140, #1156 \u2014 #1156 even links to `fill_halo_regions_normal_flow.jl`) and makes clear that the classification specifies the velocity component *normal* to a `Face`-located boundary. The renamed source file is `src/BoundaryConditions/fill_halo_regions_normal_flow.jl`.\n2. **Adds a `scheme` to `Value`** (`Value{MS}`), mirroring `NormalFlow{MS}`. `ValueBoundaryCondition(val; scheme=nothing)` gains the keyword.\n3. **Moves tracer (Center-located) `PerturbationAdvection` support** from the open path to `Value{<:PerturbationAdvection}`. Tracer open boundaries now use `ValueBoundaryCondition(c; scheme=PerturbationAdvection())`; boundary-normal velocities continue to use `OpenBoundaryCondition(u; scheme=\u2026)`. This is the natural home for relaxing/radiating a scalar toward an exterior value, and gives downstream schemes (e.g. Breeze.jl's planned `AcousticRelaxation`) a place to live.\n\n## Supersedes #5646\n\nThis PR also incorporates the #5646 bugfix (*apply tracer open boundary conditions in `NonhydrostaticModel`*): velocity and tracer halos are filled separately in the Nonhydrostatic `update_state!`. And because tracer radiation now lives on `Value` \u2014 which is **not** gated by `fill_open_bcs` \u2014 it fires during the regular halo fill, structurally fixing the bug. The #5646 regression test and the rewritten `tracer_outflow` validation are included (adapted to `ValueBoundaryCondition`), so this PR can supersede #5646.\n\n## Breaking changes\n\n- The `Open` classification is renamed to `NormalFlow` and `Open` is **no longer exported**. The public `OpenBoundaryCondition(val; scheme)` and `ImpenetrableBoundaryCondition()` constructors are unchanged.\n- `Value` is now parametric (`Value{MS}`).\n- Tracer `OpenBoundaryCondition(c; scheme=\u2026)` must become `ValueBoundaryCondition(c; scheme=\u2026)`.\n\n## Also\n\n- Fixes a latent invariant alias `const VBC = BoundaryCondition{Value}` \u2192 `BoundaryCondition{<:Value}` in `immersed_diffusive_fluxes.jl`, which would otherwise silently stop matching `Value` BCs once `Value` became parametric.\n- Migrates tests, the `tracer_outflow` validation, and docs (`@ref`s + prose).\n\n## Testing\n\nLocally on CPU (Julia 1.12):\n- `test_boundary_conditions.jl`: 275/275 pass\n- `test_boundary_conditions_integration.jl`: 336/336 pass (includes the PA velocity/tracer tests, a new `NonhydrostaticModel` tracer-PA test, and the #5646 prescribed-value regression test)\n- No new method ambiguities introduced (`detect_ambiguities` count is unchanged from `main` on this Julia version)\n- `summary`/doctest output for `OpenBoundaryCondition{\u2026}` is preserved\n\nGPU jobs and doctests will be exercised by CI.\n\n## Related\n\nCloses #5647. Supersedes #5646. Builds on #5617, #5314. Background: #703, #848, #1140, #1156.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 38,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABDy1UdA",
+        "number": 5647,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5647"
+      }
+    ],
+    "createdAt": "2026-05-31T06:45:41Z",
+    "deletions": 282,
+    "labels": [],
+    "mergedAt": "2026-06-02T03:52:24Z",
+    "number": 5648,
+    "title": "(0.110.0) Rename `Open` \u2192 `NormalFlow` and add a `scheme` to `Value`"
+  },
+  {
+    "additions": 754,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\nAdds a `target_transport` option to `PerturbationAdvection` open boundary conditions that pins the net volume transport `\u222eu\u00b7dA` (m\u00b3/s) through a boundary to a prescribed value \u2014 letting users, for example, match an outflow to an inflow exactly.\n\n## Changes\n\n- **`target_transport` keyword** on `PerturbationAdvection` (default `nothing`; existing behaviour unchanged). Accepts a number \u2014 a fixed transport \u2014 or any callable of the grid.\n- **`has_target_transport` / `get_target_transport` trait interface** \u2014 clean dispatch; external packages can extend these for custom schemes.\n- **`boundary_total_area(side, grid)`** \u2014 consolidated into `src/Models/boundary_mean.jl`, replacing duplicated per-side area helpers that previously lived in both model submodules.\n- **`NonhydrostaticModel`** \u2014 `enforce_net_zero_transport!` now does a two-pass correction: targeted boundaries are corrected first to hit their `target_transport`, then the remaining net imbalance is distributed over the non-targeted (\"pool\") boundaries to satisfy the zero-net-transport solvability condition. An error is raised when all open boundaries are targeted but the targets are inconsistent (nonzero net inflow).\n- **`HydrostaticFreeSurfaceModel`** \u2014 the targeted correction is applied before the implicit free-surface solve, so the free surface stays consistent with the prescribed transport.\n- Updated all `OpenBoundaryCondition` / `Open` references to `NormalFlowBoundaryCondition` / `NormalFlow` following the rename in #5648.\n\n## Status: exact for `NonhydrostaticModel`, approximate for `HydrostaticFreeSurfaceModel`\n\n`target_transport` holds the boundary transport `\u222eu\u00b7dA` **exactly** for `NonhydrostaticModel`, where the correction is applied before the pressure solve.\n\nFor `HydrostaticFreeSurfaceModel` it is currently **approximate**: the correction is applied before the implicit free-surface solve \u2014 so the free surface and `\u03b7` stay consistent and there is no runaway \u2014 but the subsequent barotropic-mode correction perturbs the boundary velocity, so the achieved transport is close to, but not exactly, the target. A true fix \u2014 imposing the transport as a boundary condition inside the free-surface elliptic solve \u2014 can be done in a follow-up PR.\n\n## Usage\n\n```julia\nQ = U * boundary_total_area(:west, grid)   # the transport to pin (m\u00b3/s)\nu_bcs = FieldBoundaryConditions(\n    west = NormalFlowBoundaryCondition(U; scheme = PerturbationAdvection(; target_transport = Q)),\n    east = NormalFlowBoundaryCondition(U; scheme = PerturbationAdvection(; target_transport = Q)),\n)\n```\n\n## Algorithm\n\nEach correction step, for a targeted boundary: `u[boundary] -= (\u222eu\u00b7dA \u2212 target) / boundary_area`, evaluated on the current grid. For `NonhydrostaticModel` the remaining net imbalance is then distributed uniformly over the non-targeted open boundaries. If all open boundaries are targeted and the targets do not sum to zero, an error is raised pointing the user to balance inflow/outflow targets or leave one pool boundary unspecified.\n\n## Test plan\n\n- [x] `test_targeted_transport_achieved` \u2014 targeted west boundary reaches its transport target; pool east boundary compensates\n- [x] `test_targeted_transport_conservation` \u2014 two balanced targeted boundaries preserve `\u222b\u2207\u00b7u = 0`\n- [x] `test_targeted_south_transport_achieved` \u2014 targeted south (`v`) boundary\n- [x] `test_targeted_east_with_west_pool` \u2014 targeted east boundary with pool west boundary\n- [x] `test_open_boundary_condition_net_zero_transport`, `test_zero_inflow_open_boundary_conserves_mass`, `test_fixed_imposed_velocity_open_boundary_conserves_mass` \u2014 open-boundary regressions\n- [x] Targeted-transport tests run for `NonhydrostaticModel`, where the correction is exact; `HydrostaticFreeSurfaceModel` coverage will be added with the true fix\n\n\ud83e\udd16 Generated with <a href=\"https://claude.ai/claude-code\">Claude Code</a>",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-04-08T16:28:29Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2026-06-02T16:43:54Z",
+    "number": 5479,
+    "title": "Add target_transport to PerturbationAdvection for per-boundary transport control"
+  }
+]

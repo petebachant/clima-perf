@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From https://github.com/CliMA/ClimaAtmos.jl/pull/4503#issuecomment-4597469857",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-02T00:14:30Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-02T01:08:15Z",
+    "number": 4541,
+    "title": "Update package registry as part of coupler perf pipeline"
+  },
+  {
+    "additions": 1030,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Previously, surface behavior was controlled by three overlapping mechanisms: the `surface_setup` kwarg on AtmosSimulation, an AbstractSST hierarchy on `atmos.sfc_temperature`, and a separate AbstractSurfaceTemperature hierarchy on `atmos.surface_model`. Temperature could come from `Y.sfc.T` (slab ocean), a coupler-injected Field via `p.sfc_setup`, an `ExternalTVColumnSST` time-varying input, or an analytic formula. This closes #4462 \r\n\r\n## Core changes: one source of truth in `atmos.surface`:\r\n```julia\r\n@kwdef struct AtmosSurface{FS, ST, BO, AL}\r\n    flux_scheme::FS         # MoninObukhov | ExchangeCoefficients | TimeVaryingMoninObukhov | nothing\r\n    temperature::ST         # SurfaceTemperature subtype\r\n    boundary_overrides::BO  # SurfaceBoundaryOverrides or Field thereof\r\n    surface_albedo::AL\r\nend\r\n```\r\n1. New unified `SurfaceTemperature` hierarchy replaces both `AbstractSST` and `AbstractSurfaceTemperature`:\r\n\r\n- AnalyticTemperature: scalar or function `f(coords, params, t) -> T`  for zonally-symmetric SST, RCEMIPII, time-varying GABLS\r\n- ExternalTemperature: reads from `p.external_forcing.surface_inputs.ts`\r\n- SlabOceanTemperature: reads `Y.sfc.T`, carries slab params\r\n- CoupledTemperature: holds a field the coupler writes into\r\n\r\nThese are dispatched via `surface_temperature` in `src/surface_conditions/surface_temperature.jl`\r\n\r\n2. The `SurfaceState` struct has been replaced by:\r\n\r\n- `SurfaceBoundaryOverrides`:  overrides for p, q_vap, u, v, gustiness, beta\r\n- temperature moved to `AtmosSurface.temperature`\r\n- flux parameterization moved to `AtmosSurface.flux_scheme`\r\n\r\nAdditionally, a new `TimeVaryingMoninObukhov` parameterization (`f(t, FT) -> MoninObukhov`) supports time-varying-flux setups like TRMM_LBA.\r\n\r\n3. Eliminated the coupler hack `set_dummy_surface_conditions` and replaced it with a smaller function `init_sfc_conditions_zero!` that pre-fills the cache when the AtmosSurface flux scheme is nothing.\r\n\r\n4. Removed AbstractSST, ZonallySymmetricSST, RCEMIPIISST, ExternalTVColumnSST, AbstractSurfaceTemperature, PrescribedSST, SlabOceanSST, SurfaceConditions.SurfaceState, set_dummy_surface_conditions!, get_surface_setup/_config_surface_setup\r\n\r\nThis PR should not require coupler code changes.",
+    "changedFiles": 45,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABBPngNg",
+        "number": 4462,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4462"
+      }
+    ],
+    "createdAt": "2026-05-28T20:33:50Z",
+    "deletions": 447,
+    "labels": [],
+    "mergedAt": "2026-06-02T22:06:31Z",
+    "number": 4532,
+    "title": "Refactor surface conditions"
+  }
+]
