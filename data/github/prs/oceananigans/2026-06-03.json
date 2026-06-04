@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n`set!(u::Field, v::Field)` routes to `interpolate!` whenever `matching_field_discretization(u, v)` is `false`. For a **reduced field** set from a **windowed single-layer field** this misfires:\n\n| | `u` (dest) | `v` (src) |\n|---|---|---|\n| size | `(Nx, Ny, 1)` | `(Nx, Ny, 1)` |\n| location | `(Face, Center, Nothing)` | `(Face, Center, Center)` |\n| z-index | `:` | `Nz:Nz` |\n\n`size` matches, but the z-`location` (`Nothing` vs `Center`) and z-index (`:` vs `Nz:Nz`) differ, so it's declared \"not matching\" and routed to `interpolate!` \u2014 which cannot bridge a 2-coordinate node against a 3-location source and errors:\n\n```\nERROR: MethodError: no method matching _fractional_indices(::Tuple{Float64, Float64}, ::RectilinearGrid{...}, ::Face, ::Center, ::Center)\n```\n\nThis is hit in practice when setting a 2D field from a surface slice of a 3D output (`indices = (:, :, Nz)`) reloaded as a `FieldTimeSeries`, e.g. when assembling surface-speed plots. (Surfaced via [NumericalEarth.jl#319](https://github.com/NumericalEarth/NumericalEarth.jl/issues/319).)\n\n## Fix\n\nA `Nothing` dimension carries **no node**, so in a singleton dimension there is nothing to interpolate *to* and the single slab should simply be copied. `matching_field_discretization` now treats a reduced (`Nothing`) location in a size-1 dimension as matching regardless of the other field's location or absolute index, while preserving the full `location == location && equivalent_index` check for every genuinely located dimension.\n\nIn particular this keeps interpolation (not copy) for:\n- staggered fields in a multi-point dimension (`Face` vs `Center`, `N > 1`),\n- a genuine multi-layer 3D \u2192 2D reduction (`size` differs),\n- two *located* single-layer fields windowed at different levels (`1:1` vs `Nz:Nz`) \u2014 the index is meaningful there.\n\n## Test\n\nAdds a `@testset` to `test/test_set_field_interpolation.jl` covering set! between a reduced field and a windowed single-layer field (both directions), and asserting that two located single-layer fields windowed at different levels are still *not* considered matching. Verified the original `MethodError` reproduces on `main` and is resolved by this change.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-02T18:20:28Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-06-03T04:55:09Z",
+    "number": 5652,
+    "title": "Allow set! to copy between reduced and windowed single-layer fields"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Captures #5652 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-03T04:55:35Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-06-03T04:55:45Z",
+    "number": 5653,
+    "title": "Update Project.toml"
+  }
+]

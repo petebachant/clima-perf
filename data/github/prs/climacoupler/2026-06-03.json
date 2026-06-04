@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 938,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "## Purpose\r\nWhen a surface model\u2019s timestep is longer than `dt_cpl`, it previously received instantaneous turbulent fluxes every coupling step, which breaks conservation over the surface\u2019s own timestep. This PR time-averages turbulent fluxes over each \"slow\" surface\u2019s dt window before pushing them to that surface\u2019s boundary conditions, while the atmosphere continues to see freshly computed fluxes every `dt_cpl`.\r\n\r\nFor example, in a simulation where we have `dt_cpl = 6mins` and `dt_ocean = dt_seaice = 30mins`, previously the ocean and sea ice models would receive instantaneous fluxes every 30 minutes. Now, the fluxes will be computed and accumulated every 6 minutes, then averaged at the 30 minute intervals and provided to the ocean/sea ice.\r\n\r\nCMIP fluxes look very similar to main before this PR, with general structures the same and minor changes to extrema\r\n\r\nCloses #1701\r\n\r\n## What this PR does not do\r\n#### integrated land fluxes\r\nSince these fluxes are computed implicitly in the land model, with this implementation they would not be recomputed at the coupler timestep when we have `dt_land > dt_cpl`. This would result in the atmosphere using out-of-date fluxes at some timesteps. E.g. if we have `dt_cpl = 6mins` and `dt_land = 12mins`, the atmos/land fluxes would be recomputed every 12 mins, so on odd timesteps (6, 18, 24 mins, etc) the atmos would be using stale fluxes from the previous coupler dt. In comparison, with the ocean/sea ice/bucket accumulation the fluxes are recomputed with the updated atmosphere state every `dt_cpl`. For now we can avoid this issue by setting `dt_land == dt_cpl`, but it would be good to remove this restriction in the future.\r\n\r\n#### precipitation accumulation\r\nThis is not currently accumulated across stages in the atmosphere, so accumulating it as we do for the turbulent fluxes here would be incorrect anyway. Once the atmosphere does accumulate correctly over its own step, we can easily set up precipitation accumulation in the same way we do it for turbulent fluxes in this PR.\r\n\r\n#### radiation accumulation\r\nRadiation is computed by an infrequent callback (controlled by `dt_rad`), but surface models recompute upwelling longwave radiation as a function of their updated T_sfc at each timestep. This results in an inconsistency where the radiation provided by the atmosphere changes slowly, but surface LW_u changes more quickly. This is a bit different from the flux accumulation being addressed in this PR, so I'll leave it as a piece of future work.\r\n\r\n## Content\r\n- [x] add FluxAccumulator object to hold accumulated fluxes for each slow explicit surface\r\n- [x] add flux_accumulators to CoupledSimulation \r\n- [x] add `sim_dt(sim)` and `will_step(sim, t)` helpers\r\n- [x] checkpoint / restart support for `flux_accumulators`\r\n- [x] add extra scratch space/buffers to BucketSimulation to enable flux accumulation even though its fluxes are computed on the land space (not the boundary space)\r\n- [x] update docs, add unit tests\r\n- [x] add integration tests in experiments/test/fluxes_test.jl\r\n\r\nNote: CMIP configs withdt_cpl < dt_ocean/dt_seaice(e.g.cmip_oceananigans_climaseaice*.yml) will have behavior changes",
+    "changedFiles": 25,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7oFylH",
+        "number": 1701,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1701"
+      }
+    ],
+    "createdAt": "2026-05-22T21:52:03Z",
+    "deletions": 105,
+    "labels": [],
+    "mergedAt": "2026-06-03T17:47:44Z",
+    "number": 1945,
+    "title": "enable flux accumulation"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThe benchmark table has been getting cropped so it doesn't display correctly. This PR disables cropping and display size limit.\r\n\r\nFrom the PrettyTables.jl docs:\r\n- fit_table_in_display_horizontally::Bool: If true, the table will be cropped to fit the display horizontally. (Default = true)\r\n- fit_table_in_display_vertically::Bool: If true, the table will be cropped to fit the display vertically. (Default = true)\r\n\r\nThese are both set to false here.\r\n\r\n\r\nSince this only affects the benchmarks pipeline, I'll merge without running CI after it's approved.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-03T19:20:35Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-03T19:45:18Z",
+    "number": 1970,
+    "title": "don't crop benchmark table [skip ci]"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAnd make the component dts run with integrated land so that we have one buildkite run with integrated land + spun up ICs on CPU.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-02-04T21:28:47Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-06-03T22:23:43Z",
+    "number": 1708,
+    "title": "error if NaNs in debug plot fields"
+  }
+]
