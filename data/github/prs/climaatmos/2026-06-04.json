@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "This is an [~8% speedup](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/37/list?sid=019e8a56-eb0d-4352-b532-597b8c06b2dd&tab=output) for the flagship AMIP.\r\n\r\nCloses https://github.com/CliMA/CloudMicrophysics.jl/pull/713 as it achieves the same thing without an upstream change.\r\n\r\nSeems to be failing reproducibility tests, which is strange since no logic was changed.\r\n\r\n## TODO\r\n\r\n- [x] Double check performance gains after merging in `main`",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-20T14:09:49Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      }
+    ],
+    "mergedAt": "2026-06-04T01:23:58Z",
+    "number": 4503,
+    "title": "`noinline` quadrature point evaluation"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjUxMzk3MTg2",
+      "is_bot": false,
+      "login": "juliasloan25",
+      "name": "Julia Sloan"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAll surface models in coupled simulations provide albedo during initialization, before the first step. This means we don't need to set albedo in the radiation cache to a temporary dummy value anymore.\r\n\r\nThe albedos are already set to NaN at initialization, so we'll be able to easily identify and debug if albedos are not being set correctly by the coupler.\r\n\r\nThere are no downstream changes needed in ClimaCoupler, unless we want to explicitly check that the atmosphere albedos are not NaN after a CoupledSimulation is created. We don't do this for any other variables though so maybe it's odd to just do it for albedo.\r\n\r\n## To Do\r\n- [x] update albedo initial value\r\n- [x] test from coupler - see https://github.com/CliMA/ClimaCoupler.jl/pull/1956 passes [here](https://buildkite.com/clima/climacoupler-ci/builds/9064)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-29T00:00:56Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2026-06-04T17:41:19Z",
+    "number": 4535,
+    "title": "Initialize albedo as NaN for CouplerAlbedo"
+  },
+  {
+    "additions": 426,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds the ability to output individual 1-moment microphysics process tendencies (e.g., condensation, autoconversion, accretion, melting) as diagnostic variables. All 18 source terms from `CloudMicrophysics.BulkMicrophysicsTendencies` are supported, with three variants each:\r\n\r\n- **Grid-mean** (`mp1m_S_*`) \u2014 available for any 1M microphysics configuration\r\n- **Updraft** (`mp1mup_S_*`) \u2014 available with prognostic EDMF\r\n- **Environment** (`mp1men_S_*`) \u2014 available with prognostic EDMF\r\n\r\nThe 54 diagnostics are registered via a loop over source term names, avoiding boilerplate repetition.\r\n\r\n### Design choice between recomputing vs caching\r\n\r\n**Caching approach (rejected):**\r\n- Call `bulk_microphysics_tendencies(InstantaneousVerbose(), ...)` once per diagnostic period\r\n- Store the full `MicrophysicsSourceTerms` struct in a pre-allocated cache field\r\n- Pro: single evaluation\r\n- Con: requires allocating and managing a new cache field with 18 arrays; broadcasting the verbose function over the column returns a struct-of-arrays that must be unpacked; invasive changes to the cache infrastructure\r\n\r\n**Recompute approach (chosen):**\r\n- Each diagnostic independently calls `bulk_microphysics_tendencies(InstantaneousVerbose(Val(:field_name)), ...)` which returns a single scalar per grid point\r\n- The microphysics evaluations are fast (simple arithmetic), so recomputing is cheap\r\n- Pro: zero cache allocations, no changes to the model's cache structure, each diagnostic is self-contained\r\n- Con: redundant computation if many tendencies are requested simultaneously\r\n\r\nThe recompute approach was chosen because it requires no changes to the model's state or cache and avoids allocation concerns. Hopefully the microphysics tendency functions are lightweight enough that recomputing them is negligible compared to I/O costs.\r\n\r\n> [!NOTE]\r\n> These are *instantaneous* diagnostic tendencies, not the actual linearized tendencies seen by the ODE solver. They are useful for understanding which microphysics processes are active and where, but may differ from the solver's view.\r\n\r\n### CI integration\r\n\r\nThe three prognostic EDMF single-column cases (DYCOMS-RF02, RICO, TRMM) now output all 54 microphysics tendency diagnostics. CI plots include:\r\n- **Vertical profile plots** \u2014 grid-mean, updraft, and environment overlaid per source term\r\n- **Time-height contour plots** \u2014 3-column layout (grid-mean | updraft | environment) per row\r\n\r\nBoth are saved as PDF artifacts in Buildkite CI output.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-03T16:02:00Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-06-04T21:56:44Z",
+    "number": 4545,
+    "title": " Add microphysics process tendency diagnostics"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-04T21:59:53Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-06-04T23:05:17Z",
+    "number": 4549,
+    "title": "Test Kessler1M as default autoconversion in AMIP"
+  }
+]
