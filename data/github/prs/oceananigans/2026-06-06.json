@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 63,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "For an ImmersedBoundaryGrid, the `NetCDFWriter` exports `peripheral_nodes_{ccc,fcc,cfc,ccf}` as the land/immersed mask, which (on a Bounded direction) masks the wall face as `peripheral`. At an open boundary (i.e. with a `NormalFlow` BC) that face is of interest so we should have a mask written to NetCDF that allows inactive cells (like immersed boundaries) to be masked, but that don't mask these wall cells. The `inactive_nodes*` masks does that, so this PR adds it to `NetCDFWriter`'s `gather_immersed_boundary()` function.\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Grids: peripheral_node, inactive_node\r\n\r\ngrid = RectilinearGrid(size=(4, 4, 4), x=(0, 1), y=(0, 1), z=(-1, 0), topology=(Bounded, Bounded, Bounded))\r\n\r\nperipheral_node(1, 2, 2, grid, Face(), Center(), Center())   # true  \u2190 wall flagged as periphery\r\ninactive_node(1, 2, 2, grid, Face(), Center(), Center())    # false \u2190 interior cell is active\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-05T20:35:08Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-06-06T16:44:45Z",
+    "number": 5658,
+    "title": "Add `inactive_nodes` to `NetCDFWriter`'s `gather_immersed_boundary`"
+  }
+]
