@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "I think this is needed after #5604?\r\n\r\nCloses #5641\r\n\r\nOn this PR:\r\n\r\n```Julia\r\njulia> using Oceananigans\r\n\r\njulia> grid = RectilinearGrid(CPU(); size=(20, 30, 4), x=(-10, 10), y=(-10, 10), z=(-10, 0), halo=(6, 6, 5))\r\n20\u00d730\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 6\u00d76\u00d75 halo\r\n\u251c\u2500\u2500 Periodic x \u2208 [-10.0, 10.0) regularly spaced with \u0394x=1.0\r\n\u251c\u2500\u2500 Periodic y \u2208 [-10.0, 10.0) regularly spaced with \u0394y=0.666667\r\n\u2514\u2500\u2500 Bounded  z \u2208 [-10.0, 0.0]  regularly spaced with \u0394z=2.5\r\n\r\njulia> model = HydrostaticFreeSurfaceModel(grid;\r\n                                           free_surface = SplitExplicitFreeSurface(grid; substeps = 5),\r\n                                           closure = CATKEVerticalDiffusivity())\r\nHydrostaticFreeSurfaceModel{CPU, RectilinearGrid}(time = 0 seconds, iteration = 0)\r\n\u251c\u2500\u2500 grid: 20\u00d730\u00d74 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 6\u00d76\u00d75 halo\r\n\u251c\u2500\u2500 timestepper: QuasiAdamsBashforth2TimeStepper\r\n\u251c\u2500\u2500 tracers: e\r\n\u251c\u2500\u2500 closure: CATKEVerticalDiffusivity{VerticallyImplicitTimeDiscretization}\r\n\u251c\u2500\u2500 buoyancy: Nothing\r\n\u251c\u2500\u2500 free surface: SplitExplicitFreeSurface with gravitational acceleration 9.80665 m s\u207b\u00b2\r\n\u2502   \u2514\u2500\u2500 substepping: FixedSubstepNumber(3)\r\n\u251c\u2500\u2500 advection scheme: \r\n\u2502   \u251c\u2500\u2500 momentum: VectorInvariant\r\n\u2502   \u2514\u2500\u2500 e: Centered(order=2)\r\n\u251c\u2500\u2500 vertical_coordinate: ZCoordinate\r\n\u2514\u2500\u2500 coriolis: Nothing\r\n\r\njulia> Oceananigans.Diagnostics.DiffusiveCFL(0.1)(model)\r\n0.0\r\n```\r\n\r\nwhile on `#main` it breaks; see #5641.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABDuZDiw",
+        "number": 5641,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5641"
+      }
+    ],
+    "createdAt": "2026-05-29T01:30:37Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-06-07T08:20:01Z",
+    "number": 5642,
+    "title": "Update `Diagnostics.cell_diffusion_timescale` method for vertically-implicit treatment"
+  }
+]

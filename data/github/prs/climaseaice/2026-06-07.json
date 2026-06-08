@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 389,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR removes the previously added materialized implicit coefficient caches. The reason why these coefficients were added in #137 was to void race conditions and `fill_halo_regions!` for velocities in the `ExplicitSolver` mode. However, this mode is not really used that much so I don't think we need to think hard about optimizing a configuration we do not use, and the previous issue with the checkpointer demonstrated that this design is a bit heavy. \r\n\r\nSo in this PR I remove the caches and just fill halos in the explicit solver. \r\nAlso this PR fixes some additional bugs in the distributed sea ice dynamics (optimizing this is much harder than the free surface so a lot of bugs are popping up \ud83d\ude05). In practice: the semi-implicit stresses need knowledge of the ocean velocity, however, when we use distributed we want to extend the halos meaning that also the ocean velocity should have extended halos. At the moment they are not -> out of bounds access!\r\n\r\nThe idea here is to save a cache of the \"extended\" ocean velocities in the `SemiImplicitStress` in case of an extended grid, then we can copy the \"src\" velocities inside these \"extended\" velocities and fill the halos before the substepping loop such that we remove the out of bounds access",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-02T12:23:56Z",
+    "deletions": 258,
+    "labels": [],
+    "mergedAt": "2026-06-07T12:03:52Z",
+    "number": 152,
+    "title": "Correct some bugs + remove the implicit coefficient"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-07T06:25:07Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-06-07T12:34:24Z",
+    "number": 157,
+    "title": "Add compat for Oceananigans v0.110"
+  }
+]
