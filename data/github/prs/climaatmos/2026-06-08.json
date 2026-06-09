@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Update manifest and tag new patch release\r\n\r\n```\r\n    Updating `~/clima/ClimaAtmos.jl/.buildkite/Project.toml`\r\n\u2303 [052768ef] \u2191 CUDA v5.11.2 \u21d2 v5.11.3\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-08T17:57:02Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2026-06-08T19:48:01Z",
+    "number": 4554,
+    "title": "Tag patch release"
+  },
+  {
+    "additions": 277,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Why\r\n\r\nThe docs landing experience was a flat list of ~26 top-level pages with no grouping. Someone looking for \"how do I restart a run?\" or \"what are the governing equations?\" had to scan one long, undifferentiated menu. The getting-started pages had also drifted: duplicated install instructions, a couple of script examples that didn't match the actual `AtmosSimulation` constructor, and no single place defining the recurring `Y` / `p` / `t` notation.\r\n\r\nThe goal here is to make the docs **navigable** (group pages by what the reader is trying to do) and to make the on-ramp accurate (installation \u2192 first simulation \u2192 interfaces), so newcomers aren't misled and regulars can find things quickly.\r\n\r\n## How to read this PR\r\n\r\nMost of the diff is mechanical and safe to skim. To keep review focused, here's where the feedback is most appreciated:\r\n\r\n- **`docs/make.jl` \u2014 the navigation tree.** This is the actual decision: six purpose-based\r\n  sections (Getting Started / How-to Guides / Explanation / Reference / Developer Guide),\r\n  with the large Explanation section split by topic. If you'd put a page elsewhere, this is\r\n  the place to suggest so.\r\n- **`docs/src/index.md` \u2014 the \"Finding your way around\" map.** The home page now guides\r\n  readers into each section with direct links. Mainly: does it read well as a front door?\r\n\r\n**Safe to skim (mechanical / low-risk)**\r\n\r\n- Bibliography fixes (`ShipwayHill2012` fields; six `doi` entries that were full URLs); surfaced by build warnings.\r\n- `tracers.md` \u2014 the ozone plot now renders via a saved PNG, clearing an oversized `@example` warning.\r\n- Getting-started content additions: `installation.md` (REPL install, run-from-clone workflow, GPU setup), `first_simulation.md` (duration-string `dt` / `t_end`, NetCDF vs HDF5 outputs), and `single_column_prospect.md` (\"Idealized cases\" heading).\r\n- `interfaces.md` \u2014 corrected the script examples to the real constructor kwargs (`setup` / `diagnostics`, not the YAML-only `initial_condition` / `default_diagnostics`); verified against `src/simulation/AtmosSimulations.jl`.\r\n- `job_id` cleanup (`interfaces.md`, `radiative_equilibrium.md`) \u2014 it was shown as a YAML key, but is actually set via the `--job_id` flag or the constructor / `AtmosConfig` keyword argument.\r\n- Command formatting / line-wrapping / fenced code blocks (e.g. `config_no_table.md`).\r\n- New `glossary.md`, and removal of the un-referenced `getting_started.md` (a title-less duplicate of `installation.md`).\r\n- `docs/Project.toml`. Adds `DocumenterInterLinks` for cross-project (`@extref`) links into the ClimaComms and Julia docs.\r\n\r\n## Notes\r\n\r\n- The structure draws on [Di\u00e1taxis](https://diataxis.fr) as an internal organizing lens, especially the [complex hierarchies](https://diataxis.fr/complex-hierarchies/) section.\r\n- The site builds cleanly (doctests + render).\r\n\r\n## Follow-ups (not in this PR)\r\n\r\n- `first_simulation.md` still has a one-line \"config-based interface\" stub to fill with a short YAML example.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-02T22:44:18Z",
+    "deletions": 172,
+    "labels": [],
+    "mergedAt": "2026-06-08T23:23:22Z",
+    "number": 4543,
+    "title": "docs: reorg structure and improve getting-started"
+  }
+]
