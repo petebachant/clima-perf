@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Fixes docstring prose that contradicted the code. Doc-only **except** one one-line behavior fix (noted below).\n\n- v-velocity tendency: the `y`-direction is **north-south** (was \"east-west\")\n- `checkpoint`: an explicit `filepath` **takes precedence** over a `Checkpointer` (precedence was stated backwards)\n- `ContinuousBoundaryFunction`: the 4th type param is the boundary side `S` (`LeftBoundary`/`RightBoundary`), not a boundary-normal index `I`\n- `fill_halo_regions!`: documents the actual field interface (the documented `Tuple/NamedTuple` recursion method does not exist; the docstring sat on the `nothing`-BC no-op)\n- `GridFittedBottom`: arguments are positional, not \"Keyword Arguments\"\n- `FieldBoundaryConditions`: **7** possible boundaries, not 6 (it lists 7)\n- `compute_momentum_tendencies!`: drops the \"flux boundary condition\" step it does not perform\n- momentum buffer: drops \"vertical velocity\" from the listed diagnostic fields (not computed there)\n\n**Behavior change (1 line):** `WallTimeInterval` documented a `start_time` kwarg that was silently ignored (`previous_actuation_time` was seeded from `interval`). It now seeds from `start_time`, so the documented behavior holds. Note this changes first-actuation timing: actuation now first occurs `interval` seconds after `start_time` (\u2248 construction) rather than on the first check. Happy to split this line into a separate PR if preferred.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-09T00:56:49Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-10T14:50:56Z",
+    "number": 5664,
+    "title": "Fix misleading docstring descriptions"
+  }
+]
