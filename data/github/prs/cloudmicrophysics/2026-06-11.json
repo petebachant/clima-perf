@@ -1,0 +1,60 @@
+[
+  {
+    "additions": 3711,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "**Purpose:** Integrate the P3 ice scheme with the two-moment microphysics\r\n\r\nThis branch makes the P3 ice category usable as a coupled component of the two-moment scheme, rather than a standalone solver. The motivation is to expose P3 ice processes (collisions, melting, nucleation, sedimentation) through the shared bulk-tendencies entry point so that a host model can drive 2M liquid and P3 ice consistently and performantly.\r\n\r\n**Rationale for the principal changes:**\r\n\r\n- Explicit `P3State`. Ice shape/threshold properties were previously recomputed ad hoc at each call site. Centralising them in a single, type-stable state object removes redundant work, makes the per-process interfaces uniform, and is a prerequisite for the GPU-ready paths below.\r\n- Rates without time-step limiting. Melting and nucleation now return true instantaneous tendencies instead of pre-capping to the available mass/number over dt. Capping is the integrator's responsibility; doing it inside the process broke composability across sub-steps and conflated the physics with the numerics.\r\n- 2M+P3 collision path and BMT coupling. A type-stable, allocation-free liquid\u2013ice collision path and the bulk-tendencies entry point are what let P3 ice run on GPU at acceptable cost and interoperate with the existing 2M tendencies.\r\n- Frostenberg INP nucleation. Adds an immersion-freezing parameterisation needed for realistic heterogeneous ice formation.\r\n\r\nTests and reference values were updated to reflect the new (uncapped) rates and the refactored APIs; numerical smoke references that shifted were re-derived and verified.",
+    "changedFiles": 40,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM6HRTmi",
+        "number": 386,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/386"
+      },
+      {
+        "id": "I_kwDOFzm_uM6uoZZu",
+        "number": 534,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/534"
+      }
+    ],
+    "createdAt": "2026-02-12T00:26:09Z",
+    "deletions": 964,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-06-11T17:57:14Z",
+    "number": 681,
+    "title": "feat(P3): implement additional rates + some fixes"
+  }
+]
