@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Fixes docstrings whose documented defaults or descriptions contradicted the code, in public constructors/functions users actually read. Doc-only; no behavior change.\n\n- `HydrostaticFreeSurfaceModel`: `buoyancy`/`tracers`/`clock` defaults (were `SeawaterBuoyancy`/`(:T,:S)`/`Clock{Float64}`, really `nothing`/`nothing`/`Clock(grid)`)\n- `NonhydrostaticModel`: `background_fields`/`auxiliary_fields` default (`NamedTuple()`)\n- `TKEDissipationVerticalDiffusivity`: `minimum_tke` default; nonexistent `maximum_diffusivity` \u2192 real `maximum_*` kwargs\n- `ConvectiveAdjustmentVerticalDiffusivity`: second `background_\u03baz` bullet \u2192 `background_\u03bdz`\n- `IsopycnalSkewSymmetricDiffusivity`: `\u03ba_skew`/`\u03ba_symmetric` default (`nothing`)\n- `ConformalCubedSphereGrid`: `horizontal_direction_halo` default (`3`) and name\n- `TripolarGrid`: `first_pole_longitude` default (`70`)\n- `RotatedLatitudeLongitudeGrid`: `topology` default (`nothing`)\n- `VectorInvariant`: swapped `divergence_scheme`/`kinetic_energy_gradient_scheme` defaults\n- `FieldTimeSeries`/`InMemory`: `Clamp()` (not `Clamped()`), `length` (not `size`), `reader_kw` default\n- `conjure_time_step_wizard!`: default schedule `IterationInterval(10)`\n- `LatitudeLongitudeGrid`: default topology keys off **longitudinal** extent\n- `seawater_density`: uses the model's configured equation of state\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-09T00:31:13Z",
+    "deletions": 35,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-12T05:04:33Z",
+    "number": 5662,
+    "title": "Fix inaccurate defaults/descriptions in user-facing docstrings"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Fixes hand-written docstring signatures and argument lists that didn't match the actual definitions (wrong argument names, order, count, or function name). Doc-only; no behavior change.\n\n- `prognostic_fields`: documented `::NonhydrostaticModel` (was `::HydrostaticFreeSurfaceModel`)\n- `index_binary_search` / `FractionalIndices`: corrected argument order\n- `advect_particle`: added missing `particles` arg\n- `StateChecker`: documented the positional `model` arg\n- `assemble_coordinate`: real `(c_local, n, arch, dim)` signature\n- `configure_kernel`: malformed double `;`; `interior_work_layout`/`work_layout` drop the nonexistent `include_right_boundaries` and fix `location`/`reduced_dimensions`\n- `diffusivity`: `(closure, closure_fields, tracer_index)` order\n- `implicit_step!`: added missing `fields` arg\n- `tapering_factor` (was `taper_factor`)\n- `flux_div_xy\u1d9c\u1d9c\u1d9c`: name/formula/location matched to the function it documents\n- `StaticVerticalDiscretization`: field names/labels matched to the struct\n- `ConjugateGradientSolver`: `maxiter` default; documented `residual_norm`\n- `TriadIsopycnalSkewSymmetricDiffusivity`: `ExplicitTimeDiscretization` default\n- WENO helpers (`biased_weno_weights`, `load_weno_stencil`, `weno_reconstruction`, `stencil_coefficients`)\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-09T00:41:13Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-12T15:17:00Z",
+    "number": 5663,
+    "title": "Fix wrong/stale signatures in developer-facing docstrings"
+  }
+]
