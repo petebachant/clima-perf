@@ -33,6 +33,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable, Iterator
@@ -69,11 +70,36 @@ YEAR_COLON_RE = re.compile(r",\s*(20\d{2}|19\d{2})\s*:")
 
 # --- HTTP helpers ----------------------------------------------------------
 
+# OpenAlex's search endpoint is slow and rate-limited; a burst of resolution
+# calls occasionally draws a 429 or a transient 5xx. Retry those a few times
+# with backoff so a momentary blip doesn't surface as a (silent) "no match".
+RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
+MAX_RETRIES = 4
+
+
 def get_json(url: str, params: dict | None = None, *, timeout: int = 60) -> dict:
     p = {"mailto": MAILTO, **(params or {})}
-    resp = requests.get(url, params=p, timeout=timeout)
-    resp.raise_for_status()
-    return resp.json()
+    for attempt in range(MAX_RETRIES):
+        resp = requests.get(url, params=p, timeout=timeout)
+        if resp.status_code in RETRY_STATUS and attempt < MAX_RETRIES - 1:
+            retry_after = resp.headers.get("Retry-After")
+            try:
+                delay = float(retry_after) if retry_after else None
+            except ValueError:
+                delay = None
+            if delay is None:
+                delay = min(2 ** attempt, 30)
+            print(
+                f"  retry {attempt + 1}/{MAX_RETRIES - 1} after HTTP "
+                f"{resp.status_code} (sleep {delay:.0f}s): {url}",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+            continue
+        resp.raise_for_status()
+        return resp.json()
+    # Unreachable: the final attempt either returns or raises above.
+    raise RuntimeError("get_json: exhausted retries without returning")
 
 
 # --- Publications-page parser ----------------------------------------------
@@ -157,6 +183,12 @@ def fetch_work_by_doi(doi: str) -> dict | None:
 
 def _title_norm(s: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^\w\s]", " ", s.lower())).strip()
+
+
+def source_key(doi: str | None, title: str) -> str:
+    """Stable key for a publications-page entry, used to find a pub's
+    last-known resolution when live resolution fails this run."""
+    return f"doi:{doi}" if doi else f"title:{_title_norm(title)}"
 
 
 def fetch_work_by_title(title: str, year: int) -> dict | None:
@@ -344,6 +376,13 @@ def main() -> int:
     cached_authors = {
         r["openalex_id"]: r for r in read_jsonl(OUT_DIR / "authors.jsonl")
     }
+    # Index last run's resolutions by source key so a pub that fails to
+    # re-resolve live this run (transient OpenAlex search failure) falls back
+    # to its last-known resolution instead of being dropped from the dataset.
+    cached_extras_by_source = {
+        source_key(r.get("publications_page_doi"), r.get("publications_page_title") or ""): r
+        for r in cached_clima_extras.values()
+    }
     print(
         f"Cache: {len(cached_clima_extras)} clima pubs, "
         f"{len(cached_resolved)} resolved pubs, "
@@ -364,6 +403,7 @@ def main() -> int:
     new_resolved: dict[str, dict] = {}
     new_authors: dict[str, dict] = {}
     unresolved: list[dict] = []
+    carried_forward: list[dict] = []
     seen_works: set[str] = set()
     cache_hit: set[str] = set()
     cache_miss: list[dict] = []
@@ -377,9 +417,26 @@ def main() -> int:
             except requests.RequestException as err:
                 print(f"  WARN: DOI {src['doi']}: {err}", file=sys.stderr)
         if work is None:
-            work = fetch_work_by_title(src["title"], src["year"])
-            method = "title_search" if work else ""
+            try:
+                work = fetch_work_by_title(src["title"], src["year"])
+                method = "title_search" if work else ""
+            except requests.RequestException as err:
+                print(f"  WARN: title search {src['title'][:60]!r}: {err}", file=sys.stderr)
         if work is None or not work.get("id"):
+            # Live resolution failed. If we resolved this exact page entry on a
+            # previous run, keep its last-known resolution (plus cached edges/
+            # authors, stitched below) rather than deleting the pub and
+            # cascading its whole citation subgraph out of the dataset. Only a
+            # genuinely new, never-resolved entry goes to unresolved.
+            prior = cached_extras_by_source.get(source_key(src["doi"], src["title"]))
+            cid = prior["openalex_id"] if prior else None
+            if prior and cid in cached_resolved and cid not in seen_works:
+                seen_works.add(cid)
+                clima_extras_rows.append(prior)
+                new_resolved[cid] = cached_resolved[cid]
+                cache_hit.add(cid)  # reuse cached citing-works edges
+                carried_forward.append(src)
+                continue
             unresolved.append(src)
             continue
         if work["id"] in seen_works:
@@ -406,8 +463,13 @@ def main() -> int:
     print(
         f"  resolved {len(clima_extras_rows)} pubs "
         f"({len(cache_hit)} cache-hit, {len(cache_miss)} need refetch, "
-        f"{len(unresolved)} unresolved)"
+        f"{len(carried_forward)} carried forward, {len(unresolved)} unresolved)"
     )
+    if carried_forward:
+        for c in carried_forward[:5]:
+            print(f"    carried forward (live resolve failed): {c['title'][:80]!r}")
+        if len(carried_forward) > 5:
+            print(f"    ...and {len(carried_forward) - 5} more")
     if unresolved:
         for u in unresolved[:5]:
             print(f"    unresolved: {u['title'][:80]!r} ({u['year']})")
