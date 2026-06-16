@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 586,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "This PR replaces many (317 in the first draft) manually-written docstring signatures with <a href=\"https://docstringextensions.juliadocs.org/latest/#DocStringExtensions.TYPEDSIGNATURES\">`$(TYPEDSIGNATURES)`</a> from DocStringExtensions, so the rendered signature is generated from the actual method definition instead of maintained by hand.\n\nThis conversion is applied to docstrings whose signature has no default arguments since DocStringExtensions currently cannot produce docstring signatures that indicate the default values (see https://github.com/JuliaDocs/DocStringExtensions.jl/issues/107).\n\nBeyond defaults, the following were deliberately **left untouched** (for correctness, not omission):\n\n| Left as-is | Why |\n|---|---|\n| Signatures with defaults | per the rule above |\n| `struct` definitions | `TYPEDSIGNATURES` on a type documents its constructor(s) \u2014 messy / multi-constructor output |\n| Defs that hide a default | docstring wrote `f(a, b, c)` but the method is `f(a, b, c=\u2026)` \u2014 would expand to multiple lines |\n| Function stubs `function foo end` | no methods exist, so nothing would render |\n| Name-mismatched docstrings | avoids silently changing the documented identity |\n| Functors / macros / metaprogrammed (`@eval`) docstrings | `TYPEDSIGNATURES` can't resolve these |\n\n## Imports\n\n`$(TYPEDSIGNATURES)` is evaluated at **module-load time**, so each affected module must have it in scope or precompilation fails. This PR adds `using DocStringExtensions: TYPEDSIGNATURES` to each module that needed it (and appends `TYPEDSIGNATURES` to the existing DocStringExtensions import in `Advection`, `Grids`, `HydrostaticFreeSurfaceModels`, and `MultiRegion`).\n\n## Additional fixes\n\n- Fixed a stale docstring for `concatenate_local_sizes` in `src/DistributedComputations/partition_assemble.jl` that incorrectly referenced `grid` and `dim` (argument names from an old implementation) instead of the actual `local_size` and `arch` parameters.\n\n\ud83e\udd16 Generated with <a href=\"https://claude.com/claude-code\">Claude Code</a>",
+    "changedFiles": 189,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-12T21:53:27Z",
+    "deletions": 578,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-15T01:17:16Z",
+    "number": 5680,
+    "title": "Use DocStringExtension's `TYPEDSIGNATURES` for default-free docstring signatures"
+  },
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "## Summary\n\n`FieldTimeSeries(\"file.nc\", \"var\")` threw `ArgumentError: tuple length should be \u2265 0, got -1` when reading a NetCDF variable written from a dimensionally-reduced field (e.g. `Average(c, dims=1)`, location `(Nothing, Center, Center)`).\n\nThe reader re-inflates squeezed dimensions via `inflate_nothing_dimensions`, but that check used `loc == Nothing` while the caller passes *instantiated* locations (`nothing`), and `nothing == Nothing` is `false`. So no dimension was inflated and a lower-dimensional array reached `offset_data`, where `ntuple(Val(ndims - length(grid_size)))` went negative.\n\nFix: test for both the type and the instance \u2014 `loc === Nothing || loc === nothing`.\n\n## Test\n\nAdds a regression test reading reduced fields (averaged over x, (x,y), and (y,z)) back as a `FieldTimeSeries`, asserting location, times, sizes, and values round-trip. This path was previously uncovered.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-14T04:08:22Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-06-15T22:39:33Z",
+    "number": 5682,
+    "title": "(0.110.2) Fix reading reduced fields from NetCDF as FieldTimeSeries"
+  }
+]
