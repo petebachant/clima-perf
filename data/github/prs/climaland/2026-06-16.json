@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 178,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "\r\n- Fix a diagnostic name mismatch: the LandModel possible\u2011diagnostics list named `\"snow_tbot\"`\r\n  while the diagnostic is registered as `\"snowtbot\"`. As written the snow\u2011bottom\u2011temperature\r\n  diagnostic was unreachable and `default_diagnostics(land_model; output_vars = :long)` would\r\n  error with `\"diagnostic snow_tbot does not exist\"`. Renamed to `\"snowtbot\"`.\r\n\r\n- Make the `ghf` and snow\u2011conductivity diagnostics reachable (they were registered but never\r\n  added to any possible\u2011diagnostics list). Renamed the non\u2011ASCII short name `snow\u03ba` \u2192 `snowk`\r\n  (it was the only non\u2011ASCII diagnostic name and would become a non\u2011ASCII NetCDF variable),\r\n  keeping the compute method consistent.\r\n- Add `units` to the new diagnostics (`K` for the snow temperatures, `W m^-1 K^-1` for `snowk`,\r\n  `W m^-2` for `ghf`) and a `comments` field to `ghf`.\r\n\r\n- Fix a duplicated `F_g =  F_g =` in the `update_soil_snow_ground_heat_flux!` docstring and\r\n  restore the explanation of why `\u0394z_snow` is capped at 10 cm.\r\n- Remove the vestigial, unused `\u03ba_ice` keyword from the `SnowParameters(toml_dict, \u0394t; \u2026)`\r\n  constructor (it was silently ignored after the `\u03ba_ice \u2192 \u03ba_snow` refactor).\r\n- Expand and reflow the `snow_T_bottom` docstring (math in code fences so it renders) and add it\r\n  to the API docs (`docs/src/APIs/ClimaLand.md`).\r\n\r\n**Tests**\r\n- `SturmSnowConductivityModel` conductivity test across the low/high/capped density branches.\r\n- `snow_T_bottom` unit tests covering the closed form, both analytic limits, and the\r\n  freezing\u2011point cap.\r\n- A diagnostics regression test asserting the snow diagnostics (`snowtbot`, `ghf`, `snowk`,\r\n  `snowtsfc`, `snowtb`) are reachable for a `LandModel`.\r\n\r\n**NEWS.md** \u2014 added entries for the feature, the breaking `\u03ba_ice \u2192 \u03ba_snow` change, and the\r\nground\u2011heat\u2011flux behavioral change.\r\n\r\n### Open question for the author\r\n\r\nThe Sturm low\u2011density slope `m1 = 0.20` looks slightly inconsistent with the non\u2011dimensionalization\r\nused for the other coefficients: the threshold (`0.17`), `m2` (`\u22120.93 \u2248 \u22121.01\u00b7\u03c1_ice`) and `q2`\r\n(`2.72 \u2248 3.233\u00b7\u03c1_ice\u00b2`) all correspond to `\u03c1_ice \u2248 0.917 g/cm\u00b3`, which would give\r\n`m1 = 0.234\u00b7\u03c1_ice \u2248 0.215` (and slightly better continuity at the threshold). Worth double\u2011checking\r\nagainst the source. It only affects fresh, low\u2011density snow, so I did not change the parameter.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T16:45:05Z",
+    "deletions": 32,
+    "labels": [],
+    "mergedAt": "2026-06-16T20:28:23Z",
+    "number": 1769,
+    "title": "Review fixes: snow conductivity/bottom-temp diagnostics, docs, and tests"
+  },
+  {
+    "additions": 495,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdds a simple parameterization for the bottom temperature of the snow (not optional), modularizes the thermal conductivity model of the snow, and adds a second parameterization option for this (Sturm).\r\n\r\nThis typically makes the bottom temperature warmer than the bulk temperature, which improves snow insulation over the soil, and has a big effect on permafrost locations. The Sturm conductivity model is also lower than the Jordan parameterization in general, and this helps with permafrost.\r\n\r\n## To-do\r\n\r\n\r\n## Impact\r\nMain:\r\n<img width=\"1000\" height=\"1200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/d25ea395-6e41-4696-a266-c9e2c7314bd9\" />\r\n\r\nBottom alone:\r\n<img width=\"1000\" height=\"1200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/cdba08fa-4587-402d-ab6a-77fed9b9d9cf\" />\r\n\r\nSturm + Tbottom:\r\n<img width=\"1000\" height=\"1200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/600cc374-e5d4-4a8f-a5aa-993398393881\" />\r\n\r\n## Content\r\nAdds bottom snow temp as a cache variable to integrated models with soil and snow, and computes it during the ground heat flux computation\r\n\r\nAdds another parameterization for thermal conductivity\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-12T22:10:50Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      }
+    ],
+    "mergedAt": "2026-06-16T21:55:06Z",
+    "number": 1766,
+    "title": "Snow parameterizations helping permafrost"
+  }
+]

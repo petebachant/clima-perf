@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "the machinery we had excluded field time series nested inside discrete or continuous boundary conditions. This should allow for those cases",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-10T08:19:27Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-06-16T12:55:12Z",
+    "number": 5671,
+    "title": " Update field time series in boundary conditions"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTI3MzU0",
+      "is_bot": false,
+      "login": "emmomp",
+      "name": "Emma Boland"
+    },
+    "body": "Adding in validation checks for ExponentialDiscretization types passed as grid dimensions. \r\n\r\n**Current behaviour**\r\n```\r\nusing Oceananigans\r\nusing Oceananigans.Units\r\n\r\narch=CPU()\r\n\r\nNx, Ny, Nz = 24, 24, 16\r\n\r\nLx = 100kilometers\r\nLy = 100kilometers\r\ndepth=1000meters\r\nz = ExponentialDiscretization(Nz, -depth, 0; scale = depth/4, mutable = true)\r\n\r\ngrid = RectilinearGrid(arch; size = (Nx, Ny, 1),\r\n                       x = (0, Lx),\r\n                       y = (-Ly/2, Ly/2),\r\n                       z)\r\n```\r\n Produces no error, despite Nz=1 being passed to RectilinearGrid, returning:\r\n\r\n> 24\u00d724\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 3\u00d73\u00d71 halo\r\n> \u251c\u2500\u2500 Periodic x \u2208 [0.0, 100000.0)     regularly spaced with \u0394x=4166.67\r\n> \u251c\u2500\u2500 Periodic y \u2208 [-50000.0, 50000.0) regularly spaced with \u0394y=4166.67\r\n> \u2514\u2500\u2500 Bounded  z \u2208 [-1000.0, -774.674] variably and mutably spaced with min(\u0394r)=225.326, max(\u0394r)=225.326\r\n\r\n**New Behaviour**\r\nThe same RecitlinearGrid call now returns\r\n> ERROR: ArgumentError: Coordinate ExponentialDiscretization has length 16 while direction z requires a coordinate of length 1\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T13:30:27Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-16T21:32:17Z",
+    "number": 5692,
+    "title": "Update input_validation.jl"
+  }
+]
