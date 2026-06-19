@@ -1,0 +1,116 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "If now we build a distributed `LatitudeLongitudeGrid` with a z-flat direction, we are still forced to pass `z = nothing` because, contrarily to a serial grid, the distributed version requires passing all the coordinates as it does not have defaults.\r\nThis PR adds defaults to the constructor to match how we do the distributed `RectilinearGrid`",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-17T14:16:38Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-06-18T04:48:30Z",
+    "number": 5695,
+    "title": "Add `nothing` defaults to distributed `LatitudeLongitudeGrid`"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "## What changed\nThis PR fixes a small set of typos in comments, docstrings, Markdown prose, and literated example text.\n\nIt also normalizes the edited text to US American spelling where applicable.\n\n## Scope\nThis PR only changes human-facing text.\n\nIt does not change:\n- variable names\n- method names\n- executable logic\n- numerical behavior\n\n## Validation\nNo tests were run for this PR because the changes are text-only.\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T04:21:42Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-06-18T06:34:46Z",
+    "number": 5698,
+    "title": "Fix typos and normalize text to US spelling"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n`Checkpointer` restore (`run!(; pickup=true)`) reallocated GPU memory for every field, doubling device usage at pickup and OOMing large GPU models.\n\n`prognostic_state(field::Field)` returned the field's **device-backed** array, so the checkpointer serialized a `CuArray`. JLD2 tags it as such and reconstructs a *fresh* `CuArray` per field on read \u2014 so restoring a model already resident on the GPU transiently needs ~2\u00d7 the device memory. On a multi-GPU run this OOM'd while restoring ~24 GiB/GPU slabs.\n\n## Fix\n\n```julia\nprognostic_state(field::Field)            = (; data = Array(parent(field)))   # host copy\nrestore_prognostic_state!(restored, from) = (copyto!(parent(restored), from.data); restored)\n```\n\n- Save a **host** copy of the field data (halos included). It serializes as a plain `Array`, so no `CuArray` is reconstructed on read.\n- On restore, `copyto!` host \u2192 the **existing** device parent: no new device allocation.\n\n## Testing\n\nCPU round-trip verified end-to-end via the real pickup path (`load_checkpoint_state` + `restore_prognostic_state!`): clock and all prognostic fields match the reference exactly. A 1-GPU test at ~24 GiB/GPU (the footprint that previously OOM'd on restart) is in flight.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-17T10:07:13Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-06-18T14:13:39Z",
+    "number": 5694,
+    "title": "Restore checkpoints without reallocating device memory"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Enhances the FieldDataset docstrings and resolves #5685.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABFdTlCg",
+        "number": 5685,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5685"
+      }
+    ],
+    "createdAt": "2026-06-15T01:15:47Z",
+    "deletions": 35,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-18T19:15:38Z",
+    "number": 5686,
+    "title": "Fix FieldDataset docstrings"
+  }
+]

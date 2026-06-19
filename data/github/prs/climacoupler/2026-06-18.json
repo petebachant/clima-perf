@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 62,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nMake the AMIP diagnostics that are sent to the visualization VM self-describing, and stop shipping restart checkpoints to that VM.\n\n## Changes\n\n### Global attributes on coupler & land diagnostics\n- New helper `Utilities.diagnostics_global_attribs(start_date)` builds the `global_attribs` dict passed to `ClimaDiagnostics.Writers.NetCDFWriter`:\n  - `start_date` \u2014 always (as a file-level global attribute, in addition to the existing per-variable one).\n  - `buildkite_build_number` \u2014 the \"model run #\", read from `ENV[\"BUILDKITE_BUILD_NUMBER\"]`; omitted on local runs where the variable is unset.\n- Wired into the three coupler-side writers:\n  - `src/SimOutput/diagnostics.jl` (coupler diagnostics)\n  - `ext/ClimaCouplerClimaLandExt/climaland_integrated.jl`\n  - `ext/ClimaCouplerClimaLandExt/climaland_bucket.jl`\n\nThese files (`clima_coupler/`, `clima_land/`) are exactly what gets rsynced to the VM, so the metadata travels with the data.\n\n> Note: the atmos diagnostics writer is built inside ClimaAtmos and does not expose `global_attribs`, so atmos `.nc` files are not covered here.\n\n### Exclude HDF5 restart checkpoints from the VM upload\n- Added `--exclude='*.hdf5'` to the rsync in `.buildkite/amip/pipeline.yml`. ClimaViz/ClimaAnalysis only read the NetCDF diagnostics; the checkpoints (~2.4 GB/run) otherwise fill the VM's 16 GB ephemeral disk. Checkpoints are still written/kept on the cluster for restarts.\n\n## Verification\n- Edited files parse cleanly.\n- Helper verified: local run \u2192 `{\"start_date\" => ...}`; with `BUILDKITE_BUILD_NUMBER=1234` \u2192 adds `\"buildkite_build_number\" => \"1234\"`.\n- After the first AMIP run on this code, confirm with `ncdump -h` on a `clima_coupler`/`clima_land` `.nc` on the VM that `buildkite_build_number` is present (verifies env propagation through `srun`).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-15T18:35:29Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-06-18T19:05:16Z",
+    "number": 1985,
+    "title": "Add model run # and start_date as diagnostic global attributes; exclude HDF5 from VM upload"
+  },
+  {
+    "additions": 140,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Update compat and manifests for ClimaAtmos v0.40.0",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T20:07:48Z",
+    "deletions": 588,
+    "labels": [],
+    "mergedAt": "2026-06-18T22:28:16Z",
+    "number": 1989,
+    "title": "Update manifests, add ClimaAtmos 0.40"
+  }
+]

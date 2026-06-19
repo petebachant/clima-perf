@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Adds a generic loop over `sgs_tracer_names(Y)` in hyperdiffusion. Any scalar added to `sgs\u02b2s` that isn't `\u03c1a`, `mse`, or `q_tot` now automatically receives hyperdiffusion.\r\n\r\nChanges in `hyperdiffusion.jl`:\r\n- **Cache**: Replaced 6 per-species scratch fields (`\u1d9c\u2207\u00b2q_lcl\u02b2s`, `\u1d9c\u2207\u00b2q_icl\u02b2s`, ...) with a single reusable `\u1d9c\u2207\u00b2sgs_tracer\u02b2s` field.\r\n- **Prep**: Removed per-species `\u2207\u00b2` computation blocks (now done inline).\r\n- **DSS pairs**: Removed per-species DSS buffer pairs (now done per-tracer).\r\n- **Apply**: Replaced per-species tendency blocks with a fused prep \u2192 DSS \u2192 apply loop over `sgs_tracer_names(Y)`.\r\n\r\n`q_tot` and `mse` remain hardcoded because they receive special treatment (`q_tot` couples to `\u03c1a`; `mse` is in the non-tracer hyperdiffusion path).\r\n\r\n## Tradeoff: batched vs per-tracer DSS\r\n\r\nPreviously, `\u2207\u00b2` values for all microphysics species were computed in `prep_tracer_hyperdiffusion_tendency!`, then **batch-DSSed** in a single `weighted_dss2!` call alongside all other hyperdiffusion quantities, then applied in `apply_tracer_hyperdiffusion_tendency!`.\r\n\r\nThe new code uses a **fused loop**: for each tracer, it computes `\u2207\u00b2`, DSSes it individually, then applies the `\u2207\u2074` tendency before moving to the next tracer. This reuses one scratch field but issues one `weighted_dss2!` call per tracer instead of one batched call for all.\r\n\r\n| | Old (batched) | New (per-tracer) |\r\n|---|---|---|\r\n| **Scratch memory** | 4\u20136 fields (one per species) | 1 field (reused) |\r\n| **DSS calls** | 1 batched call | N calls (one per tracer) |\r\n| **Extensibility** | Requires new code per species | Automatic |\r\n| **Code size** | ~60 lines of per-species boilerplate | ~25 lines of generic loop |\r\n\r\nFor the current tracer count (4\u20136 microphysics + 0\u20131 passive), the per-tracer DSS overhead is negligible. If this becomes a bottleneck with many tracers, the batched approach can be restored by allocating a NamedTuple of scratch fields keyed by tracer name.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T23:04:05Z",
+    "deletions": 88,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-06-18T00:50:16Z",
+    "number": 4592,
+    "title": "Auto-discovery of tracers for hyperdiff tendency"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "## Purpose\r\n\r\nWeekly release\r\n```\r\n    Updating `~/clima/ClimaAtmos.jl/.buildkite/Project.toml`\r\n  [b2c96348] ~ ClimaAtmos v0.39.5 `..` \u21d2 v0.40.0 `..`\r\n  [2913bbd2] \u2191 StatsBase v0.34.11 \u21d2 v0.34.12\r\n```",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T17:59:42Z",
+    "deletions": 145,
+    "labels": [],
+    "mergedAt": "2026-06-18T19:29:20Z",
+    "number": 4597,
+    "title": "(0.40.0) tag minor release + up deps"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Current main errors in `update_jacobian!` when the following options are enabled. No tested config uses all of these.\r\n- `turbconv: prognostic_edmfx`\r\n- `edmfx_sgs_mass_flux: true`\r\n- `microphysics_model: 1M` or `2M`\r\n- `implicit_diffusion: false`\r\n\r\n\r\nThis error happens because `turbconv_model` is undefined in local scope, fixed by replacing it with `p.atmos.turbconv_model`.\r\n\r\nError:\r\n```\r\nERROR: UndefVarError: `turbconv_model` not defined in local scope\r\nSuggestion: check for an assignment to a local variable that shadows a global of the same name.\r\nStacktrace:\r\n  [1] update_jacobian!(alg::ClimaAtmos.ManualSparseJacobian, cache::@NamedTuple{\u2026}, Y::ClimaCore.Fields.FieldVector{\u2026}, p::ClimaAtmos.AtmosCache{\u2026}, dt\u03b3::Float32, t::ClimaUtilities.TimeManager.ITime{\u2026})\r\n    @ ClimaAtmos ~/clima/ClimaAtmos.jl/src/prognostic_equations/implicit/manual_sparse_jacobian.jl:1111\r\n  [2] macro expansion\r\n    @ ~/clima/ClimaAtmos.jl/src/prognostic_equations/implicit/jacobian.jl:47 [inlined]\r\n  [3] update_jacobian!(jacobian::ClimaAtmos.Jacobian{\u2026}, Y::ClimaCore.Fields.FieldVector{\u2026}, p::ClimaAtmos.AtmosCache{\u2026}, dt\u03b3::Float64, t::ClimaUtilities.TimeManager.ITime{\u2026})\r\n    @ ClimaAtmos ~/.julia/packages/NVTX/IqPon/src/macro.jl:194\r\n  [4] (::ClimaTimeSteppers.var\"#92#95\"{\u2026})(jacobian::ClimaAtmos.Jacobian{\u2026}, U\u2032::ClimaCore.Fields.FieldVector{\u2026})\r\n    @ ClimaTimeSteppers ~/.julia/packages/ClimaTimeSteppers/lQpni/src/solvers/imex_ark.jl:287\r\n  [5] macro expansion\r\n    @ ~/.julia/packages/ClimaTimeSteppers/lQpni/src/nl_solvers/newtons_method.jl:625 [inlined]\r\n  [6] solve_newton!(alg::ClimaTimeSteppers.NewtonsMethod{\u2026}, cache::@NamedTuple{\u2026}, x::ClimaCore.Fields.FieldVector{\u2026}, f!::ClimaTimeSteppers.var\"#91#94\"{\u2026}, j!::ClimaTimeSteppers.var\"#92#95\"{\u2026}, prepare_for_f!::ClimaTimeSteppers.var\"#93#96\"{\u2026})\r\n    @ ClimaTimeSteppers ~/.julia/packages/NVTX/IqPon/src/macro.jl:194\r\n```\r\n\r\nReproducer:\r\n```julia\r\nimport ClimaComms\r\nClimaComms.@import_required_backends\r\nimport ClimaAtmos as CA\r\n\r\nconfig = CA.AtmosConfig(\r\n    Dict(\r\n        \"initial_condition\" => \"Bomex\",\r\n        \"turbconv\" => \"prognostic_edmfx\",\r\n        \"edmfx_sgs_mass_flux\" => true,\r\n        \"edmfx_entr_model\" => \"Generalized\",\r\n        \"edmfx_detr_model\" => \"Generalized\",\r\n        \"prognostic_tke\" => true,\r\n        \"microphysics_model\" => \"1M\",\r\n        \"config\" => \"column\",\r\n        \"implicit_diffusion\" => false,   # <-- the trigger\r\n        \"z_elem\" => 60, \"z_max\" => 3000.0, \"z_stretch\" => false,\r\n        \"dt\" => \"120secs\", \"t_end\" => \"120secs\",\r\n        \"ode_algo\" => \"ARS222\",\r\n        \"toml\" => [\"toml/prognostic_edmfx_bomex.toml\"],\r\n    )\r\n)\r\nsim = CA.get_simulation(config)\r\nCA.solve_atmos!(sim) \r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T18:43:54Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-06-18T20:48:18Z",
+    "number": 4598,
+    "title": "Fix UndefVarError in `update_jacobian!`"
+  },
+  {
+    "additions": 239,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds a passive tracer `A` to the atmospheric model (both grid-mean and EDMF). All SGS tendencies (entrainment, advection, diffusion, mass flux) are auto-discovered via `sgs_tracer_names(Y)`. Grid-mean tendencies (advection, diffusion, hyperdiffusion) are auto-discovered via `gs_tracer_names(Y)` / `foreach_gs_tracer`. The Jacobian is still hard-coded. To be changed in future PRs.\r\n\r\nTo switch it on set `chemistry_model: \"passive\"`. As an example, the PR adds an SCM Bomex with passive tracer to the CI. It's switched off by default, so should not affect any of our typical simulations.\r\n\r\nI think it's a good test of our sgs vertical transport. So I'm adding it to the CI.\r\n\r\n### Chemistry model (`chemistry.jl`)\r\n- New `GasPhaseChem <: AbstractChemistryModel` type, selected via `chemistry_model: \"passive\"` in the YAML config.\r\n\r\n### Physical state (`physical_state.jl`)\r\n- Added `A` field (default `zero(T)`) to the `physical_state` NamedTuple. Present in all setups but only added to the Atmos model state when chemistry is active.\r\n\r\n### Prognostic variables (`prognostic_variables.jl`)\r\n- `chemistry_variables(\u03c1, ps, ::AbstractChemistryModel)` \u2192 adds `\u03c1A` to grid-scale state.\r\n- `chemistry_sgs_variables(ps, ::AbstractChemistryModel)` \u2192 adds `A` to updraft `sgs\u02b2s`.\r\n- Both return `(;)` when chemistry model is `nothing`, so no impact on existing configs.\r\n\r\n### Initial condition (`Bomex.jl`)\r\n- Initializes `A = 1` in the Bomex physical state (a uniform background for testing transport).\r\n\r\n### Jacobian (`manual_sparse_jacobian.jl`)\r\n- `\u03c1A` gets a `-I` identity block (explicit treatment).\r\n- `sgs\u02b2s.:(1).A` gets Jacobian entries for SGS vertical advection (TridiagonalRow) and entrainment (Diagonal), matching the implicit treatment of other SGS scalars.\r\n- All entries rely on `MatrixFields.has_field(Y, @name(...))`.\r\n\r\n### Diagnostics (`core_diagnostics.jl`, `edmfx_diagnostics.jl`)\r\n- `passiveA`: grid-mean specific concentration `\u03c1A/\u03c1`.\r\n- `passiveAup`: updraft concentration `sgs\u02b2s.:(1).A`.\r\n\r\n### CI (`pipeline.yml`)\r\n- New single-column job using `prognostic_edmfx_bomex_tracerA_column.yml`",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T23:33:19Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-06-18T21:57:17Z",
+    "number": 4593,
+    "title": "Add \"explicit\" Bomex with passive tracer A"
+  }
+]
