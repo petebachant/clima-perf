@@ -1,0 +1,100 @@
+[
+  {
+    "additions": 188,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "## Summary\r\n\r\n- After the first grid's description, adds three `jldoctest grids` blocks demonstrating `xnodes`/`znodes` with both `Center()` and `Face()` locations, highlighting the key difference between `Periodic` (N face nodes) and `Bounded` (N+1 face nodes) directions.\r\n- After the GPU grid's description, adds a `jldoctest grids` block that creates a CPU equivalent of the irregular-z grid and uses `zspacings` to show the varying cell widths `[1.0, 2.0, 3.0, 4.0]`.\r\n\r\n## Test plan\r\n\r\n- [x] Verify `jldoctest grids` blocks pass (`julia --project=docs/ docs/make.jl`)\r\n- [x] Check rendered tutorial reads naturally end-to-end\r\n\r\nDocs preview at https://clima.github.io/OceananigansDocumentation/previews/PR5699/grids\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.ai/claude-code)\r\n\r\nSuggested by @Thefrollickingnerd; thanks heaps! \ud83d\ude4f\ud83c\udffc",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T07:59:22Z",
+    "deletions": 130,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-06-19T04:29:25Z",
+    "number": 5699,
+    "title": "Add node and spacing inspection examples to grids tutorial"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjMzODQzODI2",
+      "is_bot": false,
+      "login": "macmccallum",
+      "name": "Mason McCallum"
+    },
+    "body": "## Summary\n\n### Fix 1: 5D multilinear interpolation GPU JIT compile time\n\n- The `_interpolate` function for 5D data was a single `@inline` 32-term fully-unrolled expression\n- When compiled for GPU, LLVM's optimization passes had to analyze all 32 terms (~256 arithmetic ops) at once, causing ~20-minute JIT compilation for `TabulatedFunction5D` in the GPU unit test CI\n- Factored the 5D interpolation into two calls to a new non-`@inline` helper (`_interpolate(data, ix, iy, iz, iw, m::Integer)`) that does the 16-term 4D interpolation at a fixed 5th index\n- The `@inline` wrapper reduces to 3 scalar ops + 2 device function calls at the GPU kernel call site \u2014 the function call overhead (~20\u201350 cycles) is negligible vs. the 32 memory accesses that dominate cost\n\n### Fix 2: Broken docs cross-references\n\n- `@ref \"Two dimensional turbulence example\"` in `models_overview.md` \u2192 `@ref two_dimensional_turbulence` (broken since PR #4843)\n- `@ref schedules` in `simulations_overview.md` \u2192 `@ref callback_schedules` (broken since PR #4834)\n- These were causing the `documentation` CI job to fail with exit code 1\n\n## Test plan\n\n- [x] `TabulatedFunction` CPU tests: 2087/2087 pass\n- [ ] GPU unit tests should now complete the `TabulatedFunction` testset in minutes rather than ~20 minutes\n- [ ] Docs build should pass without cross-reference errors\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T21:44:30Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-19T11:56:59Z",
+    "number": 5705,
+    "title": "Reduce 5D interpolation GPU JIT compile time and fix docs cross-references"
+  },
+  {
+    "additions": 2638,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n- New `LambertConformalConicGrid` recipe under `OrthogonalSphericalShellGrids`: a regional curvilinear grid built on `OrthogonalSphericalShellGrid` using a Lambert conformal conic projection. Three domain modes (`x/y`, `center/extent`, `center/spacing`), one or two standard parallels, optional false easting/northing, and an apex-in-domain warning for safe regional use.\n- GPU-compatible coordinate and spherical-metric kernels; full curvilinear-grid contract (`with_halo`, `similar`, `with_number_type`, `constructor_arguments`, `Adapt`, `on_architecture`).\n- Exports: `LambertConformalConicGrid`, `LambertConformalConic`, `lcc_forward`, `lcc_inverse`, `lcc_scale_factor`.\n\nNetCDF integration was scoped out of this PR (see \"Drop NCDatasets integration\") and will land separately.\n\n## Test plan\n\n- [x] `test/test_lambert_conformal_conic_grid.jl` on CPU \u2014 1009/1009 pass. Covers projection math (allocation-free, type-inferred, roundtrip both hemispheres, tangent + secant forms), the polar-stereographic limit (rotation-angle range, intrinsic\u2194extrinsic roundtrip, `with_halo`/`similar`/`with_number_type`/reconstruction, hydrostatic smoke run), constructor validation, coordinates/metrics, Float32 arrays, vector rotation, a hydrostatic smoke run, and architecture construction/transfer.\n- [x] `test/test_grid_reconstruction.jl` extended with LCC + flat-LCC roundtrips (via `constructor_arguments`) on CPU.\n- [ ] GPU CI: `test/run_lambert_conformal_conic_gpu_gate.jl` runs the LCC test file + grid-reconstruction tests under `TEST_ARCHITECTURE=GPU`.\n- [ ] Doctests in `docs/src/grids.md` and the new module docstrings.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-15T05:07:33Z",
+    "deletions": 79,
+    "labels": [],
+    "mergedAt": "2026-06-19T14:55:24Z",
+    "number": 5589,
+    "title": "Add LambertConformalConicGrid"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "This PR adds the functions `traced_type_inner` and `make_tracer` to `OceananigansReactantExt` for `RectilinearGrid`. Currently there is a bug where calling `eltype` for RectilinearGrid with ReactantState architecture returns Float64, although it should return a TracedRFloat.\r\n\r\nThis PR is not yet successful. It can be tested by running the script [here](https://github.com/DJ4Earth/Channelanigans/blob/jlk9/rectilinear-grid-reactant-error/scripts/abernathey_channel.jl), which shows the fields in RectilinearGrid are still generally Float64 even with `traced_type_inner` and `make_tracer` being run.\r\n\r\n@wsmoses",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-16T18:45:55Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-06-19T15:38:03Z",
+    "number": 5600,
+    "title": "Adding reactant extension to RectilinearGrid"
+  }
+]
