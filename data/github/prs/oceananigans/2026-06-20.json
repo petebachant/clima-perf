@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 274,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes part of #5323.\n\nAdds slice for extracting lower-dimensional grids from existing grids:\n\n```julia\nsst_grid          = slice(grid, :, :, 1)   # 2D horizontal grid (z collapses to Flat)\ncross_section     = slice(grid, :, 1, :)   # 2D x\u2013z grid\ncolumn            = slice(grid, 1, 1, :)   # 1D vertical column\n```\n\n## Semantics\n\n- A **single integer index** collapses that dimension to `Flat`; a **colon** (`:`) retains it with its size, halo, spacing, and topology unchanged.\n- For `RectilinearGrid` / `LatitudeLongitudeGrid` the index *value* does not affect the result (horizontal and vertical coordinates are independent), so only *which* dimension is collapsed matters. The value-dependence noted in #5323 (curved grids) is left for a follow-up.\n\n## Implementation\n\nBuilt on the same `cpu_face_constructor_*` / `pop_flat_elements` machinery as `with_halo`, `similar`, and `on_architecture`, so **stretched coordinates are preserved** and the result round-trips like any reconstructed grid. Methods for `RectilinearGrid` and `LatitudeLongitudeGrid` (the latter retains `radius` and precomputed metrics).\n\n## Motivation\n\nThis is the grid-level primitive behind exchange/surface grids in coupled models. In NumericalEarth the manual\n\n```julia\nsst_grid = RectilinearGrid(grid.architecture, size=grid.Nx, halo=grid.Hx,\n                           x=(-10kilometers, 10kilometers), topology=(Periodic, Flat, Flat))\n```\n\nbecomes `slice(grid, :, :, grid.Nz+1 \u2192 surface)`. It is also what enables an atmosphere\u2013ocean exchange grid at a different resolution from one of the components.\n\n## Tests\n\n`test_grids.jl` covers both grid types: topology collapse, retained size/halo/architecture/eltype, preserved nodes, stretched-coordinate preservation (RG), and retained radius + finite latitude-dependent metrics (LLG). Validated on CPU.\n\n## Not included (follow-ups)\n\n- A `Field`-level `slice` (a 2D field viewing the `k`-level data) \u2014 needed next for the coupling interpolation.\n- Curved-grid (`OrthogonalSphericalShellGrid`) support and the index-value semantics for those.\n- Range indices (`slice(grid, :, :, 1:10)` \u2192 `Bounded` sub-grid).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-18T15:11:35Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-06-20T00:15:02Z",
+    "number": 5701,
+    "title": "Add slice(grid, i, j, k) to extract lower-dimensional grids"
+  },
+  {
+    "additions": 858,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Experimenting with NCCL to accelerate multi-GPU Poisson solver.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-27T21:32:45Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-06-20T03:24:03Z",
+    "number": 5445,
+    "title": "Add NCCL extension and implement NCCLFourierTridiagonalPoissonSolver"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-20T03:24:27Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-06-20T03:24:38Z",
+    "number": 5708,
+    "title": "Bump project version from 0.110.3 to 0.110.4"
+  }
+]
