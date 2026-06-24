@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR updates the end to end coupler pipeline to use the most recent coupler commit and automatically compare SYPD to the most recent CA main build.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-22T20:48:27Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-06-23T00:40:16Z",
+    "number": 4601,
+    "title": "Update .buildkite/coupler_perf/pipeline.yml"
+  },
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "With the recent microphysics additions, some options are not printed to the log. This prints all options to aid reproducibility.\r\n\r\nSample output:\r\n```\r\n\u250c Info: Making AtmosConfig with config files:\r\n\u2502    config/default_configs/default_config.yml\r\n\u2514    config/model_configs/prognostic_edmfx_bomex_tracerA_column.yml\r\n\u250c Info: numerics\r\n\u2502        `energy_q_tot_upwinding`::`Val{:vanleer_limiter}`\r\n\u2502              `tracer_upwinding`::`Val{:vanleer_limiter}`\r\n\u2502     `edmfx_mse_q_tot_upwinding`::`Val{:first_order}`\r\n\u2502       `edmfx_sgsflux_upwinding`::`Val{:none}`\r\n\u2502        `edmfx_tracer_upwinding`::`Val{:first_order}`\r\n\u2502       `test_dycore_consistency`::`Nothing`\r\n\u2502          `reproducible_restart`::`Nothing`\r\n\u2502                       `limiter`::`Nothing`\r\n\u2502                     `diff_mode`::`ClimaAtmos.Implicit`\r\n\u2514                     `hyperdiff`::`ClimaAtmos.Hyperdiffusion{Float32}`\r\n\u250c Info: AtmosModel:\r\n\u2502 \r\n\u2502                             `water`::`ClimaAtmos.AtmosWater{ClimaAtmos.NonEquilibriumMicrophysics1M, ClimaAtmos.MLCloud{Flux.Chain{Tuple{Flux.Dense{typeof(NNlib.relu), StaticArraysCore.SMatrix{8, 4, Float32, 32}, StaticArraysCore.SVector{8, Float32}}, Flux.Dense{typeof(NNlib.relu), StaticArraysCore.SMatrix{8, 8, Float32, 64}, StaticArraysCore.SVector{8, Float32}}, Flux.Dense{typeof(identity), StaticArraysCore.SMatrix{1, 8, Float32, 8}, StaticArraysCore.SVector{1, Float32}}}}}, ClimaAtmos.Implicit, Nothing, ClimaAtmos.SGSQuadrature{3, StaticArraysCore.SVector{3, Float32}, StaticArraysCore.SVector{3, Float32}, ClimaAtmos.GaussianSGS, Float32}, ClimaAtmos.FixedTerminalVelocity{Float32}}`\r\n\u2502                         `scm_setup`::`ClimaAtmos.SCMSetup{ClimaAtmos.Subsidence{AtmosphericProfilesLibrary.ZProfile{AtmosphericProfilesLibrary.var\"#31#32\"{Float32}}}, Nothing, ClimaAtmos.LargeScaleAdvection{ClimaAtmos.var\"#555#557\"{@NamedTuple{prof_dTdt::AtmosphericProfilesLibrary.\u03a0ZProfile{AtmosphericProfilesLibrary.var\"#27#28\"}, prof_dqtdt::AtmosphericProfilesLibrary.ZProfile{AtmosphericProfilesLibrary.var\"#29#30\"{Float32}}}}, ClimaAtmos.var\"#554#556\"{@NamedTuple{prof_dTdt::AtmosphericProfilesLibrary.\u03a0ZProfile{AtmosphericProfilesLibrary.var\"#27#28\"}, prof_dqtdt::AtmosphericProfilesLibrary.ZProfile{AtmosphericProfilesLibrary.var\"#29#30\"{Float32}}}}}, Bool, @NamedTuple{prof_ug::AtmosphericProfilesLibrary.ZProfile{AtmosphericProfilesLibrary.var\"#23#24\"{Float32}}, prof_vg::ClimaAtmos.Setups.var\"#11#12\"{Float32}, coriolis_param::Float32}}`\r\n\u2502                         `radiation`::`ClimaAtmos.AtmosRadiation{Nothing, ClimaAtmos.IdealizedInsolation}`\r\n\u2502                          `turbconv`::`ClimaAtmos.AtmosTurbconv{ClimaAtmos.EDMFXModel{ClimaAtmos.InvZEntrainment, ClimaAtmos.BuoyancyVelocityDetrainment, Val{true}, Val{true}, Val{true}, Val{true}, Val{true}, ClimaAtmos.SmoothMinimumBlending}, ClimaAtmos.PrognosticEDMFX{1, true, Float32}, Nothing, Nothing, Nothing}`\r\n\u2502                   `prescribed_flow`::`Nothing`\r\n\u2502                      `gravity_wave`::`ClimaAtmos.AtmosGravityWave{Nothing, Nothing}`\r\n\u2502                `vertical_diffusion`::`Nothing`\r\n\u2502                            `sponge`::`ClimaAtmos.AtmosSponge{Nothing, Nothing}`\r\n\u2502                           `surface`::`ClimaAtmos.AtmosSurface{ClimaAtmos.SurfaceConditions.MoninObukhov{Float32, ClimaAtmos.SurfaceConditions.\u03b8AndQFluxes{Float32, Float32}, Float32}, ClimaAtmos.SurfaceConditions.AnalyticTemperature{Returns{Float32}}, ClimaAtmos.SurfaceConditions.SurfaceBoundaryOverrides{Float32, Float32, Nothing, Nothing, Nothing, Nothing}, ClimaAtmos.ConstantAlbedo{Float32}}`\r\n\u2502                          `numerics`::`ClimaAtmos.AtmosNumerics{Val{:vanleer_limiter}, Val{:vanleer_limiter}, Val{:first_order}, Val{:none}, Val{:first_order}, Nothing, Nothing, Nothing, ClimaAtmos.Implicit, ClimaAtmos.Hyperdiffusion{Float32}}`\r\n\u2514                         `chemistry`::`ClimaAtmos.AtmosChem{ClimaAtmos.GasPhaseChem}`\r\n\u250c Info: Microphysics settings:\r\n\u2502                        `n_substeps`::`3`\r\n\u2502                   `n_substeps_quad`::`2`\r\n\u2502            `cloud_liquid_formation`::`CloudLiquidFormation`\r\n\u2502               `cloud_ice_formation`::`ConstantTimescale`\r\n\u2502                    `cloud_ice_melt`::`CloudIceMelt`\r\n\u2502               `rain_autoconversion`::`Kessler1M`\r\n\u2502               `snow_autoconversion`::`NoSupersaturation`\r\n\u2502     `rain_condensation_evaporation`::`RainEvaporation`\r\n\u2502       `snow_deposition_sublimation`::`DepositionAndSublimation`\r\n\u2502                         `snow_melt`::`SnowMelt`\r\n\u2502       `cloud_liquid_rain_accretion`::`CloudLiquidRainAccretion`\r\n\u2502       `cloud_liquid_snow_accretion`::`CloudLiquidSnowAccretion`\r\n\u2502          `cloud_ice_rain_accretion`::`CloudIceRainAccretion`\r\n\u2502          `cloud_ice_snow_accretion`::`CloudIceSnowAccretion`\r\n\u2514               `rain_snow_accretion`::`RainSnowAccretion`\r\n```",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-22T23:38:35Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-23T21:07:18Z",
+    "number": 4603,
+    "title": "Print all microphysics options"
+  }
+]
