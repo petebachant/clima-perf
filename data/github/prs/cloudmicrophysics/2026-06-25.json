@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Group documentation runs by workflow and ref with `cancel-in-progress`, so re-pushing a branch cancels its in-flight documentation build rather than running a second build alongside it.\r\n\r\nPreview deploys push to the single `gh-pages` branch with `git push --force-with-lease`. When several documentation builds reach that push together, all but one are rejected with \"stale info\" and must be re-run. Cancelling superseded per-branch builds removes the redundant concurrent builds that re-pushing a branch produces, lowering the number of simultaneous preview deploys and the resulting rejections. Independent branches still build in parallel, so a single update to many branches can still race; the change reduces the frequency rather than eliminating it.\r\n\r\nClimaAtmos.jl has the same lines in their [docs.yml](https://github.com/CliMA/ClimaAtmos.jl/blob/c7141b455ccebe3355112c8c6c6d4b8f9c695c49/.github/workflows/docs.yml#L11-L13)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-25T19:18:45Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-25T22:28:30Z",
+    "number": 747,
+    "title": "ci(docs): add per-ref concurrency to the documentation workflow"
+  }
+]

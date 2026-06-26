@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 539,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n\r\n## Purpose\r\n\r\n**Item 1 from code alignment tasks**\r\n\r\nReplace the prescribed surface-area boundary condition in PrognosticEDMFX (`turbconv_params.surface_area` force-relaxed via an artificial first-cell entrainment override) with a physical surface mass-flux boundary condition. The previous BC pinned the first-cell area fraction to a fixed target, which prevented `a` from evolving with surface forcing and required a hand-tuned relaxation rate.\r\n\r\n### New surface BC\r\n\r\nAt the first cell, the updraft receives a Deardorff convective surface mass flux\r\n\r\n$$\r\nF_{\\mathrm{surf}} = a_s \\rho w^\\*\r\n$$\r\n\r\nwith\r\n\r\n$$\r\na_s = a_{s,\\max} \\frac{(w^\\*)^3}{(w^\\*)^3 + c_u \\cdot (u^\\*)^3}\r\n$$\r\n\r\nand\r\n\r\n$$\r\nw^\\* = \\sqrt{\\max\\left(z_i \\langle w'b' \\rangle_s, 0\\right)}\r\n$$\r\n\r\nHere, $a_{s,\\max} =$ `turbconv_params.surface_area` is now interpreted as the *asymptotic* plume area fraction in the free-convection limit ($w^\\* \\gg u^\\*$). The factor\r\n\r\n$$\r\n\\frac{(w^\\*)^3}{(w^\\*)^3 + (u^\\*)^3}\r\n$$\r\n\r\nsmoothly shuts the source off in shear-dominated conditions. The boundary-layer depth $z_i$ is taken from `SFP.gustiness_zi`.\r\n\r\n### Edge cases\r\n\r\n- **Stable boundary layer** ($\\langle w'b' \\rangle_s \\le 0$): $F_{\\mathrm{surf}} = 0$, $a_s = 0$, no inflow, and the area fraction decays through advective sinks.\r\n- **Shear-only or very weak convection** ($a_s \\to 0$): $F_{\\mathrm{surf}} \\to 0$ linearly, while the `sgs_scalar_first_interior_bc` percentile coefficient grows only logarithmically. Their product therefore vanishes. `eps` guards in `percentile_bounds_mean_norm` prevent NaNs near the floating-point floor.\r\n- **Area-fraction saturation** ($a \\to a_{\\max}$): the limiter tends to zero, and the $\\rho a$ source, MSE and $q_{\\mathrm{tot}}$ tendencies, and the Jacobian rate all vanish consistently.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://github.io\r\n- followed the style guide: https://github.io\r\n- followed the documentation policy: https://github.com\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included\r\n- relevant unit tests, and integration tests,\r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n---\r\n\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-17T22:25:42Z",
+    "deletions": 221,
+    "labels": [],
+    "mergedAt": "2026-06-25T02:43:36Z",
+    "number": 4596,
+    "title": "Replace prescribed surface-area BC with a surface mass-flux BC"
+  },
+  {
+    "additions": 150,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nPromote hardcoded parameters: EDMF surface condition parameters as well as cloud fraction parameters\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 29,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-25T05:23:21Z",
+    "deletions": 118,
+    "labels": [],
+    "mergedAt": "2026-06-25T18:23:21Z",
+    "number": 4607,
+    "title": "Promote hardcoded params"
+  }
+]
