@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2058,
+    "author": {
+      "id": "MDQ6VXNlcjIzNzQ0MTk1",
+      "is_bot": false,
+      "login": "braghiere",
+      "name": "Renato Braghiere"
+    },
+    "body": "## Purpose\r\nExtends the existing ClimaLand calibration pipeline with the two remaining steps of the [CalibrateEmulateSample.jl](https://github.com/CliMA/CalibrateEmulateSample.jl) (CES) UQ workflow \u2014 emulation and MCMC sampling \u2014 enabling full uncertainty quantification after a `ClimaCalibrate` run. Also adds an end-to-end site-level tutorial demonstrating the full CES pipeline with the ClimaLand land surface model.\r\n\r\n## To-do\r\n- Add user-facing documentation section for emulate + sample steps in `docs/src/calibration.md`\r\n\r\n## Content\r\n\r\n### Production pipeline scripts\r\n- `experiments/calibration/emulate.jl`: Loads EKP checkpoints from a completed `ClimaCalibrate` run via `load_latest_ekp`, trains a GP emulator using `CalibrateEmulateSample.Emulators` (GPJL / GaussianProcess / `optimize_hyperparameters!`), and saves the emulator plus observation metadata to `ces_output_dir/emulators.jld2`. Reads config from the same env vars (`CALIBRATION_OUTPUT_DIR`, `CALIBRATION_CONFIG`) as `run_calibration.jl`.\r\n- `experiments/calibration/sample.jl`: Loads the saved emulator and runs RWMH-MCMC via `CalibrateEmulateSample.MarkovChainMonteCarlo` (MCMCWrapper / `optimize_stepsize` / `sample` / `get_posterior`) to produce a full posterior over the calibrated parameters. Logs constrained posterior statistics (mean, std, 95% CI).\r\n- `experiments/calibration/test/test_ces_pipeline.jl`: End-to-end integration test exercising the full Calibrate \u2192 Emulate \u2192 Sample pipeline without running the real land model, using a toy forward model G(emissivity) = 240 \u00d7 emissivity. All 12 tests pass.\r\n\r\n### Tutorial\r\n- `docs/src/tutorials/calibration/perfect_model_site_level_ces.jl`: Single-site perfect-model CES tutorial using US-MOz FLUXNET forcing. Calibrates `Vcmax25` via EKI against synthetic LHF, trains and validates a GP emulator, and runs RWMH-MCMC to recover the true parameter. Uses physically realistic values (true `Vcmax25 = 1.5e-4` mol m\u207b\u00b2 s\u207b\u00b9 \u2248 150 \u03bcmol; prior `N(1e-4, 5e-5)` bounded `[0, 2e-4]`), in the LHF-sensitive regime (a sensitivity sweep confirmed LHF responds across the physical range and saturates only at unphysically high values). The posterior recovers the truth (mean \u2248 146 \u03bcmol vs. true 150; EKI MAP \u2248 154) and is much narrower than the prior (posterior std \u2248 18 \u03bcmol vs. prior 50; truth within the 95% CI [112, 181] \u03bcmol). Includes a posterior predictive check against the true model `G`, precomputed offline (50 posterior + 50 prior pushforwards) and committed as a static figure so it doesn't slow the docs build.\r\n- `docs/list_tutorials.jl`: Registered under \"Calibrating a ClimaLand model\" as \"Single site perfect model (CES/UQ)\".\r\n\r\n\r\n---\r\n\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-10T22:50:44Z",
+    "deletions": 36,
+    "labels": [],
+    "mergedAt": "2026-06-26T20:33:31Z",
+    "number": 1764,
+    "title": "Add CES emulate + sample pipeline"
+  }
+]
