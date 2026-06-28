@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "## Summary\n\nFixes #5731.\n\n`interpolating_time_indices(::Clamp, times, t)` built its clamped index tuples with a literal `0` for the fractional time index, while the in-range tuple used the `Float64` value `\u00f1`:\n\n```julia\nbeyond_indices    = (0, n\u2082, n\u2082)\nbefore_indices    = (0, n\u2081, n\u2081)\nunclamped_indices = (\u00f1, n\u2081, n\u2082)\n```\n\nThe `ifelse` over these tuples then inferred as `Union{Tuple{Int,Int,Int}, Tuple{Float64,Int,Int}}` \u2014 a type instability.\n\nThis also produces a Reactant compile warning on every compile (*\"`ifelse` with different element-types in Reactant works by promoting the element-type to the common type\"*), since Reactant maps `ifelse` element-wise over tuples. Because `Clamp()` is the default time-indexing mode for `FieldTimeSeries`, this fired for essentially any Reactant-compiled model interpolating time series data.\n\n## Fix\n\nReplace the literal `0` with `zero(\u00f1)` so all branches share an element type, matching the pattern already used in the sibling `find_time_index` function:\n\n```julia\nbeyond_indices    = (zero(\u00f1), n\u2082, n\u2082)\nbefore_indices    = (zero(\u00f1), n\u2081, n\u2081)\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABG3rdzA",
+        "number": 5731,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5731"
+      }
+    ],
+    "createdAt": "2026-06-27T00:52:13Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-06-27T17:22:20Z",
+    "number": 5732,
+    "title": "Fix type instability in interpolating_time_indices(::Clamp, \u2026)"
+  }
+]
