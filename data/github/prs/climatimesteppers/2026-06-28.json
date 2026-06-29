@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 403,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nFixes misleading tests, closes coverage gaps, and removes dead code.\r\n\r\n- **dense_output**: rewrote to test the real `sol(t)` nearest-neighbor contract \u2014 the old tests claimed linear interpolation (which CTS doesn't do) and were vacuous.\r\n- **MPI CI**: the \"callbacks (MPI)\" job ran single-rank; now launches 2 ranks via `srun` so the distributed `EveryXWallTimeSeconds` path is actually exercised.\r\n- **CPU CI**: added steps for `forward_diff`, `jacobian_update`, `cache_sizes` (previously only run locally/on GPU).\r\n- **integrator API**: added tests for `advance_to_tstop`, two-arg `step!(integrator, dt, stop_at_tdt)`, and the error branches.\r\n- **type stability**: replaced solver smoke tests with `JET.@test_opt` on each solver's `step_u!` (adds JET to test deps; covers IMEX SSPRK too).\r\n- **dead code**: removed `all_test_cases` and the unused `IntegratorTestCase` fields `default_num_steps`/`high_order_sample_shifts`.\r\n\r\nThere're also two source code change to make Rosenbrock and multirate solvers allocation-free\r\n- Avoid materializing a slice of the tableau in Rosenbrock solvers to make them allocation-free\r\n- Make multirate solver allocation free (required changing `SortedQueue` argument from keyword to positional\r\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-28T02:06:29Z",
+    "deletions": 230,
+    "labels": [],
+    "mergedAt": "2026-06-28T09:58:11Z",
+    "number": 427,
+    "title": "Test suite improvements"
+  }
+]
