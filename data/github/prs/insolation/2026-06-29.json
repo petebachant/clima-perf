@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 460,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Documentation\r\n* Fixed an incorrect physical claim (equator-equinox daily-mean cosine is 1/\u03c0 \u2248 0.318, not 2/\u03c0), clarified the non-standard azimuth convention, and corrected several stale/typo'd docstring examples (including broken ; milankovitch=true keyword calls and a adapt(CuArray, TSIDataSpline) typo).\r\n* Standardized docstrings, added missing # Fields/# Returns/cross-reference sections, and added a type-level docstring for InsolationParameters.\r\n* Made the manual-parameter examples consistent and physically accurate.\r\n\r\n## Code\r\n* Bug: TSIDataSpline's evaluate selected the wrong monthly interval for dates after the 15th but before noon, producing a small (1e-3 W/m2) non-physical discontinuity. Fixed the branch condition.\r\n* Bug: the Milankovitch path indexed the Laskar (2004) tables (Julian-year axis) with anomalistic years. Added julian_years_since_epoch and use it for the spline lookup, keeping anomalistic years for the mean anomaly.\r\n* Breaking change: Removed semi-major axis from parameters and expressed all distances as normalized by semi-major axis. This does not affect any CliMA consumers but is a breaking change of the API.\r\n* Robustness: solar_geometry/daily_distance_zenith_angle now convert all inputs to eltype(param_set) (removes silent float-type mixing); cleared the tan(\u03b4) singularity in the azimuth, added clamp to the daily acos, and removed several no-op mod(\u00b7, 2\u03c0) calls.\r\n\r\n## Bump minor version\r\n* Bumped minor version to reflect breaking change in API \r\n* API change has no effect on ClimaAtmos, ClimaLand etc. No source code changes needed\r\n* However, there are tiny changes in insolation, e.g., from the more accurate equation of time (the difference is less than 45 s time shift everywhere). They don't matter in practice, but if there are bitwise reproducibility tests (e.g.,. in atmos) that depend on exact insolation, they'd break. ",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-28T12:21:11Z",
+    "deletions": 194,
+    "labels": [],
+    "mergedAt": "2026-06-29T15:05:34Z",
+    "number": 102,
+    "title": "Documentation; interpolation fixes (TSI and Milankovitch); changed use of semi-major axis"
+  }
+]

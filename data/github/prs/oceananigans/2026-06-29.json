@@ -1,0 +1,105 @@
+[
+  {
+    "additions": 83,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "At the moment, `KernelFunctionOperation`s work only with functions that have signature `(i, j, k, grid, args...)`. However, some time, we want to have KernelFunctionOperations on genuinely 2D functions, corresponding to Nothing locations.\r\nFor example:\r\nhttps://github.com/CliMA/Oceananigans.jl/blob/5494227cc4eb017f60550e8a7b1cb272c7ef8766/src/ImmersedBoundaries/grid_fitted_bottom.jl#L151-L154\r\n\r\nAt the moment, we would need to create a helper function that redirects a `k` index into two-d functions. \r\nThis PR makes this step automatic so that it would be possible, for example, to do\r\n```julia\r\nKernelFunctionOperation{Center, Center, Nothing}(static_column_depth\u1d9c\u1d9c\u1d43, grid)\r\n```\r\nwithout requiring extra code",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-06T18:24:17Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-06-29T09:49:58Z",
+    "number": 5659,
+    "title": "Allow kernel functions with fewer indices for KernelFunctionOperation at reduced locations"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The models save the clock as `Clock{T}` but the clock type is `Clock{TT, KT, DT, IT, S}` so that `getproperty(model, :clock)` cannot infer the correct type of the clock and poisons all the methods downstream. This PR fixes this issue.\r\n\r\nAnother step towards #5729",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T08:55:01Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-06-29T12:40:38Z",
+    "number": 5738,
+    "title": "Bugfix type inference of `Clock` types"
+  },
+  {
+    "additions": 104,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "we actually do not need a `Field` (the grid is the same grid the immersed boundary is attached to). So it's good to have just plain `OffsetArray`s. It also help with memory allocation issues and keeping the field descriptor of a model a bit more contained; each `Field` has a gigantic field descriptor, and on an immersed boundary we now have in main `Field(Grid(Field(Grid))` which explodes the descriptor by a factor of 2",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-28T18:56:13Z",
+    "deletions": 99,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-06-29T14:36:03Z",
+    "number": 5737,
+    "title": "Immersed boundary as a plain `OffsetArray`"
+  },
+  {
+    "additions": 112,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nMakes `Oceananigans.Fields.interpolate!(to_field, from_field)` work \u2014 and work *fast* \u2014 when `from_field` lives on a `LambertConformalConicGrid` (LCC). Previously this threw `MethodError: no method matching fractional_x_index(\u2026, ::OrthogonalSphericalShellGrid\u2026)`, because fractional-index methods existed only for `RectilinearGrid` and `LatitudeLongitudeGrid`.\n\nThis unblocks ingesting projected GRIB datasets (e.g. NOAA RAP) through the existing `interpolate!` path with **no KD-tree and no scattered search** \u2014 a closed-form O(1) fractional-index lookup analogous to the regular-`LatitudeLongitudeGrid` shortcut.\n\n## How\n\nThe LCC grid is exactly uniform in its projected `(x, y)` meters plane, and the closed-form forward map `lcc_forward(map, \u03bb, \u03c6) \u2192 (x, y)` already exists (`@inline`, allocation-free). So the fractional index is exact:\n\n```julia\nx, y = lcc_forward(map, \u03bb, \u03c6)\nii = (x - lcc_xnode(1, \u2113x, map)) / map.\u0394x + 1\njj = (y - lcc_ynode(1, \u2113y, map)) / map.\u0394y + 1\n```\n\nThe one structural subtlety: LLG shortcuts are per-axis (`fractional_x_index(\u03bb)`, `fractional_y_index(\u03c6)`) because lat-lon axes are separable. **LCC axes are not** \u2014 each projected coordinate depends on both \u03bb and \u03c6. So the shortcut installs one level up, as a joint specialization of `_fractional_indices` (where the full horizontal node is in scope), following the existing `XFlatGrid`/`XYFlatGrid`/\u2026 precedent.\n\n## Notes\n\n- **Module placement.** Methods live in `OrthogonalSphericalShellGrids` (loaded after `Fields`) so extending `Oceananigans.Fields._fractional_indices` introduces no import cycle.\n- **No new ambiguities.** Locations are constrained to `Union{Center, Face}`, keeping the new methods disjoint from the existing `Nothing`-location methods. `detect_ambiguities` on the module stays at 0 (the module is in the strict no-ambiguities list).\n- **Staggering** is exact via the location-aware `lcc_xnode(1, \u2113x, map)` / `lcc_ynode(1, \u2113y, map)` origin (Center vs Face).\n- **Out-of-domain** targets clamp identically to the LLG path \u2014 same `interpolator`/`_interpolate` machinery, the fractional index just feeds into it.\n- **GPU-safe**: the `lcc_*` helpers are already `@inline` and allocation-free; the new code adds only arithmetic.\n\n## Tests\n\nNew `test/test_lcc_interpolation.jl` (registered in `runtests.jl`), over `archs \u00d7 float_types`:\n\n1. **Constant field** \u2192 same constant, exact to round-off.\n2. **Linear-in-projected-coords field** \u2192 bilinear interpolation of a function linear in `(x, y)` is exact, so the target reproduces `a\u00b7x + b\u00b7y` to round-off. Validates origin, \u0394, 1-based offset.\n3. **Face-located field** (u-like, `\u2113x = Face`) \u2192 same, checks staggering.\n4. **Type stability** (`@inferred` \u2192 `Tuple{FT, FT}`) and **allocation-freedom** (`@allocated == 0` on CPU) of the fractional-index helper.\n\nVerified passing: **CPU 10/10** and **GPU (H100) 8/8** (the two allocation assertions are CPU-only by design).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-26T15:26:39Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-29T16:01:46Z",
+    "number": 5727,
+    "title": "Fast interpolate! from a LambertConformalConicGrid source"
+  },
+  {
+    "additions": 139,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "which will help with #5729. At the moment, the threshold is gigantic because we do not know how much our models allocate. This number needs to be refined as we improve memory allocation and remove instabilities",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T09:13:21Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-06-29T21:26:21Z",
+    "number": 5739,
+    "title": "Add a memory allocation test"
+  }
+]
