@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "This uses a deprecated plugin, and nobody is looking at the results because it is not required for merging.\r\n\r\n<\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T18:03:30Z",
+    "deletions": 118,
+    "labels": [],
+    "mergedAt": "2026-06-30T00:20:18Z",
+    "number": 1780,
+    "title": "Remove short-performance pipeline"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Extracts three self-contained fixes from `ar/calibrate_inversion_nee` onto a clean branch off `main`.\n\n## Changes\n\n- **`src/standalone/Vegetation/Canopy.jl`**\n  - `ZhouOptimalLAIModel`: default `height` to the constant `canopy_height` from the TOML dict instead of the spatially-varying CLM canopy-height field. The CLM field is ~0 at barren/alpine cells, which makes the leaf-water storage `LAI * height` vanish in the `\u03d1_l` tendency, so the transpiration/root fluxes drive `\u03d1_l` (and the coupled canopy/soil state) to NaN once prognostic LAI greens up.\n  - Add a `PModelConductance{FT}(domain, toml_dict; Drel)` method delegating to the existing `(toml_dict; Drel)` constructor, matching the uniform `(domain, toml_dict)` component signature that the `CanopyModel` constructor already invokes (currently a latent `MethodError`).\n\n- **`src/integrated/land.jl`**\n  - Drop the erroneous 4th positional `\u0394t` argument passed to `SoilCO2Model{FT}` in both `LandModel` constructors. `SoilCO2Model` has no method taking `\u0394t`, and the other call sites (`soil_canopy_model.jl`, `soil_energy_hydrology_biogeochemistry.jl`) already omit it.\n\n- **`Artifacts.toml`**\n  - Bump the `optimal_lai_inputs` artifact (new tree hash / sha256 / url).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T18:04:08Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-06-30T21:26:39Z",
+    "number": 1783,
+    "title": "Fix prognostic-LAI canopy height NaN and missing component constructors"
+  }
+]

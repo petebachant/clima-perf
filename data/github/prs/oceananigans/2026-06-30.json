@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "## Summary\n- Add two recently published papers that confirm using Oceananigans in their methods: Knudsen et al. (2026, arXiv:2605.28555) and Kang & Zhang (2026, arXiv:2603.22602)\n- Fix several DOI hyperlinks whose displayed text didn't match their actual link target, apparently from copy-paste between adjacent entries (Pan & Li 2026, Wang et al. 2026, Souza et al. 2025, Arnscheidt et al. 2021)\n\n## Test plan\n- [x] Verified both new papers explicitly cite Oceananigans as the simulation tool in their methods sections\n- [x] Verified corrected DOIs resolve to the intended papers\n- [ ] Docs build (`julia --project=docs/ docs/make.jl`)\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T02:16:58Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-06-30T04:33:02Z",
+    "number": 5741,
+    "title": "Update papers using Oceananigans list and fix mismatched DOI links"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In this PR we change the definition of $\\partial_t \\sigma$ to include the free surface forcing. This allows to write freshwater fluxes at the surface of the ocean as a volume forcing (a forcing in the free surface equation).\r\n\r\nI am also adding the P-E forcing in the implicit free surface that was missing it, it is already wired in with explicit and split-explicit free surface",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-15T12:05:23Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2026-06-30T08:15:02Z",
+    "number": 5592,
+    "title": "Extend zstar to allow mass fluxes"
+  },
+  {
+    "additions": 240,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Looping tuple of fields is type-unstable and allocating. This PR removes the damaging pattern in favor of a type-stable pattern.\r\n\r\nMWE:\r\n```julia\r\ngrid = RectilinearGrid(CPU(), size=(4, 4, 4), extent=(1, 1, 1))\r\nt = (CenterField(grid), XFaceField(grid))\r\n\r\nfunction allocating_set(fields::Tuple)\r\n    for field in fields\r\n        set!(field, 1)\r\n    end\r\nend\r\n\r\nfunction clean_set(fields::Tuple)\r\n    set!(first(fields), 1)\r\n    clean_set(Base.tail(fields))\r\nend\r\n\r\nclean_set(::Tuple{}) = nothing\r\n```\r\n\r\nIf you run `@code_warntype` on these functions you'll see that `allocating_set` is type-unstable, while `clean_set` is inferrable (I am not copying here the output since it is gigantic).\r\nWith inferrability comes less allocations:\r\n```julia\r\njulia> @allocated allocating_set(t)\r\n2448\r\n\r\njulia> @allocated clean_set(t)\r\n352\r\n```\r\n\r\nAnother step in the #5729",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T10:38:31Z",
+    "deletions": 200,
+    "labels": [],
+    "mergedAt": "2026-06-30T15:40:42Z",
+    "number": 5743,
+    "title": "Remove looping over tuple of fields"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T16:41:50Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-06-30T21:13:46Z",
+    "number": 5747,
+    "title": "Update UpwindBiased function default type"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Motivation\n\n`TripolarGrid` hardcoded its vertical topology to `Bounded`:\n\n```julia\ntopology = (Periodic, fold_topology, Bounded)\n```\n\nso there was no way to build a purely horizontal (2D) tripolar grid. Every other grid (`RectilinearGrid`, `LatitudeLongitudeGrid`) supports a `Flat` dimension via `z = nothing`; this brings `TripolarGrid` in line.\n\nThe concrete need is downstream (NumericalEarth): a **surface / single-level prescribed atmosphere** (or any 2D coupling field) on a tripolar grid wants a 2D `(Center, Center, Nothing)` field with the north-fold zipper BC \u2014 which requires the grid's vertical to be `Flat`, not a 1-cell `Bounded` column.\n\n## What changed\n\n- `z = nothing` \u21d2 `Flat` vertical topology; otherwise `Bounded` (unchanged default).\n- The vertical entry of `size`/`halo` is now optional, so both of these work:\n  ```julia\n  TripolarGrid(size = (Nx, Ny),    z = nothing, halo = (Hx, Hy))      # 2-tuple\n  TripolarGrid(size = (Nx, Ny, 1), z = nothing, halo = (Hx, Hy, Hz))  # 3-tuple, vertical entry ignored\n  ```\n- The default `z = (0, 1)` path is byte-for-byte unchanged.\n- The distributed `TripolarGrid(::Distributed; \u2026)` inherits this for free \u2014 it delegates to the serial constructor.\n\n## Tests\n\nAdded a `Flat-z (2D) construction` testset (`test/test_tripolar_grid.jl`) over both fold topologies: builds via 2- and 3-tuple `size`, checks `topology(grid, 3) === Flat` and `Nz == 1`, and confirms the horizontal coordinates match the `Bounded`-z grid of the same horizontal size.\n\n> Note: I couldn't precompile locally (an unrelated extension-precompile issue in my dev env), so I'm relying on CI to exercise the new path.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-26T19:59:33Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-06-30T21:55:24Z",
+    "number": 5728,
+    "title": "Allow Flat-z (2D) TripolarGrid via z = nothing"
+  }
+]
