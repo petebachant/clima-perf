@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "It seems like FFMPEG is not used in EKP; it adds many indirect dependencies for packages that depend on `EnsembleKalmanProcesses`, e.g.:\r\n\r\n```toml\r\n[[deps.FFMPEG]]\r\ndeps = [\"FFMPEG_jll\"]\r\ngit-tree-sha1 = \"95ecf07c2eea562b5adbd0696af6db62c0f52560\"\r\nuuid = \"c87230d0-a227-11e9-1b43-d7ebe4e7570a\"\r\nversion = \"0.4.5\"\r\n\r\n[[deps.FFMPEG_jll]]\r\ndeps = [\"Artifacts\", \"Bzip2_jll\", \"FreeType2_jll\", \"FriBidi_jll\", \"JLLWrappers\", \"LAME_jll\", \"Libdl\", \"Ogg_jll\", \"OpenSSL_jll\", \"Opus_jll\", \"PCRE2_jll\", \"Zlib_jll\", \"libaom_jll\", \"libass_jll\", \"libfdk_aac_jll\", \"libva_jll\", \"libvorbis_jll\", \"x264_jll\", \"x265_jll\"]\r\ngit-tree-sha1 = \"cac41ca6b2d399adfc95e51240566f8a60a80806\"\r\nuuid = \"b22a6f82-2f65-5046-a5b2-351ab43fb4e5\"\r\nversion = \"8.1.0+0\"\r\n```\r\n\r\nIntroduced in #425. I couldn't find any references to FFMPEG [anywhere in the code](https://github.com/search?q=repo%3ACliMA%2FEnsembleKalmanProcesses.jl+FFMPEG&type=commits), so it's possible it may be removed altogether.\r\n\r\ncc: @odunbar ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T19:54:28Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-01T00:58:00Z",
+    "number": 570,
+    "title": "ci: Move FFMPEG to test targets in Project.toml"
+  }
+]

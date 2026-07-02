@@ -1,0 +1,196 @@
+[
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Reading a `FieldTimeSeries` from a NetCDF file is throwing an error when `Oceananigans` isn't in the main scope. \r\nThis is because strings were `eval`'d in the extension's scope, where the `Oceananigans` name isn't bound.\r\n\r\nMWE:\r\n\r\n```julia\r\nimport Oceananigans as OC\r\nimport NCDatasets\r\n\r\ngrid  = OC.RectilinearGrid(size=(4, 4, 4), extent=(1, 1, 1))\r\nmodel = OC.NonhydrostaticModel(grid; tracers=:c)\r\n\r\nsim = OC.Simulation(model; \u0394t=1, stop_iteration=1)\r\nsim.output_writers[:fields] = OC.NetCDFWriter(model, model.tracers;\r\n    filename=\"mwe_grid.nc\", schedule=OC.IterationInterval(1), overwrite_existing=true)\r\nOC.run!(sim)\r\n\r\nOC.FieldTimeSeries(\"mwe_grid.nc\", \"c\")   # throws\r\n```\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-14T23:50:35Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-07-01T01:32:59Z",
+    "number": 5684,
+    "title": "Fix error reading FieldTimeSeries from NetCDF"
+  },
+  {
+    "additions": 166,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This is another PR in the roadmap to 0 allocations in timestepping. \r\nA little (technical) explanation of why this is required:\r\n\r\nWhen a kernel is launched, KernelAbstractions packs all of the call arguments into a single tuple that the CPU __run path passes to the worker. Whether that tuple is passed by reference (stack) or as a boxed, heap-allocated value (`addrspace(10)`) is decided by `Base.allocatedinline(T)` / Julia's `jl_datatype_isinlinealloc`.\r\n\r\nA Julia datatype with a type-1 (16-bit) field descriptor stores each field's size in only 15 bits (the 16th bit is the isptr flag), so the maximum representable field size is 32767 bytes. A field of \u2265 32768 (2\u00b9\u2075) bytes forces the layout to `fielddesc_type = 2`.\r\n\r\nThe consequences:\r\n  - src/datatype.c, jl_datatype_isinlinealloc: if `npointers > 0` and `fielddesc_type > 1`, it returns 0 (not inline-allocatable).\r\n  - src/cgutils.cpp: `deserves_stack(T) == jl_datatype_isinlinealloc(T)`, and `deserves_argbox = !deserves_stack`. So a non-inline type is passed boxed as ptr `addrspace(10)`, which the caller must `jl_gc_big_alloc`.\r\n\r\nIf someone wants to dive in the julia src, here is the allocation of the field descriptor\r\nhttps://github.com/JuliaLang/julia/blob/fcc4213c488a1fa3b88271776636d45fc1ca42c7/src/datatype.c#L217-L225\r\nand here the decision whether args can be inlined or not\r\nhttps://github.com/JuliaLang/julia/blob/fcc4213c488a1fa3b88271776636d45fc1ca42c7/src/datatype.c#L377-L393\r\nThe final decisions on whether the pointers will be stack or heap allocated\r\nhttps://github.com/JuliaLang/julia/blob/fcc4213c488a1fa3b88271776636d45fc1ca42c7/src/codegen.cpp#L1674-L1684\r\n\r\nOur tendency kernels were called as `kernel!(G, grid, args)` with args a packed ~14-element tuple. With CATKE closure fields plus several tracers (or a heavy grid) that single args field crosses 32 KiB, so the (G, grid, args) launch tuple gets `fielddesc_type = 2` which leads to not inline which leads to boxed and finally a `gc_big_alloc` on every interior launch. \r\n\r\nFix: pass the arguments individually `(kernel!(G, grid, arg1, arg2, \u2026))` instead of as one packed tuple. The launch tuple then has many small fields instead of one \u2265 32 KiB field, stays `fielddesc_type = 1` / inline-allocatable, and is passed by reference \u2014 no per-launch heap allocation. (It is not the number of arguments that matters \u2014 a 512-field tuple still stack-allocates \u2014 only the size of the largest single field.)\r\n\r\n**TL;DR**: Never pass gigantic tuples to functions (I am not talking about memory, I am talking about field descriptor!). \r\nPR https://github.com/CliMA/Oceananigans.jl/pull/5737 was a step forward to trying to solve the same issue (reduced the field descriptor of an immersed grid which in turn reduced the field descriptor of all the fields allocated on the grid, reducing the total field descriptor of args by a factor 2).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T15:20:56Z",
+    "deletions": 112,
+    "labels": [],
+    "mergedAt": "2026-07-01T04:42:26Z",
+    "number": 5746,
+    "title": "Fix boxing of large `args` inputs"
+  },
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`extract_field_time_series` is highly type-unstable and it runs also if the model does not have any FTS! This PR fixes all the type instabilities associated with this method (pending fixes also for the `flatten_unique_tuple` method).\r\n\r\nI will add here briefly a practical example of the fix vs the allocations on main\r\n\r\nMWE:\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Units: Time\r\nusing Oceananigans.OutputReaders: extract_field_time_series\r\nusing Oceananigans.Fields: flattened_unique_values\r\nusing Oceananigans.Models: possible_field_time_series, update_model_field_time_series!\r\n\r\ngrid = RectilinearGrid(CPU(), size=(4, 4, 4), extent=(1, 1, 1))\r\nfts(name) = FieldTimeSeries{Center, Center, Nothing}(grid, [0.0, 1.0, 2.0]; name)\r\nTt, St, bt = fts(\"T\"), fts(\"S\"), fts(\"b\")\r\n@inline \u03d5(i, j, grid, clock, fields, p) = @inbounds p[i, j, 1, Time(clock.time)]\r\n\r\nbcs = (T = FieldBoundaryConditions(top    = ValueBoundaryCondition(Tt)),\r\n       S = FieldBoundaryConditions(top    = ValueBoundaryCondition(\u03d5; discrete_form=true, parameters=St)),\r\n       b = FieldBoundaryConditions(bottom = FluxBoundaryCondition(bt)))\r\nmodel = NonhydrostaticModel(grid; tracers=(:T, :S, :b), boundary_conditions=bcs)\r\npfts  = possible_field_time_series(model)\r\n\r\ncollected = flattened_unique_values(extract_field_time_series(pfts))   # warm up\r\nupdate_model_field_time_series!(model, model.clock)\r\n\r\n@show @allocated update_model_field_time_series!(model, model.clock)\r\nN = 10_000; t = @elapsed for _ in 1:N; update_model_field_time_series!(model, model.clock); end\r\n@show round(1e9 * t / N, digits=1)  # ns/call\r\n```\r\nOn main\r\n```julia\r\njulia> @show @allocated update_model_field_time_series!(model, model.clock)\r\n#= REPL[17]:1 =# @allocated(update_model_field_time_series!(model, model.clock)) = 4032\r\n4032\r\n\r\njulia> N = 10_000; t = @elapsed for _ in 1:N; update_model_field_time_series!(model, model.clock); end\r\n0.091572334\r\n\r\njulia> @show round(1e9 * t / N, digits=1)  # ns/call\r\nround((1.0e9t) / N, digits = 1) = 9157.2\r\n9157.2\r\n```\r\nOn this PR:\r\n```julia\r\njulia> @show @allocated update_model_field_time_series!(model, model.clock)\r\n#= REPL[15]:1 =# @allocated(update_model_field_time_series!(model, model.clock)) = 1072\r\n1072\r\n\r\njulia> N = 10_000; t = @elapsed for _ in 1:N; update_model_field_time_series!(model, model.clock); end\r\n0.025518625\r\n\r\njulia> @show round(1e9 * t / N, digits=1)  # ns/call\r\nround((1.0e9t) / N, digits = 1) = 2551.9\r\n2551.9\r\n```\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T09:36:12Z",
+    "deletions": 29,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-07-01T13:32:25Z",
+    "number": 5740,
+    "title": "Remove type instability from the `extract_field_time_series` function"
+  },
+  {
+    "additions": 139,
+    "author": {
+      "id": "MDQ6VXNlcjM5MTkyMTc1",
+      "is_bot": false,
+      "login": "vopikamm",
+      "name": "David Kamm"
+    },
+    "body": "Add option to run benchmarks distributed. Is invoked by adding `--distributed` flag and providing the desired `partition`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABB_LA5w",
+        "number": 5579,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5579"
+      }
+    ],
+    "createdAt": "2026-05-15T10:13:02Z",
+    "deletions": 80,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-07-01T15:40:16Z",
+    "number": 5591,
+    "title": "Dk/add distributed benchmark"
+  },
+  {
+    "additions": 216,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR fixes reductions on a tripolar grid to make sure that the extra repeated half-line is excluded from the reduction.\r\n\r\nThis should also solve the problem with the tripolar conservation test. \r\n\r\ncloses #4488 #4487 ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM61xNKD",
+        "number": 4488,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4488"
+      }
+    ],
+    "createdAt": "2026-01-05T15:57:49Z",
+    "deletions": 42,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-07-01T16:42:23Z",
+    "number": 5099,
+    "title": "Fix tripolar reductions"
+  },
+  {
+    "additions": 258,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR is a clean extract of the workaround in PR #5729 to make sure the `launch!` function is completely type stable.\r\nWe always derive our `StaticSize` from grid size and halo size information, which then need to be compile-time constants.\r\nBy adding a `GridSize` type parameter to the grid we can always infer the `StaticSize` of kernel and then squash the type instability.\r\n\r\nThis is not possible for kernels that launch on the active cells map, but in that case, since the kernel is always 1D and the index is computed already with `length(map)` inside the `@index` macro, we can safely use a `DynamicSize`\r\n\r\nMWE:\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.Utils: work_layout, interior_work_layout, configure_kernel\r\nusing KernelAbstractions.NDIteration: StaticSize\r\nusing Test\r\n\r\ngrid = RectilinearGrid(size=(8, 6, 4), halo=(2, 2, 2), extent=(1, 1, 1))\r\nwg,  ws  = @inferred work_layout(grid,:xyz, ())\r\nwg2, ws2 = @inferred interior_work_layout(grid, :xyz, (Center(), Center(), Center()))\r\n```\r\n\r\non main:\r\n\r\n```julia\r\njulia> wg,  ws  = @inferred work_layout(grid,:xyz, ())\r\nERROR: return type Tuple{StaticSize{(16, 16)}, StaticSize{(8, 6, 4)}} does not match inferred return type Tuple{StaticSize, StaticSize}\r\nStacktrace:\r\n [1] error(s::String)\r\n   @ Base ./error.jl:44\r\n [2] top-level scope\r\n   @ REPL[15]:1\r\n\r\njulia> wg2, ws2 = @inferred interior_work_layout(grid, :xyz, (Center(), Center(), Center()))\r\nERROR: return type Tuple{StaticSize{(16, 16)}, Oceananigans.Utils.OffsetStaticSize{(1:8, 1:6, 1:4)}} does not match inferred return type Tuple{StaticSize, Oceananigans.Utils.OffsetStaticSize}\r\nStacktrace:\r\n [1] error(s::String)\r\n   @ Base ./error.jl:44\r\n [2] top-level scope\r\n   @ REPL[16]:1\r\n```\r\n\r\non this PR\r\n\r\n```julia\r\njulia> wg,  ws  = @inferred work_layout(grid, Val(:xyz), ())\r\n(StaticSize{(16, 16)}(), StaticSize{(8, 6, 4)}())\r\n\r\njulia> wg2, ws2 = @inferred interior_work_layout(grid, Val(:xyz), (Center(), Center(), Center()))\r\n(StaticSize{(16, 16)}(), Oceananigans.Utils.OffsetStaticSize{(1:8, 1:6, 1:4)}())\r\n```",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T12:50:31Z",
+    "deletions": 249,
+    "labels": [],
+    "mergedAt": "2026-07-01T19:23:16Z",
+    "number": 5745,
+    "title": "Fix instabilities in the `launch!` function"
+  },
+  {
+    "additions": 226,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "## Summary\r\n\r\nAdds a block-diagonal preconditioner for `ConjugateGradientPoissonSolver` based on [Marshall et al. (1997, \u00a74.2.2)](https://doi.org/10.1029/96JC02775). For each horizontal column `(i, j)` it solves the vertical (`k`-direction) sub-system of the symmetric volume-weighted Laplacian `V\u2207\u00b2` exactly while discarding horizontal couplings \u2014 i.e. `M = Lz\u207b\u00b9`, applied as one batched Thomas sweep per column (reusing the existing `BatchedTridiagonalSolver` over `ZDirection`).\r\n\r\nFor ocean-like problems (large `Nz`, thin layers, stretched vertical grids) this is a much stronger preconditioner than `DiagonallyDominantPreconditioner`. On the `staircase_convection` configuration (16\u00d716\u00d7128, `Bounded\u00b3` + slope, `\u0394z/\u0394x = 0.125`) it gives a **4\u20135\u00d7 reduction in CG iterations** (478 \u2192 85 in Float64, 184 \u2192 28 in Float32).\r\n\r\n## What's in the kernel\r\n\r\nA na\u00efve transcription of K\u2083D fails even in its target regime; the implementation includes three corrections:\r\n\r\n1. **BC / immersed-face masking.** The preconditioner builds `Lz` directly where Bounded-domain and immersed face couplings are masked with `inactive_cell(i, j, k\u00b11, grid)`.\r\n2. **Neumann\u2013Neumann regularization.** Each column's `Lz` is singular (its rows sum to zero), and its null space is `Nx\u00b7Ny`-dimensional vs. the operator's single global constant \u2014 so the global gauge fix cannot cover it. A multiplicative diagonal shift `(1 + \u03b5)` with `\u03b5 = 1/100` lifts the column-constant modes off the kernel (a Helmholtz-style screening) without disturbing the rough vertical modes K\u2083D needs. `\u03b5 = 1/100` is empirically found to be useful for both Float32 and Float64.\r\n3. **Vertically-isolated active cells.** A `PartialCellBottom` thin surface cell with both vertical neighbors inactive has no vertical sub-system; the diagonal would collapse to exactly zero and stall CG. These are treated as identity (`b = 1`), like inactive cells.\r\n\r\n## Regime of effectiveness\r\n\r\n`\u03ba(MA) \u2248 1 + (\u0394z/\u0394x)\u00b2\u00b7Nz\u00b2/\u03c0\u00b2`:\r\n- **Oceanic / hydrostatic** (`(\u0394z/\u0394x)\u00b2Nz\u00b2 \u226a 1`): near-exact, CG terminates in `O(1)` iterations.\r\n- **Isotropic** (`\u0394z/\u0394x \u2248 1`): conditioning is *worse* than no preconditioner \u2014 use `DiagonallyDominantPreconditioner` or the FFT solver instead. This is expected, not a bug.\r\n\r\n## Also in this PR\r\n\r\n- **Fix `DiagonallyDominantPreconditioner`:** remove the spurious `V\u207b\u00b9\u1d9c\u1d9c\u1d9c` factor from the `Ax\u00b1/Ay\u00b1/Az\u00b1` coefficients so the preconditioner matches the `V\u2207\u00b2` operator on non-uniform grids. `heuristic_residual` is unchanged.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-01T19:21:40Z",
+    "deletions": 23,
+    "labels": [],
+    "mergedAt": "2026-07-01T21:35:41Z",
+    "number": 5650,
+    "title": "Add `ColumnwiseTridiagonalPreconditioner` for the CG Poisson solver"
+  }
+]

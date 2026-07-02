@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 753,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nOptimizes CloudMicrophysics for GPU execution by removing sources of warp divergence, replacing expensive `SpecialFunctions.jl` calls with simpler alternatives, and pre-computing constant gamma values at parameter-construction time.\r\n\r\n## Key changes\r\n\r\n- **Custom `gamma_inc`/`gamma_inc_inv`** in `Utilities.jl`: fixed-iteration, low-divergence replacements for `SpecialFunctions.gamma_inc`; cuts compile time and uses `ifelse` in inner loops to avoid warp divergence.\r\n- **P3 shape solver**: Uses `BrentsMethod` with `FixedIterations` tolerance (8/10 iters for F32/F64); constant iteration count eliminates warp divergence. In GPU experiments, this was the fastest variant (faster than Regula Falsi, for example; however, CPU performance differs). It will be further accelerated in the next release of RootSolvers (coming soon).\r\n- **Replace convergence tolerances by fixed iterations* in other places too. \r\n- **Closures \u2192 callable structs** across P3 size distribution and terminal velocity for type stability and GPU compatibility.\r\n- **Pre-computed gamma constants** in parameter structs (`Blk1MVelTypeRain`, `CloudParticlePDF_SB2006`, `EvaporationSB2006`): moves `SF.gamma`/`SF.loggamma` from hot loops to construction time.\r\n- **Numerical robustness**: `P \u2212 P` vs `Q \u2212 Q` formulation in incomplete-gamma moment integrals to avoid catastrophic cancellation.\r\n- New `test/gpu_performance.jl` benchmark suite; updated allocation thresholds.\r\n- Achieves >2x speedup of P3 GPU kernel\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-26T18:36:30Z",
+    "deletions": 90,
+    "labels": [],
+    "mergedAt": "2026-07-01T00:07:08Z",
+    "number": 748,
+    "title": "GPU performance: eliminate warp divergence and reduce compile times"
+  },
+  {
+    "additions": 639,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Implicit (Rosenbrock-type) microphysics substepping needs Jacobians of the pointwise 2M+P3 tendencies w.r.t. the 8 prognostic species, so `ForwardDiff.jacobian` must work through `bulk_microphysics_tendencies` (`log\u03bb` is held fixed). This PR does some groundwork to enable this.\n\n- Modify `P3State` and `\u0393_incl` to accept a mix of `Dual` and floating point arguments.\n- Implement `Dual` method for `SF.gamma_inc_inv` (JuliaMath/SpecialFunctions.jl#452) locally. Ideally this should be added to `SpecialFunctions`, and I might do so later, but adding here to move forward locally for now. The implementation uses a mix of analytical and central differences of the forward map.\n- Ensure `ice_mass_coeffs` returns one tuple type (needed for efficient AD).\n- Type early returns and fallback values across the 2M, NonEq, and P3 leaves by the promotion of all the arguments the result derives from (new `Utilities.promote_typeof`), so a caller mixing `Dual` and float arguments does not get a union-typed, heap-boxed return.\n- Handle edge cases for `sgs_weight_function` (lower tail rounds 1 - a to 1, so atanh(-1) = -Inf) and SB2006 autoconversion (vertical tangent of `\u03c4^0.7` at zero rain), which previously could produce NaNs.\n- Unrelated fix: `get_distribution_log\u03bb_from_prognostic` called an undefined function.\n\nI might try to differentiate through the `log\u03bb` shape solve later; which needs \u2202/\u2202a of the forward `gamma_inc` (JuliaMath/SpecialFunctions.jl#317).\n\nTests cover Jacobians at four regimes for both float types against per-row central finite differences, the `gamma_inc_inv` rule into the `q = eps()` tail, the regularised-ratio band, and that the touched functions stay concretely typed under single-`Dual` and all-`Dual` argument mixes.\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-11T19:57:31Z",
+    "deletions": 89,
+    "labels": [],
+    "mergedAt": "2026-07-01T22:48:34Z",
+    "number": 725,
+    "title": "Make the pointwise 2M+P3 tendencies ForwardDiff-differentiable"
+  }
+]
