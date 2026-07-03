@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 1035,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nImprove GPU performance of 1M, 2M, and P3 microphysics by removing branches and reducing transcendental function calls (e.g., inside quadratures and other hot paths).\r\n\r\n## Changes\r\n- **1M / NonEq**: replace `if q > \u03f5` guards with branchless `ifelse`; simplify `lambda_inverse`; compute the shared size-distribution quantities (\u03bb\u207b\u00b9, n\u2080, v\u2080 for rain/snow/ice) once per cell and thread them via an `sd` argument instead of recomputing per process.\r\n- **2M**: branchless SB2006 rates and terminal velocities; compute `cbrt(Sc)` / `sqrt(Re)` once in rain evaporation.\r\n- **P3**: fuse the Chen velocity `D^b\u00b7exp(-c\u00b7D)` into one `exp`; `\u03d5\u1d62`: `a\u1d62^1.5 \u2192 a\u1d62\u00b7\u221aa\u1d62`; hoist `loggamma` out of the `gamma_inc_inv` loop; add a \u03bc=1 fast-path quantile; split `ice_self_collection` at the `|\u0394v|=0` cusp; lower the `quadrature_order` default **100 \u2192 16** (auto-selects Gauss-Legendre).\r\n- **Replace rational exponents** by `FT`.  This is an important lesson for our code stack: Internally, for an expression such as `x::Float32 ^ (-2 // 3)`, Julia constructs a `Rational{Int64}` struct on the GPU thread's local stack. To do so, it runs a 64-bit integer Greatest Common Divisor (`divgcd`) routine along with 64-bit overflow checks on the GPU. Then it lowers numerator and denominator to f32 and computes the power--all in all, with a massive overhead. (**Changing the rational exponents alone achieved ~7x speedup for 2M.**)\r\n\r\n## Results\r\n\r\n## GPU Performance: `main` (27bbdeb1) vs `ts/cmp-gpu-opt` (b0e306f5) [based on array of 1024 CMP evaluations in `test/gpu_performance.jl']\r\n| Microphysics Kernel | Precision | `main` Runtime | `ts/cmp-gpu-opt` Runtime | Speedup vs `main` |\r\n|:---|:---|---:|---:|:---|\r\n| **1-Moment Bulk Tendencies** | Float64 | 261.2 \u03bcs (83 allocs) | 57.5 \u03bcs (43 allocs) | **4.54\u00d7** |\r\n| | Float32 | 51.9 \u03bcs (45 allocs) | 31.3 \u03bcs (42 allocs) | **1.66\u00d7** |\r\n| **2-Moment Bulk Tendencies** | Float64 | 1,947.0 \u03bcs (298 allocs) | 43.6 \u03bcs (48 allocs) | **44.6\u00d7** |\r\n| | Float32 | 1,713.0 \u03bcs (298 allocs) | 29.9 \u03bcs (41 allocs) | **57.3\u00d7** |\r\n| **P3 Ice Microphysics** | Float64 | 127.3 ms (294 allocs) | 101.2 ms (294 allocs) | **1.26\u00d7** |\r\n| | Float32 | 45.4 ms (294 allocs) | 46.8 ms (294 allocs) | 0.97\u00d7 |\r\n\r\n* All allocations are CPU-side kernel launch tracking overhead from KernelAbstractions/CUDA.jl\r\n* ~6% speedup of 1M bulk microphysics comes from branch removal (at f32 on GPU); most of the rest from caching special function evaluations. \r\n* A factor 7 of the 2M speedup comes from replacing rational exponents.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T23:32:39Z",
+    "deletions": 668,
+    "labels": [],
+    "mergedAt": "2026-07-02T08:12:09Z",
+    "number": 750,
+    "title": "GPU performance optimizations"
+  },
+  {
+    "additions": 948,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Replaces the hand-maintained `update_dev_guides.yml` with the current template from CliMA/DeveloperGuides.\n\nThis fixes a permissions bug in the workflow that prevented the monthly sync job from opening PRs correctly.",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T04:04:02Z",
+    "deletions": 325,
+    "labels": [],
+    "mergedAt": "2026-07-02T16:13:21Z",
+    "number": 752,
+    "title": "ci: refresh dev-guides sync workflow from template"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "See [issue](https://github.com/JuliaDocs/Documenter.jl/issues/2048) in Documenter.jl. This is the solution suggested there.\n\nDependabot PRs run without access to repository secrets, so `GITHUB_TOKEN`/`DOCUMENTER_KEY` are unavailable and `push_preview = true` causes doc preview pushes to fail. This only enables `push_preview` when both env vars are present.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T17:53:17Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T18:02:57Z",
+    "number": 756,
+    "title": "Prevent dependabot from pushing doc previews"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDODh2tMw",
+      "is_bot": false,
+      "login": "k-alphonse",
+      "name": "Kaitlyn Alphonse"
+    },
+    "body": "## Purpose\r\n\r\nCloses #754.\r\n\r\nThis PR updates the CLA workflow triggers so the CLA check can run during the review and auto-merge flow for bot-created pull requests.\r\n\r\n## To-do\r\n\r\n* None.\r\n\r\n## Content\r\n\r\n* Updated `.github/workflows/cla.yml` to include `review_requested` and `auto_merge_enabled` in the `pull_request_target` event types.\r\n* Preserved the existing CLA triggers for `opened`, `reopened`, `synchronize`, and `merge_group`.\r\n* Expanded the workflow trigger coverage without changing the CLA validation logic itself.\r\n\r\n---\r\n\r\n* [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM8AAAABHelzzw",
+        "number": 754,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/754"
+      }
+    ],
+    "createdAt": "2026-07-02T17:33:34Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T19:43:14Z",
+    "number": 755,
+    "title": "fix: trigger CLA on bot PR review and auto-merge events"
+  }
+]

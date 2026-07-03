@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 719,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## SCM intercomparison plots against PyCLES LES reference data\r\n\r\nThis PR adds automated profile and timeseries intercomparison plots for the seven single-column model (SCM) cases in the Prognostic EDMF test suite, comparing ClimaAtmos output against PyCLES large-eddy simulation (LES) reference data.\r\n\r\n### What's new\r\n\r\n**Reference data** (`Artifacts.toml`)\r\n- Registers a new `pycles_scm_les_data` Julia artifact containing PyCLES LES statistics for Soares, GABLS, BOMEX, DYCOMS-RF01, DYCOMS-RF02, Rico, and TRMM-LBA.\r\n\r\n**Post-processing scripts** (`post_processing/`)\r\n- `edmf_scm_intercomparison.jl` \u2014 generates a single-case intercomparison figure (12-column grid: 6 thermodynamic profiles, 6 turbulence/dynamics profiles, 4 water-path timeseries). ClimaAtmos is shown in blue, PyCLES in orange, with \u00b12\u03c3 shading over the last 3 hours.\r\n- `run_all_scm_intercomparisons.jl` \u2014 driver that runs all seven cases in pipeline order (Soares \u2192 GABLS \u2192 BOMEX \u2192 DYCOMS-RF01 \u2192 DYCOMS-RF02 \u2192 Rico \u2192 TRMM-LBA) and merges the results into a single joint PDF via `pdfunite`.\r\n\r\nBoth scripts use `--project=.buildkite` (the shared CI environment), consistent with all other post-processing in the repo.\r\n\r\n**CI pipeline** (`.buildkite/pipeline.yml`)\r\n- Adds `key:` identifiers to each of the seven SCM simulation jobs.\r\n- Adds a new *SCM intercomparison plots* step in the Prognostic EDMF group that depends on all seven SCM jobs and uploads `scm_intercomparison.pdf` as a build artifact.\r\n\r\n\r\nBoth the plotting script and the running script were AI generated. Maybe thats ok? Lmk if you want me to clean up anything there or if we are ok with it\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-25T23:35:44Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      }
+    ],
+    "mergedAt": "2026-07-02T00:15:15Z",
+    "number": 4610,
+    "title": "Testing LES comparison plots for EDMF"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDODh2tMw",
+      "is_bot": false,
+      "login": "k-alphonse",
+      "name": "Kaitlyn Alphonse"
+    },
+    "body": "## Purpose\r\n\r\nCloses #4627.\r\n\r\nThis PR updates the CLA workflow triggers so the CLA check can run during the review and auto-merge flow for bot-created pull requests.\r\n\r\n## To-do\r\n\r\n* None.\r\n\r\n## Content\r\n\r\n* Updated `.github/workflows/cla.yml` to include `review_requested` and `auto_merge_enabled` in the `pull_request_target` event types.\r\n* Preserved the existing CLA triggers for `opened`, `reopened`, `synchronize`, and `merge_group`.\r\n* Expanded the workflow trigger coverage without changing the CLA validation logic itself.\r\n\r\n---\r\n\r\n* [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABHdgz9A",
+        "number": 4627,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4627"
+      }
+    ],
+    "createdAt": "2026-07-02T15:09:27Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T15:44:51Z",
+    "number": 4628,
+    "title": "fix: trigger CLA on bot PR review and auto-merge events"
+  },
+  {
+    "additions": 1625,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Replaces the hand-maintained `update_dev_guides.yml` with the current template from CliMA/DeveloperGuides.\n\nThis fixes a permissions bug in the workflow that prevented the monthly sync job from opening PRs correctly.",
+    "changedFiles": 34,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T04:03:43Z",
+    "deletions": 980,
+    "labels": [],
+    "mergedAt": "2026-07-02T16:08:39Z",
+    "number": 4626,
+    "title": "ci: refresh dev-guides sync workflow from template"
+  },
+  {
+    "additions": 60,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "This updates Insolation to v1.2 and CloudMicrophysics to v0.37 (keeps compat with v0.36)\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T19:03:12Z",
+    "deletions": 42,
+    "labels": [],
+    "mergedAt": "2026-07-02T22:37:07Z",
+    "number": 4630,
+    "title": "Patch release v0.41.2"
+  }
+]

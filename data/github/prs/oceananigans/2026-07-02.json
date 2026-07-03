@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 402,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nEliminates the two parallel materialize paths `Relaxation` had after #5575 \u2014 `Number`/function targets went through `ContinuousForcing`, while `FieldTimeSeries` targets used a bespoke `FieldTimeSeriesTarget` wrapper with a type-parameter-as-index trick and its own discrete-form callable. The asymmetry forced ~80 lines of duplicated machinery just because the FTS path couldn't fit through `ContinuousForcing`'s parameter slot.\n\nNow there's **one** `Relaxation{R, F, M, T, L, Tr}` that carries the forced field directly, **one** kernel callable, and **one** `evaluate_target` dispatch family handling all target types: `Number`, function, `AbstractField`, and `FieldTimeSeries`. As discussed in #5575, storing the forced field directly is the underlying simplification that unlocks both the unified machinery and the new `transform` feature.\n\n## What changed\n\n### Forced field stored directly on `Relaxation`\n\n`Relaxation` now carries the forced field in its `relaxed` field, so the kernel reads `\u03d5 = relaxed[i, j, k]` directly instead of recovering it from `model_fields` via a type-parameter index trick. A single kernel callable `(::Relaxation{R, F})(i, j, k, grid, clock, model_fields) where F<:AbstractArray` serves every target type; the target is evaluated through an `evaluate_target` dispatch family.\n\n### `FieldTimeSeries` grid is cached on the `Relaxation` side, **not** added to `GPUAdaptedFieldTimeSeries`\n\n`interpolate` needs the FTS grid on the device, but `Adapt`ing a `FieldTimeSeries` to `GPUAdaptedFieldTimeSeries` drops the grid. As discussed in the review thread, rather than adding the grid to `GPUAdaptedFieldTimeSeries` \u2014 which would enlarge the kernel parameter space / specialization for **all** FTS code paths \u2014 the grid is cached in a lightweight `FieldTimeSeriesTarget{F, G}` wrapper that carries its own `Adapt.adapt_structure`. This keeps the grid plumbing local to the relaxation path and leaves `GPUAdaptedFieldTimeSeries` (and `src/OutputReaders/field_time_series.jl`) untouched.\n\nThis replaces the old `FieldTimeSeriesTarget{L, F, G, I}` (which also carried the simulation-side location and encoded the forced-field index as a type parameter `I::Int`) with a simpler `FieldTimeSeriesTarget{F, G}` holding just the FTS and its grid.\n\n### `transform` kwarg\n\n```julia\n# Relax tracer to its own horizontal average:\nRelaxation(rate=1/\u03c4, transform=:horizontal_average)\n\n# Or supply your own closure:\nRelaxation(rate=1/\u03c4, transform = f -> Field(Average(f, dims=(1, 2))))\n```\n\n`transform` builds a lazy target from the forced field at materialize time (stored as `relaxed`). It's refreshed each step via the new `compute_forcing!` hook, wired into `update_state!` for all three model types. `transform` is not supported with a `FieldTimeSeries` target.\n\n### Field targets\n\n`Relaxation(rate=1/\u03c4, target=my_field)` now works for any `AbstractField`. When the target shares the forced field's grid and location (or is a reduction of it), it's indexed directly; otherwise it's wrapped in a new `InterpolatedFieldTarget{F, L, G}` and interpolated from its own grid and location at each kernel call. Validation throws clear errors on FTS extent mismatch.\n\n### Type aliases\n\n`FieldRelaxation` and `FieldTimeSeriesRelaxation` for tests and user-side type assertions.\n\n### Deletions\n\n- `materialize_forcing(::Relaxation, \u2026)` ContinuousForcing wrapper\n- Six `(::Relaxation)(x,y,z,t,field)` / `(x\u2081,x\u2082,t,field)` / `(x\u2081,t,field)` continuous-form callable overloads\n- The type-parameter-as-index trick and `_field_index` helper of the old `FieldTimeSeriesTarget`\n- `using \u2026: ContinuousForcing` dep from `relaxation.jl`\n\n## Files\n\n- `src/Forcings/relaxation.jl` \u2014 rewrite: `relaxed` field on `Relaxation`, single kernel callable, `evaluate_target`/`materialize_target` dispatch families, new `InterpolatedFieldTarget{F,L,G}`, simplified `FieldTimeSeriesTarget{F,G}`\n- `src/Forcings/compute_forcing.jl` \u2014 new: default no-op + `Tuple`/`NamedTuple`/`MultipleForcings` recursion + `Relaxation` method\n- `src/Forcings/Forcings.jl` \u2014 include + export `compute_forcing!`\n- `src/Models/{Nonhydrostatic,HydrostaticFreeSurface,ShallowWater}Models/update_*_state.jl` \u2014 call `compute_forcing!(model.forcing)` after `update_model_field_time_series!`\n- `test/test_forcings.jl` \u2014 updated FTS testset assertions, new Field-target testset, new `transform=:horizontal_average` testset, FTS cross-grid interpolation testset\n- `docs/src/models/forcing_functions.md` \u2014 doctest updates for the new `Relaxation` show output and `transform`\n\n## Test plan\n\n- [x] `test_forcings.jl` on CPU\n- [x] `test_output_readers.jl` on CPU\n- [x] Analytical verification: `transform=:horizontal_average` decay factor matches `exp(-t/\u03c4)`\n- [ ] GPU run via CI\n\n## Follow-ups\n\n- `transform` shortcuts beyond `:horizontal_average` (e.g. `:vertical_average`, `:domain_average`) \u2014 add on demand\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-21T20:45:41Z",
+    "deletions": 148,
+    "labels": [],
+    "mergedAt": "2026-07-02T04:52:39Z",
+    "number": 5620,
+    "title": "Simplify Relaxation: drop ContinuousForcing dependency, add transform and Field targets"
+  },
+  {
+    "additions": 119,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This is actually not 100% possible because when we have exactly the same variable repeated it will lead to instability. However we remove the instability in all other cases and remove `flatten_unique_values` from the `update_model_field_time_series!` hot path given that `extract_field_time_series!` now already flattens the extracted field time series and update_model_field_time_series! is idempotent",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-01T19:40:56Z",
+    "deletions": 47,
+    "labels": [],
+    "mergedAt": "2026-07-02T11:14:17Z",
+    "number": 5749,
+    "title": "Remove type instability in `flattened_unique_values`"
+  },
+  {
+    "additions": 138,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nAdaptive implicit vertical advection (AIVA) currently assumes a **volume-conserving (Boussinesq)** tracer flux. Anelastic and compressible models advect in **mass-flux** form, `\u2202t(\u03c1c) = -\u2207\u00b7(\u03c1 \ud835\udc30 c)`, so they can't reuse the implicit coefficients and have to re-derive them downstream (with type piracy / wrappers \u2014 see context below).\n\nThis PR adds an **optional `density`** to the implicit vertical advection, as a trailing positional argument (default `nothing`) \u2014 keeping the existing positional call structure:\n\n```julia\n# Boussinesq (unchanged):\nimplicit_step!(field, solver, closure, closure_fields, idx, clock, fields, \u0394t, advection, velocities)\n\n# mass-flux model:\nimplicit_step!(field, solver, closure, closure_fields, idx, clock, fields, \u0394t, advection, velocities, \u03c1)\n```\n\nWhen a density field is supplied, the implicit upwind coefficients are weighted by the density at the advecting interface (`density\u1d9c\u1d9c\u1da0`) and divided by the density at the reconstructed cell centre (`density\u1d9c\u1d9c\u1d9c`), i.e. `c = \u03c1c/\u03c1`:\n\n```\nupper_k =  \u0394t/V_k \u00b7 Az_{k+\u00bd} \u00b7 \u03c1\u1d9c\u1d9c\u1da0_{k+\u00bd} / \u03c1\u1d9c\u1d9c\u1d9c_{k+1} \u00b7 min(w\u2071, 0)\nlower_k = \u2212\u0394t/V_k \u00b7 Az_{k\u2212\u00bd} \u00b7 \u03c1\u1d9c\u1d9c\u1da0_{k\u2212\u00bd} / \u03c1\u1d9c\u1d9c\u1d9c_{k\u22121} \u00b7 max(w\u2071, 0)\n```\n\n**The default `density === nothing` reproduces the volume-conserving coefficients exactly** (`\u03c1\u1d9c\u1d9c\u1da0/\u03c1\u1d9c\u1d9c\u1d9c \u2192 1`), so existing Boussinesq behaviour is bit-for-bit unchanged.\n\n## What changed\n\n- `density\u1d9c\u1d9c\u1d9c(i, j, k, grid, \u03c1)` / `density\u1d9c\u1d9c\u1da0(i, j, k, grid, \u03c1)` return the density at the tracer cell centre / vertical interface, and `1` for `\u03c1 === nothing`.\n- `implicit_advection_{upper,lower,diagonal}` take an optional trailing `density = nothing` and apply the `\u03c1\u1d9c\u1d9c\u1da0/\u03c1\u1d9c\u1d9c\u1d9c` weighting.\n- The `get_coefficient` overloads thread the same optional `density` through (default `nothing`).\n- `implicit_step!` gains a trailing `density = nothing` positional argument and forwards it to `solve!`.\n\nIntended for tracers (`Center, Center, Center`); momentum stays volume-conserving (passing `nothing`). No exported API changes; all additions are backward-compatible optional arguments.\n\n## Tests\n\nExtends `test/test_adaptive_implicit_vertical_advection.jl`:\n- `\u03c1 \u2261 1` reproduces the volume-conserving coefficients;\n- off-diagonal coefficients scale with the density ratio `\u2111z(\u03c1)/\u03c1`;\n- the density-weighted implicit solve **conserves column mass** (the upwind operator is flux-form, so a closed column preserves `\u2211 V \u03c1 c`).\n\nThe existing AIVA tests (incl. the `WENOVectorInvariant` + `SplitRungeKutta3` paths) also exercise the `density = nothing` path through `implicit_step!`/`get_coefficient`/the kernel, guarding the Boussinesq behaviour. Full `TEST_FILE=test_adaptive_implicit_vertical_advection.jl` run: 325 pass / 0 fail.\n\n## Motivation / downstream\n\n[Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) (anelastic/compressible) currently reimplements the density-weighted coefficients and wires its own `breeze_implicit_step!` because there's no hook for `\u03c1` in the upstream signature (and extending `get_coefficient`/`implicit_step!` with all-Oceananigans argument types is type piracy). With this PR, Breeze can call `implicit_step!(\u2026, advection, velocities, \u03c1)` directly and delete that machinery.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-27T03:10:42Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-07-02T16:19:50Z",
+    "number": 5733,
+    "title": "Density-weighted (mass-flux) adaptive implicit vertical advection"
+  }
+]

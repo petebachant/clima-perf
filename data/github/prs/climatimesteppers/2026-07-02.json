@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 57,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Replaces the hand-maintained `update_dev_guides.yml` with the current template from CliMA/DeveloperGuides.\n\nThis fixes a permissions bug in the workflow that prevented the monthly sync job from opening PRs correctly.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T04:03:57Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-07-02T16:10:28Z",
+    "number": 431,
+    "title": "ci: refresh dev-guides sync workflow from template"
+  },
+  {
+    "additions": 296,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Summary\r\n\r\nThis PR adds a keyword argument `constrain_state!` to `ClimaODEFunction`. This function can be used for various state constraints, such as limiters to tracers.\r\nAlso an update signal hierarchy is added to control when `cache!` and`constrain_state!` fire.\r\n\r\n## Key Changes\r\n\r\n- **added**: keyword argument `constrain_state!` in `ClimaODEFunction`.\r\n- **Solvers**: All solvers (`imex_ark.jl`, `imex_ssprk.jl`, `rosenbrock.jl`) have been updated to additionally call `constrain_state!`.\r\n- **Update signals**: Added an update-signal hierarchy `EndOfStep <: EndOfStage <: WithDSS <: UpdateSignal`, and new keyword arguments `update_cache` and `update_constrain_state` on `ClimaODEFunction` that accept any `UpdateSignalHandler` to control when `cache!` and`constrain_state!` fire.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-28T01:17:07Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2026-07-02T18:04:45Z",
+    "number": 378,
+    "title": "feat: add `constrain_state!` with update signals"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "See [issue](https://github.com/JuliaDocs/Documenter.jl/issues/2048) in Documenter.jl. This is the solution suggested there.\n\nDependabot PRs run without access to repository secrets, so `GITHUB_TOKEN`/`DOCUMENTER_KEY` are unavailable and `push_preview = true` causes doc preview pushes to fail. This only enables `push_preview` when both env vars are present.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T17:53:11Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T18:16:21Z",
+    "number": 436,
+    "title": "Prevent dependabot from pushing doc previews"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nMake JuliaRegistrator happy\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T18:34:59Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T18:51:45Z",
+    "number": 437,
+    "title": "fix compat entry of NullBroadcasts"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDODh2tMw",
+      "is_bot": false,
+      "login": "k-alphonse",
+      "name": "Kaitlyn Alphonse"
+    },
+    "body": "## Purpose\r\n\r\nCloses #432.\r\n\r\nThis PR updates the CLA workflow triggers so the CLA check can run during the review and auto-merge flow for bot-created pull requests.\r\n\r\n## To-do\r\n\r\n* None.\r\n\r\n## Content\r\n\r\n* Updated `.github/workflows/cla.yml` to include `review_requested` and `auto_merge_enabled` in the `pull_request_target` event types.\r\n* Preserved the existing CLA triggers for `opened`, `reopened`, `synchronize`, and `merge_group`.\r\n* Expanded the workflow trigger coverage without changing the CLA validation logic itself.\r\n\r\n---\r\n\r\n* [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEDQfX88AAAABHd58FA",
+        "number": 432,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNzE4NTEzNTk=",
+          "name": "ClimaTimeSteppers.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaTimeSteppers.jl/issues/432"
+      }
+    ],
+    "createdAt": "2026-07-02T15:57:34Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-02T20:25:14Z",
+    "number": 433,
+    "title": "fix: trigger CLA on bot PR review and auto-merge events"
+  }
+]
