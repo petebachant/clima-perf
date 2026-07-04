@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5758.\n\n## Summary\n\n`a_fts * b_fts` (and `sqrt(fts)`, `\u2202x(fts)`, `+(fts, b, c)`, `fts * 2`, \u2026) currently dispatch through the `AbstractField` operator methods and silently build a **3-D** operation that reads only the **first time slice** \u2014 no error, plausible-looking numbers (MWE in #5758).\n\nThis PR makes those constructions throw an informative `ArgumentError` instead:\n\n```\nAbstractOperations on FieldTimeSeries are not supported yet: the result would be a\nthree-dimensional operation that silently drops the time dimension. To operate on a\nsingle snapshot, slice the FieldTimeSeries first with `fts[n]` or `fts[Time(t)]`, or\nwrap it in `TimeSeriesInterpolation` to interpolate to a clock time.\n```\n\n## Design\n\n`AbstractOperations` is included before `OutputReaders`, so it cannot dispatch on `FieldTimeSeries` directly. Instead:\n\n- `AbstractOperations` gains a `validate_operand(a) = a` hook, called on every operand by the four central constructors (`_unary_operation`, `_binary_operation`, `_multiary_operation`, `_derivative`) \u2014 one line each.\n- `OutputReaders` extends `validate_operand(::FieldTimeSeries)` to throw.\n\nAll existing operand types pass through the inlined no-op fallback unchanged.\n\nThis is the \"immediate\" step from #5758; actual support for operations over `FieldTimeSeries` (same operator names, dispatching to a lazy 4-D operation) is prototyped in a companion draft PR. When that lands, the operator methods intercept FTS operands before they ever reach these constructors, and this error remains as a safety net for uncovered paths.\n\n## Tests\n\nNew testset in `test/test_output_readers.jl` (runs over `archs`): asserts the error for binary (field\u2013field and field\u2013scalar), unary, multiary, and derivative constructions, and that slicing (`a[n] * b[n]`) still composes and computes correctly. Verified locally on CPU along with checks that `Field`-only operations and `fts[Time(t)]` interpolation are unaffected.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABHfPi4w",
+        "number": 5758,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5758"
+      }
+    ],
+    "createdAt": "2026-07-02T19:16:17Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-07-03T03:29:51Z",
+    "number": 5760,
+    "title": "Reject FieldTimeSeries operands in AbstractOperations"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\r\n\r\n`NCCLDistributed` crashes when communicating `Bool` arrays across ranks.\r\nThis happens during `ImmersedBoundaryGrid` construction: `compute_mask`\r\ncalls `fill_halo_regions!` on the mask field (`CuArray{Bool, 3}`), which\r\nroutes through the NCCL send/recv path and hits:\r\n\r\n```\r\nMethodError: no method matching NCCL.LibNCCL.ncclDataType_t(::Type{Bool})\r\n```\r\n\r\nNCCL supports `UInt8`, `UInt32`, `Float16`, `Float32`, `Float64`, etc.,\r\nbut has no data type for `Bool`. Since `Bool` is 1 byte (same as `UInt8`),\r\nthe fix is to reinterpret `Bool` buffers as `UInt8` before calling\r\n`NCCL.Send`/`NCCL.Recv!`, then the receiver naturally reinterprets back.\r\n\r\n## Root cause\r\n\r\n`_nccl_send_recv_pair!` and `nccl_corner_send_recv!` pass `buf.send`/\r\n`buf.recv` directly to NCCL without checking the element type. Any field\r\nwhose backing array has `eltype == Bool` will fail.\r\n\r\n## Fix\r\n\r\nCheck `eltype(buf) === Bool` at the call site and reinterpret to `UInt8`:\r\n\r\n```julia\r\nsend_buf = eltype(buf.send) === Bool ? reinterpret(UInt8, buf.send) : buf.send\r\nrecv_buf = eltype(buf.recv) === Bool ? reinterpret(UInt8, buf.recv) : buf.recv\r\n```\r\n\r\nApplied to both `_nccl_send_recv_pair!` (edge halos) and\r\n`nccl_corner_send_recv!` (corner halos).\r\n\r\n## Test plan\r\n\r\n- [ ] Confirmed working on 2-GPU `NCCLDistributed` on GH200 aarch64: model\r\n      with `ImmersedBoundaryGrid(grid, GridFittedBoundary(...))` now\r\n      constructs and runs past the first time step without error\r\n- [ ] Plain `RectilinearGrid` (no immersed boundary) unaffected: no Bool\r\n      fields are communicated in that case\r\n\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-03T08:39:32Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-07-03T08:42:57Z",
+    "number": 5765,
+    "title": "Fix NCCL send/recv for Bool fields (ImmersedBoundaryGrid mask)"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5762.\r\n\r\n## Problem\r\n\r\n`mean` on a `DistributedField` returns `global_sum / local_length` \u2014 `nranks\u00d7` too large. `_mean` reduces the numerator (`sum`) across ranks, but the denominator `conditional_length(operand)` falls back to the generic `conditional_length(c::AbstractField) = length(c)` (the per-rank **local** count) for a bare field. So the two halves of the mean are reduced inconsistently.\r\n\r\nThis breaks `enforce_zero_mean_gauge!` in `ConjugateGradientPoissonSolver` on distributed grids (wrong gauge constant), and any other distributed `mean` caller.\r\n\r\n## Fix\r\n\r\nTwo methods in `src/DistributedComputations/distributed_fields.jl`:\r\n\r\n```julia\r\n@inline conditional_length(c::DistributedField) = all_reduce(+, length(c), architecture(c))\r\n\r\n@inline conditional_length(c::Field{<:Any,<:Any,<:Any,<:Any,<:DistributedImmersedBoundaryGrid}) =\r\n    conditional_length(condition_operand(identity, c, NotImmersed(), 0))\r\n```\r\n\r\nThe second resolves method ambiguity: a field on a distributed *immersed* grid matches both `DistributedField` and the immersed `AbstractField{\u2026,<:ImmersedBoundaryGrid}` method. It defers to the immersed definition, which excludes inactive cells and is already globally reduced through the distributed `sum`.\r\n\r\nThe `dims` form of `_mean` likely has an analogous issue for partitioned dims (see #5762) \u2014 left as a follow-up.\r\n\r\n## Verification\r\n\r\nRegression test added to the \"Distributed reductions\" testset. Verified on 4 ranks across `Partition(1,4)`, `(2,2)`, `(4,1)`: `mean` now equals the true global mean (2.5 for rank-blocks holding 1/2/3/4), and `dot`/`norm`/`min`/`max` remain correct.\r\n\r\nUnblocks #5757 (distributed `ConjugateGradientPoissonSolver` tests), which currently marks the `mean` case `@test_broken`.\r\n\r\nOnce this is merged all tests on https://github.com/CliMA/Oceananigans.jl/pull/5757 will pass and then https://github.com/CliMA/Oceananigans.jl/pull/5756 can be closed too. \r\n\r\n@aklocker42 \r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABHfWilg",
+        "number": 5762,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5762"
+      }
+    ],
+    "createdAt": "2026-07-02T19:40:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-03T19:19:08Z",
+    "number": 5763,
+    "title": "Fix distributed `mean`: reduce `conditional_length` globally"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 692,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Correctness\r\n* WSRK multirate cleared stale inner tstops before each stage, so the fast tendency integrates over `[t, t+c\u00b7dt]` rather than the whole remaining span (was silently wrong on state-coupled problems).\r\n* IMEX-SSPRK now routes implicit stages through the shared `solve_stage_implicit!` helper, so the public `initialize_imp!` hook is used (previously ARK-only).\r\n* Newton passes the 0-based iteration index to `ConvergenceCondition`, fixing `MaximumErrorReduction` / `MinimumRateOfConvergence`.\r\n* Newton initializes `j_lu` safely inside the iteration loop, ensuring the Jacobian is never factored before `j!` populates the prototype.\r\n* `UpdateEveryN` reset-signal dispatch fixed (had bound the wrong type parameter, leaving the feature dead).\r\n* `EveryXSimulationTime` is now `tdir`-aware (works with reverse-time integration); `reinit!` recomputes `tdir` from the new `tspan`.\r\n\r\n## Performance\r\n* `NewtonsMethod` now caches the LU factorization of dense Jacobian matrices across iterations, eliminating redundant factorizations when `update_j` does not refresh the Jacobian every iteration.\r\n* `ClimaODEFunction` gains `HasExpLim` and `HasImp` type parameters, replacing runtime `isnothing` checks with `has_T_exp_T_lim(f)` and `has_T_imp(f)` to guarantee static compile-time branch elimination in GPU kernels.\r\n\r\n## Validation / API improvements\r\n* `KrylovMethod` gains a `preconditioner` field for passing standalone preconditioner objects (e.g., matrix-free or block-diagonal operators) directly to `Krylov.jl`.\r\n* `RosenbrockTableau` asserts constant-diagonal `\u0393`; `IMEXTableau`/`ExplicitTableau` assert `c == row-sums(a)` and `b` length.\r\n* `UpdateEveryDt(dt::Real)` value constructor (old type-taking form deprecated).\r\n* `tableau(name)` methods for IMEX/ERK names; `RosenbrockAlgorithm` exported with a name-taking constructor.\r\n* `step!(advance_to_tstop=true)` guards empty `tstops`; `saveat` filters out-of-interval values.\r\n* `LineSearch` keeps the lowest-residual iterate and never returns a non-finite one (no GPU-hostile logging).\r\n\r\n## Surface / cleanup\r\n* Re-export `EveryXSimulationTime` / `EveryXSimulationSteps` / `EveryXWallTimeSeconds` at the top level.\r\n* `has_T_exp` gains an explicit `_has_exp` flag (false for limiter-only functions).\r\n* Compat: Julia 1.10 floor; tightened CUDA / ClimaComms / Krylov bounds; updated test environment compat for `0.11`.\r\n* Docstring accuracy, `docs/` updates for preconditioners and LU caching, dead-code removal, assorted nits.\r\n* New tests: state-coupled multirate convergence, stateful Newton conditions, SSP `initialize_imp!`, `UpdateEveryN` reset / `UpdateEveryDt` value, reverse-time callbacks.\r\n\r\nCloses #434 \r\n",
+    "changedFiles": 33,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEDQfX88AAAABHeA_hA",
+        "number": 434,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyNzE4NTEzNTk=",
+          "name": "ClimaTimeSteppers.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaTimeSteppers.jl/issues/434"
+      }
+    ],
+    "createdAt": "2026-06-28T23:09:57Z",
+    "deletions": 144,
+    "labels": [],
+    "mergedAt": "2026-07-03T06:06:45Z",
+    "number": 428,
+    "title": "v1-readiness: correctness fixes, API validation, and docs"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nBugfix (relevant when cache is updated per step): post-Newton, if update_cache doesn't fire cache invoke cache_imp instead so the implicit-relevant cache still tracks the post-DSS solved state. Applied in both IMEX-ARK and IMEX-SSPRK.)\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T23:49:56Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-07-03T17:35:16Z",
+    "number": 438,
+    "title": "Bugfix with updating cache per step"
+  }
+]
