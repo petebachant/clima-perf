@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 5660,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "This PR restructures the RRTMGP.jl public API to separate concerns, complete the\r\ndecoupling from ClimaCore, and enable ClimaAtmos to drop its ~1160-line\r\n`RRTMGPInterface.jl` wrapper. This is breaking\u2014will release (v0.22.0) later.\r\n\r\n### Changes\r\n\r\n- **Thin orchestrator:** `RRTMGPSolver` is now a lightweight, `Adapt`-compatible\r\n  aggregate over the functional `solve_lw!`/`solve_sw!` core, storing the\r\n  interpolation/extrapolation config, `deep_atmosphere_inverse_scaling`, lookup\r\n  tables, and flux buffers. `update_fluxes!`/`update_net_fluxes!` run an\r\n  allocation-free, type-stable pipeline and return `nothing` (read results via\r\n  getters). `Adapt.adapt_structure` overloads for the optics and source workspaces\r\n  re-alias the packed `layerdata`/`leveldata` scratch into a single adapted buffer\r\n  across a device transfer, so ClimaCoupler checkpoint restores stay zero-allocation.\r\n\r\n- **Foolproof grid params:** `RRTMGPGridParams(FT; domain_nlay, ncol, \u2026)` takes the\r\n  *physical* layer count and adds the isothermal boundary layer internally (the stored\r\n  `nlay` is the total), so callers can't miscount. The solver's output-buffer fields\r\n  are `net_flux_buffer`/`clear_net_flux_buffer`, disambiguated from the `net_flux(s)`/\r\n  `clear_net_flux(s)` getters.\r\n\r\n- **Standalone API:** Added `solve_gray(FT)` (with `default_parameters` and\r\n  `heating_rate`, in K/s) as a 1D functional front door for classroom use. The gray\r\n  path needs no NetCDF tables.\r\n\r\n- **Grid adaptation & interpolation:** Lifted the level interpolation and isothermal\r\n  boundary-layer cascade (`interpolate_levels!`, `add_isothermal_boundary_layer!`,\r\n  `clip!`, `update_concentrations!`) out of ClimaAtmos and directly into RRTMGP. The\r\n  logic operates on plain `(nlay, ncol)` array views, completing the decoupling from\r\n  ClimaCore.\r\n\r\n- **Canonical aerosol map:** Introduced `src/api/aerosols.jl` as the single source of\r\n  truth for the aerosol species ordering, including lookup-loading assertions and a\r\n  name-map cross-check test. The API accepts canonical names only (e.g. `sulfate`,\r\n  `sea_salt1`); host models map their own short names (`so4`, `ss1`, \u2026).\r\n\r\n- **Full getter API:** Completed the public getter interface so hosts write/read only\r\n  via array views: `layer_pressure`/`layer_temperature`/`layer_relative_humidity`\r\n  (centers), `level_pressure`/`level_temperature` (faces), `net_flux`,\r\n  `radiation_method`, and the cloud/aerosol/flux getters. Getters return `(nlay, ncol)`\r\n  centers / `(nlev, ncol)` faces (physical dim first) as domain-only views (excluding\r\n  the isothermal boundary layer) so a host's arrays match its physical grid. Layer-2\r\n  names follow RT convention (`layer_`/`level_` prefixes, full words `aerosol_*`), and\r\n  the deep-atmosphere getter/kwarg is `deep_atmosphere_inverse_scaling` (the low-level\r\n  `metric_scaling` argument is unchanged).\r\n\r\n- **Spectrally-resolved fluxes (optional):** Construct with `spectral_fluxes = true`\r\n  to retain per-band fluxes, read via `spectral_{lw,sw}_flux_{up,dn,net}` and the band\r\n  edges `{lw,sw}_band_bounds`. Off by default (zero cost); the two-stream kernels\r\n  accumulate per band with the broadband result byte-for-byte unchanged\r\n  (`sum(bands) == broadband`).\r\n\r\n- **Buildkite fix:** Updated SLURM specs to use `--gpus` (`slurm_gpus: 1`) instead of\r\n  `--gres=gpu` to resolve a job submission failure on `central`.\r\n\r\n- **Docs & tests:** New \"Functional core\" and \"The getter contract\" pages document\r\n  Layer 1 and the host data-exchange contract; the radiation-method docstrings are\r\n  completed. Docstrings/formatting follow the CliMA DeveloperGuides. Added tests for the\r\n  aerosol name map, grid adaptation, the standalone gray path, boundary-layer-masked\r\n  getters, per-band flux consistency, the Layer-2 zero-allocation/type-stability\r\n  contract, and an `Adapt` round-trip.\r\n\r\n- **Cleanup:** Remove Infiltrator (closes #489). Add partial cloud cover test (closes\r\n  #547 and #441). Fix Aqua failures by removing `Base.Array` type-piracy overloads\r\n  (closes #578). Remove the internal `RRTMGPData` datalayout subsystem (unused by the\r\n  getter API), which also drops the `LinearAlgebra` dependency. Remove the 14 deprecated\r\n  positional-argument constructors that warned to use `RRTMGPGridParams`, plus the dead\r\n  flux/`vmr` helper methods. Drop `@fastmath` from the longwave kernels (kept for\r\n  shortwave) so GPU longwave fluxes match CPU at the tight test tolerance.\r\n  \r\n- **Not implemented:** Explored changing the datalayout internally from `(nlev, ncol)` to `(ncol, nlev)` for fluxes, for coalesced memory access. This improved performance by 10-20%. However, since the analogous change cannot be done for optics while keeping array views for the coupling to ClimaAtmos, the API became brittle; this seems ultimately not worth the modest performance gain.\r\n\r\nCorresponding host changes: ClimaAtmos CliMA/ClimaAtmos.jl#4624 (phases out the\r\n`RRTMGPModel` wrapper in favor of direct `RRTMGPSolver` usage, now constructing with\r\n`domain_nlay`) and a version bump in ClimaCoupler CliMA/ClimaCoupler.jl#2009 (both pass\r\ntests with this RRTMGP branch).",
+    "changedFiles": 88,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODGrFgs6JB8_k",
+        "number": 489,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyMDgzMjM5NzA=",
+          "name": "RRTMGP.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/RRTMGP.jl/issues/489"
+      },
+      {
+        "id": "I_kwDODGrFgs6zsU93",
+        "number": 578,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyMDgzMjM5NzA=",
+          "name": "RRTMGP.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/RRTMGP.jl/issues/578"
+      }
+    ],
+    "createdAt": "2026-07-01T05:53:19Z",
+    "deletions": 1716,
+    "labels": [],
+    "mergedAt": "2026-07-06T16:10:51Z",
+    "number": 601,
+    "title": "API Redesign: Functional Core, Standalone API, and ClimaCore Decoupling (#1 in refactor chain)"
+  }
+]

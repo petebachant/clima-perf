@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "## Summary\r\n\r\n`ConjugateGradientPoissonSolver` (used as the nonhydrostatic pressure solver) had **no distributed coverage** \u2014 it was only tested on single CPU/GPU. The distributed machinery already exists and is wired up (global `dot`/`norm`/`mean` reductions, distributed `precondition!` for the FFT solver), but was untested. This adds that coverage.\r\n\r\n## Changes\r\n\r\n- **`test_distributed_models.jl`** \u2014 extend the existing \"Distributed reductions\" testset with the global reductions the solver relies on: `dot`, `norm`, `mean`, `minimum`, `maximum` (only `sum`/`any`/`all` were covered before).\r\n- **`test_distributed_conjugate_gradient_poisson_solver.jl`** (new) \u2014 mirrors `test_distributed_poisson_solvers.jl` and the serial CG test: solves for `\u03d5` on a `Distributed` grid, then checks `\u2207\u00b2\u03d5 \u2248 R`, for both `DiagonallyDominantPreconditioner` and the FFT preconditioner, across `(4,1,1)`/`(1,4,1)`/`(2,2,1)` layouts and Periodic/Bounded topologies.\r\n- Registered the new file in the `:distributed_solvers` group in `runtests.jl` (already runs on 4 CPU ranks and 4 GPU ranks in the Buildkite distributed pipeline).\r\n\r\n@aklocker42 \r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T18:14:33Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-07-06T02:52:37Z",
+    "number": 5757,
+    "title": "Add distributed tests for ConjugateGradientPoissonSolver"
+  }
+]
