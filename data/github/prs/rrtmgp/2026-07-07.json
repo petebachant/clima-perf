@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 619,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Improves the numerically sensitive parts of the longwave/shortwave solvers so Float32 results track Float64 better. Broadband f32\u2194f64 agreement improves 25\u201390\u00d7: every longwave path now sits at its ~2\u20135e-4 W/m\u00b2 interpolation-noise floor (from 1e-2\u20133e-2).\r\n\r\n## Accuracy fixes\r\n\r\n* LW no-scattering source: series switch at `eps^(1/4)` (was `100\u00b7eps`), avoiding O(1) cancellation error just above threshold.\r\n* Two-stream `k`: exact `\u03b31 \u2212 \u03b32` identities (`PIFM \u2261 2(1\u2212ssa)`, `Fu \u2261 1.66(1\u2212ssa)`), removing near-1 cancellation at `ssa \u2192 1`.\r\n* Thin-layer factors via `expm1` and the exact `(1\u2212e)(1+e)` factorization.\r\n* Consistent off-resonance evaluation of the SW direct beam near `k\u00b7\u03bc\u2080 = 1`.\r\n* Addition-built cumulative optical depth for the direct-beam profile (no repeated subtraction).\r\n* LW two-stream source restructured so no term divides by `\u03c4`; thin layers keep their real `O(\u03c4)` emission instead of being zeroed.\r\n\r\n## Supporting\r\n\r\n* New `RRTMGP.Numerics module`: collects every guard constant (`k_min`, `\u03c4_thresh`, `resonance_window`, `\u03bc\u2080_min`) in one place.\r\n* Opt-in input validation (`RRTMGP.check_values[] = true`), allocation-free when off.\r\n* Lookup-loader hardening (asserts the hard-coded h2o/o3 slots and temperatures).\r\n* Testing: new ratcheting `test/float32_consistency.jl` harness to avoid regressions: the f32 LW no-scattering reference tolerances tighten from `0.05` to `5e-3 W/m\u00b2`. ",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T01:13:28Z",
+    "deletions": 90,
+    "labels": [],
+    "mergedAt": "2026-07-07T08:29:01Z",
+    "number": 605,
+    "title": "F32 accuracy improvements (#2)"
+  }
+]

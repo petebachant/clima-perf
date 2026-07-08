@@ -1,0 +1,74 @@
+[
+  {
+    "additions": 315,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Fixes two problems at the upper boundary and with tracer-mass consistency\r\n* Ensures zero mass flux through top boundary even in the presence of warped coordinate surfaces (before the flux would only be zero if top layers are level)\r\n* Ensures tracer-mass consistency in EDMF by treating all tracers (e.g., condensates) like `mse` and `q_tot`, in difference form, with corresponding Jacobian updates. Reduces SGS mass-flux tendency with an artificially uniform `q_lcl` from 1.1e-7 to 6.7e-14 (Float32 roundoff). \r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-04T23:34:22Z",
+    "deletions": 138,
+    "labels": [],
+    "mergedAt": "2026-07-07T07:51:17Z",
+    "number": 4637,
+    "title": "Fixes problems near upper boundary and tracer-mass continuity"
+  },
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpdate CTS:\r\nRoute enforce_physical_constraints! through ClimaTimeSteppers' new `constrain_state!` hook (per-step by default) and drop the separate callback. Frequencies are configurable via `update_cache_every` / `update_constrain_state_every`. This avoids redundant cache calls.\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T19:42:51Z",
+    "deletions": 93,
+    "labels": [],
+    "mergedAt": "2026-07-07T16:31:16Z",
+    "number": 4631,
+    "title": "Update CTS"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "As of now, there isn't much benefit to testing on Windows.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T17:38:05Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-07T18:41:22Z",
+    "number": 4650,
+    "title": "Remove GHA tests on Windows"
+  },
+  {
+    "additions": 51,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Fix subsidence top BC in cases with prescribed forcing (GCM- or ERA-driven)\r\n\r\n* Replace `\u1d9csubdiv\u1d65` (top extrapolatation, which copied the cell below into the\r\ntop cell) with `\u1d9cadvdiv\u1d65` in the advective-form subsidence operator. With\r\nzero boundary fluxes on both divergences, the advective form implements\r\na zero-gradient inflow condition at the lid: for `w < 0` the upwinded\r\ntop-face flux `w\u00b7\u03c7_top` cancels the `\u03c7_top\u00b7w` term exactly, equivalent to\r\nprescribing `\u03c7 = \u03c7_top` above the lid. For uniform `\u03c7` the tendency vanishes\r\nidentically at every level, so tracer-mass (`\u03c7 \u2261 1`) consistency holds. \r\nThis also consolidates all advective divergences into a\r\nsingle operator (`\u1d9cadvdiv\u1d65`).\r\n\r\n* Delete both `external_forcing.jl` blocks that zeroed the accumulated\r\n`\u03c1e_tot`/`\u03c1q_tot` tendencies in the top cell; they existed to mask the\r\nextrapolation problem and also discarded radiation/nudging/sponge\r\ntendencies there. GCM/ERA5-driven cases will change as a result.\r\n\r\n* Extend the tracer-mass consistency test with subsidence assertions:\r\ntop-cell tendency vanishes for descending flow with a non-constant\r\nprofile (fails at 4.2e-8 on the pre-fix operator), and the tendency\r\nvanishes at every level for uniform `\u03c7` under all reconstruction schemes.\r\n\r\nThis will affect calibration of SCM cases; they should be recalibrated. \r\n\r\nThis goes on top of #4637. ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-05T04:46:37Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2026-07-07T21:48:16Z",
+    "number": 4638,
+    "title": "Fix subsidence top BC and remove top-cell tendency-zeroing workaround"
+  }
+]
