@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 514,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\n\nAdds the calibrated optimal-LAI parameters as model defaults, makes the P-model snowy-land long run able to run with **prognostic (modeled) LAI**, and adds an **inversion-obs leaderboard** to the long run \u2014 wired into weekly CI and a new on-demand label.\n\n## Changes\n\n**1. Calibrated optimal-LAI defaults** \u2014 `toml/default_parameters.toml`\n\nCalibrated `ZhouOptimalLAIModel` against MODIS LAI (Yuan et al. 2017) with `experiments/calibration/configs/lai.jl` (TransformUnscented, constrained ensemble mean, converged over 4 iterations):\n\n| param | old (prior mean) | new (calibrated) |\n|---|---|---|\n| `optimal_lai_z` | 12.227 | **21.4** |\n| `optimal_lai_sigma` | 1.1 | **0.939** |\n| `optimal_lai_alpha` | 0.067 | **0.0701** |\n\nOnly affects prognostic-LAI runs; the prescribed-LAI default is unchanged.\n\n**2. Prognostic-LAI option** \u2014 `experiments/long_runs/snowy_land_pmodel.jl`\n\nNew `PROGNOSTIC_LAI` env-var switch (mirrors `LONGER_RUN` / `UNCALIBRATED`). Unset \u2192 prescribed MODIS LAI (unchanged). Set \u2192 the canopy computes LAI from the P-model potential GPP via the no-LAI `LandModel` convenience constructor (`ZhouOptimalLAIModel`, #1783). Prognostic output goes to a separate `snowy_land_pmodel_opt_lai_longrun_*` directory.\n\n**3. INVERSION leaderboard** \u2014 `ext/land_sim_vis/leaderboard/*`, `ext/LandSimulationVisualizationExt.jl`\n\n- Adds the inversion carbon leaderboard: the long run now compares the model's NEE/GPP/ER against the inversion product (CT2022 NEE, GOSIF GPP, residual ER) from the `inversion_nee` artifact, alongside the ERA5 and ILAMB leaderboards.\n- The leaderboard also compares the model `lai` against the MODIS LAI target (Yuan et al. 2017), included for **all** runs: for prescribed-LAI runs the panel is ~1:1 (model `lai` equals the prescribed MODIS obs), and for prognostic-LAI runs it is an independent check. _(The earlier prognostic-only `include_lai` gating was removed in review round #1.)_\n\n**4. CI + labels** \u2014 `.buildkite/longruns_gpu/pipeline.yml`\n\nThe two labels are now **independent \u2014 add just one**:\n- `Run long runs` \u2192 the prescribed long run (as before).\n- `long run opt lai` \u2192 the prognostic long run.\n\nThe **weekly scheduled build runs both**. (The default group's `if` short-circuits on `build.source == \"schedule\"` so the weekly run is unaffected by the label logic.)\n\n**5. New GitHub label** \u2014 `long run opt lai` (green `#0e8a16`), created via `gh`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T16:54:22Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "0e8a16",
+        "description": "Run the snowy_land_pmodel long run with prognostic (optimal) LAI",
+        "id": "LA_kwDOGiZe4s8AAAACqaSp9g",
+        "name": "long run opt lai"
+      }
+    ],
+    "mergedAt": "2026-07-08T22:31:10Z",
+    "number": 1794,
+    "title": "Calibrated optimal-LAI defaults + prognostic-LAI long run option"
+  }
+]

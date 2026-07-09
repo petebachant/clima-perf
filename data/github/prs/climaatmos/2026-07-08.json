@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 1569,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Refactor `manual_sparse_jacobian.jl` to organize tracer lists and jacobian blocks by physical process (advection, sedimentation, diffusion, SGS transport), with centralized process-based tracer-name utilities and automated block assembly, while keeping the exact same sparsity pattern and numerical values.\r\n\r\n## What changed\r\n\r\nNew file `src/utils/tracer_processes.jl` \u2014 the central, process-based tracer classification:\r\n- `sedimenting_tracer_names(Y)`, `sedimenting_mass_names(Y)`, `diffused_gs_scalar_names(Y)`, `advected_gs_scalar_names(Y)`, `microphysics_tracer_names(Y)` for the grid scale, and `sedimenting_sgs_tracer_names(Y)`, `advected_sgs_scalar_names(Y)`, `passive_sgs_tracer_names(Y)` for the updrafts. All lists filter candidate names by what's actually in Y, so a new tracer opts into its processes automatically.\r\n\r\n- Per-tracer process properties: `sedimentation_velocity_name (e.g. \u03c1q_rai \u2192 \u1d9cw\u1d63)`, `condensate_phase` (returns `TD.Liquid()` / `TD.Ice()`), and phase-dispatched internal_energy_function, `condensate_e_int_offset`, `condensate_cv_difference`. They replace the hardcoded and duplicated `(name, e_int, \u2202cv\u2202q)`.\r\n\r\n`manual_sparse_jacobian.jl` rewritten around processes:\r\n\r\n- `jacobian_cache` now assembles the matrix from per-process block builders (`advection_jacobian_blocks`, `diffusion_jacobian_blocks`, `sedimentation_jacobian_blocks`, `sgs_advection_jacobian_blocks`, `sgs_massflux_jacobian_blocks`). Blocks requested by multiple processes are de-duplicated by `merge_jacobian_blocks`, and a final `fallback_identity_blocks` pass gives every state variable without a diagonal a `-I` block. That fallback eliminated all the `\u03c1q_gas_A_if_available`-style special cases. A passive tracer now needs no mention in this file at all (!)\r\n\r\n- The 900-line `update_jacobian!` is split into per-process functions mirroring `implicit_tendency!`: `update_advection_jacobian!`, `update_sedimentation_jacobian!`, `update_diffusion_jacobian!`, and `update_sgs_{advection,diffusion,entr_detr,boundary_condition,massflux}_jacobian!`. The scratch-space and block-initialization dependencies between them are documented in an ordering contract in `update_jacobian!`; eddy diffusivities are now computed once and passed to both diffusion updates.\r\n\r\n- Removed unused `\u1d9ckappa_m\u02b2` computation and a few unused constants. Left TODO comments where the Jacobian intentionally diverges from the tendencies: SGS entrainment skips number concentrations; SGS diffusion skips passive tracers.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T18:35:20Z",
+    "deletions": 876,
+    "labels": [],
+    "mergedAt": "2026-07-08T00:34:18Z",
+    "number": 4629,
+    "title": "Process-based jacobian refactor"
+  },
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "In the words of Mr. Claude:\r\n\r\n>The SGS-quadrature 1-moment microphysics broadcast (set_microphysics_tendency_cache!, PrognosticEDMFX path) is register-bound, and much of its cost is fixed per grid point rather than in the quadrature loop. It recomputed several quantities inline at every point: the lazy environment inputs (air_density and the specific_env_value reconstructions for q_lcl/q_icl/q_rai/q_sno), and the quadrature-invariant liquid fraction and linearized saturation-excess mean.\r\n>\r\n>Materialize those into scratch fields once (in cheap, high-occupancy kernels) and pass the precomputed \u03bb and mu_S into microphysics_tendencies_1m, so the heavy kernel reads them instead of recomputing them. Numerically identical; large speedup on the AMIP 1M prognostic-EDMF config (env microphysics kernel roughly halved).\r\n\r\nThis is an 11% speedup for the flagship AMIP (prog. EDMF 1M), though it's kind of hard to test because of dependency conflicts.\r\n\r\n<img width=\"530\" height=\"559\" alt=\"image\" src=\"https://github.com/user-attachments/assets/2b23eef5-5a4b-4767-a303-720ad88edbf8\" />\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T21:06:03Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2026-07-08T18:11:17Z",
+    "number": 4652,
+    "title": "Precompute quadrature-invariant microphysics inputs to cut kernel cost"
+  },
+  {
+    "additions": 230,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUpdate to CM 0.37.0. This temporarily disables 2M microphysics until it is updated properly for compatibility. \r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T18:37:51Z",
+    "deletions": 150,
+    "labels": [],
+    "mergedAt": "2026-07-08T22:51:19Z",
+    "number": 4651,
+    "title": "Temp disable P3"
+  }
+]
