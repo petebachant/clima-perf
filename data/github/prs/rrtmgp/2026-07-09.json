@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1586,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Cleanup of the RTE solver layer. No numerical changes; every driver produces byte-identical fluxes; this is about halving the code where CPU/GPU asymmetries kept creeping in.\r\n\r\n1. File & naming reorganization (zero logic): moved `RTE.jl` into `rte/`, split the monolithic `api.jl/api_types.jl/Optics.jl` into focused files, renamed solver fragments to `*_noscat/*_2stream`, and put the include list in architectural-layer order. Renames with one-release compat aliases: `Vmrs \u2192 VolumeMixingRatios`, `GrayUtils \u2192 GrayAtmosphere`, and `aerosol_idx() \u2192 aerosol_index_map()`.\r\n\r\n2. Driver unification: the CPU and CUDA drivers now share device-agnostic per-(g-point, column) bodies (`*_gpt_col!`) with common helpers for cloud-mask building, aerosol masking, and flux accumulation, instead of ~2,100 lines of near-duplicate code. As part of this, the broadband shortwave direct beam `sw_direct_flux_dn` is now a true per-level profile (previously meaningful only at the surface row).\r\n\r\n3. `LookupBundle`: `lookup_tables` returns a typed `LookupBundle` instead of a nested `NamedTuple`. Adds `save_lookup_tables/load_lookup_tables` for on-disk caching, so the spectral methods can run without `NCDatasets` once a cache exists (which will facilitate use of code in teaching).",
+    "changedFiles": 59,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T01:14:30Z",
+    "deletions": 1463,
+    "labels": [],
+    "mergedAt": "2026-07-09T21:12:52Z",
+    "number": 606,
+    "title": "CUDA kernel refactor/deduplication of CPU/GPU code (#3)"
+  }
+]

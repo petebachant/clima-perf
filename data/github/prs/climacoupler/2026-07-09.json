@@ -1,0 +1,88 @@
+[
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Introduces the option to use `CO.OceanConfigurations.orca_ocean` and makes this the default configuration for weekly (CMIP) longruns. \r\n\r\nCloses https://github.com/CliMA/ClimaCoupler.jl/issues/1379",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc64s0cG",
+        "number": 1379,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1379"
+      }
+    ],
+    "createdAt": "2026-06-26T19:33:22Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-07-09T01:28:13Z",
+    "number": 2001,
+    "title": "Add config option for ORCA grid "
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "EN4 Monthly data only supports 5500m depth - this is set via kwarg in the tripolar grid config but was not done for the ORCA grid ; this PR fixes the max depth (set to 5500m, where the default 6km leads to `LoadError`).  ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T18:04:07Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-07-09T20:42:18Z",
+    "number": 2024,
+    "title": "Fix ORCA grid depth"
+  },
+  {
+    "additions": 237,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "This PR adds a `Interfacer.progress` function that can extended by each component model to print some information on a callback interval. \r\n\r\nChanges:\r\n- Config flag `ocean_progress_interval` is now a `String`, not an `Integer` (default: `\"never\"`)\r\n- Config flag `atmos_progress_interval` added (default: `\"never\"`)\r\n- Config flag `land_progress_interval` added (default: `\"never\"`)\r\n- Config flag `seaice_progress_interval` added (default: `\"never\"`)\r\n- `Interfacer.progress` function added with default warning, extended for `ClimaAtmos`, `Oceanananigans`, `ClimaLand`, and `ClimaSeaIce`\r\n- `Intefacer.current_date` has a new method that allows for passing a component model's `t`\r\n- Progress printing is turned on for all CI runs\r\n- docs/tests updated accordingly\r\n",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T21:24:07Z",
+    "deletions": 51,
+    "labels": [],
+    "mergedAt": "2026-07-09T21:17:16Z",
+    "number": 2021,
+    "title": "Add progress callbacks for all component models"
+  },
+  {
+    "additions": 88,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Temporarily disables the `main` branch tracking in the nightly coarse AMIP runs. \r\n\r\nSee : https://github.com/CliMA/ClimaAtmos.jl/pull/4624 and https://github.com/CliMA/RRTMGP.jl/pull/601. \r\n\r\nSurfaceFluxes, likewise, is about to include a breaking change soon - the temporary changes in this PR attempt to keep nightly build running so that updates to ClimaAtmos.jl and ClimaTimesteppers can be tested. Upon updating to the new RRTMGP interfaces + verifying the new SurfaceFluxes solver changes, we can track main branches in both those packages. \r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T22:04:18Z",
+    "deletions": 65,
+    "labels": [],
+    "mergedAt": "2026-07-09T23:17:16Z",
+    "number": 2022,
+    "title": "Temporarily use latest compatible versions of SF / RRTMGP + Up deps"
+  }
+]

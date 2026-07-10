@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\ninstead of weighting `A = f*A_c3 + (1-f)A_c4` and `ci =f*ci_c4 + (1-f)ci_c4` , and then computing `gs = A/(ca-ci)`, here we compute an effective `gs` by weighting the evaporation that comes from each:\r\n\r\n`E = f g_c3 (q_air - q_sat(T_canopy)) + (1-f) g_c4 (q_air - q_sat(T_canopy)) `\r\nor\r\n`E = gs (q_air - q_sat(T_canopy)) ` with `gs =  f g_c3 +  (1-f) g_c4`, and `g_x = A_x /(ca - ci_x)`.\r\n\r\nthis is more in line with weighting fluxes, which is what we should do, instead of weighting intercellular co2 pressure\r\n\r\n\r\n## To-do\r\nlook at long runs: https://buildkite.com/clima/climaland-long-runs/builds/4886\r\n\r\n\r\n## Content\r\nI also changed `gs = A_gross/(ca-ci)` from `A_net`.\r\n\r\nI believe this matches https://gmd.copernicus.org/articles/13/1545/2020/\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T20:35:23Z",
+    "deletions": 34,
+    "labels": [],
+    "mergedAt": "2026-07-09T17:47:56Z",
+    "number": 1781,
+    "title": "c3 and c4 plants in parallel for evaporation"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Background \r\nAccounting for stems/roots is important for modelling autotrophic respiration during the winter. We had also included SAI in the thermal mass of the canopy (appearing in the tendency for canopy energy), in the long wave emission, and in the sensible heat flux. The thermal mass contribution should be negligible. The latter too may matter at some level. However, on main, we had always run with SAI = 0, so we did not check the effects of this. PR #1707  tried running with nonzero SAI, but found it worsened energy fluxes. More recently, changes to improve autotrophic respiration led to nonzero SAI, but this also has a negative impact on energy fluxes, in particular, SHF.\r\n\r\nAdditionally, it may be incorrect to model the effect of trunks on SHF, LW_net, but not SW_net, which we had not been doing. \r\n\r\nSee the discussion here: https://github.com/CliMA/ClimaLand.jl/pull/1707\r\n\r\n## Purpose \r\nThis PR removes SAI from any energy flux computations and from the tendency for temperature.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T23:10:31Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "b60205",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAABqosfKw",
+        "name": "Run long runs"
+      }
+    ],
+    "mergedAt": "2026-07-09T21:18:47Z",
+    "number": 1782,
+    "title": "remove SAI from energy tendency, LW_u, turbulent fluxes"
+  }
+]

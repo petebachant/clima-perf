@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 137,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd an optional `T_post_imp!(du, u, p, t)` field on `ClimaODEFunction`. When set, it's evaluated on the Newton-solved stage state `U*` and applied as `U \u2190 U* + dt\u03b3 \u00b7 du` inside `solve_stage_implicit!` (shared by IMEX-ARK and IMEX-SSPRK). The correction is folded into `T_imp[i]` via the existing `(U \u2212 U_start) / dt\u03b3` computation, so it inherits the same `b_imp` weight and ARK order conditions are preserved.\r\n  \r\n## Motivation\r\nThis is meant for corrections whose dependence on the current state is too nonlinear or discontinuous to include in the Newton solve itself. The motivating case (in downstream ClimaAtmos) is the \u03c1e_tot / \u03c1q_tot vertical upwind correction: with `max_iters = 1`, the sign of `\u1da0u\u00b3` can flip between Newton's initial guess and its solution, so an upwind flux baked into `T_imp!` at the initial guess can end up using values from the wrong cell. Evaluating the correction post-Newton, on `U*`, fixes the direction.\r\n\r\n## Design notes\r\n- **`cache_imp!` is refreshed on `U*` before `T_post_imp!` runs.** `solve_newton!` only calls `prepare_for_f!` (== `cache_imp!`) before each residual evaluation, not after the final `x .-= \u0394x` step, so `p.precomputed` would otherwise be one Newton step stale \u2014 exactly the quantities (e.g. `\u1da0u\u00b3`) that the correction needs.\r\n- **Scratch buffer.** The correction is written into `cache.T_imp[i]`, which is guaranteed to exist for implicit stages (`a_imp[i,i] \u2260 0`) and is about to be overwritten by `evaluate_stage_tendencies!` anyway.\r\n- **Zero cost when unused.** Everything is gated on `has_T_post_imp(f)`.\r\n- **Order conditions.** The correction is not part of the Newton residual, so we don't converge to `U = U_start + dt\u03b3 \u00b7 (T_imp(U) + T_post(U))` \u2014 we get `U = U_start + dt\u03b3 \u00b7 T_imp_Newton(U*) + dt\u03b3 \u00b7 T_post(U*)`. This is an operator-splitting-style step. The formal Butcher-tree order matches standard ARK; practically, order is preserved as long as `T_post` is small and non-stiff.\r\n\r\n## Changes\r\n- `src/functions.jl` \u2014 new `T_post_imp!` field + `TPI` type parameter, updated docstring, `has_T_post_imp` accessor. Shifted `<:Any` filler counts in `has_T_exp` / `has_T_lim` / `has_T_exp_T_lim` / `has_T_imp`.\r\n- `src/solvers/imex_ark.jl` \u2014 inserted the refresh + hook + apply block between Newton and the post-Newton DSS in the shared `solve_stage_implicit!`.\r\n- `test/unit/post_imp.jl` (new) + `test/runtests.jl` \u2014 asserts the hook fires on both `SSP333` (SSPRK) and `ARS343` (ARK), stays finite, does NOT fire when the field is `nothing`, and produces a different result than the no-hook run.\r\n  - `NEWS.md` \u2014 new `v0.10.4` section.\r\n  - `Project.toml` \u2014 `0.10.3 \u2192 0.10.4`.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-08T21:44:23Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-07-09T20:41:38Z",
+    "number": 440,
+    "title": "Add post-Newton correction hook to ClimaODEFunction"
+  }
+]

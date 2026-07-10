@@ -1,0 +1,92 @@
+[
+  {
+    "additions": 248,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Three physics corrections for prognostic EDMFX, stacked on #4638 (which stacks on #4637):\r\n\r\n1. **Remove coherent (mass-flux) buoyancy production from the TKE budget.** The coherent updraft/environment buoyancy flux belongs to the resolved SGS circulation, not to the isotropic turbulence that TKE represents; retaining it double-counts buoyancy production already accounted for by the mass-flux transport. This affects TKE budgets (e.g., Sc: TKE peaks at cloud tops, drops sharply above, and is significantly lower below too--as it should be).\r\n\r\n2. **Decompose the diffusive enthalpy flux into dry static energy + water enthalpy** (`F_h = -K_h \u2207s_d + \u03a3_\u03bc h_tot,\u03bc (-K_h \u2207q_\u03bc)`, unit turbulent Lewis number), at both diffusion sites (`edmfx_sgs_diffusive_flux_tendency!` and `vertical_diffusion_boundary_layer_tendency!`). Diffusing `h_tot` directly implies a spurious enthalpy flux carried by dry-air diffusion, which systematically warms entrained air across capping inversions where `h_tot` jumps up while `q_t` jumps down, contributing to Sc bias. The implicit-Jacobian diffusion factors are updated to match. In DYCOMS RF01, air just above cloud top is now ~1.6 K cooler. May affect mid-troposphere biases too.\r\n\r\n3. **Damp the relative part of the cloud-fraction floor as the subdomain mean saturates** (`D = x/\u221a(1+x\u00b2)`, `x = max(-\u03bc_S, 0)/(\u03b5_rel\u00b7q_sat)`), so an equilibrated overcast deck is no longer capped below CF = 1 by the patchiness floor. No new parameter; the floor still enters only the CF diagnosis, so quadrature mass conservation is untouched. DYCOMS RF01 deck cloud fraction 96\u201399% (was 74\u201389%), hour-6 LWP 145 g/m\u00b2 (was 51).",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T21:27:52Z",
+    "deletions": 67,
+    "labels": [],
+    "mergedAt": "2026-07-09T00:11:18Z",
+    "number": 4644,
+    "title": "EDMFX corrections: TKE buoyancy production, enthalpy-flux decomposition, cloud-fraction floor"
+  },
+  {
+    "additions": 232,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Three changes to the manual sparse Jacobian to make it discretely consistent with the implicit tendency:\r\n\r\n- Exner-form PGF rows. The `u\u2083` rows previously linearized the old `\u2207p/\u03c1 + \u2207\u03a6` form while the tendency uses `cp_d (\u03b8_v \u2212 \u03b8_vr) \u2207\u03a0 + \u2207(\u03a6 \u2212 \u03a6_r)`. The rows now carry the exact product-rule linearization (turned out to be essentially identical to what\nwe had).\r\n\r\n- Entrainment relaxation diagonals. The updraft-scalar diagonals now include the feedback through the relaxation target, scaling `\u2212(\u03b5 + \u03b5_turb)` by `(1 + w \u03c1a\u02b2/\u03c1a\u2070)` (the derivative used to diagnose the environment value) and include the 2M number concentrations `(n_lcl, n_rai)`.\r\n\r\n- Sedimentation in the continuity row. vertical_advection_of_water_tendency! adds the same sedimentation flux divergence to `\u03c1` as to `\u03c1q_tot`, but only the latter had Jacobian entries. Added `(\u03c1, \u03c1q_x)` blocks; since the scalar solve ordered `\u03c1` first, the scalar `BlockLowerTriangularSolve` is reordered to `[condensate masses] \u2192 [\u03c1] \u2192 [\u03c1q_tot] \u2192 [rest]` (the always-zero `(\u03c1q_x, \u03c1)` keys are removed, keeping the solve exactly block-triangular). (It's cost-neutral computationally.)\r\n\r\n## To-Do\r\n\r\n- [x] Update `ref_counter` after rebase",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T21:36:16Z",
+    "deletions": 43,
+    "labels": [],
+    "mergedAt": "2026-07-09T02:07:15Z",
+    "number": 4653,
+    "title": "Jacobian changes: Exner-form PGF linearization, entrainment relaxation, and sedimentation in the continuity row"
+  },
+  {
+    "additions": 56,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "The prognostic-EDMF subdomain corrections to the grid-mean sedimentation\r\nenergy flux in `vertical_advection_of_water_tendency!` had two\r\ninconsistencies:\r\n\r\n1. **Sign error on the environment correction.** The environment term\r\n   entered with an extra `-1` relative to the updraft term, even though\r\n   both fluxes use the same `WVector(-(w\u00b7q))` convention. The environment\r\n   enthalpy correction therefore entered the energy budget with the wrong\r\n   sign.\r\n\r\n2. **Kinetic-energy double counting.** The grid-mean reference energy was\r\n   defined as `e_int - Kin`, while the grid-mean flux being corrected\r\n   carries `e_int + \u03a6 + Kin`. The correction thus re-added the grid-mean\r\n   kinetic energy instead of replacing it with the subdomain value.\r\n\r\nBoth corrections are now defined per subdomain as\r\n\r\n    (e_int\u1d4f + Kin\u1d4f) - (e_int + Kin),\r\n\r\nwith `Kin\u02b2 = Kin(w\u02b2, u\u02b2)` for the updraft and `Kin(w, u\u2070)` for the\r\nenvironment (no separate environment terminal velocity is stored, since\r\nthe environment mass flux is the residual `\u03c1qw - \u03c1a\u02b2q\u02b2w\u02b2`). Both terms now enter \r\nwith the same sign convention as the grid-mean flux.\r\n\r\n## To do:\r\n- Bump ref_counter when rebased and ready to merge",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T17:29:22Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2026-07-09T04:38:39Z",
+    "number": 4648,
+    "title": "Fixes energy  bookkeeping in EDMF sedimentation fluxes"
+  },
+  {
+    "additions": 528,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Previously, publishing a new reproducibility reference required a full main build that re-ran the entire simulation suite just to move its output into the reference store. This eliminates that: the reference is published from the bundle the PR's CI already computed shortly after the PR merges.\r\n\r\n### How it works\r\n\r\n1. Move reproducibility bundle to the staging folder at the end of a build after all tests have passed.\r\n2. When CI runs on the main branch (on merge), run one job to publish the bundle in the staging folder.\r\n\r\nSee the README for full info.\r\n\r\nNotes:\r\n- If in a merge queue, the final merge queue build will publish the reproducibility bundle immediately. \r\n- This needs branch protection requiring PRs to be up to date with main, so the PR-build state matches the merged state.\r\n- Every buildkite job group now needs an `if: 'build.branch != \"main\"'` guard. We can simplify this by splitting the \"publish bundle on main\" step into a different file.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-08T21:40:37Z",
+    "deletions": 49,
+    "labels": [],
+    "mergedAt": "2026-07-09T20:57:38Z",
+    "number": 4654,
+    "title": "Publish reproducibility references on merge instead of via a main build"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThey are useful diagnostics. After review I will merge it manually since it only changes diagnostics.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T23:05:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-09T23:23:22Z",
+    "number": 4674,
+    "title": "add eddy diffusivity to default diagnostics"
+  }
+]
