@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "## Summary\n- Pin JuliaFormatter to an exact version (`2.10.1`) in the formatter GitHub Action, `test/Project.toml`, and the README so formatting is reproducible across CI and local runs.\n- Reformat the codebase with JuliaFormatter v2.10.1 (whitespace/style only, no logic changes).\n\nSee [Pinning the JuliaFormatter version](https://juliaeditorsupport.github.io/JuliaFormatter.jl/stable/status/#Pinning-the-JuliaFormatter-version) for why pinning is recommended.\n\n## Test plan\n- [x] `git diff` reviewed \u2014 formatting-only changes\n- [ ] CI passes",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T21:15:51Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-07-10T21:59:08Z",
+    "number": 231,
+    "title": "Pin JuliaFormatter to v2.10.1"
+  },
+  {
+    "additions": 60,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "On `main`, the current implementation of `read!` is calling `read` and using the array to fill out `dest`. For example, it looks like this:\r\n\r\n```julia\r\ndest .= FileReaders.read(file_reader, date)\r\n```\r\n\r\nThis is not a good pattern because the right hand side still allocates a temporary array. This PR changes this by implementing `read` by allocating the destination array and calling `read!` with it.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T18:27:29Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2026-07-10T22:20:28Z",
+    "number": 228,
+    "title": "Remove unnecessary allocations in read and read!"
+  }
+]

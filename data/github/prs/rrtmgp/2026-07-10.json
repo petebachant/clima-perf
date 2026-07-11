@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 831,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Completes the RRTMG conceptual redesign: a one-line path to run RRTMGP without a host model, for teaching and single-column experiments. Additive; no changes to the existing solver or getter API.\r\n\r\n**`prepare_atmosphere!(solver)`** exposes the input-preparation cascade (level interpolation \u2192 isothermal boundary layer \u2192 clipping \u2192 column amounts) as a callable step, so hosts can inspect the prepared state without solving. `update_fluxes!` is now literally `prepare_atmosphere!` followed by the solve/combine steps \u2014 the prepare/solve split familiar from other radiation drivers.\r\n\r\n**`standard_atmosphere(FT; kind)`** builds an idealized clear-sky `AtmosphereProfile` (`:tropical`, `:midlatitude_summer`, `:subarctic_winter`) \u2014 analytic two-segment temperature, exact hydrostatic pressure, idealized water vapor/ozone, present-day well-mixed gases.\r\n\r\n**`solve(profile; method)`** solves it in one call, returning a documented **`RadiationOutput`** struct with stable field names (`lw_up` \u2026 `sw_direct_dn`, `net`, `heating_rate`, `solver`). Default `ClearSkyRadiation` (needs lookup tables); `GrayRadiation` runs after a bare `using RRTMGP` with no NetCDF. `solve_gray` now returns the same struct (its old NamedTuple used identical names, so access is unchanged).\r\n\r\n```julia\r\nusing RRTMGP, NCDatasets\r\nout = RRTMGP.solve(RRTMGP.standard_atmosphere(Float64; kind = :tropical))\r\nout.net; out.heating_rate\r\n```\r\n\r\n**Docs**: new \"Fortran and paper concordance\" page mapping RRTMGP.jl names \u2192 reference `rte-rrtmgp` `mo_*`/`ty_*` modules and kernels \u2192 the papers whose equations they implement, so Fortran-literate readers can navigate the code.\r\n\r\nStacked on #606 (`ts/kernel-refactor`).",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T01:12:39Z",
+    "deletions": 106,
+    "labels": [],
+    "mergedAt": "2026-07-10T00:00:07Z",
+    "number": 604,
+    "title": "Standalone front door + Fortran concordance docs (#4)"
+  },
+  {
+    "additions": 831,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Brings the standalone / single-column (\"Layer-3\") RRTMGP work onto `main`. This is the content that was merged into `ts/kernel-refactor` via #604; here it is retargeted at `main` as a clean, linear branch (`main` is a direct ancestor of the tip, so there is no merge commit and no conflicts).\r\n\r\n## What's included (5 commits)\r\n\r\n- **`prepare_atmosphere!`** \u2014 the prepare/solve split, so hosts can inspect the prepared atmospheric state without solving (W5, part 1).\r\n- **`standard_atmosphere`, `solve(profile)`, `RadiationOutput`** \u2014 the standalone single-column entry points that need no ClimaCore (W5, part 2).\r\n- **Fortran-and-paper concordance docs page** \u2014 maps RRTMGP.jl names to the RTE-RRTMGP `mo_*`/`ty_*` names and the paper equations.\r\n- **Code deduplication and robustness increases** \u2014 shared `compute_gas_optics_core`, stored per-band `flux_net`, shortwave two-stream resonance/energy-conservation robustness.\r\n- **Lookup-sourced temperature clip bounds** \u2014 read the clip range from the lookup tables' reference temperatures (`t_ref_min`/`t_ref_max`) instead of ClimaParams, and remove the now-unused `optics_lookup_temperature_min/max` parameters.\r\n\r\n## Notes\r\n\r\n- Docbuild-critical fixes are already in the content: the `compute_gas_optics` docstring is on the public method and `get_t_min` is listed in `docs/src/api.md`, so the docs `missing_docs`/`docs_block` checks pass.\r\n- One intermediate commit message has a typo (\"tempe**Get**\" \u2192 \"temperature\"); harmless if this PR is squash-merged.",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T00:16:23Z",
+    "deletions": 106,
+    "labels": [],
+    "mergedAt": "2026-07-10T01:15:40Z",
+    "number": 608,
+    "title": "Standalone single-column RRTMGP path (prepare/solve split, standard_atmosphere, RadiationOutput)"
+  }
+]

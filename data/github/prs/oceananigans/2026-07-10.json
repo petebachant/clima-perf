@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "See https://github.com/NumericalEarth/NumericalEarth.jl/pull/405#discussion_r3538799666 for context\r\n\r\nSets every time slice of an in-memory `FieldTimeSeries` to a constant, e.g. `set!(fts, 0)`. Previously only per-slice `set!(fts[n], value)` / `set!(fts, value, n)` worked.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-07T20:29:22Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-07-10T03:36:01Z",
+    "number": 5773,
+    "title": "Add `set!(::FieldTimeSeries, ::Number)`"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "* build DCT twiddle factors in the grid's precision: Metal cannot store ComplexF64, and this also avoids mixed-precision broadcasts on Float32 CUDA/AMDGPU grids\r\n* use integer arithmetic in the DCT index permutations: integer / produces Float64, which Metal kernels cannot compile; i \u00f7 2 == trunc(i/2) and (N + 1) \u00f7 2 == ceil(N/2) exactly, and this retires the unsafe_trunc workaround from #997\r\n* make the Poisson test helpers allocate in eltype(grid) and test the FFT and Fourier-tridiagonal solvers on Metal\r\n\r\nChanges in preparation for Metal support for FFT-based Poisson solvers.  Taken out of #5782 because these changes are generic fixes, although strictly needed only for Metal GPUs, and can be reviewed separately from adding support for Poisson solvers.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T13:51:32Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2026-07-10T23:25:35Z",
+    "number": 5783,
+    "title": "Misc fixes for better type-generic support"
+  }
+]
