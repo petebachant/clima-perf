@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "I tested it in nightly AMIP:\r\n- All simulations were stable\r\n- The bias is slightly larger\r\n- The simulation with prognostic EDMF 1M integrated land was 2 hours faster.\r\n\r\nI think we should change the defaults to always use it.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T17:03:32Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-11T00:36:11Z",
+    "number": 4670,
+    "title": "Change the default: update_cache_every step"
+  },
+  {
+    "additions": 108,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nIn the buoyancy-limited branch of the mixing-length closure (`l = l_N`), local TKE balance reduces to a threshold Richardson number for TKE production:`Ri_c = c_m\u00b7c_b/c_d`. Only this combination of the three mixing-length coefficients controls the stable-regime cutoff for turbulence maintenance. Calibrating `(c_m, c_b, c_d)` independently leads to correlated parameters and possibly unphysical `Ri_c`. The current default values (`c_m = 0.56`, `c_b = 0.4`, `c_d = 0.22`) imply `Ri_c \u2248 1.0`, above the literature range of 0.2\u20130.3, without that being visible.\r\n\r\nThis PR reparameterizes to `(c_m, c_b, Ri_c)` and **derives** `c_d = c_m\u00b7c_b/Ri_c`.\r\n\r\n## Why this basis is better conditioned\r\n\r\nSince `c_m/c_d = Ri_c/c_b`, neutral-equilibrium TKE (`\u221d c_m/c_d`) becomes independent of `c_m`. Each parameter then is more directly tied to an observable:\r\n- `Ri_c`: stability cutoff for turbulence maintenance (direct literature priors);\r\n- `c_b`: partitions TKE amplitude against the buoyancy length;\r\n- `c_m`: flux-magnitude scaling.\r\n\r\n## Implementation\r\n\r\n- `Ri_c` is read from the **existing** ClimaParams parameter `mixing_length_Ri_crit` (default 0.25); the parameter otherwise is unused across CliMA FWIK.\r\n- `c_d` is derived in `TurbulenceConvectionParameters` construction. Explicit `tke_diss_coeff` overrides still take precedence; **TOML overrides of `mixing_length_diss_coeff` no longer have any effect**; set `mixing_length_Ri_crit` instead.\r\n- All TOMLs overriding the coefficients are converted: the `c_m = 0.56` EDMF family pins `Ri_c = 1.0181818181818183` (preserving `c_d = 0.22` and making the implied high `Ri_c` of the current calibration explicit); the calibrated experiment TOMLs replace their `c_d` values with the equivalent `Ri_c`; the `gcm_driven_scm` calibration priors now target `mixing_length_Ri_crit` (mean 0.25, same relative width as the old `c_d` prior; a prior range 0.2-0.5 is reasonable).\r\n- Unit tests cover the derivation, the TOML override path.\r\n\r\n## Behavior\r\n\r\n- Configurations using the converted TOMLs: preserved.\r\n- Configurations at ClimaParams defaults: derived `c_d = 0.14\u00b70.4/0.25 = 0.224` instead of 0.22 (+1.8 % dissipation): tiny behavioral change, ref counter bumped.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T15:11:59Z",
+    "deletions": 47,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-11T05:00:56Z",
+    "number": 4678,
+    "title": "Reparameterize TKE dissipation via a critical Richardson number (c_d = c_m c_b / Ri_c)"
+  }
+]
