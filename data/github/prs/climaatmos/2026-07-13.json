@@ -1,0 +1,152 @@
+[
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR adds a read-only depot that gets rebuilt every night to stay up-to-date with the `.buildkite` Manifest. This is meant to enable the current quick precompilation while preventing failures caused by concurrent writes to the shared depot. Closes #4612 \r\n\r\n## Corea idea:\r\nEach build reads from the shared depot, and write any changes it needs to its own depot. This is controlled via the environment variable:\r\n```\r\n  JULIA_DEPOT_PATH: \"${BUILDKITE_BUILD_PATH}/${BUILDKITE_PIPELINE_SLUG}/${BUILDKITE_BUILD_NUMBER}/depot:${BUILDKITE_BUILD_PATH}/${BUILDKITE_PIPELINE_SLUG}/depot/shared\"\r\n```\r\nSee [Julia docs](https://pkgdocs.julialang.org/dev/depots/#Setting-up-shared-depots-for-multi-user-systems) for more.\r\n\r\nThe depot is managed by the new `depot_pipeline.yml`, which runs nightly at https://buildkite.com/clima/atmos-depot. The three most recent depots are stored. When a new depot is built, it is swapped out atomically so this should not cause errors in CI.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABG1rBdw",
+        "number": 4612,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4612"
+      }
+    ],
+    "createdAt": "2026-07-09T23:27:16Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-13T15:02:26Z",
+    "number": 4675,
+    "title": "Add read-only depot that gets rebuilt periodically"
+  },
+  {
+    "additions": 131,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Diffuses the prognostic updraft variables horizontally, mirroring `edmfx_vertical_diffusion` with the mixing length limited by the horizontal node spacing: moist static energy and total specific humidity at `K_h`, and the updraft SGS tracers at `\u03b1_vert_diff_tracer \u00b7 K_h`, all weighted by the updraft density. The updraft dry-air mass is unchanged by the water flux, so `\u03c1a` receives the counterpart tendency `\u03c1a/(1 \u2212 q_tot)` times the `q_tot` tendency, mirroring the hyperdiffusion treatment. Always explicit; enabled by the opt-in `edmfx_horizontal_diffusion` config option (default `false`), separate from the grid-mean `edmfx_sgs_horizontal_diffusive_flux` option in the same way `edmfx_vertical_diffusion` is separate from `edmfx_sgs_diffusive_flux`.\n\nExtends the tests: horizontally uniform updraft fields produce no tendency, perturbed fields produce one with the stated `\u03c1a`/`q_tot` pairing, and the single-column tendency is identically zero.\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T01:15:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-07-13T17:50:40Z",
+    "number": 4659,
+    "title": "feat(edmfx): add horizontal diffusion of prognostic EDMFX updrafts"
+  },
+  {
+    "additions": 250,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Consolidates the diffusion code in two layers: how eddy diffusivities are computed, and how diffusive fluxes are applied.\n\n**Coefficient layer.** Extracts the TKE \u2192 mixing length \u2192 Prandtl \u2192 eddy viscosity/diffusivity chain, previously duplicated at seven sites, into a single `\u1d9ceddy_diffusivities!` function. Callers supply the mixing-length output field and optional `K_u`/`K_h` output fields, preserving each site's scratch slots and lazy or materialized policy; the closure inputs (`grid_scale`, `buoyancy_gradient`) pass through unchanged. The implicit-Jacobian scheme dispatcher is renamed `eddy_diffusivity_coefficients!` \u2192 `\u1d9cimplicit_diffusion_coefficients!` to distinguish it from the closure chain. Migrated sites: the vertical and horizontal EDMFX SGS diffusive fluxes, the vertical and horizontal updraft diffusion, the TKE tendency for both EDMF models, and the diffusion Jacobian coefficients.\n\n**Flux-application layer.** Adds two shared zero-flux boundary-condition divergence operators (`\u1d9cdiffdiv\u1d65`, `\u1da0diffdiv\u1d65_u\u2083`, next to the existing operator constants in `abbreviations.jl`) and two lazy helpers (`\u1d9cdiffusive_flux_divergence\u1d65`, `\u1da0total_enthalpy_gradient\u1d65`), then migrates the five vertical diffusion sites that rebuilt these per function \u2014 vertical Smagorinsky\u2013Lilly, vertical AMD, `vertical_diffusion_boundary_layer_tendency!`, the EDMFX grid-mean SGS diffusive flux, and the EDMFX updraft vertical diffusion \u2014 one commit per site.\n\n**Behavior-preserving.** The coefficient-layer extraction reproduces each site's original expression, and every flux-application commit is bit-for-bit identical to its parent. The dynamics test group (`Prognostic equations`, `Tracer/mass transport consistency`, `EDMFX horizontal diffusive flux`) passes on this branch, and a new unit test (`test/diffusion_operators.jl`) pins the shared operators and helpers, including the diffusive-flux sign, at `Float32` and `Float64`.\n\n**Scope and limitations.** The diagnostics that recompute the closure fields lazily (`edt`, `evu`, `edth`, `evuh`) are deliberately not routed through the new function, which mutates scratch; unifying them needs either a lazy variant or cached diffusivity fields. A behavior-changing correction to the vertical-diffusion tracer scaling, surfaced by this refactor, is deferred to a follow-up PR. Unifying the tendency functions themselves (a per-direction driver over a declarative field table) is out of scope here.\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T16:22:03Z",
+    "deletions": 211,
+    "labels": [],
+    "mergedAt": "2026-07-13T17:50:41Z",
+    "number": 4669,
+    "title": "refactor(diffusion): consolidate the eddy-diffusivity pipeline and diffusive-flux application"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Replace the ad hoc Interpolations.jl interpolants in the ShipwayHill2012 initial condition (\u03b8 and q_tot) and the TRMM_LBA q_tot profile with ClimaInterpolations.Interpolation1D.Interpolate1D over SVector knots, following the pattern of #4664; the interpolants become isbits and evaluate inside a device broadcast, so these setups' center initial conditions can be built on a GPU space.\n\nThe CI environment manifest moves to AtmosphericProfilesLibrary 0.1.9, which provides isbits data-backed profiles (tke and sounding data) for the setups audited in #4664. The existing compat entry already admits it, and the pinned calibration experiment environments are unchanged.\n\nStacked on #4664. Validated on an A100: the audited setups construct isbits and the affected initial conditions evaluate in a GPU broadcast with CPU values unchanged.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T17:41:20Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-13T17:57:09Z",
+    "number": 4671,
+    "title": "fix(setups): make ShipwayHill2012 and TRMM_LBA profiles GPU-compatible"
+  },
+  {
+    "additions": 1371,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR enables us to skip redundant buildkite builds when the only PR in merge queue has already had CI run on its commit. Merge queue still requires a successful build for status checks, so we still run a minimal build. \r\n\r\n## Content\r\n\r\nThe large diff is misleading due to a rename, if you look at the commits separately you can see the changes more clearly.\r\n\r\n- Rename `pipeline.yml` to `full_pipeline.yml`. This is not necessary but makes it easier to revert.\r\n- Add script `.buildkite/should_skip_merge_queue.sh` which determine whether to skip CI or not. This skips the normal pipeline upload if it is in merge queue, the base commit is on main, the merge group tree is identical to the PR tree, and that the PR has a reproducibility bundle staged.\r\n- Add script `.buildkite/decide_pipeline.sh` which runs the `.buildkite/should_skip_merge_queue.sh` script to decide whether to upload the full pipeline. For now, to ensure it works properly, it just reports when it would have skipped the build, then uploads the full pipeline as before. \r\n- Add new `pipeline.yml` to run `.buildkite/decide_pipeline.sh`.\r\n\r\nSee dry run build https://buildkite.com/clima/climaatmos-ci/builds/30795#annotation-skip-ci",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T21:11:02Z",
+    "deletions": 1247,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-13T20:36:20Z",
+    "number": 4680,
+    "title": " Skip merge queue if only one up-to-date PR is being tested "
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "#4675 added a read-only depot. This made the Checkbounds job recompile its own compilecache, since `julia --check-bounds=yes` requires recompilation. This PR fixes it by precompiling the depot an additional time with the `--check-bounds` flag enabled.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-13T19:38:10Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-13T22:13:30Z",
+    "number": 4686,
+    "title": "Add separate depot precompilation for checkbounds job"
+  }
+]

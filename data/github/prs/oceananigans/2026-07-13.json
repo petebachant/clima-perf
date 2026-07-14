@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "the `buffer_*_parameters` are not returning concrete types because the `KernelParameters` are constructed by runtime-variables. This PR fixes the instability by computing the \"local direction\" from topologies which are compile-time constants and in turn allows the `buffer_*_parameters` functions to return fully concrete `KernelParameters`.\r\n\r\nThis is an instability which is hit only in asynchronous-distributed computations.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-01T17:17:02Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-07-13T16:48:43Z",
+    "number": 5748,
+    "title": "Remove type-instability in `buffer_*_parameters`"
+  },
+  {
+    "additions": 250,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The `multi_region` group takes ~1h44m on CPU, dominated by the cubed sphere simulation testset (~61 of ~96 min of test time), of which the two immersed-grid runs alone are ~40 min.\n\nThis splits that testset out of `test_multi_region_cubed_sphere.jl` into two new test groups that run as separate parallel Buildkite jobs:\n\n- `multi_region_simulation` \u2014 underlying-grid runs (~21 min)\n- `multi_region_simulation_immersed` \u2014 immersed-grid runs (~40 min)\n\n`multi_region` keeps the unit, advection-diffusion, and cubed-sphere geometry/halo tests (~36 min). The shared per-grid test body lives in `test_multi_region_cubed_sphere_simulation_utils.jl`, included by both drivers. No test content changed; `TEST_GROUP=all` still runs everything.\n\nNet effect: the critical path for these tests drops from ~1h44m to roughly the slowest of the three jobs (~40 min + setup), provided the agent queue has spare capacity.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-08T20:46:00Z",
+    "deletions": 199,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-07-13T20:24:24Z",
+    "number": 5775,
+    "title": "Speed up multi_region cubed sphere and zstar tests"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "`PerturbationAdvection` still had a face-field indexing for the left boundary conditions even when used with center fields. Somehow this didn't create any problems in the validation scripts and tests. I'm trying to come up with a MRE that catches this difference.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-03T13:14:43Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2026-07-13T22:42:17Z",
+    "number": 5767,
+    "title": "Bugfix in left center-field boundary conditions with `PerturbationAdvection` "
+  }
+]

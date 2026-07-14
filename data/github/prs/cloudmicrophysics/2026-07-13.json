@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 43,
+    "author": {
+      "id": "U_kgDOCixB3A",
+      "is_bot": false,
+      "login": "jefftyoder",
+      "name": "Jeffrey Yoder"
+    },
+    "body": "## Summary\n\n`INP_concentration_mean` for the `Frostenberg2023` immersion-freezing scheme\nignores the distribution's `a` and `b` coefficients \u2014 even though the struct\nstores them, the constructor reads them from `ClimaParams`\n(`Frostenberg2023_a_coefficient`, `Frostenberg2023_b_coefficient`), and the\ndocs describe them as the coefficients of Eq. (1). The marine-dataset curve is\neffectively hardcoded, so `a` and `b` are dead knobs: setting them in\n`ClimaParams` (e.g. to calibrate the INP curve) is a silent no-op.\n\n```julia\n# before \u2014 a, b never read\nfunction INP_concentration_mean((; T_freeze)::CMP.Frostenberg2023, T)\n    T_celsius = min(T - T_freeze, 0)\n    return 9log(-T_celsius / 10)\nend\n```\n\n## Fix\n\nImplement Eq. (1) of [Frostenberg et al. (2023)](https://doi.org/10.5194/acp-23-10883-2023),\nwhere `log(a \u00b7 INPC)` is normally distributed with mean\n`\u03bc(T) = log(-(b \u00b7 T_c / 10)^9)`. The mean `log(INPC)` this function returns is\ntherefore `\u03bc(T) - log(a) = 9 log(-b \u00b7 T_c / 10) - log(a)`.\n\n```julia\nfunction INP_concentration_mean((; T_freeze, a, b)::CMP.Frostenberg2023, T)\n    T_celsius = min(T - T_freeze, 0)\n    return 9log(-b * T_celsius / 10) - log(a)\nend\n```\n\nAt the defaults `a = 1 m\u00b3`, `b = 1 \u00b0C\u207b\u00b9` this reduces **exactly** to the\nexisting curve `log((-T_c / 10)^9)`, so default behavior is unchanged. The\nchange matches the equation already given in `docs/src/IceNucleation.md`, which\ndocumented `a`/`b` ahead of the implementation.\n\n## Relationship to `inpc_log_shift`\n\n`immersion_limit_rate` already accepts an additive `inpc_log_shift`. That knob\noverlaps with the `-log(a)` term but is temperature-independent, so it cannot\nreach the slope coefficient `b`; this change restores the paper's own `a`/`b`\nand composes cleanly with `inpc_log_shift`.\n\n## Tests\n\nAdded a `Frostenberg a/b coefficients` testset asserting the mean shifts by\n`-log(a)` and `+9 log(b)` and recovers the marine-dataset curve at the\ndefaults. This fails on `main` (where the mean is independent of `a` and `b`)\nand passes with this change.\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T19:15:55Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "2213f4",
+        "description": "Non equilibrium microphysics",
+        "id": "LA_kwDOFzm_uM8AAAACDB8CEQ",
+        "name": "NonEq \ud83d\udca7\ud83e\uddca"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      }
+    ],
+    "mergedAt": "2026-07-13T19:35:34Z",
+    "number": 758,
+    "title": "Use the Frostenberg 2023 `a` and `b` coefficients in `INP_concentration_mean`"
+  }
+]
