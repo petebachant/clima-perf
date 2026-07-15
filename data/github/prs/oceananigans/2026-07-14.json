@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "the substeps were not perfectly aligned with the baroclinic steps. This produces a (rather) small time delay on the barotropic mode. However, when introducing a forcing, this delay also destroys freshwater conservation.\r\nThis PR fixes it.\r\n\r\nMWE:\r\n```julia\r\ngrid = RectilinearGrid(size = (1, 1, 1), x = (0, 100), y = (0, 100), z = MutableVerticalDiscretization((-100, 0)))\r\nmodel = HydrostaticFreeSurfaceModel(grid; free_surface=SplitExplicitFreeSurface(grid; substeps=10), forcing=(; \u03b7 = (args...) -> 1e-2))\r\ntime_step!(model, 10)\r\n```\r\nThe free surface should increase by 10 cm given the forcing is 1e-2 m/s\r\n\r\non main\r\n```julia\r\njulia> model.free_surface.displacement\r\n1\u00d71\u00d71 Field{Center, Center, Face} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: Nothing, top: Nothing, immersed: Nothing\r\n\u251c\u2500\u2500 indices: (:, :, 2:2)\r\n\u2514\u2500\u2500 data: 3\u00d73\u00d71 OffsetArray(::Array{Float64, 3}, 0:2, 0:2, 2:2) with eltype Float64 with indices 0:2\u00d70:2\u00d72:2\r\n    \u2514\u2500\u2500 max=0.100909, min=0.100909, mean=0.100909\r\n```\r\n\r\non this PR\r\n```julia\r\njulia> model.free_surface.displacement\r\n1\u00d71\u00d71 Field{Center, Center, Face} on RectilinearGrid on CPU\r\n\u251c\u2500\u2500 grid: 1\u00d71\u00d71 RectilinearGrid{Float64, Periodic, Periodic, Bounded} on CPU with 1\u00d71\u00d71 halo\r\n\u251c\u2500\u2500 boundary conditions: FieldBoundaryConditions\r\n\u2502   \u2514\u2500\u2500 west: Periodic, east: Periodic, south: Periodic, north: Periodic, bottom: Nothing, top: Nothing, immersed: Nothing\r\n\u251c\u2500\u2500 indices: (:, :, 2:2)\r\n\u2514\u2500\u2500 data: 3\u00d73\u00d71 OffsetArray(::Array{Float64, 3}, 0:2, 0:2, 2:2) with eltype Float64 with indices 0:2\u00d70:2\u00d72:2\r\n    \u2514\u2500\u2500 max=0.1, min=0.1, mean=0.1\r\n```",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-13T09:40:43Z",
+    "deletions": 38,
+    "labels": [],
+    "mergedAt": "2026-07-14T11:40:47Z",
+    "number": 5788,
+    "title": "(0.110.10) Fix substeps alignment in `SplitExplicitFreeSurface`"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR fixes the ordering of `update_biogeochemical_state!` and `compute_tendencies!` in the `update_state!` method for the nonhydrostatic model. The change in ordering crept in in https://github.com/CliMA/Oceananigans.jl/pull/4811",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T16:29:32Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-07-14T21:57:12Z",
+    "number": 5791,
+    "title": "(0.110.11) Restores `update_state!` ordering for nonhydrostatic model"
+  }
+]

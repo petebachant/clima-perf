@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\n\n`compute_chi` computes the optimal `ci/ca` ratio (\u03c7) by blending a C3 and a C4 branch. The C4 intercellular CO\u2082 was computed with the **C3** dryness sensitivity `\u03be_c3` instead of `\u03be_c4`:\n\n```julia\nci_c3 = intercellular_co2_pmodel(\u03be_c3, ca_pp, \u0393star, VPD_safe)\nci_c4 = intercellular_co2_pmodel(\u03be_c3, ca_pp, \u0393star, VPD_safe)  # <- was \u03be_c3\n```\n\nSince `\u03be_c4 = sqrt(\u03b2_c4 * (Kmm + \u0393star) / (Drel * \u03b7star))` uses a much smaller unit-cost ratio (`\u03b2_c4` \u2248 `\u03b2_c3 / 9`), the C4 branch was getting the C3 \u03c7, biasing the blended \u03c7 toward C3 behavior at C4 and mixed C3/C4 cells.\n\n## Impact\n\n- `compute_chi` is consumed by the optimal-LAI model (`optimal_lai.jl`) for the water-limitation term, so the bias propagated into optimal LAI at C4/mixed cells.\n- The per-timestep GPP path (`compute_blended_pmodel_photosynthesis`) computes `ci_c3`/`ci_c4` correctly with their own \u03be and is **not** affected.\n- Pure-C3 cells (`fractional_c3 = 1`) are unaffected since the C4 branch is weighted out.\n\n## Change\n\nOne-line fix: use `\u03be_c4` for the C4 intercellular CO\u2082. Plus a NEWS entry.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T16:54:04Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-14T18:58:24Z",
+    "number": 1805,
+    "title": "Fix C4 dryness sensitivity typo in compute_chi"
+  }
+]

@@ -1,0 +1,99 @@
+[
+  {
+    "additions": 963,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Stacked on `ts/tests-docs` (docs branch); this PR is the performance work only.\r\n\r\n## Transition internal buffers to coalesced `(ncol, nlev)` layout \r\n\r\nBy switching internal storage layouts across optical properties (`TwoStream`, `OneScalar)`, thermal and solar source arrays (`SourceLW2Str`, `SourceLWNoScat`, `SourceSW2Str`), and radiative fluxes (`FluxLW`, `FluxSW`, `FluxBand`) from `(nlev, ncol)` to contiguous column-major `(ncol, nlev)` order, adjacent GPU warp threads perform consecutive, coalesced memory reads and writes (`stride-1` over `gcol`).\r\n\r\nThis preserves the public API and host data-exchange contract without adding runtime allocations or latency. All public getters (`lw_flux_up`, `lw_flux_dn`, `lw_flux_net`, `sw_flux_up`, `sw_flux_dn`, `sw_direct_flux_dn`, `sw_flux_net`, `net_flux`, `clear_*`, and all `spectral_*_flux_*` arrays) wrap internal buffers via `PermutedDimsArray(buffer, (2, 1))`. \r\n\r\nMeasured GPU speedups across uniform DYAMOND grids (86,400 horizontal columns \u00d7 63 vertical layers, 480 spectral g-points) on NVIDIA A100-SXM4-40GB:\r\n\r\nPer-kernel execution time comparison against baseline:\r\n- clear_sky_lw (Float32): 489.92 ms (down from 771.22 ms -> 0.64x / -36.4% reduction)\r\n- clear_sky_lw (Float64): 682.07 ms (down from 1049.30 ms -> 0.65x / -35.0% reduction)\r\n- clear_sky_sw (Float32): 455.41 ms (down from 464.95 ms -> 0.98x / -2.1% reduction)\r\n- clear_sky_sw (Float64): 639.97 ms (down from 653.72 ms -> 0.98x / -2.1% reduction)\r\n- all_sky_lw (Float32):   726.15 ms (down from 976.15 ms -> 0.74x / -25.6% reduction)\r\n- all_sky_lw (Float64):   992.34 ms (down from 1331.26 ms -> 0.75x / -25.5% reduction)\r\n- all_sky_sw (Float32):   671.15 ms (down from 843.34 ms -> 0.80x / -20.4% reduction)\r\n- all_sky_sw (Float64):   940.08 ms (down from 1097.44 ms -> 0.86x / -14.3% reduction)\r\n- all_sky_with_aerosols_lw (Float32): 797.79 ms (down from 1054.67 ms -> 0.76x / -24.4% reduction)\r\n- all_sky_with_aerosols_lw (Float64): 1096.99 ms (down from 1412.72 ms -> 0.78x / -22.3% reduction)\r\n- all_sky_with_aerosols_sw (Float32): 728.34 ms (down from 894.53 ms -> 0.81x / -18.6% reduction)\r\n- all_sky_with_aerosols_sw (Float64): 966.28 ms (down from 1173.98 ms -> 0.82x / -17.7% reduction)",
+    "changedFiles": 41,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-12T21:20:12Z",
+    "deletions": 372,
+    "labels": [],
+    "mergedAt": "2026-07-14T02:43:17Z",
+    "number": 610,
+    "title": "Performance: coalesced (ncol, nlev) internal layout for GPU speedups"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Bumps the version **0.21.9 \u2192 0.22.0** and rolls the NEWS `main` section into a `v0.22.0` heading.\r\n\r\nThis is the release commit for the work already merged to `main` (the API redesign in #608, the docs suite in #607, and the performance/dual-layout work in #610). No source changes here beyond `Project.toml` and `NEWS.md`",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T02:54:30Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-14T05:17:57Z",
+    "number": 612,
+    "title": "Release v0.22.0"
+  },
+  {
+    "additions": 75,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n\r\nDocuments copy-free flux getter, to make CPU branch allocation free\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T14:42:14Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-07-14T16:27:18Z",
+    "number": 613,
+    "title": "Allocation-free copy"
+  },
+  {
+    "additions": 4177,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose \r\n\r\n* Add DevGuides subtree\r\n* Update Readme to point to engineering guides, AGENTS.md\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 36,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T18:31:55Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-07-14T18:32:48Z",
+    "number": 614,
+    "title": "Ts/vendor dev guides"
+  },
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T19:51:54Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "012AD7",
+        "description": "Launch Buildkite run",
+        "id": "LA_kwDODGrFgs8AAAABcLc0wQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-14T22:51:19Z",
+    "number": 615,
+    "title": "add set_volume_mixing_ratio for well-mixed gases"
+  }
+]
