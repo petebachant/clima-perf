@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 437,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Our strain and stress formulation is not metric-aware: i.e. it's correct on a rectilinear grid, but it fails to conserve energy on a curvillinear grid. This PR introduces the SI3 formulation for strain and stress computed as a function of derived fields such as divergence $(\\delta)$ tension $(\\mathcal{T})$ and shear $(\\mathcal{S})$.\r\nIn particular the strain rate is computed as\r\n\r\n$$\\dot{\\epsilon}_{xx} = \\delta + \\mathcal{T}$$\r\n$$\\dot{\\epsilon}_{yy} = \\delta - \\mathcal{T}$$\r\n$$\\dot{\\epsilon}_{xy} = \\mathcal{S} / 2$$\r\n\r\nwhile the ice stress divergence is a function of the divergent stress invariant $\\sigma\\delta = \\sigma_{11} + \\sigma_{22}$, the tension component $\\sigma\\mathcal{T} = \\sigma_{11} - \\sigma_{22}$ and the tangential stress $\\sigma_{12}$.\r\nThis formulation satisfies the discrete energy budget of the momentum equation on curvilinear grids and is guaranteed to not inject numerical noise at the grid scale",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-12T16:22:51Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-07-15T07:12:23Z",
+    "number": 164,
+    "title": "Metric-aware formulation for strain and stress"
+  }
+]

@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Metal.jl 1.10 implements the AbstractFFTs API for MtlArray, so wire it\r\ninto the FFT machinery like the CUDA and AMDGPU extensions:\r\n\r\n* define plan_forward_transform/plan_backward_transform for MtlArray and\r\n  drop the ConjugateGradientPoissonSolver override, so regular grids get\r\n  FFTBasedPoissonSolver and stretched grids FourierTridiagonalPoissonSolver\r\n* test the FFT\r\n  and Fourier-tridiagonal solvers on Metal\r\n\r\n---\r\n\r\nThis was mainly a pattern-matching task (we already support FFT-based solvers on other GPUs, it was a matter of copying the same pattern), so I gave the pattern-matching machine a go.  I reviewed the changes, and they made sense to me, and in a couple of cases where it wasn't clear to me the motivation for the changes, for example in `src/Solvers/discrete_transforms.jl` and `src/Solvers/index_permutations.jl`, I got it to add explanatory comments, which seemed reasonable.  Metal-related tests seem to pass locally.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T09:22:24Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2026-07-15T08:20:30Z",
+    "number": 5782,
+    "title": "Add support for FFT-based Poisson solvers on Metal GPUs"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Let's see what's the situation nowadays.  I seem to remember Enzyme tests used to be the problem a few months ago, hopefully thins improved a little bit since then.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T23:32:01Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-07-15T10:45:53Z",
+    "number": 5786,
+    "title": "[CI] Run Enzyme/Reactant tests with Julia v1.11"
+  }
+]
