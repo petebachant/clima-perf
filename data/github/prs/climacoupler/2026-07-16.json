@@ -1,0 +1,109 @@
+[
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Closes #1992\r\n\r\nFollowing the update to ClimaOcean v0.10 (#1971), `stop_time` would default to `Inf` in the ocean/sea-ice models, which forced us to use `Float`s instead of `Date`s. [This PR](https://github.com/NumericalEarth/NumericalEarth.jl/pull/395) in NumericalEarth.jl enables us to set `stop_time` as a kwarg. \r\n\r\nThis PR:\r\n- [x] Updates how `clock` and `stop_time` are set in the ocean model\r\n- [x] Updates how `clock` and `stop_time` are set in the sea-ice model\r\n- [x] Re-enables `use_itime: true` in config files\r\n\r\nThis PR also fixes a completely unrelated bug in `experiments/test/compare_cmip.jl` that emerged from an update in NumericalEarth (see [this PR](https://github.com/NumericalEarth/NumericalEarth.jl/pull/346); ocean surface salinity is now passed as a `view` instead of with `interior`, changing how we need to define `_compare(v1, v2)` for `SubArray`s).",
+    "changedFiles": 10,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc8AAAABGePUag",
+        "number": 1992,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1992"
+      }
+    ],
+    "createdAt": "2026-06-30T23:50:12Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-16T16:44:33Z",
+    "number": 2006,
+    "title": "Re-enable ITime in ocean and sea-ice models"
+  },
+  {
+    "additions": 517,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "- ClimaCouplerClimaAtmosExt: query the radiation method via RRTMGP.radiation_method(solver) instead of reading the removed `.radiation_mode` field off the solver, which would throw on non-gray coupled runs (the neighboring flux accesses were migrated, this one missed).\r\n- Rename rrtmgp_model -> rrtmgp_solver to match ClimaAtmos.",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-15T21:48:42Z",
+    "deletions": 139,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-16T20:02:14Z",
+    "number": 2036,
+    "title": "Update RRTMGP API (includes gates for CMIP env compat with older version) "
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-16T20:18:16Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-16T20:26:59Z",
+    "number": 2043,
+    "title": "Restore tracking SurfaceFluxes main in nightly pipeline"
+  },
+  {
+    "additions": 100,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nUse SF 1.1.0\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-16T20:45:09Z",
+    "deletions": 95,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-16T22:26:45Z",
+    "number": 2044,
+    "title": "update Manifest for SF 1.1.0"
+  }
+]

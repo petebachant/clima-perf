@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Include entrainment of environment microphysics species when falling through a narrowing updraft.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-15T16:57:06Z",
+    "deletions": 40,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-16T19:44:32Z",
+    "number": 4693,
+    "title": "Different version of precipitation sedimentation"
+  },
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Consolidate the per-file vertical diffusive-flux implementations into a shared set of zero-flux boundary-condition operators and lazy flux helpers, and route the three vertical diffusion closures through them.\r\n\r\nTwo zero-flux boundary-condition operators are added to the abbreviations: `\u1d9cdiffdiv\u1d65` for the scalar-flux divergence (matching the `\u1da0grad\u1d65` output) and `\u1da0diffdiv\u1d65_u\u2083` for the vertical-momentum divergence, each with a zero top and bottom boundary. Two lazy flux helpers are added to the eddy-diffusion closures: `\u1d9cdiffusive_flux_divergence\u1d65` for the divergence of a single diffusive scalar flux `-\u2207\u00b7(\u03c1D \u2207\u03c7)`, and `\u1da0total_enthalpy_gradient\u1d65` for the dry-static-energy + water-enthalpy gradient.\r\n\r\nSmagorinsky-Lilly, anisotropic minimum dissipation (AMD), and the boundary-layer vertical diffusion now build their scalar, energy, and vertical-momentum tendencies from these shared operators and helpers.\r\n\r\nThe momentum-flux boundary-correction term is removed from Smagorinsky-Lilly and AMD. It is the divergence of a flux with a zero coefficient and a zero boundary value, so it evaluates to zero identically; the surface momentum flux is applied by `surface_flux_tendency!`.\r\n\r\nThe one behavioral change is the tracer-scaling selection in the boundary-layer vertical diffusion. The tracers that receive the `\u03b1_vert_diff_tracer` eddy-diffusivity scaling are now selected from the shared `gs_sedimenting_tracer_candidates` list instead of a hardcoded tuple of species. The previous tuple omitted the P3 sedimenting tracers `\u03c1n_ice`, `\u03c1q_rim`, and `\u03c1b_rim`, which were diffused with the unscaled `K_h`; they now receive the scaled diffusivity, so the tracer diffusivity scaling is consistent across the boundary-layer diffusion, the EDMFX SGS flux, the EDMFX updraft vertical diffusion, and the implicit Jacobian, which already use that list.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-16T08:19:06Z",
+    "deletions": 77,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-16T20:13:57Z",
+    "number": 4699,
+    "title": "refactor(diffusion): consolidate vertical diffusive-flux operators and helpers"
+  }
+]
