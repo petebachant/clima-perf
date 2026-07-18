@@ -1,0 +1,74 @@
+[
+  {
+    "additions": 126,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "## Summary\n\nThis PR makes conservative regridding a live Oceananigans field operation instead of a one-time copied snapshot.\n\nThe new operation recomputes its source and remaps it whenever Oceananigans needs a fresh value. It therefore works naturally inside fields, integrals, and output writers.\n\nTwo constructors are available:\n\n- `RegriddedField(source, destination_grid)` creates the destination field and conservative regridder automatically.\n- `RegriddedField(destination, regridder, source)` lets advanced callers allocate or reuse them explicitly.\n\n```julia\nheat_budget = RegriddedField(native_heat_budget, latitude_longitude_grid)\noutputs = (; heat_budget)\n\nJLD2Writer(model, outputs;\n           schedule = AveragedTimeInterval(1day),\n           filename = \"heat_budget\")\n```\n\nA `TimeInterval` schedule writes the latest remapped value. An `AveragedTimeInterval` schedule samples and averages the live remapped value through the usual Oceananigans output machinery.\n\n## Implementation\n\nThe operation type is `RegriddedOperation` and remains in the optional `OceananigansConservativeRegriddingExt`. ConservativeRegridding owns the geometric weights and remapping, while Oceananigans supplies operation-tree integration and architecture adaptation.\n\n## Validation\n\nTests change the source several times and verify that both constructor forms refresh the conservative remapping. Local checks included diff validation, Julia syntax parsing, extension loading, and constructor registration. Full tests are left to GitHub Actions.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-15T07:10:02Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-17T02:52:46Z",
+    "number": 5792,
+    "title": "Add lazy regridding fields"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\r\n\r\n`create_nccl_comm_from_mpi` crashes on ARM (e.g. NVIDIA GH200 / Neoverse V2) with:\r\n\r\n```\r\nInexactError: convert(UInt8, -10)\r\n```\r\n\r\n**Root cause:** In `nccl_communicator.jl`, the `ncclUniqueId` is reconstructed using:\r\n\r\n```julia\r\nnccl_internal = ntuple(i -> reinterpret(Int8, id_bytes[i]), Val(128))\r\n```\r\n\r\nOn x86_64, `Cchar = Int8`, so this is fine. On aarch64, C's `char` is unsigned by default,\r\nso `Cchar = UInt8`. `reinterpret(Int8, ::UInt8)` throws `InexactError` for any byte \u2265 128.\r\n\r\n**Fix:** Use `% Cchar` \u2014 a portable bit-reinterpretation equivalent to a C cast `(char)byte`:\r\n\r\n```julia\r\nnccl_internal = ntuple(i -> id_bytes[i] % Cchar, Val(128))\r\n```\r\n\r\nWorks correctly on both x86_64 (`Cchar = Int8`) and aarch64 (`Cchar = UInt8`).\r\n\r\n## Test plan\r\n\r\n- [ ] Confirmed fix resolves crash on GH200 aarch64 (Neoverse V2, Julia 1.12)\r\n- [ ] No change in behavior on x86_64 (`% Cchar` is identity for `UInt8` values < 128, correct reinterpretation for values \u2265 128)\r\n\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-02T17:10:09Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-07-17T07:42:08Z",
+    "number": 5755,
+    "title": "Fix Cchar portability in NCCLCommunicator for aarch64"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This PR [likely causes a segfault](https://github.com/CliMA/Oceananigans.jl/pull/5765#issuecomment-5003649002).  Note that [the distributed tests never ran on the original PR](https://buildkite.com/clima/oceananigans-distributed/builds?branch=aklocker%2Ffix-nccl-bool-dtype).\r\n\r\nReverts CliMA/Oceananigans.jl#5765",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-17T13:20:21Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-07-17T20:45:37Z",
+    "number": 5802,
+    "title": "Revert \"Fix NCCL send/recv for Bool fields (ImmersedBoundaryGrid mask)\""
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> NCCL has no ncclDataType_t for Bool, so communicating Bool arrays (e.g. the GridFittedBoundary mask) crashes with a MethodError. Reinterpret Bool buffers as UInt8 before passing to NCCL.Send/Recv! since Bool is 1 byte and UInt8 is a supported NCCL dtype.\r\n\r\nReopening #5765, this time targeting the right branch.\r\n\r\n***NOTE***: wait for the distributed tests (and the NCCL one in particular) to finish successfully before merging!",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-17T21:09:52Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-07-17T23:09:06Z",
+    "number": 5804,
+    "title": "Fix NCCL send/recv for Bool fields (ImmersedBoundaryGrid mask)"
+  }
+]
