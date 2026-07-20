@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 5064,
+    "author": {
+      "id": "MDQ6VXNlcjI3OTk5MjAx",
+      "is_bot": false,
+      "login": "ray-chew",
+      "name": ""
+    },
+    "body": "## Purpose\r\nAdd a Beres et al. (2004) convective gravity-wave source to the Alexander\u2013Dunkerton (1999) non-orographic GW scheme, coupled to prognostic EDMFX. The convective source is additive: AD99 supplies the background broad spectrum everywhere, and Beres supplies a convective spectrum whose shape and amplitude are set by EDMF heating. Each source is launched and broken independently (each with its own intermittency), so deposition is computed twice per column with active convective gravity waves.\r\n\r\nThe Beres scheme is enabled with `non_orographic_gravity_wave: true` + `nogw_beres_source: true` (requires EDMF).\r\n\r\n## Content\r\n- **Beres convective source** (`src/parameterized_tendencies/gravity_wave_drag/non_orographic_gravity_wave.jl`):   launches at the convective envelope top; the heating amplitude `Q0` is derived from  the EDMF updraft mass-flux divergence (in-cloud amplitude with cloud coverage/area fraction weighting).\r\n- **Unified Beres/AD99 kernel** with a moment-matched half-sine heating envelope.\r\n- **Steady (\u03bd \u2248 0) stationary-wave component**, triggered by choice of the phase speed `c` grid, now always computed and  deposited at `c \u2248 0`.\r\n- **Optional canonical latent heating** (`nogw_beres_heating_latent`, requires   `microphysics_model: 1M`) as an alternative to the dry static energy flux-divergence Yanai-Q\u2081 source. \r\n- **Parameters migrated to ClimaParams TOML** under the `nogw_beres_*` prefix  (`sigma_x`, `nu_min/max`, `h_heat_min`, `Q0_threshold`, `scale_factor`, \u2026).\r\n- **Diagnostics**: the CliMA dycore gets only `utendnogw`/`vtendnogw`. The source-internal verification fields (e.g., `Q0`, `h_heat`, `z_bot/z_top`, `a_cover`, `Q_conv`, half-sine,  launched-spectrum summaries) are activated by toggling `nogw_beres_detailed_diagnostics`.\r\n- **Docs** are now split into `non_orographic_gravity_wave.md` and `orographic_gravity_wave.md`, as the gravity wave documentation files are getting longer.\r\n- **Tests / CI**: unit, single-column, and sphere-integration suites, plus two Buildkite jobs and the `single_column_beres_nogw_test` / `beres_squall_integration_test` model configs.\r\n- **`ref_counter`** updated as the steady-source phase-speed grid (`cmax/dc = 125`) shifts the NOGW bins for every NOGW run (AD99 included).\r\n\r\n## Tuning note\r\n`nogw_beres_scale_factor` (\u03b1) is the one free amplitude knob. Separate tuning for \u03c1\u2080/(L\u03c4), the |Q\u0302|\u00b2 weight, and tuning are all combined into this one tuning parameter. It may need calibration so the Beres convective and AD99 background spectra sit at comparable magnitudes.\r\n\r\n## Verification\r\nThe 9-panel moment-matching figure below shows the half-sine source centroid tracking the EDMF in-cloud heating, with sensible drag in the deposition panels for an instantaneous snapshot at day 120 of a 0M aquaplanet free run with prognostic EDMF.\r\n\r\n<img width=\"2400\" height=\"1600\" alt=\"image\" src=\"https://github.com/user-attachments/assets/0613760d-d171-4961-aafd-8a90b677c8fe\" />\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-20T08:10:45Z",
+    "deletions": 596,
+    "labels": [
+      {
+        "color": "B9F512",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs8AAAABVTK-eA",
+        "name": "gravity wave"
+      }
+    ],
+    "mergedAt": "2026-07-19T06:34:57Z",
+    "number": 4382,
+    "title": "Convective gravity wave source based on Beres et al. (2004) driven by the prognostic EDMF scheme"
+  }
+]
