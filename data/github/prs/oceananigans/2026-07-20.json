@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Follows up on the discussion in #5794.\n\n## FFT pressure solver warning\n\nIn https://github.com/CliMA/Oceananigans.jl/issues/5794, a user built the `ConjugateGradientPoissonSolver` suggested by the warning but did not pass it into the model, silently keeping the approximate FFT solver (which produced a garbage solution for a sloping top boundary). The warning now also shows the model construction step:\n\n```\nusing Oceananigans.Solvers: ConjugateGradientPoissonSolver\npressure_solver = ConjugateGradientPoissonSolver(grid)\nmodel = NonhydrostaticModel(grid; pressure_solver)\n```\n\nThe corresponding doctest output in `docs/src/models/boundary_conditions.md` is updated to match.\n\n## Error for `GridFittedBoundary` with a free surface\n\nAs noted in https://github.com/CliMA/Oceananigans.jl/issues/5794#issuecomment-5012064390, `HydrostaticFreeSurfaceModel` should fail with a `GridFittedBoundary` that immerses the top of the domain, which the free surface machinery does not support.\n\nFollowing review, support for `GridFittedBoundary` in `HydrostaticFreeSurfaceModel` with a free surface is discontinued entirely: any mask the free surface machinery supports is exactly representable with `GridFittedBottom` or `PartialCellBottom`, so the constructor now throws an `ArgumentError` directing users there (fully immersed columns like lateral walls or land masks are built with a bottom height equal to the top of the domain). `PrescribedVelocityFields` configurations (no free surface) still construct, including with an immersed top (used e.g. in Lagrangian particle tests).\n\nIn-repo users of `GridFittedBoundary` with a free surface are migrated to `GridFittedBottom`: the hydrostatic immersed boundary bump test, the immersed tracer conservation test wall, and the circular wall in the polar vortex crystal example. Tests are added for both the throwing and non-throwing cases.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-18T17:47:35Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2026-07-20T00:41:55Z",
+    "number": 5807,
+    "title": "Clarify FFT pressure solver warning and error on immersed cells above wet cells in `HydrostaticFreeSurfaceModel`"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjk4MjQyNDQ=",
+      "is_bot": false,
+      "login": "Pangoraw",
+      "name": "Paul Berg"
+    },
+    "body": "goes from TracedRNumber{Float64} to Float64.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-06T09:37:59Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-20T11:52:53Z",
+    "number": 5770,
+    "title": "Unwrap FT in adapt_structure for OrthogonalSphericalShellGrid"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "This resolves #5752, which was causing errors for distributed gpu workflows. The fix was to use `Oceananigans.Architectures.device_copy_to!` instead of `Base.copyto!` in the `set_array` function.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABHcm2Xg",
+        "number": 5752,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5752"
+      }
+    ],
+    "createdAt": "2026-07-02T13:33:55Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2026-07-20T15:49:09Z",
+    "number": 5753,
+    "title": "Fix scalar indexing of GPUs when resizing immersed boundaries"
+  }
+]
