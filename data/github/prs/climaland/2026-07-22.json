@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Now (this PR)\n\n<img width=\"3600\" height=\"3200\" alt=\"FlagshipCarbonMetrics_sim_annual_time_avg_over_all_years\" src=\"https://github.com/user-attachments/assets/43a8db77-2755-418a-9e59-05a19798b775\" />\n\n## Before this PR\n\n<img width=\"3600\" height=\"3200\" alt=\"image\" src=\"https://github.com/user-attachments/assets/277055e7-4996-43e2-9c8d-6dab9b0bbfb8\" />\n\n## Problem\n\nLAI is *prescribed from MODIS*, so the leaderboard's SIM and OBS LAI should be ~1:1 \u2014 but the MON lines were visibly offset.\n\n**Root cause (temporal convention mismatch):** the model's `lai` diagnostic is a calendar-monthly **mean** dated at the month start, which effectively represents mid-month. `get_modis_lai_obs_var` built the obs as an instantaneous **month-start snapshot**, which the mean leads by ~half a month \u2014 so SIM ran high on the spring green-up and low on the autumn senescence, even though sim and obs come from the same MODIS files. It is **not** a mask issue.\n\nThe other leaderboard variables already date their obs at the month start (`transform_dates!(firstdayofmonth)`); LAI was the only snapshot.\n\n## Fix\n\nSample the linearly-interpolated MODIS at the **middle of each fully observed calendar month** and label it at the **month start**. For this near-piecewise-linear product the mid-month value equals the true monthly mean to **< 0.002 m\u00b2 m\u207b\u00b2**, while the month-start snapshot differs by **0.218 m\u00b2 m\u207b\u00b2**.\n\nThe MON lines now sit on top of each other, and global bias is **\u22120.0055 m\u00b2 m\u207b\u00b2** (\u22480, unchanged \u2014 the fix is a seasonal-phase correction that cancels in the annual mean).\n\nPer @ph-kev's review, the relabel goes through `ClimaAnalysis.transform_dates` like the other loaders, with the month selection and midpoint split into `_fully_observed_month_starts` and `_mid_month`. That refactor is behavior-preserving (bitwise identical), so the numbers above are unaffected.\n\n## Residual RMSE (~0.34 m\u00b2 m\u207b\u00b2) \u2014 expected, not reducible\n\nModel and MODIS share the 1\u00b0\u00d71\u00b0 resolution, so there is no resolution loss. But the grids are registered a half-cell apart (model at integer degrees, MODIS centers at half-integer), and the model ingests MODIS **nearest-neighbor** while the leaderboard resamples obs **bilinear**. The residual is a zero-mean dipole hugging sharp LAI boundaries (Amazon/Congo rims, forest\u2013savanna edges, coasts): interior cells agree to ~0.08, top-quartile-gradient cells carry ~0.64, `corr(|SIM\u2212OBS|, |\u2207LAI|) = 0.76`. Matching the obs to nearest-neighbor makes it **worse** (0.56); reaching ~0 would require passing obs through the model's exact regrid chain, defeating the point of an independent obs.\n\nThe same floor exists for other variables, but their RMSE is dominated by genuine physical model-vs-obs differences (ER 1.29, NEE 1.27, GPP 0.83 g m\u207b\u00b2 day\u207b\u00b9) \u2014 the signal the leaderboard is meant to show. LAI is the only prescribed variable, hence the only one where a non-physical floor matters.\n\n## Note on scope\n\n`get_modis_lai_obs_var` also backs the LAI calibration target, so this shifts that target by up to ~0.2 m\u00b2 m\u207b\u00b2 in some cells/seasons. Correct direction, but flagging it for in-flight LAI calibrations.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-14T18:36:20Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-22T22:14:36Z",
+    "number": 1806,
+    "title": "Build leaderboard/calibration MODIS LAI obs as a monthly mean"
+  }
+]

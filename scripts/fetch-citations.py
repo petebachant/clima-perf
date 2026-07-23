@@ -398,6 +398,24 @@ def main() -> int:
         f"{sum(1 for s in sources if not s['doi'])} without)"
     )
 
+    # A zero-entry parse means the page is unreachable, redirected, or its
+    # structure changed (e.g. moved to a private site) — never that CliMA
+    # genuinely has no publications. Overwriting the tables here would wipe the
+    # whole dataset (and cascade every citation subgraph out of existence),
+    # breaking the downstream analyze notebook. Bail out and keep the last-good
+    # committed tables instead, leaving the marker untouched so the next run
+    # retries. This mirrors the per-pub carry-forward below for transient
+    # OpenAlex resolution failures.
+    if not sources:
+        print(
+            "WARN: parsed 0 publication entries from "
+            f"{PUBLICATIONS_URL} — keeping the existing "
+            f"{len(cached_resolved)} resolved pubs and skipping this run "
+            "rather than clobbering the dataset with empty tables.",
+            file=sys.stderr,
+        )
+        return 0
+
     print("Resolving CliMA pubs against OpenAlex...")
     clima_extras_rows: list[dict] = []
     new_resolved: dict[str, dict] = {}

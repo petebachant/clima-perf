@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjIyMjM3NzUx",
+      "is_bot": false,
+      "login": "alephpiece",
+      "name": "one"
+    },
+    "body": "This fixes a small typo in the AMDGPU device-selection method that prevents distributed AMD GPU configurations from initializing. The method takes `i` as its device index, but was using the undefined variable `id`. Since Oceananigans uses zero-based indices while AMDGPU uses one-based indices, the correct call is `AMDGPU.device_id!(i + 1)`.\r\n\r\nI also added a regression test for the index conversion.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-21T03:45:42Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-22T06:43:13Z",
+    "number": 5810,
+    "title": "Fix AMDGPU device index mapping"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Currently we have\r\n```julia-repl\r\njulia> using Oceananigans\r\n\r\njulia> unique(Base.return_types(Oceananigans.Advection.needs_implicit_solver, (NamedTuple,)))\r\n1-element Vector{Any}:\r\n Union{Missing, Bool}\r\n\r\njulia> unique(Base.return_types(Oceananigans.Advection.needs_implicit_solver, (Any,)))\r\n2-element Vector{Any}:\r\n Bool\r\n Union{Missing, Bool}\r\n```\r\nbecause [`any`](https://docs.julialang.org/en/v1/base/collections/#Base.any-Tuple%7BAbstractArray,%20Any%7D) follows the [three-valued logic](https://en.wikipedia.org/wiki/Three-valued_logic) and it _may_ return `missing` in some cases, but we know we only have booleans here, so we need to give the compiler a nudge to know that.  With the proposed change:\r\n```julia-repl\r\njulia> using Oceananigans\r\n\r\njulia> unique(Base.return_types(Oceananigans.Advection.needs_implicit_solver, (NamedTuple,)))\r\n1-element Vector{Any}:\r\n Bool\r\n\r\njulia> unique(Base.return_types(Oceananigans.Advection.needs_implicit_solver, (Any,)))\r\n1-element Vector{Any}:\r\n Bool\r\n```\r\n\r\nIssue detected by using JETLS.jl downstream in Breeze.jl.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-18T09:50:35Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-22T09:14:47Z",
+    "number": 5806,
+    "title": "Improve type inference for `Advection.needs_implicit_solver`"
+  }
+]
