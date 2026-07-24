@@ -1,0 +1,97 @@
+[
+  {
+    "additions": 2728,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR introduces a generic framework for driving single-column simulations from netCDF forcing datasets.\r\n\r\nKey changes:\r\n- Added ColumnDatasets, a shared interface for reading column forcing files:\r\n\t- One native, self-describing format using (z, time) atmospheric variables and (time,) surface variables. It is currently named ClimaColumn, though we can bikeshed on the name.\r\n\t- New formats plug in as small dataset modules, with no changes to the forcing, setup, or config code.\r\n- Changed generated ERA5 files to the native column schema. Stale or non-conforming cached files are regenerated from the source rather than read.\r\n- Composed external forcing from per-process terms (HorizontalAdvection, VerticalFluctuation, Nudging, Subsidence) assembled into ExternalDrivenTVForcing, letting runscripts select terms and set per-variable nudging timescales and height masks.\r\n- Added the ColumnFromFile setup, which can source initial conditions, external forcing, surface data, and insolation from one file.\r\n- Extracted shared forcing-tendency kernels, de-duplicating the energy-conversion, nudging, and subsidence math across the GCM, ISDAC, and file-driven paths.\r\n- Renamed the old large-scale-subsidence forcing to LargeScaleSubsidence, freeing the name Subsidence for the new per-process forcing term.\r\n- Ported the ARM VARANAL case onto the interface: a converter (VaranalFiles.to_climacolumn) rewrites pressure-level profile into the native schema, and the case runs through ColumnFromFile. Removed the custom setup and forcing.\r\n\r\nFuture work (TBD):\r\n- Migrate the cfsite (GCM-driven) case onto the new interface\r\n- Add MOSAiC case?\r\n- Generic in-memory reader, so a runscript can drive forcing from arrays or a non-native format without first writing a native file to disk via to_climacolumn\r\n- Formalize derived variables (quantities computed from the file, e.g. density or vertical velocity) as a first-class part of the interface\r\n- Give the file-driven terms an analytic-target data source, so idealized profiles flow through the same AbstractForcingTerm composition\r\n\r\nDocumentation to understand the new interface:\r\n- docs/src/single_column_prospect.md section \"Column forcing datasets\"\r\n- docs/src/setups.md section \"Defining a Case in a Runscript\"\r\n- Docstrings: `ColumnDatasets`, `AbstractForcingTerm`, `ExternalDrivenTVForcing`, `ColumnFromFile`, `FileHeatFluxes`\r\n",
+    "changedFiles": 32,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABHG-qQA",
+        "number": 4617,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4617"
+      }
+    ],
+    "createdAt": "2026-07-17T00:54:11Z",
+    "deletions": 1222,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-23T19:42:37Z",
+    "number": 4705,
+    "title": "SCM setup consolidation: ColumnDatasets interface and per-term forcing"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "To compare with what we had a week ago:\r\n\r\nOld sedimentation term:\r\n\r\n```\r\n    @. vtt = ifelse(\r\n        \u2202a\u2202z < 0,\r\n        -(\u1d9cprecipdiv\u1d65(\u1da0\u03c1 * Geometry.WVector(\u1da0wa\u03c7))),\r\n        -(\u1d9ca * \u1d9cprecipdiv\u1d65(\u1da0\u03c1 * Geometry.WVector(\u1da0w\u03c7))),\r\n    )\r\n```\r\n\r\nnew sedimentation term:\r\n\r\n```\r\n    @. vtt = ifelse(\r\n        \u2202a\u2202z < 0,\r\n        -(\u1d9cprecipdiv\u1d65(\u1da0\u03c1 * Geometry.WVector(\u1da0wa\u03c7)) - \u03b1_lat * \u2202a\u2202z * \u1d9c\u03c1\u2070w\u2070\u03c7\u2070),\r\n        -(\u1d9ca * \u1d9cprecipdiv\u1d65(\u1da0\u03c1 * Geometry.WVector(\u1da0w\u03c7))),\r\n    )\r\n```\r\n\r\nOld Jacobian term:\r\n\r\n```\r\n@. \u1d9ctridiagonal_matrix_scalar = dt\u03b3 * ifelse(\u1d9c\u2202a\u2202z < 0,\r\n     -(\u1d9cprecipdiv\u1d65_matrix()) \u22c5 \u1da0sed_tracer_advection * DiagonalMatrixRow(\u1d9ca),\r\n      -DiagonalMatrixRow(\u1d9ca) \u22c5 \u1d9cprecipdiv\u1d65_matrix() \u22c5 \u1da0sed_tracer_advection,\r\n )\r\n```\r\n\r\nnew Jacobian term:\r\n\r\n```\r\n@. \u1d9ctridiagonal_matrix_scalar = dt\u03b3 * ifelse(\u1d9c\u2202a\u2202z < 0,\r\n    -(\u1d9cprecipdiv\u1d65_matrix()) \u22c5 \u1da0sed_tracer_advection * DiagonalMatrixRow(\u1d9ca) +\r\n        DiagonalMatrixRow(\u03b1_lat * \u1d9c\u2202a\u2202z * \u1d9c\u03c1\u02b2s.:(1) * \u1d9cw\u02b2 / max(1 - \u1d9ca, eps(eltype(\u1d9ca)))),\r\n    -DiagonalMatrixRow(\u1d9ca) \u22c5 \u1d9cprecipdiv\u1d65_matrix() \u22c5 \u1da0sed_tracer_advection,\r\n)\r\n````\r\n\r\nAnd I'm setting `\u03b1_lat = 0` for now for testing and to recover nightly amip",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-23T14:43:27Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-23T21:35:46Z",
+    "number": 4721,
+    "title": "Add a temporary lateral coeff for sedimentation"
+  },
+  {
+    "additions": 87,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nCurrently, precipitation (rain and snow) is included in the radiation scheme. However, RRTMGP assumes a single effective radius for all liquid water and a single effective radius for all ice. Applying the cloud droplet effective radius to rain is unphysical, as raindrops are significantly larger than cloud droplets. Because rain cannot be represented accurately, we have excluded it, and for consistency, we have excluded snow from the radiative calculations as well. We can come back to it if we can treat cloud condensate and precipitation differently in RRTMGP in the future.\r\n\r\nNote: `clwvi` and `clivi` diagnostics are not changed. This may not be consistent with the CMIP convention \"only including precipitating hydrometeors when they are included in radiation\". I didn't change it because otherwise `clivi` is just a duplicate of `iwp`. We can change it in the future if it's important.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-23T18:57:40Z",
+    "deletions": 58,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-23T23:59:46Z",
+    "number": 4722,
+    "title": "not include precipitation in cloud fraction and radiation"
+  }
+]
