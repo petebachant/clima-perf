@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "## Summary\n\n`NetCDFWriter` errored with a `MethodError` on any grid whose vertical coordinate is an `AbstractVerticalCoordinate` other than the two concrete built-ins. The NCDatasets extension dispatched `vertical_coordinate_name`, `gather_vertical_dimensions`, and `default_vertical_dimension_attributes` only on `StaticVerticalDiscretization` and `MutableVerticalDiscretization`, so a third subtype matched no method and died at writer construction.\n\nThis came up with a terrain-following \u03c3 coordinate defined downstream \u2014 [Breeze.jl](https://github.com/NumericalEarth/Breeze.jl)'s `TerrainFollowingVerticalDiscretization`, which `<: AbstractVerticalCoordinate` \u2014 but the fix is generic.\n\n## Change\n\n- Widen the two non-static methods (`gather_vertical_dimensions`, `default_vertical_dimension_attributes`) from `::MutableVerticalDiscretization` to `::AbstractVerticalCoordinate`.\n- Add a `vertical_coordinate_name(::AbstractVerticalCoordinate) = \"r\"` fallback.\n\nSuch coordinates save their reference coordinate `r` (read from the shared `c\u1d43\u1d43\u1da0`/`c\u1d43\u1d43\u1d9c` fields); physical height is reconstructed at read time from `r` and the coordinate transform \u2014 identical to the existing z-star path.\n\n## Why it's safe\n\n- `MutableVerticalDiscretization` behavior is unchanged: `MVD <: AbstractVerticalCoordinate` and the method bodies are byte-identical, so MVD now simply arrives via the supertype.\n- `StaticVerticalDiscretization` keeps its own, more specific method (still writes physical `z`).\n- The per-step \u03b7/\u03c3 reconstruction output stays gated on `MutableVerticalDiscretization`, so a static-terrain coordinate correctly skips it.\n\n## Testing\n\n- New unit test (`test_netcdf_abstract_vertical_coordinate_name`): a custom non-`MVD` `AbstractVerticalCoordinate` routes to the `\"r\"` fallback, while `Static` \u2192 `\"z\"` and `MVD` \u2192 `\"r\"` still hold.\n- The existing `test_netcdf_rectilinear_mvd_output` (z-star) now exercises the widened `::AbstractVerticalCoordinate` methods end-to-end (regression for the `r` write path).\n- Manually verified that `NetCDFWriter` constructs and writes on a downstream terrain-following grid: reference `r` dimension + staggered fields present.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-15T23:58:26Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-07-24T03:38:50Z",
+    "number": 5689,
+    "title": "Support NetCDF output on any AbstractVerticalCoordinate"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjQwNTE0MzA2",
+      "is_bot": false,
+      "login": "aviatesk",
+      "name": "Shuhei Kadowaki"
+    },
+    "body": "Revise signature extraction does not replay standalone mutations, so the `push!` loop left `other_locs` empty when reconstructing generated definitions, causing revising on conditional_differences.jl to fail with a `BoundsError`.\r\n\r\nConstruct the two locations directly as a tuple so generated operators no longer depend on preceding side effects.\r\n\r\nFixes aviatesk/JET.jl#804\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDODbnZ2c7s7r7D",
+        "number": 804,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkyMzAyODM3Mzc=",
+          "name": "JET.jl",
+          "owner": {
+            "id": "MDQ6VXNlcjQwNTE0MzA2",
+            "login": "aviatesk"
+          }
+        },
+        "url": "https://github.com/aviatesk/JET.jl/issues/804"
+      }
+    ],
+    "createdAt": "2026-07-23T15:34:59Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-07-24T06:20:01Z",
+    "number": 5817,
+    "title": "Make conditional differences Revisable"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkwNDM0Nzk0",
+      "is_bot": false,
+      "login": "awiteck",
+      "name": "Aidan Witeck"
+    },
+    "body": "Need to access `InterpolatedOperation` downstream, which was added after the `0.110.11` release.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-23T20:57:41Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-24T11:08:35Z",
+    "number": 5819,
+    "title": "Bump semver"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjE2ODg4NjIz",
+      "is_bot": false,
+      "login": "jlk9",
+      "name": "Joseph Kump"
+    },
+    "body": "When using a Reactant architecture, the function `getclosure(I, j, closure)` can fail for IsopycnalSkewSymmetricDiffusivity (and presumably other closures that contain field parameters). Adding an `Adapt.adapt_structure(...)` method fixes this.\r\n\r\nA script that produces this error is [here](https://github.com/DJ4Earth/Channelanigans/blob/jlk9/error-adapt-kappaskew-0708/scripts/abernathey_channel.jl).\r\n\r\n@wsmoses",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-10T19:15:16Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-07-24T17:32:55Z",
+    "number": 5785,
+    "title": "Adds adapt method for IsopycnalSkewSymmetricDiffusivity"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The docstring on main doesn't describe the user-facing interface.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-23T12:48:31Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-07-24T17:52:38Z",
+    "number": 5813,
+    "title": "Improve docstrings for `viscosity` and `diffusivity`"
+  }
+]
