@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5821.\n\n`fractional_x_index` and `fractional_y_index` for regular `LatitudeLongitudeGrid`s recovered the grid spacing by differencing two adjacent nodes. In `Float32` those nodes are ~180 in magnitude, so the subtraction discards most of their significant digits, and dividing by the result multiplies that error by the cell index \u2014 `interpolate` then reads a different cell. Both now take the spacing from the grid (`\u0394\u03bb\u1d9c\u1d43\u1d43`, `\u0394\u03c6\u1d43\u1d9c\u1d43`), as the `RectilinearGrid` and `z` methods already do.\n\nMWE \u2014 a field holding its own longitude, interpolated back at a cell centre of a 1 arc-minute global grid:\n\n```julia\ngrid = LatitudeLongitudeGrid(Float32; size = (21600, 2), longitude = (-180, 180),\n                             latitude = (0, 1), topology = (Periodic, Bounded, Flat))\nc = Field{Center, Center, Nothing}(grid)\nset!(c, (\u03bb, \u03c6) -> \u03bb)\n\ninterpolate((7.991666666666667, 0.5, 0), c, (Center(), Center(), Nothing()), grid)\n# main: 8.037581f0    this PR: 7.991667f0\n```\n\nWorst index displacement in cells, sampled over the middle 80% of each 1 arc-minute grid with halos filled (the outer 10% is skipped because a \u03bb-valued field is discontinuous across the periodic seam):\n\n| | main | this PR |\n| --- | --- | --- |\n| regular, `Center` | 4.75 | 0.001 |\n| regular, `Face` | 4.75 | 0.001 |\n| `Bounded` x | 4.75 | 0.001 |\n| longitude `(0, 360)` | 0.0037 | 0.0037 |\n| longitude `(-1080, -720)` | 76.2 | 0.007 |\n| x-stretched | 0.0003 | 0.0003 |\n| x-regular + y-stretched | 4.75 | 0.001 |\n| `ImmersedBoundaryGrid` | 4.75 | 0.001 |\n| `Float64`, all of the above | 0.0 | 0.0 |\n\nStretched grids dispatch to the vector-search method and are deliberately untouched: `fractional_index` differences nodes too, but the binary search localises the result, so the error stays within one cell rather than scaling with the index. Grids in the `(0, 360)` convention were never affected \u2014 \u03bb\u2080 \u2248 0 leaves nothing to cancel \u2014 which is largely why this went unnoticed.\n\nAdded to `run_field_interpolation_tests`: interpolating at a node returns that node's value, at centres and faces, in longitude and latitude, in both float types. 12 of its 32 assertions fail on `main`. Full `test_field.jl` passes here (4004793 pass, 0 fail).\n\nFor scale downstream: a global 1 arc-minute topography regrid went from 284 m mean error against its source file to 0.07 m.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABKF54Yg",
+        "number": 5821,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5821"
+      }
+    ],
+    "createdAt": "2026-07-24T22:04:51Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-07-25T00:14:23Z",
+    "number": 5822,
+    "title": "Fix `interpolate` reading the wrong cell on fine Float32 `LatitudeLongitudeGrid`s"
+  }
+]
