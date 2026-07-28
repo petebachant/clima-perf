@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 192,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Initializes the AtmosphericProfilesLibrary single-column setups (Bomex, DYCOMS, GABLS, GATE_III, ISDAC, Larcform1, PrecipitatingColumn, Rico, Soares, ShipwayHill2012, TRMM_LBA) on GPU spaces, and integrates their hydrostatic pressure on a finer grid.\n\nThese setups build host-resident profile interpolants, so broadcasting the initial-condition closure on a device fails. `initial_condition_field` now broadcasts the closure on the device when it is isbits after adapting to the device array type, and otherwise evaluates it on the host and copies the result to the device. Interpolant setups take the host path, so no interpolant enters a device kernel, while analytic setups keep their device broadcast. The setup API is unchanged, with profiles remaining plain callables of height and no GPU-specific code.\n\n`hydrostatic_pressure_profile` integrates the initial value problem on a 1000-element column instead of 100, returning a `ClimaInterpolations.Interpolation1D.Interpolate1D`. The finer grid removes the interpolation error of the coarser 300 m spacing, changing initial center pressures by about `2e-4` to `4e-4` relative, within about `4e-6` of a reference on a 16 times finer grid. This changes the reproducibility reference, so the counter is bumped; the difference is a chaotic decorrelation of the convective fields with the thermodynamic climate preserved (see the comment below).\n\nAlso: `\u03c1_from_profile` is hoisted to a top-level function; the ShipwayHill2012 and TRMM_LBA `\u03b8` and `q_tot` profiles use `ClimaInterpolations` interpolants; and the `ShipwayHill2012` constructor returns the setup type (its interface methods were previously unreachable). A new buildkite GPU test evaluates the pressure profiles on a column and a stretched box for Float64 and Float32, with exact values checked in `test/larcform1.jl`.\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T06:43:17Z",
+    "deletions": 107,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-27T10:28:42Z",
+    "number": 4664,
+    "title": "fix(setups): GPU-compatible single-column setups and finer hydrostatic-pressure integration"
+  }
+]
