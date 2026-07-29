@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 540,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR makes workers individually submitted and self-registering. Each worker is its own scheduler allocation, adds itself to a process-wide pool once it has started and loaded model code, and the scheduler loop dispatches forward-model runs to workers as they become available. Closes #296. \r\n\r\nChanges\r\n- Updated `add_workers` to be asynchronous. This is the new intended way to use the `WorkerBackend`, though `addprocs` still works.\r\n- Add global, self-filling worker pool `GLOBAL_WORKER_POOL`. This pool is guarded by `POOL_LOCK`\r\n- `Distributed.launch` now submits `n` separate single-process allocations instead of one job array. `poll_files_for_worker_startup` now polls all worker signal files, since they spin up separately now.\r\n- Added `@worker_setup` to replace `@everywhere`, which required all workers to be already registered. The new macro records setup expressions on the main process and replays them on every worker as it joins.\r\n- `run_iteration` now starts with a possibly empty pool and waits for workers. Added `EMPTY_POOL_TIMEOUT = 7200` so that jobs don't just hang indefinitely, maybe we can make this configurable.\r\n- Added `cancel_worker_jobs` to cancel all workers. This now runs in an `atexit` hook.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOI0q0v877gVzA",
+        "number": 296,
+        "repository": {
+          "id": "R_kgDOI0q0vw",
+          "name": "ClimaCalibrate.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCalibrate.jl/issues/296"
+      }
+    ],
+    "createdAt": "2026-07-14T21:21:44Z",
+    "deletions": 126,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-28T00:11:13Z",
+    "number": 338,
+    "title": "Add asynchronous workers"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR updates the minimum Julia version to 1.10, which is needed to release the newest version of the package (0.3.2). \r\nSee error from [AutoMerge](https://github.com/JuliaRegistries/General/pull/162463):\r\n```\r\n\u250c Error: Was not able to successfully `Pkg.add` the package on julia 1.9.4 (lowest compatible version)\r\n\u2514 @ AutoMerge ~/.julia/packages/AutoMerge/aXNpV/src/guidelines.jl:1204\r\n```",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T00:31:11Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-28T14:58:34Z",
+    "number": 340,
+    "title": "Update minimum Julia version to 1.10"
+  }
+]

@@ -1,0 +1,127 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "When close to an immersed boundary, the `column_depth` function on edges, correctly uses the `static_column_depth` equal to zero, but then picks the free surface inside the immersed boundary, which leaves a value to it. \r\nThis PR fixes this behavior by zeroing out the `column_depth` when the static depth is zero (we are on an immersed edge)\r\n\r\nThis is actually already done in #5351 but it probably deserves its own PR (I also need it in NumericalEarth)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T10:32:13Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-07-28T12:07:47Z",
+    "number": 5826,
+    "title": "Fix column_depth when close to an immersed boundary"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "Profiles of the kernel launching process showed that there were large overheads associated with each call. This was/is being caused by \"slurping\"/\"splatting\" the arguments between function calls, which results in allocations of Tuples for each argument.\r\n\r\nI have gone through the launch functions to reduce this as much as possible. My idea is to have the arguments that are used for launching be explicit, i.e.:\r\n- `arch`\r\n- `workspec`\r\n- `kernel!`\r\n\r\nThen the arguments for the kernel itself are slurped at the initial call, and then passed along as a tuple to further calls as much as possible.\r\n\r\nFor single kernel launches (specifically launching `compute_hydrostatic_free_surface_Gc!`) this reduces the overhead by ~20% (360KiB to 260KiB).",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-08T14:47:49Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-07-28T14:23:27Z",
+    "number": 5774,
+    "title": "Reduce kernel launching overhead"
+  },
+  {
+    "additions": 270,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5716. `regrid!` now composes the existing single-dimension conservative regrids when the grids differ in more than one dimension (including all three), instead of throwing. Intermediate grids are built with `constructor_arguments`, swapping one dimension at a time toward the target, so the result is exact for `RectilinearGrid` and `LatitudeLongitudeGrid` since cell volumes factorize per dimension.\n\n- Same constraints as single-dimension `regrid!`: same grid class and topology, `Center` locations along the regridded dimensions, GPU-native.\n- Also fixes #5825: `regrid_in_x!`/`regrid_in_y!` with a `Periodic` transverse dimension \u2014 the source face count was `N` instead of `N + 1`, so the last row/column lost all fractional-cell contributions (a constant field regridded to half its value there).\n- Also fixes #5830: the kernels' face search probes index `N + 1`, past the end of the face array of a swept `Periodic` dimension \u2014 a silent out-of-bounds read, and a `BoundsError` under `--check-bounds=yes`. Faces now include the closing halo face.\n- Tests check against brute-force cell-overlap integrals and integral conservation on both grid classes.\n\n```julia\nusing Oceananigans\n\nsource_grid = RectilinearGrid(size=(4, 4, 4), x=[0, 0.1, 0.3, 0.65, 1.1], y=[0, 0.2, 0.5, 0.9, 1.4],\n                              z=[-1, -0.7, -0.45, -0.2, 0], topology=(Bounded, Bounded, Bounded))\ntarget_grid = RectilinearGrid(size=(2, 3, 2), x=(0, 1.1), y=(0, 1.4), z=(-1, 0),\n                              topology=(Bounded, Bounded, Bounded))\n\nc = CenterField(source_grid)\nset!(c, (x, y, z) -> x + y * z)\n\nregrid!(CenterField(target_grid), c)  # previously an ArgumentError\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABGdvXag",
+        "number": 5716,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5716"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABKZXRww",
+        "number": 5825,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5825"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABKiU2Yg",
+        "number": 5830,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5830"
+      }
+    ],
+    "createdAt": "2026-07-27T21:45:18Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-07-28T20:57:31Z",
+    "number": 5824,
+    "title": "Support multi-dimensional conservative regridding with `regrid!`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "I want to use multi-dimensional conservative `regrid!` downstream in NumericalEarth (see https://github.com/NumericalEarth/NumericalEarth.jl/pull/464).\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T21:05:25Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-07-28T21:28:43Z",
+    "number": 5831,
+    "title": "Bump patch release v0.110.13"
+  }
+]

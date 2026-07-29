@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "For the error in https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1354#019fa545-4164-4edf-a997-555f3ec12685/L357, this happens because the nightly pipeline is using the main branch of ClimaCore, but not the main branch of ClimaCoreMakie. With the main branch of ClimaCore, `size(ClimaCore.Spaces.local_geometry_data(space))` returns a tuple of length 4 while the latest release of ClimaCoreMakie expects a tuple of length 5.\r\n\r\nThis issue is fixed by also using the main branch of ClimaCoreMakie.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T01:08:26Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-07-28T01:30:55Z",
+    "number": 2058,
+    "title": "Use main branch of ClimaCoreMakie for nightly run"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This commit introduces the environment variable UPSTREAM_PACKAGES for configuring which packages are used for the nightly pipeline. \r\n\r\nThe main benefit of this PR is making it easier to run one off case of nightly when some particular package(s) can't be used. As of now, the main branch of `SurfaceFluxes` couldn't be used for nightly. To run nightly, you would need to make a new branch, comment out the part where the main branch of `SurfaceFluxes` is added, and manually start a run on Buildkite. With this change, you can set the environment variable `UPSTREAM_PACKAGES=\"ClimaAtmos ClimaCore ClimaCoreMakie ClimaTimeSteppers Thermodynamics ClimaLand RRTMGP\"` (notice that `SurfaceFluxes` is not included) on the web API of Buildkite.\r\n\r\nYou can also pass `UPSTREAM_PACKAGES=\"ClimaAtmos ClimaCore#bug-fix SurfaceFluxes@1.1.0\"` to use the main branch of ClimaAtmos, the `bug-fix` branch of `ClimaCore`, and `SurfaceFluxes` v1.1.0.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T21:29:16Z",
+    "deletions": 10,
+    "labels": [],
+    "mergedAt": "2026-07-28T21:56:08Z",
+    "number": 2061,
+    "title": "Make it easier to change nightly upstream packages"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`CO` is still wired in which means that temperature and salinity top bcs pick from NumericalEarth where we use real fluxes for salinity and temperature, which in turn means that T and S top boundary conditions are `DiscreteBoundaryFunctions` which we need to extract.\r\n\r\nThis correction will not be needed after #2059, but is propaedeutic to when we will need to implement real fluxes",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T17:33:00Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-28T22:17:19Z",
+    "number": 2060,
+    "title": "Fix error from ocean's output writer"
+  }
+]
