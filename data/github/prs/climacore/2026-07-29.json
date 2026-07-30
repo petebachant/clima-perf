@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 476,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "`jl_in_threaded_region` is a process-global flag, but `parallelize_over(f, ::ThisThreadPool)` read it twice. If an unrelated task entered a threaded region between the two reads, the first read said \"not in a region\" and the second said \"in a region\", leading to an error without actual nesting.\r\n\r\nThis affects any code that broadcasts `Field`s from several concurrent tasks. The `plane/inertial_gravity_wave` example does that via `ThreadsX.mapreduce`, and fails intermittently (PR #2556, build 7117).\r\n\r\n### CPU Multithreading & Scope Fixes\r\n- **Scope Resolution**: Loops resolve their scope once up front with `resolved_scope`, and thread rank comes from task-local storage (`:climacore_pool_threads`) rather than global state.\r\n- **Thread Pool Partitioning**: Concurrent loops divide the CPU pool dynamically, each taking an equal share of threads instead of letting the first loop claim all threads. This is ~2.6x faster with two concurrent tasks on 8 threads.\r\n- **Explicit Scope & Task Spawning**: Explicit `ThisThreadPool()` calls now resolve properly. Pool threads are spawned explicitly into `:default` with `@spawn :default` (protecting against execution inside `:interactive` tasks), and parallel worker errors are collected and thrown via `CompositeException`.\r\n\r\n### GPU Performance Optimizations (`ClimaCoreCUDAExt`)\r\n- **Device Attribute Caching**: Cache invariant CUDA device attributes (`MAX_THREADS_PER_BLOCK`, `WARP_SIZE`, `SM_COUNT`, etc.) to eliminate repeated C driver calls (`cuDeviceGetAttribute`) on every launch. Reduces host-side broadcast launch latency by ~54x (from ~477 \u03bcs down to ~8.8 \u03bcs per launch on an A100).\r\n- **Occupancy Query Caching**: Cache invariant kernel launch configurations (`CUDA.launch_configuration`) in an `IdDict` to eliminate repeated C driver occupancy calculations (`cuOccupancyMaxPotentialBlockSize`) on every broadcast and reduction launch. Saves an additional ~2 \u03bcs of host CPU launch overhead per kernel call (~4.2% faster reductions).\r\n- **Task-Local Reduction Buffers**: Intermediate GPU reduction arrays in `reduce_points` are cached in task-local storage to avoid allocating device memory (`similar`) during repeated scalar reductions.\r\n- **Warp Alignment**: Ensure thread block sizes for slice loops are rounded to warp multiples (`32`) to prevent warp divergence.\r\n\r\n### CI & Workflow Improvements\r\n- **Documentation Deploy Concurrency**: Added a `concurrency` group (`documentation-deploy`) to `.github/workflows/docs.yml` to queue documentation preview deployments sequentially, preventing git `--force-with-lease` rejections (`! [rejected] HEAD -> gh-pages (stale info)`) when multiple CI jobs run concurrently.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-27T21:04:57Z",
+    "deletions": 61,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-07-29T15:47:13Z",
+    "number": 2557,
+    "title": "Fix spurious \"Nested loops over ThisThreadPool\" error"
+  }
+]

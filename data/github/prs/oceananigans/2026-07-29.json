@@ -1,0 +1,59 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #5818.\r\n\r\nSince #5774, `_launch!` pre-converts kernel arguments with `convert_to_device` before invoking the KernelAbstractions kernel. On Metal this calls `Metal.mtlconvert` without the launch-time command encoder, which skips buffer residency registration (`MTL.use!`) and argument rooting until the batched command buffers execute \u2014 kernels then silently read/write invalid memory (fields stay `0.0f0`, wrong Poisson solutions). This is what broke Metal CI on `main`.\r\n\r\nFix: remove the `MetalGPU` `convert_to_device` methods so the generic identity fallback applies and Metal.jl converts arguments at kernel encode time. CUDA, AMDGPU, and oneAPI keep the launch-overhead optimization.\r\n\r\nThis is not a numerics change \u2014 the kernel receives identical arguments either way. Verified on an Apple M-series GPU with the `test_metal.jl` ImmersedBoundaryGrid setup (`max u` after 100 iterations):\r\n\r\n| code state | run 1 | run 2 |\r\n|---|---|---|\r\n| CPU Float32 reference | 0.017791448 | \u2014 |\r\n| this PR (Metal) | 0.017791448 | 0.017791448 |\r\n| `main` (Metal) | 0.0 | 0.0 |\r\n| `main` before #5774 (Metal) | 0.0035841 | 0.0131003 |\r\n\r\nThe last row shows Metal results were already nondeterministically corrupted before #5774: `fill_halo_regions!` and the split-explicit substepping pass pre-converted arguments through the same path. That likely explains the FFT Poisson flake #5818, and why #5774's failing Metal PR CI read as that known flake. All `test_metal.jl` testsets pass locally with this change, with and without Metal residency sets.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABJ8PoXg",
+        "number": 5818,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5818"
+      }
+    ],
+    "createdAt": "2026-07-28T21:09:57Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-07-29T03:01:33Z",
+    "number": 5832,
+    "title": "Fix Metal kernel launches broken by argument pre-conversion"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Ths issues is `RegriddingOperation` not being correctly imported from `AbstractOperations`\r\n\r\nAlso the tests has some issues, but the test was never called in CI.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T10:54:40Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-07-29T06:24:27Z",
+    "number": 5827,
+    "title": "Fix ConservativeRegridding extension"
+  }
+]
