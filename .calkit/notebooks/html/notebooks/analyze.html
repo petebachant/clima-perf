@@ -7332,12 +7332,7 @@ a.anchor-link {
     if (!diagrams.length) {
       return;
     }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
-    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
-    if(elkUrl) {
-      const elkLayouts = (await import(elkUrl)).default;
-      mermaid.registerLayoutLoaders(elkLayouts);
-    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
     const parser = new DOMParser();
 
     mermaid.initialize({
@@ -7434,8 +7429,7 @@ a.anchor-link {
      * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
      */
     function cleanMermaidSvg(svg) {
-      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
-      return `${SVG_XML_HEADER}${svg}`;
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
     }
 
 
@@ -7461,285 +7455,6 @@ a.anchor-link {
       }
       return `<${tag} ${rest}>`;
     }
-
-
-  /**
-   * Named HTML entities with their decimal equivalent codes.
-   *
-   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
-   * */
-  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
-<!ENTITY aacute "&#225;">
-<!ENTITY Acirc "&#194;">
-<!ENTITY acirc "&#226;">
-<!ENTITY acute "&#180;">
-<!ENTITY AElig "&#198;">
-<!ENTITY aelig "&#230;">
-<!ENTITY Agrave "&#192;">
-<!ENTITY agrave "&#224;">
-<!ENTITY alefsym "&#8501;">
-<!ENTITY Alpha "&#913;">
-<!ENTITY alpha "&#945;">
-<!ENTITY amp "&#38;">
-<!ENTITY and "&#8869;">
-<!ENTITY ang "&#8736;">
-<!ENTITY Aring "&#197;">
-<!ENTITY aring "&#229;">
-<!ENTITY asymp "&#8776;">
-<!ENTITY Atilde "&#195;">
-<!ENTITY atilde "&#227;">
-<!ENTITY Auml "&#196;">
-<!ENTITY auml "&#228;">
-<!ENTITY bdquo "&#8222;">
-<!ENTITY Beta "&#914;">
-<!ENTITY beta "&#946;">
-<!ENTITY brvbar "&#166;">
-<!ENTITY bull "&#8226;">
-<!ENTITY cap "&#8745;">
-<!ENTITY Ccedil "&#199;">
-<!ENTITY ccedil "&#231;">
-<!ENTITY cedil "&#184;">
-<!ENTITY cent "&#162;">
-<!ENTITY Chi "&#935;">
-<!ENTITY chi "&#967;">
-<!ENTITY circ "&#710;">
-<!ENTITY clubs "&#9827;">
-<!ENTITY cong "&#8773;">
-<!ENTITY copy "&#169;">
-<!ENTITY crarr "&#8629;">
-<!ENTITY cup "&#8746;">
-<!ENTITY curren "&#164;">
-<!ENTITY dagger "&#8224;">
-<!ENTITY Dagger "&#8225;">
-<!ENTITY darr "&#8595;">
-<!ENTITY dArr "&#8659;">
-<!ENTITY deg "&#176;">
-<!ENTITY Delta "&#916;">
-<!ENTITY delta "&#948;">
-<!ENTITY diams "&#9830;">
-<!ENTITY divide "&#247;">
-<!ENTITY Eacute "&#201;">
-<!ENTITY eacute "&#233;">
-<!ENTITY Ecirc "&#202;">
-<!ENTITY ecirc "&#234;">
-<!ENTITY Egrave "&#200;">
-<!ENTITY egrave "&#232;">
-<!ENTITY empty "&#8709;">
-<!ENTITY emsp "&#8195;">
-<!ENTITY ensp "&#8194;">
-<!ENTITY epsilon "&#949;">
-<!ENTITY Epsilon "&#917;">
-<!ENTITY equiv "&#8801;">
-<!ENTITY Eta "&#919;">
-<!ENTITY eta "&#951;">
-<!ENTITY ETH "&#208;">
-<!ENTITY eth "&#240;">
-<!ENTITY Euml "&#203;">
-<!ENTITY euml "&#235;">
-<!ENTITY exist "&#8707;">
-<!ENTITY fnof "&#402;">
-<!ENTITY forall "&#8704;">
-<!ENTITY frac12 "&#189;">
-<!ENTITY frac14 "&#188;">
-<!ENTITY frac34 "&#190;">
-<!ENTITY frasl "&#8260;">
-<!ENTITY Gamma "&#915;">
-<!ENTITY gamma "&#947;">
-<!ENTITY ge "&#8805;">
-<!ENTITY gt "&#62;">
-<!ENTITY harr "&#8596;">
-<!ENTITY hArr "&#8660;">
-<!ENTITY hearts "&#9829;">
-<!ENTITY hellip "&#8230;">
-<!ENTITY Iacute "&#205;">
-<!ENTITY iacute "&#237;">
-<!ENTITY Icirc "&#206;">
-<!ENTITY icirc "&#238;">
-<!ENTITY iexcl "&#161;">
-<!ENTITY Igrave "&#204;">
-<!ENTITY igrave "&#236;">
-<!ENTITY image "&#8465;">
-<!ENTITY infin "&#8734;">
-<!ENTITY int "&#8747;">
-<!ENTITY Iota "&#921;">
-<!ENTITY iota "&#953;">
-<!ENTITY iquest "&#191;">
-<!ENTITY isin "&#8712;">
-<!ENTITY Iuml "&#207;">
-<!ENTITY iuml "&#239;">
-<!ENTITY Kappa "&#922;">
-<!ENTITY kappa "&#954;">
-<!ENTITY Lambda "&#923;">
-<!ENTITY lambda "&#955;">
-<!ENTITY lang "&#9001;">
-<!ENTITY laquo "&#171;">
-<!ENTITY larr "&#8592;">
-<!ENTITY lArr "&#8656;">
-<!ENTITY lceil "&#8968;">
-<!ENTITY ldquo "&#8220;">
-<!ENTITY le "&#8804;">
-<!ENTITY lfloor "&#8970;">
-<!ENTITY lowast "&#8727;">
-<!ENTITY loz "&#9674;">
-<!ENTITY lrm "&#8206;">
-<!ENTITY lsaquo "&#8249;">
-<!ENTITY lsquo "&#8216;">
-<!ENTITY lt "&#60;">
-<!ENTITY macr "&#175;">
-<!ENTITY mdash "&#8212;">
-<!ENTITY micro "&#181;">
-<!ENTITY middot "&#183;">
-<!ENTITY minus "&#8722;">
-<!ENTITY Mu "&#924;">
-<!ENTITY mu "&#956;">
-<!ENTITY nabla "&#8711;">
-<!ENTITY nbsp "&#160;">
-<!ENTITY ndash "&#8211;">
-<!ENTITY ne "&#8800;">
-<!ENTITY ni "&#8715;">
-<!ENTITY not "&#172;">
-<!ENTITY notin "&#8713;">
-<!ENTITY nsub "&#8836;">
-<!ENTITY Ntilde "&#209;">
-<!ENTITY ntilde "&#241;">
-<!ENTITY Nu "&#925;">
-<!ENTITY nu "&#957;">
-<!ENTITY Oacute "&#211;">
-<!ENTITY oacute "&#243;">
-<!ENTITY Ocirc "&#212;">
-<!ENTITY ocirc "&#244;">
-<!ENTITY OElig "&#338;">
-<!ENTITY oelig "&#339;">
-<!ENTITY Ograve "&#210;">
-<!ENTITY ograve "&#242;">
-<!ENTITY oline "&#8254;">
-<!ENTITY Omega "&#937;">
-<!ENTITY omega "&#969;">
-<!ENTITY Omicron "&#927;">
-<!ENTITY omicron "&#959;">
-<!ENTITY oplus "&#8853;">
-<!ENTITY or "&#8870;">
-<!ENTITY ordf "&#170;">
-<!ENTITY ordm "&#186;">
-<!ENTITY Oslash "&#216;">
-<!ENTITY oslash "&#248;">
-<!ENTITY Otilde "&#213;">
-<!ENTITY otilde "&#245;">
-<!ENTITY otimes "&#8855;">
-<!ENTITY Ouml "&#214;">
-<!ENTITY ouml "&#246;">
-<!ENTITY para "&#182;">
-<!ENTITY part "&#8706;">
-<!ENTITY permil "&#8240;">
-<!ENTITY perp "&#8869;">
-<!ENTITY Phi "&#934;">
-<!ENTITY phi "&#966;">
-<!ENTITY Pi "&#928;">
-<!ENTITY pi "&#960;">
-<!ENTITY piv "&#982;">
-<!ENTITY plusmn "&#177;">
-<!ENTITY pound "&#163;">
-<!ENTITY prime "&#8242;">
-<!ENTITY Prime "&#8243;">
-<!ENTITY prod "&#8719;">
-<!ENTITY prop "&#8733;">
-<!ENTITY Psi "&#936;">
-<!ENTITY psi "&#968;">
-<!ENTITY quot "&#34;">
-<!ENTITY radic "&#8730;">
-<!ENTITY rang "&#9002;">
-<!ENTITY raquo "&#187;">
-<!ENTITY rarr "&#8594;">
-<!ENTITY rArr "&#8658;">
-<!ENTITY rceil "&#8969;">
-<!ENTITY rdquo "&#8221;">
-<!ENTITY real "&#8476;">
-<!ENTITY reg "&#174;">
-<!ENTITY rfloor "&#8971;">
-<!ENTITY Rho "&#929;">
-<!ENTITY rho "&#961;">
-<!ENTITY rlm "&#8207;">
-<!ENTITY rsaquo "&#8250;">
-<!ENTITY rsquo "&#8217;">
-<!ENTITY sbquo "&#8218;">
-<!ENTITY Scaron "&#352;">
-<!ENTITY scaron "&#353;">
-<!ENTITY sdot "&#8901;">
-<!ENTITY sect "&#167;">
-<!ENTITY shy "&#173;">
-<!ENTITY Sigma "&#931;">
-<!ENTITY sigma "&#963;">
-<!ENTITY sigmaf "&#962;">
-<!ENTITY sim "&#8764;">
-<!ENTITY spades "&#9824;">
-<!ENTITY sub "&#8834;">
-<!ENTITY sube "&#8838;">
-<!ENTITY sum "&#8721;">
-<!ENTITY sup "&#8835;">
-<!ENTITY sup1 "&#185;">
-<!ENTITY sup2 "&#178;">
-<!ENTITY sup3 "&#179;">
-<!ENTITY supe "&#8839;">
-<!ENTITY szlig "&#223;">
-<!ENTITY Tau "&#932;">
-<!ENTITY tau "&#964;">
-<!ENTITY there4 "&#8756;">
-<!ENTITY Theta "&#920;">
-<!ENTITY theta "&#952;">
-<!ENTITY thetasym "&#977;">
-<!ENTITY thinsp "&#8201;">
-<!ENTITY THORN "&#222;">
-<!ENTITY thorn "&#254;">
-<!ENTITY tilde "&#732;">
-<!ENTITY times "&#215;">
-<!ENTITY trade "&#8482;">
-<!ENTITY Uacute "&#218;">
-<!ENTITY uacute "&#250;">
-<!ENTITY uarr "&#8593;">
-<!ENTITY uArr "&#8657;">
-<!ENTITY Ucirc "&#219;">
-<!ENTITY ucirc "&#251;">
-<!ENTITY Ugrave "&#217;">
-<!ENTITY ugrave "&#249;">
-<!ENTITY uml "&#168;">
-<!ENTITY upsih "&#978;">
-<!ENTITY Upsilon "&#933;">
-<!ENTITY upsilon "&#965;">
-<!ENTITY Uuml "&#220;">
-<!ENTITY uuml "&#252;">
-<!ENTITY weierp "&#8472;">
-<!ENTITY Xi "&#926;">
-<!ENTITY xi "&#958;">
-<!ENTITY Yacute "&#221;">
-<!ENTITY yacute "&#253;">
-<!ENTITY yen "&#165;">
-<!ENTITY Yuml "&#376;">
-<!ENTITY yuml "&#255;">
-<!ENTITY Zeta "&#918;">
-<!ENTITY zeta "&#950;">
-<!ENTITY zwj "&#8205;">
-<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
-
-  /**
-   * A reasonably strict xml declaration.
-   */
-  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
-
-  /**
-   * The beginning of the XML doctype declaration.
-   */
-  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
-
-  /**
-   * The end of the XML docype declaration.
-   */
-  const DOCTYPE_END = ']>';
-
-  /**
-   * A full header for an SVG XML document.
-   */
-  const SVG_XML_HEADER = `${XML_DECL}
-    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
 
     void Promise.all([...diagrams].map(renderOneMarmaid));
   });
@@ -7814,7 +7529,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">cd</span> ..
+<div class="highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="n">cd</span> <span class="o">..</span>
 </pre></div>
 </div>
 </div>
@@ -7827,7 +7542,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>/home/runner/work/clima-perf/clima-perf
+<pre>/Users/pete/calkit/clima-perf
 </pre>
 </div>
 </div>
@@ -7857,6 +7572,8 @@ a.anchor-link {
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
@@ -7940,19 +7657,32 @@ a.anchor-link {
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_sypd</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the simulated years per day (SYPD) achieved by an AMIP run.</span>
+
+<span class="sd">    Every ClimaCoupler AMIP run prints a final ``[ Info: SYPD: &lt;value&gt;`` line</span>
+<span class="sd">    once the fixed-length (40-step) benchmark finishes. That final figure is the</span>
+<span class="sd">    achieved throughput we track, so we read the *last* such line in the log.</span>
+
+<span class="sd">    Buildkite logs wrap output in ANSI color codes and terminal escape</span>
+<span class="sd">    sequences -- sometimes splitting a token, e.g. ``Info: &lt;esc&gt;SYPD:`` -- so</span>
+<span class="sd">    strip those before matching. This also makes the parser robust to the</span>
+<span class="sd">    progress-format change on 2026-07-22: older logs reported</span>
+<span class="sd">    ``estimated_sypd = "..."`` under an ``n_steps_completed = 40`` block, while</span>
+<span class="sd">    newer logs print ``step = 40 (100.0%)`` with a per-step ``sypd`` estimate.</span>
+<span class="sd">    Both formats still emit the same final ``SYPD:`` line, so keying off it</span>
+<span class="sd">    keeps the metric consistent across the change.</span>
+<span class="sd">    """</span>
+    <span class="n">ansi</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\x1b\[[0-9;]*m|\x1b[_\]][^\x07]*\x07"</span><span class="p">)</span>
     <span class="n">sypd</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">"n_steps_completed = 40"</span> <span class="ow">in</span> <span class="n">line</span>
-            <span class="ow">or</span> <span class="s2">"n_steps_completed = 41"</span> <span class="ow">in</span> <span class="n">line</span>
-        <span class="p">):</span>
-            <span class="n">found_step_40</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">found_step_40</span> <span class="ow">and</span> <span class="s2">"estimated_sypd = "</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">sypd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"estimated_sypd = "</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">break</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\bSYPD:\s*([0-9][0-9.eE+-]*)"</span><span class="p">,</span> <span class="n">ansi</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="n">sypd</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># keep the last finite SYPD print in the log</span>
     <span class="k">return</span> <span class="n">sypd</span>
 
 
@@ -8202,50 +7932,55 @@ a.anchor-link {
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>shape: (142, 18)
-┌────────────┬───────────┬───────┬────────────┬───┬────────────┬───────────┬───────────┬───────────┐
-│ date       ┆ run_from  ┆ sypd  ┆ buildkite_ ┆ … ┆ ClimaTimes ┆ RRTMGP_di ┆ Thermodyn ┆ repos_cha │
-│ ---        ┆ ---       ┆ ---   ┆ commit     ┆   ┆ teppers_di ┆ ff_url    ┆ amics_dif ┆ nged      │
-│ datetime[μ ┆ str       ┆ f64   ┆ ---        ┆   ┆ ff_url     ┆ ---       ┆ f_url     ┆ ---       │
-│ s, UTC]    ┆           ┆       ┆ str        ┆   ┆ ---        ┆ str       ┆ ---       ┆ f64       │
-│            ┆           ┆       ┆            ┆   ┆ str        ┆           ┆ str       ┆           │
-╞════════════╪═══════════╪═══════╪════════════╪═══╪════════════╪═══════════╪═══════════╪═══════════╡
-│ 2025-10-15 ┆ calkit    ┆ null  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-01 ┆ calkit    ┆ 0.059 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-02 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 1.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-03 ┆ calkit    ┆ 0.048 ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ 2025-11-04 ┆ calkit    ┆ 0.06  ┆ null       ┆ … ┆ null       ┆ null      ┆ null      ┆ 0.0       │
-│ 00:00:00   ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ UTC        ┆           ┆       ┆            ┆   ┆            ┆           ┆           ┆           │
-│ …          ┆ …         ┆ …     ┆ …          ┆ … ┆ …          ┆ …         ┆ …         ┆ …         │
-│ 2026-07-24 ┆ buildkite ┆ null  ┆ 4724fa85f2 ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 02:01:07.9 ┆           ┆       ┆ 99f6e9112a ┆   ┆            ┆           ┆           ┆           │
-│ 47 UTC     ┆           ┆       ┆ a153652b68 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-07-28 ┆ buildkite ┆ null  ┆ a7241d6033 ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 02:01:07.9 ┆           ┆       ┆ ad599f4035 ┆   ┆            ┆           ┆           ┆           │
-│ 97 UTC     ┆           ┆       ┆ 20832aab3d ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-07-29 ┆ buildkite ┆ null  ┆ 2411de308c ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 02:01:08.7 ┆           ┆       ┆ 616946f48d ┆   ┆            ┆           ┆           ┆           │
-│ 45 UTC     ┆           ┆       ┆ 2d8cb2fcb9 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-07-30 ┆ buildkite ┆ null  ┆ 8e3578b6e0 ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 02:01:07.8 ┆           ┆       ┆ 308d008ea3 ┆   ┆            ┆           ┆           ┆           │
-│ 54 UTC     ┆           ┆       ┆ ce434ef370 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-│ 2026-07-31 ┆ buildkite ┆ null  ┆ 8e3578b6e0 ┆ … ┆ null       ┆ null      ┆ null      ┆ null      │
-│ 02:01:08.6 ┆           ┆       ┆ 308d008ea3 ┆   ┆            ┆           ┆           ┆           │
-│ 16 UTC     ┆           ┆       ┆ ce434ef370 ┆   ┆            ┆           ┆           ┆           │
-│            ┆           ┆       ┆ …          ┆   ┆            ┆           ┆           ┆           │
-└────────────┴───────────┴───────┴────────────┴───┴────────────┴───────────┴───────────┴───────────┘
+┌───────────┬───────────┬──────────┬───────────┬───┬───────────┬───────────┬───────────┬───────────┐
+│ date      ┆ run_from  ┆ sypd     ┆ buildkite ┆ … ┆ ClimaTime ┆ RRTMGP_di ┆ Thermodyn ┆ repos_cha │
+│ ---       ┆ ---       ┆ ---      ┆ _commit   ┆   ┆ steppers_ ┆ ff_url    ┆ amics_dif ┆ nged      │
+│ datetime[ ┆ str       ┆ f64      ┆ ---       ┆   ┆ diff_url  ┆ ---       ┆ f_url     ┆ ---       │
+│ μs, UTC]  ┆           ┆          ┆ str       ┆   ┆ ---       ┆ str       ┆ ---       ┆ f64       │
+│           ┆           ┆          ┆           ┆   ┆ str       ┆           ┆ str       ┆           │
+╞═══════════╪═══════════╪══════════╪═══════════╪═══╪═══════════╪═══════════╪═══════════╪═══════════╡
+│ 2025-10-1 ┆ calkit    ┆ null     ┆ null      ┆ … ┆ null      ┆ null      ┆ null      ┆ null      │
+│ 5         ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 00:00:00  ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ UTC       ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 2025-11-0 ┆ calkit    ┆ 0.069659 ┆ null      ┆ … ┆ null      ┆ null      ┆ null      ┆ 0.0       │
+│ 1         ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 00:00:00  ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ UTC       ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 2025-11-0 ┆ calkit    ┆ 0.069698 ┆ null      ┆ … ┆ null      ┆ null      ┆ null      ┆ 1.0       │
+│ 2         ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 00:00:00  ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ UTC       ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 2025-11-0 ┆ calkit    ┆ 0.054227 ┆ null      ┆ … ┆ null      ┆ null      ┆ null      ┆ 0.0       │
+│ 3         ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 00:00:00  ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ UTC       ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 2025-11-0 ┆ calkit    ┆ 0.069714 ┆ null      ┆ … ┆ null      ┆ null      ┆ null      ┆ 0.0       │
+│ 4         ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ 00:00:00  ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ UTC       ┆           ┆          ┆           ┆   ┆           ┆           ┆           ┆           │
+│ …         ┆ …         ┆ …        ┆ …         ┆ … ┆ …         ┆ …         ┆ …         ┆ …         │
+│ 2026-07-2 ┆ buildkite ┆ 0.342017 ┆ 4724fa85f ┆ … ┆ null      ┆ null      ┆ null      ┆ 2.0       │
+│ 4 02:01:0 ┆           ┆          ┆ 299f6e911 ┆   ┆           ┆           ┆           ┆           │
+│ 7.947 UTC ┆           ┆          ┆ 2aa153652 ┆   ┆           ┆           ┆           ┆           │
+│           ┆           ┆          ┆ b68…      ┆   ┆           ┆           ┆           ┆           │
+│ 2026-07-2 ┆ buildkite ┆ null     ┆ a7241d603 ┆ … ┆ null      ┆ null      ┆ null      ┆ null      │
+│ 8 02:01:0 ┆           ┆          ┆ 3ad599f40 ┆   ┆           ┆           ┆           ┆           │
+│ 7.997 UTC ┆           ┆          ┆ 3520832aa ┆   ┆           ┆           ┆           ┆           │
+│           ┆           ┆          ┆ b3d…      ┆   ┆           ┆           ┆           ┆           │
+│ 2026-07-2 ┆ buildkite ┆ null     ┆ 2411de308 ┆ … ┆ null      ┆ null      ┆ null      ┆ null      │
+│ 9 02:01:0 ┆           ┆          ┆ c616946f4 ┆   ┆           ┆           ┆           ┆           │
+│ 8.745 UTC ┆           ┆          ┆ 8d2d8cb2f ┆   ┆           ┆           ┆           ┆           │
+│           ┆           ┆          ┆ cb9…      ┆   ┆           ┆           ┆           ┆           │
+│ 2026-07-3 ┆ buildkite ┆ null     ┆ 8e3578b6e ┆ … ┆ null      ┆ null      ┆ null      ┆ null      │
+│ 0 02:01:0 ┆           ┆          ┆ 0308d008e ┆   ┆           ┆           ┆           ┆           │
+│ 7.854 UTC ┆           ┆          ┆ a3ce434ef ┆   ┆           ┆           ┆           ┆           │
+│           ┆           ┆          ┆ 370…      ┆   ┆           ┆           ┆           ┆           │
+│ 2026-07-3 ┆ buildkite ┆ null     ┆ 8e3578b6e ┆ … ┆ null      ┆ null      ┆ null      ┆ null      │
+│ 1 02:01:0 ┆           ┆          ┆ 0308d008e ┆   ┆           ┆           ┆           ┆           │
+│ 8.616 UTC ┆           ┆          ┆ a3ce434ef ┆   ┆           ┆           ┆           ┆           │
+│           ┆           ┆          ┆ 370…      ┆   ┆           ┆           ┆           ┆           │
+└───────────┴───────────┴──────────┴───────────┴───┴───────────┴───────────┴───────────┴───────────┘
 </pre>
 </div>
 </div>
