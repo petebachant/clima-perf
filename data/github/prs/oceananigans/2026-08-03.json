@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I don't know what was exactly the issue which brought to #5839, but let's see if newer version of Reactant fixes it.\r\n\r\nFix #5841.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABLH19rg",
+        "number": 5841,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5841"
+      }
+    ],
+    "createdAt": "2026-08-02T10:52:55Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-08-03T01:17:52Z",
+    "number": 5842,
+    "title": "Require newer version of Reactant"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Since #5586, `set_to_field!(::ReactantField, ::ReactantField)` takes the\r\nCPU interpolation fallback whenever sizes or locations differ, including\r\nfor a reduced column field (e.g. a 1D reference profile) being set into\r\na full 3D field. Under Reactant tracing that fallback cannot work: its\r\nfirst step, `on_architecture(CPU(), grid)`, rebuilds the traced grid\r\nthrough the validating constructor, and validate_lat_lon_grid_args then\r\ndrives `||` with a `TracedRNumber{Bool}`:\r\n\r\n    TypeError: non-boolean (Reactant.TracedRNumber{Bool}) used in boolean context\r\n\r\n(and even past validation, traced data cannot be materialized on the CPU\r\nmid-trace). Before #5586 this case was handled by the extension's plain\r\n`interior(u) .= interior(v)` broadcast, which traces fine.\r\n\r\nRestore that behavior by widening the fast path: a dimension may be\r\ncopied by broadcasting when both fields share its location and size, or\r\nwhen v is reduced there (Nothing location, singleton size). The strict\r\nold condition is a subset, so other cases are unchanged.\r\n\r\nThis fixes Breeze.jl's Reactant lat-lon compilation tests, broken since\r\nits reference states became column fields set into 3D density fields\r\ninside compiled functions (NumericalEarth/Breeze.jl#863).\r\n\r\n---\r\n\r\nRef: https://github.com/NumericalEarth/Breeze.jl/pull/882#issuecomment-5152852279.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-01T19:54:17Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-08-03T16:15:30Z",
+    "number": 5840,
+    "title": "Let Reactant `set!(u, v)` broadcast reduced fields instead of hopping to the CPU"
+  }
+]
