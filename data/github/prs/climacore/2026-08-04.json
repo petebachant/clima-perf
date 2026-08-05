@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Downgrade tests fail after v2.7.0\r\n\r\nthis solution was written with claude",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-03T20:28:20Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-04T01:28:15Z",
+    "number": 2564,
+    "title": "Skip aqua tests in downgrade action"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "## Summary\r\n- Removes the `columnwise!` operator implementation (`src/Operators/columnwise.jl`) and its CUDA extension (`ext/cuda/operators_columnwise.jl`)\r\n- Removes the associated unit test (`test/Operators/finitedifference/unit_columnwise.jl`)\r\n- Removes the corresponding `include`s from `src/Operators/Operators.jl` and `ext/ClimaCoreCUDAExt.jl`\r\n- Removes the \"Unit: columnwise\" and \"Unit: gpu columnwise\" buildkite CI jobs\r\ncloses #2520\r\n## Test plan\r\n- [x] `using ClimaCore` loads cleanly with no errors\r\n- [x] Confirmed no remaining references to `columnwise!` or the deleted files elsewhere in the repo",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms8AAAABEDPjPA",
+        "number": 2520,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2520"
+      }
+    ],
+    "createdAt": "2026-07-13T22:18:02Z",
+    "deletions": 504,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-04T02:37:14Z",
+    "number": 2548,
+    "title": "Remove columnwise! operator and its tests"
+  },
+  {
+    "additions": 214,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose\r\n\r\nEnable `fieldvectors` in Krylov workspaces\r\n\r\n## Changes \r\n\r\n-  Added `Fields.fieldvector2array!` and `Fields.array2fieldvector!`,\r\n  allocation-free, GPU-safe block-wise copies between a `FieldVector` and a\r\n  flat vector. Together with `Krylov.ktypeof(::FieldVector)` (defined in\r\n  `KrylovExt`), these let iterative Krylov solvers keep their workspace vectors on the\r\n  GPU while model code continues to operate on `FieldVector`s.\r\n- Fixed `zero(::FieldVector)` to preserve scalar (`ScalarWrapper`) components\r\n  instead of turning them into 0-dimensional `Array`s, and fixed\r\n  `ClimaComms.array_type(::FieldVector)` (and hence\r\n  `Krylov.ktypeof(::FieldVector)`) for `FieldVector`s with plain-array or\r\n  scalar components, which previously threw a `MethodError`.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-04T00:04:10Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-04T22:19:26Z",
+    "number": 2565,
+    "title": "Adds `Fields.fieldvector2array!` and `Fields.array2fieldvector!`"
+  }
+]
