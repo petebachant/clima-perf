@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 55,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "> [!NOTE]\n> The commit in this PR was authored by Claude (Claude Code), working on behalf of @imreddyTeja.\n\n## Summary\n\n`ext/cuda/column_matrix_helpers.jl` contained 8 nearly identical `row_mul_mat!` methods (one per pair of matrix staggering shapes) and 4 nearly identical `row_mul_vec!` methods. This PR replaces them with **one method each**, shrinking the file from 431 to 119 lines (\u2212376/+65).\n\nThe per-shape index arithmetic is factored into three small compile-time shape-trait helpers:\n\n- `column_slot(v, d, shape)` \u2014 converts entry `d` of the matrix row computed by thread `v` into the shared-memory slot of the value it multiplies (`v + d`, with `\u00b1half` corrections for the mixed-staggering shapes)\n- `n_column_slots(shape)` \u2014 number of valid slots in the matrix's column space (`blockDim().x` for face columns, one fewer for center columns)\n- `product_shape(shape1, shape2)` \u2014 the shape of `matrix1 * matrix2`, used for the product-row bounds check in `row_mul_mat!`\n\nAll shapes are singleton types, so everything still resolves at compile time.\n\nOne deliberate behavior nuance: in the two CenterToFace-product cases, the old outer bounds check (`v + pd + half < 1`) admitted product column 0, which lies outside the matrix. The unified slot-based check zeroes that entry instead, matching the CPU reference `multiply_matrix_at_index` in `src/MatrixFields/matrix_multiplication.jl`.\n\n## Performance\n\n**This change is performance neutral.** The unified helpers compile down to essentially the same machine code as the 12 hand-written methods: generated PTX is bit-identical for the same-staggered shape combinations (after normalizing session-dependent pointer constants and label numbering), and the mixed-staggering combinations differ only by register renumbering and equivalent bounds computations (e.g. `< blockDim` vs `<= blockDim - 1`), with equal or slightly lower register counts. Measured A100 kernel timings across all 12 shape combinations plus a chained product are unchanged (within run-to-run noise).\n\n## Verification (on an A100)\n\n- All `test/MatrixFields/matrix_fields_broadcasting` scripts (scalar 1\u201317, non-scalar 1\u20135) produce identical results before and after the refactor.\n- Per-case GPU kernel timings across all 12 shape combinations plus a chained product are unchanged (within run-to-run noise).\n- Generated PTX is bit-identical for the same-staggered shape combinations; the mixed-staggering combinations differ only by register renumbering and equivalent bounds computations (e.g. `< blockDim` vs `<= blockDim - 1`), with equal or slightly lower register counts.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_011oirTEPPBEj5BWwhgYKMzn",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-11T01:02:27Z",
+    "deletions": 378,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-05T18:02:36Z",
+    "number": 2545,
+    "title": "Unify row_mul_mat! and row_mul_vec! into single methods"
+  },
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Follow-on on #2565:\r\n\r\nReplace the hand-rolled first/tail recursion in `_blocks2array!` and `_array2blocks!` with `unrolled_reduce` folds over the entry offset, and give `_array2block(s)!` the same `(array, offset, block)` argument order as `_block(s)2array!`. Unwrap wrapped arrays (e.g. views) through parent in `_array_type` instead of reporting the wrapper type.\r\n\r\n- Fixes `_array_type` for wrapped arrays: views/reshapes now report the underlying storage type (e.g. CuArray) instead of the wrapper (SubArray \u2192 promotes to AbstractArray).\r\n- Makes `length(::FieldVector)` allocation-free: the `AbstractArray` fallback computes length through `axes`, whose `blockedrange` is not inferrable for nested `FieldVectors` and allocated on every call. Conversions are now allocation-free for nested and scalar components (previously a few hundred bytes per call).\r\n- Removes an inference cliff in the converters at large component counts: the hand-rolled recursion allocates ~20 KB per call at 64 same-type components, while the unrolled_reduce form stays allocation-free; both are allocation-free at realistic sizes.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-05T01:01:51Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-05T18:43:18Z",
+    "number": 2567,
+    "title": "Simplify FieldVector flat-array conversion helpers"
+  }
+]
