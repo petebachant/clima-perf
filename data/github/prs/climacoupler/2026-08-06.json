@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 329,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Geometric walltime reporting was removed in #2026, but some find it useful for debugging, so I've added it back in here in the form of a config flag: \r\n\r\n- **`walltime_debug::Bool`** (default `false`) \u2014 also report the walltime on power-of-two steps, on top of the `walltime_dt` interval. If `walltime_dt` is `\"never\"`, those steps become the only reporting.\r\n\r\nTo accomplish this, I've added two new schedules to `TimeManager`:\r\n\r\n- **`PowerOfTwoSchedule`** \u2014 true on coupling steps 1, 2, 4, 8, 16, \u2026\r\n- **`OrSchedule(schedules...)`** \u2014 true when any child schedule is true.\r\n\r\n`maybe_trigger_callback` now passes `(; t, step)`, where `step` is a new field in `CoupledSimulation`. Note: `step` restarts to 0 after a restart, so just counts the number of steps in the *current* run.\r\n\r\nAll coupler schedules now live in `TimeManager` and subtype `ClimaDiagnostics.Schedules.AbstractSchedule` so that they can be used for diagnostics (and could in principle be moved to `ClimaDiagnostics`/`ClimaUtilities` someday).\r\n\r\nAll CI, nightly, and longrun configs now have `walltime_debug: true`.\r\n\r\n(I also noticed that two `Input.jl` help strings were wrong, so I fixed those).",
+    "changedFiles": 46,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-05T00:14:30Z",
+    "deletions": 52,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-06T19:46:35Z",
+    "number": 2069,
+    "title": "Walltime reporting for debugging"
+  }
+]

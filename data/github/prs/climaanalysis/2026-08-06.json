@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 74,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "While using a LLM to verify https://github.com/CliMA/ClimaAnalysis.jl/pull/418, it notified me of various bugs in other places in the codebase.\r\n\r\nI asked the LLM to fix them and I made verified the commits afterward.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-03T19:15:59Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-08-06T00:02:29Z",
+    "number": 419,
+    "title": "Fix various bugs"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaAnalysis.jl/issues/423 - This PR adds `abs` as another unary function for `OutputVar`.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc8AAAABLmYU6w",
+        "number": 423,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/423"
+      }
+    ],
+    "createdAt": "2026-08-05T22:00:26Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-08-06T00:27:43Z",
+    "number": 426,
+    "title": "Add abs as a unary operation for OutputVar"
+  },
+  {
+    "additions": 91,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "fixes #424 - This bug was found in https://github.com/CliMA/ClimaLand.jl/pull/1836. For `OutputVar`s with `NaN`s in the data, the error metrics could have been computed wrong if a mask function is not given. This is because the normalization is computed using the mask function. This PR fixes that issue by computing the normalization from the `NaN`s in `sim - obs`.\r\n\r\nI asked a LLM to implement these changes.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc8AAAABLmcyPw",
+        "number": 424,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/424"
+      }
+    ],
+    "createdAt": "2026-08-05T18:27:17Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-08-06T00:44:34Z",
+    "number": 425,
+    "title": "Exclude NaNs from normalization in error metrics"
+  },
+  {
+    "additions": 1125,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaAnalysis.jl/issues/182 - This PR adds the module Interpolation which implements its own regridder for linear interpolation on CPU. This speeds up `resampled_as` as shown in the benchmark below. This is also needed to implement `NaN`-aware interpolation which will build on top of this PR. \r\n\r\n```\r\n# ClimaCoupler leaderboard plots comparsion using @time\r\n# Current release of ClimaAnalysis\r\n# First call\r\n633.497110 seconds (4.78 G allocations: 350.271 GiB, 11.06% gc time, 25.36% compilation time: 11% of which was recompilation)\r\n\r\n# Second call\r\n453.559515 seconds (4.48 G allocations: 336.167 GiB, 9.66% gc time, 0.05% compilation time: 37% of which was recompilation)\r\n\r\n# This branch\r\n# First call\r\n226.008800 seconds (326.68 M allocations: 142.870 GiB, 11.99% gc time, 52.08% compilation time: 15% of which was recompilation)\r\n\r\n# Second call\r\n95.502202 seconds (47.26 M allocations: 129.401 GiB, 16.47% gc time, 0.24% compilation time: 37% of which was recompilation)\r\n```",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOK3jXuc6iDkt6",
+        "number": 182,
+        "repository": {
+          "id": "R_kgDOK3jXuQ",
+          "name": "ClimaAnalysis.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAnalysis.jl/issues/182"
+      }
+    ],
+    "createdAt": "2026-08-03T17:11:20Z",
+    "deletions": 112,
+    "labels": [],
+    "mergedAt": "2026-08-06T22:13:44Z",
+    "number": 418,
+    "title": "Add interpolation module"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR makes a release of ClimaAnalysis v0.5.23. This is needed to merge https://github.com/CliMA/ClimaCalibrate.jl/pull/334 and make a new release of ClimaCalibrate.\r\n\r\nThis should be merged after https://github.com/CliMA/ClimaAnalysis.jl/pull/418.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-06T17:46:20Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-08-06T23:53:05Z",
+    "number": 428,
+    "title": "Release v0.5.23"
+  }
+]

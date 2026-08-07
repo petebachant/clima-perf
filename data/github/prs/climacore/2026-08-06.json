@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaCore.jl/issues/2566 - On Julia 1.12, you can get a `BoundsError` with\r\n\r\n```julia\r\nimport ClimaCore\r\nusing ClimaCore.CommonSpaces\r\nspace = ColumnSpace(; z_min = 0.0, z_max = 1.0, z_elem = 4, staggering = CellCenter())\r\nf = ClimaCore.Fields.ones(space)\r\nf .= f .+ 1\r\n```\r\n\r\nInstead of manually constructing the `Broadcasted` expression, we pass it to `Broadcast.broadcasted` instead which will determine the style and axes for us.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms8AAAABLfca4Q",
+        "number": 2566,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2566"
+      }
+    ],
+    "createdAt": "2026-08-05T21:52:25Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-06T01:15:31Z",
+    "number": 2569,
+    "title": "Fix BoundsError with broadcasted expression"
+  },
+  {
+    "additions": 310,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR extends `max_resident_blocks` (renamed to `max_active_blocks`) so that it accounts for register pressure and shared memory requirements, fixing the \"tail effect\" problem that was introduced in #2522 for 64-level pointwise kernels (see [this comment](https://github.com/CliMA/ClimaCore.jl/pull/2522#issuecomment-5063662876) for details). This PR also improves the launch configuration caching, leading to a 5%--20% drop in kernel launch latency, and it exposes all occupancy limits that the CUDA API can identify internally.\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T01:06:08Z",
+    "deletions": 185,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-06T04:01:16Z",
+    "number": 2558,
+    "title": "Fix tail effect on GPUs"
+  }
+]
