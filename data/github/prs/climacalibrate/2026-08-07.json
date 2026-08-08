@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 2470,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes #328 - This PR refactors the sampling part from `ObservationRecipe` into `SampleBuilder`. \r\n\r\nAll relevant functions in `ObservationRecipe` takes in a `ObservedSampleCollection` which does all the checks of the `OutputVar`s. This eliminates most of the checks from `ObservationRecipe` and move them to `SampleBuilder`.\r\n\r\nThe `SampleBuilder` module features a `SampleCollection` struct and an `ObservedSampleCollection` struct. A `SampleCollection` struct features a matrix of samples and its associated metadata and an `ObservedSampleCollection` struct also includes which sample will be the observation in the calibration. These two structs are separated to allow for future changes to how the observation is chosen without breaking changes.\r\n\r\nFor the future, we might be interested in including `NaN`s in the matrix of samples and letting `ObservationRecipe.observation` handle the `NaN`s. In addition, we might also want `hcat` and `vcat` to be define for `ObservedSampleCollection` to allow for more flexibility in constructing this object.\r\n\r\nTODO\r\n\r\n- [x] Add to NEWS.md\r\n- [x] Update ObservationRecipe docs\r\n- [x] Check tests",
+    "changedFiles": 22,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOI0q0v88AAAABFM5M6w",
+        "number": 328,
+        "repository": {
+          "id": "R_kgDOI0q0vw",
+          "name": "ClimaCalibrate.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCalibrate.jl/issues/328"
+      }
+    ],
+    "createdAt": "2026-06-30T00:32:43Z",
+    "deletions": 1489,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-07T01:25:05Z",
+    "number": 334,
+    "title": "Refactor sampling component from ObservationRecipe into SampleBuilder"
+  }
+]
