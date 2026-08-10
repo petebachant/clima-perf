@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "`update_stage!` for `IMEXSSPRKCache` evaluated\r\n\r\n    inc_imp = !has_T_imp(f) ? 0 : fused_raw_increment(dt, a_imp, T_imp, v_i)\r\n    @. U = U_exp + inc_imp\r\n\r\nunconditionally. The `0` is a sentinel meaning \"no implicit increment\", not a value to broadcast, and `step_u!` already guards it with `inc_imp_final !== 0` before adding. Without the same guard here, stepping a problem that has no `T_imp!` evaluated `U_exp + 0` against every element of the state, leading to errors.\r\n\r\nThat is a no-op for states of plain numbers, but states whose elements are vectors define no `+` against a scalar, so it raised\r\n\r\n    MethodError: no method matching +(::UVVector{Float64}, ::Int64)\r\n\r\nfor ClimaCore states holding `Geometry` vectors, and likewise for `SVector` elements. Guard the add the same way `step_u!` does.\r\n\r\nAdds a regression test using `SVector` elements, which reproduces the failure without pulling ClimaCore into the test environment, and bumps the patch version.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-08T22:22:44Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "18d546",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAACsi6r2w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-09T00:36:54Z",
+    "number": 449,
+    "title": "Bugfix: explicit-only increment in SSPRK"
+  }
+]
