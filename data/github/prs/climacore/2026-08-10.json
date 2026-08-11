@@ -1,0 +1,127 @@
+[
+  {
+    "additions": 394,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Problem\r\n\r\nPR #2572  broke ClimaAtmos AMIP runs on GPU: compiling the fused cloud-fraction\r\nbroadcast kernel failed with `InvalidIRError` (`gpu_gc_pool_alloc`,\r\n`jl_f__apply_iterate`), with the stacktrace pointing into `unrolled_filter`.\r\n\r\n## Root cause\r\n\r\n`unrolled_filter` (UnrolledUtilities v0.1.9) pushes items into a tuple\r\naccumulator whose type changes at every step. For wide, complexly typed\r\nbroadcast expressions (fused EDMFX broadcasts), inference's recursion-widening\r\nheuristics widen the accumulator, and the resulting dynamic dispatch and heap\r\nallocation cannot be compiled for GPUs. The trigger is an inference budget,\r\nwhich is why unit tests passed while AMIP failed.\r\n\r\n## Changes\r\n\r\n- Kernel-critical traversals build no tuples at all: `each_maskable_slice_index`\r\n  and `equal_layout_shapes` compare each non-point layout against a reference\r\n  layout, and `f_dim` reduces with a nothing-or-in\r\n- Remaining kernel-reachable `unrolled_filter` calls (`layout_args`,\r\n  `axes_at_colons`, `overlap_components`) use `unrolled_flatmap`, which maps\r\n  each item to an empty or singleton tuple, avoidies.\r\n- Scope errors are singleton exception types (`InvalidSubscopeError`,\r\n  `NonOverlappingScopesError`) whose messages interpolate the scope types in\r\n  `showerror` on the host only.\r\n- Tests: `test/DataLayouts/opt_layout_args.jl` runs JET `@test_opt` over wide\r\n  broadcasts and a fused multi-broadcast mixing `DataF` and `VIJFH` args (the\r\n  AMIP failure shape); `test/aqua.jl` forbids `unrlit`\r\n  in kernel-reachable directories. New Buildkite CPU and 1-GPU jobs run them.\r\n\r\n## Companion change\r\n\r\nUnrolledUtilities [PR 33](https://github.com/CliMA/UnrolledUtilities.jl/pull/33) fixes the root cause upstream by reimplementing `unrolled_filter`/`unrolled_split`/`unrolled_unique` via\r\n`unrolled_flatmap`. This PR does not depend on it; all affected suites pass\r\nagainst both v0.1.9 and the patched v0.1.10. Once v0.1.10 is registered, the\r\nguardrail test can be dropped.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-09T03:17:50Z",
+    "deletions": 61,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T01:43:57Z",
+    "number": 2575,
+    "title": "Fix GPU InvalidIRError from inference widening in broadcast argument traversal"
+  },
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "Bump ClimaCore to v0.15.0, and bump the patch versions of all `lib` packages after updating their `compat` entries. This release includes the DataLayouts API refactor, which changes all field layouts to `VIJHWithF` and enables pointwise kernel fusion.\r\n\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-31T23:04:44Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T04:26:17Z",
+    "number": 2562,
+    "title": "Release v0.15.0"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "It is no longer compatible with older ClimaCore versions because `DataLayouts.DataLayout` is only defined in the latest CC release. It also bumps the lower Julia and ClimaComms bounds to match that of the latest ClimaCore release\r\n\r\nThis should fix the Julia registration issues [here](https://github.com/JuliaRegistries/General/pull/164015)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-10T16:46:04Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T17:11:03Z",
+    "number": 2577,
+    "title": "Update ClimaCoreTempestRemap compats"
+  },
+  {
+    "additions": 729,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds a space that can supports multiple columns. This is needed to complete https://github.com/CliMA/ClimaLand.jl/issues/1723.\r\n\r\nThis PR have been tested with the `FluxnetSimulation`s in ClimaLand and it produces identical results with the current single column used for the `FluxnetSimulation`.\r\n\r\nThe remapping feature will not be done in this PR. For the purpose of calibration, this is not needed because the data is extracted from the ClimaCore fields rather than from the NetCDF files produced from the diagnostics.\r\n\r\nNote that most of the code in this PR have been written with Claude.",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-10T18:51:56Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T20:35:06Z",
+    "number": 2525,
+    "title": "Add space with multiple columns"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR updates the CI to use a single `Pkg.develop` instead of multiple `Pkg.develop`. Each `Pkg.develop` results in resolving and updating the manifest so minimizing the number of times that `Pkg.develop` is called would speed up this up. It also makes the order of that packages are developed in not matter anymore since all of the developed packages are considered all at once.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-10T17:21:27Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T21:49:07Z",
+    "number": 2578,
+    "title": "Use a single Pkg.develop for CI"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 415,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## GPU-resident Krylov solves for FieldVector states\r\n\r\n`KrylovMethod` previously had no GPU-correct workspace for ClimaCore\r\n`FieldVector` states: CPU workspace vectors leaked into the `jvp!` broadcast,\r\ncausing scalar indexing and significant GPU slowdown\r\n\r\n- Keep the Krylov workspace flat and on-device (`Krylov.ktypeof(::FieldVector)`\r\n  from ClimaCore's `KrylovExt`), translating with a new `KrylovVectorAdapter`: \r\n  allocation-free block-wise copies around each\r\n  JVP/preconditioner application (via the new\r\n  `ClimaTimeSteppersClimaCoreExt` (ClimaCore weakdep).\r\n- Plain-vector states keep the existing zero-copy path.\r\n- Simplify `ForwardDiffStepSize3` to `length(x) + sum(abs, x)` (equivalent, and\r\n  already GPU-safe via ClimaCore's `mapreduce`).\r\n- Add a Newton\u2013Krylov FieldVector test\r\n\r\nRequires ClimaCore \u2265 0.15; merge after its release.\r\n\r\nPerformance comparison for RICO on A100 GPU, direct solve (baseline) vs Krylov (with dev version of ClimaCore and this branch):\r\n\r\nComponent / Function | Direct Solve Calls | Direct Solve Time (median) | Direct Solve Allocs (Memory) | Krylov Solve Calls | Krylov Solve Time (median) | Krylov Solve Allocs (Memory) | Difference / Notes\r\n-- | -- | -- | -- | -- | -- | -- | --\r\nstep!\u00a0(Total Time) | 1 | 5.67 ms | 3,296 (784.6 KiB) | 1 | 5.24 ms | 4,084 (331.1 KiB) | ~8% faster, 58% less memory\r\nldiv! | 2 | 281.9 \u03bcs | 480 (19.9 KiB) | 4 | 578.4 \u03bcs | 960 (39.8 KiB) | 2 extra preconditioner solves\r\nWfact! | 2 | 746.0 \u03bcs | 208 (83.4 KiB) | 2 | 674.3 \u03bcs | 208 (83.4 KiB) | ~72 \u03bcs faster\r\nT_imp! | 2 | 907.6 \u03bcs | 874 (225.8 KiB) | 4 | 1.78 ms | 1,748 (451.7 KiB) | 2 extra matrix-free JVP calls\r\nT_exp! | 2 | 176.7 \u03bcs | 730 (69.1 KiB) | 2 | 177.4 \u03bcs | 730 (69.1 KiB) | Equal\r\nlim! | 3 | 126.0 ns | 0 (0 bytes) | 3 | 126.0 ns | 0 (0 bytes) | Equal\r\ndss! | 7 | 287.0 ns | 0 (0 bytes) | 7 | 287.0 ns | 0 (0 bytes) | Equal\r\nconstrain_state! | 1 | 5.4 \u03bcs | 69 (6.0 KiB) | 1 | 5.3 \u03bcs | 69 (6.0 KiB) | Equal\r\ninitialize_imp! | 2 | 39.9 \u03bcs | 0 (0 bytes) | 2 | 39.4 \u03bcs | 0 (0 bytes) | Equal\r\ncache! | 3 | 6.90 ms | 297 (11.5 KiB) | 3 | 6.75 ms | 297 (11.5 KiB) | ~150 \u03bcs faster\r\ncache_imp! | 2 | 20.5 \u03bcs | 28 (1.2 KiB) | 4 | 40.8 \u03bcs | 56 (2.4 KiB) | 2 extra calls for JVP\r\n\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-04T00:32:05Z",
+    "deletions": 183,
+    "labels": [
+      {
+        "color": "18d546",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAACsi6r2w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-10T21:13:58Z",
+    "number": 448,
+    "title": "Avoid scalar indexing in Krylov solver"
+  }
+]
