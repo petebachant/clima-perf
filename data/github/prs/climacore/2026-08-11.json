@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "This PR optimizes GPU memory access patterns in the remapping kernels to ensure coalesced reads and writes:\r\n\r\n- **`remapping_distributed.jl`:** Reordered `CartesianIndices` iteration to ensure coalesced global memory reads.\r\n- **`remapping_interpolate_array.jl`:** Replaced in-loop global memory accumulations with explicit thread-local register accumulation in `interpolate_slab_kernel!`. \r\n\r\nThis currently makes no performance difference in benchmarks, apparently because the compiler already optimizes these patterns (e.g., hoisting the memory accumulations into a register automatically). But these changes guarantee coalesced memory traffic and protect performance in case future compiler heuristic changes or loop complexity increases.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-08T15:13:14Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-11T17:33:18Z",
+    "number": 2574,
+    "title": "Makes memory access patterns in remapping kernels more robust"
+  },
+  {
+    "additions": 55,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR updates JuliaFormatter to v2.10.1 and pins it. This is recommended by https://juliaeditorsupport.github.io/JuliaFormatter.jl/stable/status/#Pinning-the-JuliaFormatter-version.",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-10T22:28:02Z",
+    "deletions": 57,
+    "labels": [],
+    "mergedAt": "2026-08-11T23:29:11Z",
+    "number": 2579,
+    "title": "Update to JuliaFormatter v2.10.1"
+  }
+]

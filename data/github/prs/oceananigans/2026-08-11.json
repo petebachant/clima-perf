@@ -1,0 +1,71 @@
+[
+  {
+    "additions": 2462,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR implements open boundary conditions for the hydrostatic free surface model compatible with the split explicit free surface. The boundary conditions follow what discussed in #5229, meaning `Flather` boundary conditions for the barotropic component and \"Orlanski\" (`Radiation`) boundary conditions for the three-dimensional evolution.\r\n\r\nI need to clean up a bit the PR (for example Flather now stores the external values inside its own struct, but it would be probably better to store it in the `condition` of the `boundary_condition` struct.\r\n\r\nSince the flow of the algorithm has to change, because the barotropic correction needs to be done **after** filling up the boundary conditions for the 3d velocities, such that the barotropic components of the boundaries is consistent with the 2d evolution, some refactor is necessary and I would like to open a PR specifically for this (this is actually a positive because it means we can compute the entire `w` velocity in the `update_state` in distributed computations). \r\n\r\nThere is an example that showcases the use of these boundary conditions which we can remove later on.\r\nA part from all the changes that need to be done to clean up the code, this feature should be already fully functional and testable, so if you want to test it @vtamsitt you can give it a try\r\n\r\ncc @tomchor \r\n\r\n- [x] Include tests\r\n- [x] Clean up Flather BC",
+    "changedFiles": 45,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-03-02T08:30:46Z",
+    "deletions": 279,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-11T14:01:55Z",
+    "number": 5351,
+    "title": "Open boundary conditions using `SplitExplicitFreeSurface`"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\n- Fixes #5843: on a 2-rank `Periodic` decomposition axis, a rank's west and east neighbors are the same peer, so both halo directions multiplex onto one NCCL channel within a single `groupStart`/`groupEnd` block.\n- NCCL matches `Send`/`Recv` by post order per peer (no tags, unlike MPI). `_nccl_send_recv_dual!` posted `Recv(west)` then `Recv(east)` in the same order as the sends, pairing west-send with west-recv on the peer \u2014 a silent west/east halo swap that blows up any periodic-axis run using `NCCLDistributed` on exactly 2 ranks (CFL \u2192 NaN within ~4 iterations).\n- Fix: reverse the recv posting order relative to the send order, so each side's send pairs with the opposite-side recv on the peer, matching the MPI path's `send_tag`/`recv_tag` opposite-side convention (`src/DistributedComputations/halo_communication.jl`). This is a no-op when west/east peers differ (N>2 ranks), since NCCL matching is independent per `(src,dst)` pair.\n\n## Test plan\n- [x] 2-GPU MWE (`NCCLDistributed`, `Partition(x=Equal())`, periodic x-axis): CFL blew up to NaN by iteration 4 before the fix; stable and monotonically decaying through 20 iterations after.\n- [x] Same MWE on `Partition(y=Equal())` (bounded y-axis, control): stable before and after \u2014 confirms the fix is a no-op on axes where west/east peers differ.\n- [ ] CI\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABLKHPTg",
+        "number": 5843,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5843"
+      }
+    ],
+    "createdAt": "2026-08-10T15:55:58Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2026-08-11T20:00:06Z",
+    "number": 5859,
+    "title": "Fix NCCL west/east halo swap on 2-rank periodic axes"
+  }
+]

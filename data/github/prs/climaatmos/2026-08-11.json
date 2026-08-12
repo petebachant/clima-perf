@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 65,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Fixes the `BoundsError` currently failing both `test/grids.jl` and the docs build on every fresh CI.\r\n\r\n## Cause\r\n\r\nClimaCore [v0.15.0](https://github.com/CliMA/ClimaCore.jl/releases/tag/v0.15.0) replaced every `Field` with a unified `VIJHWithF` layout. From its release notes:\r\n\r\n> Replaced all `Field` values with a unified `VIJHWithF` layout type. Data is now indexed in the order `[v, i, j, h]`, and **every parent array has a 5-dimensional shape**. For backward compatibility, `[i, j, f, v, h]` `DataLayout` indexing is still allowed, but **downstream code that indexes directly into `parent(field)` arrays needs to be updated.**\r\n\r\nTwo places read the horizontal grid's coordinates through `parent(...)` and hard-coded the old 4-dimensional `IJFH` shape as `[1, 1, 1, :]`. Under the new layout the array is `1\u00d72\u00d72\u00d71\u00d718`, and four indices no longer cover five dimensions:\r\n\r\n```\r\nBoundsError: attempt to access 1\u00d72\u00d72\u00d71\u00d718 view(::Array{Float64, 5}, :, :, :, 1:1, :)\r\n             with eltype Float64 at index [1, 1, 1, 1:1]\r\n```\r\n\r\nThis breaks the `BoxGrid` unit test and the `@setup` block that draws the space-filling curve in `docs/src/grids.md`.\r\n\r\n## Why now, and why `main` passed CI\r\n\r\n`Project.toml` already allowed `ClimaCore = \"0.14.55, 0.15\"`, but 0.15 was unreachable while no released `ClimaDiagnostics` supported it. `ClimaDiagnostics` v0.3.8 changed that, so any CI run resolving fresh from now on picks up ClimaCore 0.15. \r\n\r\n## Fix\r\n\r\nTake the first index of each leading dimension rather than hard-coding how many there are:\r\n\r\n```julia\r\nfirst_node(p) = p[ntuple(_ -> 1, ndims(p) - 1)..., :]\r\n```\r\n\r\n`Nh` is the last dimension in both the old and new layouts, so this selects the first node of every element either way, and the code works whether an environment resolves ClimaCore 0.14.55 or 0.15.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-11T06:37:31Z",
+    "deletions": 58,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-11T11:06:47Z",
+    "number": 4758,
+    "title": "Index parent arrays by rank, for ClimaCore 0.15 layouts"
+  },
+  {
+    "additions": 14568,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "This PR revises existing docstrings to be consistent with the code and with dev-guides policies and adds (*many*) new docstrings where they were missing.\r\n\r\nFor reviewing: Check the overall structure, and spot check docstrings in areas you know well.",
+    "changedFiles": 157,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-05T16:42:44Z",
+    "deletions": 4559,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-11T18:42:01Z",
+    "number": 4749,
+    "title": "Revise and add docstrings throughout src"
+  },
+  {
+    "additions": 226,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR makes the model use non-constant rain sedimentation velocity by default. There is an assumed minimum velocity of about 0.8 m/s to allow for stable computation with 1 Newton iteration. \r\n\r\nIn the same PR I also switch on the lateral mixing of precipitation in the updrafts where area fraction decreases with height.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-03T23:51:32Z",
+    "deletions": 58,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-11T21:32:47Z",
+    "number": 4744,
+    "title": "Use non-constant rain sedimentation velocity"
+  }
+]
