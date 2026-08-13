@@ -1,0 +1,138 @@
+[
+  {
+    "additions": 100,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-10T19:54:50Z",
+    "deletions": 115,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-08-12T02:24:20Z",
+    "number": 5860,
+    "title": "Explicit imports in OutputReaders"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Two runtime failures currently make `NCCLDistributed` unusable; both reproduce on Oceananigans v0.110.14 and current main, verified on 2\u00d7A100 (Slurm, MPICH hydra host launch).\n\n**1. `UndefVarError: cuStreamWaitEvent not defined in CUDA`** on every `fill_halo_regions!`: the extension calls the raw driver symbol `CUDA.cuStreamWaitEvent`, which is no longer bound in the `CUDA` module after the CUDA.jl/CUDACore split. Fixed by the high-level `CUDA.wait(event, stream)` (reexported from CUDACore, also present pre-split), which is exactly `cuStreamWaitEvent(stream, event, 0)`.\n\n**2. Segfault in MPI's host memcpy on device-resident buffers** reaching the `NCCLCommunicator` MPI forwarding methods. Distributed field reductions (e.g. `minimum_xspacing` \u2192 `maybe_all_reduce!` \u2192 `MPI.Allreduce!`) pass small device arrays; forwarding them verbatim to a host MPI library that is not CUDA-aware crashes in `MPIR_Typerep_unpack`/`__memmove`:\n\n```\n__memmove_evex_unaligned_erms at /lib64/libc.so.6\nMPIR_Typerep_unpack ... libmpi.so\n...\nAllreduce! at ext/OceananigansNCCLExt/nccl_distributed.jl:20\nall_reduce! at src/DistributedComputations/partition_assemble.jl:8\nmaybe_all_reduce! at src/DistributedComputations/distributed_fields.jl:168\nminimum_xspacing ...\n```\n\nFixed by staging `CUDA.AnyCuArray` buffers through the host in `MPI.Allreduce!`/`MPI.Allreduce`/`MPI.Bcast!` on `NCCLCommunicator` \u2014 these buffers are tiny (reduction results), so the copies are negligible, and host staging supports every reduction operator (NCCL only covers +, *, min, max).\n\nWith both fixes, a 2-rank x-partitioned `CenterField` halo exchange validates end-to-end (each rank's x halos hold the neighbor's rank-constant), and a full nested-model construction proceeds past the previously crashing reduction.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-11T10:07:41Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-08-12T08:02:04Z",
+    "number": 5863,
+    "title": "Fix NCCLDistributed runtime failures: CUDA.wait and device-buffer MPI collectives"
+  },
+  {
+    "additions": 130,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "It was already possible to enable compression by setting the `jld2_kw` argument, but the syntax is slightly obnoxious and giving that argument a non-empty default is probably not a good idea because it'd be easy to lose the default setting, so I went with a separate argument.  Haven't turned the default on, but might as well do it.  Ref: https://github.com/NumericalEarth/Breeze.jl/pull/886#issuecomment-5208043846.\r\n\r\nCC @milankl who may have opinions about compression.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-08T19:30:00Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-08-12T12:55:40Z",
+    "number": 5851,
+    "title": "Add compress keyword argument to JLD2Writer"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Will be nice to have #5351 in a tagged release!",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-12T15:17:10Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-08-12T17:28:57Z",
+    "number": 5867,
+    "title": "Bump v0.110.15"
+  },
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Taken out of #5851 ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-12T09:51:14Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-08-12T18:53:36Z",
+    "number": 5865,
+    "title": "Throw an error when file splitting limit is below metadata size"
+  },
+  {
+    "additions": 108,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Plus it removes 4 method ambiguities",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-11T00:41:11Z",
+    "deletions": 104,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-08-12T22:01:13Z",
+    "number": 5862,
+    "title": "Explicit imports for OutputWriters module"
+  }
+]
