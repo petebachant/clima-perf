@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 5583,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "**Consolidation & taxonomy**\r\n- Make `test/runtests.jl` the source of truth: register all standalone and GPU test files with a `tier` (unit/inference/conv/allocs/smoke/gpu/misc), a `subsystem`, and a `slow` flag; match filename prefixes to tiers (`unit_`, `inference_`, `conv_`, \u2026); document the conventions in `test/README.md`.\r\n- Rebuild the Buildkite pipeline around the harness: one job per subsystem on CPU and GPU, plus one per tier, replacing the single-process steps that duplicated them.\r\n- Keep the two-core GitHub runners inside their budget. GHA and Downgrade skip `slow` tests and the tiers that repeat their cases or run end-to-end (conv/inference/allocs/smoke), which Buildkite covers. Downgrade also drops `:inference`, whose JET counts are pinned to the Manifest and drift under forced-oldest dependencies. Unit tests go from hitting the 80-minute timeout to ~45 minutes.\r\n- Add CG/DG integration smoke tests (Bickley jet, column advection, solid-body rotation, baroclinic wave) and DG interface-flux and stability property tests.\r\n- Probe all four divergence forms (strong, weak, split, DG) with vector spherical harmonics, whose divergence is pointwise-exact at every wavenumber: post-DSS max-norm accuracy up to the element resolution limit, the pre-DSS inter-element jump, and its O(h^(Nq\u22121)) refinement rate (measured 2.82 against a design rate of 3 for Nq = 4).\r\n- Sweep Float32 and Float64 across DataLayouts, CommonSpaces, Spaces, and Operators; parameterize the shared 2D/3D test utilities by `FT`.\r\n\r\n**Fixes**\r\n- Fix the Bickley jet DG flux: physical velocity components were labeled contravariant, so the volume term disagreed with the interface Rusanov flux by the metric factor \u03c0/4. Both forms now build from one physical flux function.\r\n- Fix GPU kernel compilation in the bidiag-matrix-row test (`Base.Fix1` holding a `Type` is not a bitstype) and allocation-test failures that came from measurement rather than allocation: an inline `@allocated f(...)` depends on the caller's inlining budget, so it now runs from `@noinline` wrappers.\r\n- Merge `:opt` into `:inference`; JET's `@test_opt` is a type-stability check, so the two tiers tested the same thing. The tier runs under both `--check-bounds` settings, since JET reads the optimized IR and a bounds check that fails to compile under only one setting would otherwise go unnoticed.\r\n- Set `CLIMACOMMS_DEVICE=CUDA` on two \"cuda\" MPI jobs that ran on CPU; drop a duplicate Integrals perf step; add assertions to three tests that checked only that nothing threw; promote the advection-convergence job from soft to hard.\r\n- Restore GPU matrix-field broadcasting coverage: a CPU umbrella over all 22 cases in the harness, and a Buildkite matrix running each case as its own GPU job. Several need minutes of ptxas apiece, and sharing a process starves the assembler, which is SIGKILLed partway through `test_scalar_15`. A README maps each `test_scalar_*`/`test_non_scalar_*` filename to the expression it tests.\r\n- Instrument coverage only on the job that uploads it. `if: ${{ a }} && ${{ b }}` interpolates each `${{ }}` separately and leaves the string `\"true && false\"`, which is truthy either way, so codecov uploaded from every job in the matrix. Instrumentation also bypasses the precompiled pkgimages, making an instrumented run ~2.5x longer, and is what killed the 1.11 jobs near the end of the suite: with coverage off it passes the test that killed it (172 tests, 30.0 s), with coverage on it is killed ~16 s in, and 1.10 passes either way.\r\n- Raise the RootSolvers and ClimaComms compat floors; reformat for JuliaFormatter v2.10.1.\r\n\r\n**Known soft failures**: three GPU matrix-field broadcasting cases (`test_scalar_14`, `test_scalar_15`, `test_non_scalar_2`) and 2-rank GPU distributed remapping.",
+    "changedFiles": 216,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-06T04:45:21Z",
+    "deletions": 3817,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-13T06:04:44Z",
+    "number": 2570,
+    "title": "Test suite consolidation, dual-precision expansion, and CI stabilization."
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "## Purpose\n\nCloses #1432.\n\n`Base.any(fv::FieldVector)` was defined as `any(identity, A)` in `src/Fields/fieldvector.jl`, where `A` does not exist in that scope. Calling it threw:\n\n```\njulia> Yb = Fields.FieldVector(b = fill(false, space));\n\njulia> any(Yb)\nERROR: UndefVarError: `A` not defined\n\njulia> all(Yb)   # the parallel method, which correctly uses `fv`\nfalse\n```\n\nThis has been broken since the method was introduced in cf826d31 (2021-11-10), which is why nothing downstream depends on it.\n\nWhile confirming this, I also verified that the feature #1432 actually asks for \u2014 `any(isnan, Y)` on a `FieldVector` \u2014 already works via the predicate methods on the two lines above:\n\n```\nany(isnan, Y)     -> false\nparent(Y.u)[1] = NaN\nany(isnan, Y)     -> true\nall(isfinite, Y)  -> false\n```\n\nSo #1432 is closed by this PR: the requested behaviour is present, and the one adjacent method that was genuinely broken is now fixed.\n\n## Content\n\n- `src/Fields/fieldvector.jl`: `A` \u2192 `fv`.\n- `test/Fields/unit_field.jl`: new `FieldVector any/all` testset covering both the zero-argument `any`/`all` methods (the regression) and the predicate forms including `any(isnan, Y)`.\n\nVerified locally on Julia 1.10.11 against the `.buildkite` project: the new testset passes 9/9, and the rest of `test/Fields/unit_field.jl` is unaffected.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01RK7mxypihyEYPvWmTRy8BT",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5u2WKu",
+        "number": 1432,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1432"
+      }
+    ],
+    "createdAt": "2026-08-12T19:35:24Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-13T18:40:25Z",
+    "number": 2583,
+    "title": "Fix `any(::FieldVector)` referencing an undefined variable"
+  }
+]
