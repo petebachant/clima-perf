@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "## Summary\n\nThis fixes averaged output after a simulation restarts with a different `AveragedTimeInterval`.\n\nIf part of an average already exists at the checkpoint, that work is kept. For example, if the checkpoint contains the first 0.5 days of an average and the new interval is 2 days, Oceananigans keeps those 0.5 days, collects another 1.5 days, and then writes one complete 2-day average.\n\n## What went wrong\n\n`AveragedTimeInterval` stores an internal value named `actuations`. This is the number of averaging windows that have already finished. The end of the next window is calculated as:\n\n```julia\nnext_time = first_time + (actuations + 1) * interval\n```\n\nBefore this change, checkpoints stored `actuations`, but did not store the interval and window that produced it. On restart, Oceananigans restored the old value of `actuations` into the newly configured interval.\n\nFor example, the reported checkpoint contained:\n\n```text\nactuations = 6205\nold interval = 1 day\n```\n\nWith the original interval, the next averaging boundary was approximately:\n\n```text\n6206 \u00d7 1 day = model year 17\n```\n\nAfter changing the interval to 5 days, the same stored value was interpreted as:\n\n```text\n6206 \u00d7 5 days = model year 85\n```\n\nThe simulation was around model year 18, so the averaging calculation would not start another window until approximately year 85. The file writer still ran every 5 days, but it repeatedly wrote the previous cached average. This made temperature, salinity, and other averaged output appear exactly constant while the model itself continued to change.\n\n## Fix\n\n- Store the interval and window with the averaging state.\n- If they are unchanged after restart, restore the averaging state exactly as before.\n- If they changed, keep the partial cached average and its original start time.\n- Schedule the next output at the end of the newly configured averaging window.\n- Keep the file writer schedule aligned with that window.\n\n## Test\n\nThe new test:\n\n1. Starts with `AveragedTimeInterval(1day)`.\n2. Runs for 0.5 days and writes a checkpoint.\n3. Confirms that the checkpoint contains a 0.5-day partial average.\n4. Restarts with `AveragedTimeInterval(2days)`.\n5. Confirms that the 0.5-day cache is restored.\n6. Runs to day 2 and checks both the completed average and the value written to the JLD2 file.\n\n`git diff --check` passes. Local tests were not run because this workspace uses GitHub CI for test execution.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-13T08:09:33Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-08-14T00:32:58Z",
+    "number": 5875,
+    "title": "Fix averaged output pickup after interval changes"
+  },
+  {
+    "additions": 106,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Right now `NetCDFWriter` picks its NetCDF open mode from `overwrite_existing` alone which mean you cannot do file splitting with `overwrite_existing = false` or with checkpoints.\r\n\r\nThe PR creates the file whenever it isn't there and adds two tests to make sure NetCDF file splitting works while appending and with checkpointing.\r\n\r\nResolves #5868\r\n\r\n---\r\n\r\nBit more context:\r\n\r\nYou can only open a NetCDF file in three modes: \"c\" for clobber (or create?), \"a\" for append, and \"r\" for reading.\r\n\r\nBoth \"a\" and \"r\" require the file to exist as they call `nc_open` under the hood. So if the file does not exist, you have to use \"c\" so `nc_create` gets called.\r\n\r\nAnd when `overwrite_existing = true`, \"c\" is used and when `nc_create` is called any existing file is overwritten.\r\n\r\nBefore this PR, the mode was chosen via `mode = overwrite_existing ? \"c\" : \"a\"` but this is wrong in the case where `overwrite_existing = false` and the output file does not exist.\r\n\r\nThat happens in the constructor if the path doesn't exist yet, because either it's a fresh run, or a restart where a previous run's splitting renamed `output.nc` to `output_part1.nc`.\r\n\r\nSo the solution to both cases is to make sure we always create the file if it doesn't exist with `mode = (overwrite_existing || !isfile(filepath)) ? \"c\" : \"a\"`.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABMh35EQ",
+        "number": 5868,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5868"
+      }
+    ],
+    "createdAt": "2026-08-12T22:25:32Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2026-08-14T14:43:34Z",
+    "number": 5869,
+    "title": "Fix NetCDF file splitting when `overwrite_existing = false`"
+  },
+  {
+    "additions": 156,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Right now `NetCDFWriter` creates the output file in the constructor which can lead to issues with checkpointing and file splitting such as #5870. `JLD2Writer` and `ZarrWriter` create the output file in `initialize!`. So this PR moves file creation for `NetCDFWriter` from the constructor into `initialize!`.\r\n\r\nThis PR also simplifies the `NetCDFWriter` struct by removing the `dataset` property which was actually not needed because the dataset was always closed unless you were inside `write_output!`.\r\n\r\nResolves #5870",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABMiVdbw",
+        "number": 5870,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5870"
+      }
+    ],
+    "createdAt": "2026-08-12T23:56:44Z",
+    "deletions": 66,
+    "labels": [],
+    "mergedAt": "2026-08-14T14:43:35Z",
+    "number": 5871,
+    "title": "Defer `NetCDFWriter` file creation to `initialize!`"
+  }
+]

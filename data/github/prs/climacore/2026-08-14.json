@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 3316,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "**Reorganization.** Group examples by geometry (`column/`, `plane/`, `sphere/`,\r\n`hybrid/{box,plane,sphere}`); delete the Held\u2013Suarez cases, the\r\npotential-temperature and internal-energy variants (the total-energy form\r\nremains), duplicated cases, and dead scripts \u2014 28 files deleted, net \u22124,200\r\nlines. Merge the CUDA shallow-water fork into `sphere/shallow_water.jl`; share\r\nthe 2D plane setup in `plane_utils.jl`, the figure-link helper in\r\n`example_utils.jl`, and the bubble constants in `bubble_parameters.jl`; sweep\r\nall four flux constraints in one column limiter example. Consolidate\r\nrepetitive Buildkite steps into matrices, and point figure links at\r\nrepository-root paths so they resolve in the build logs.\r\n\r\n**Dependency removal.** Examples, tests, and the introduction tutorial\r\ntime-step with ClimaTimeSteppers 0.10; the OrdinaryDiffEq/SciML dependencies\r\nare gone, which drops 27 packages from the Buildkite environment. The SciML\r\ncompatibility layer goes with them \u2014 breaking for anyone passing a `Field` to\r\nan OrdinaryDiffEq integrator, recorded in NEWS.md \u2014 and the two time-stepping\r\ntests join the curated suite under `Pkg.test`.\r\n\r\n**Physics fixes.** Terrain-following surface flow in the mountain and channel\r\ncases, applied between stages rather than by mutating the stage state; the\r\ncorrect Exner exponent in the mountain initial density (cv/R, not cp/R \u2014 the\r\nstate was out of hydrostatic balance by a factor of \u03c0(z)); a consistent\r\nconstant-N\u00b2 Exner profile in the Agnesi case; pressure rather than density in\r\nthe isothermal channel's vertical energy flux; in-place mass-matrix\r\nnormalization of the DG tendency; degrees\u2192radians in the sphere limiter's\r\nslot-width test.\r\n\r\n**Assertions.** Each example now asserts what it demonstrates: exact solutions\r\n(column cases), conservation and stability (jets, channels, mountains), bounds\r\n(limiters), bracketed rise speeds (bubbles), unchanged fields (balanced/at-rest\r\ncases), with measured tolerances noted in place, and runs stopped before the\r\nconfiguration becomes invalid (e.g., bubble hitting lid). Limiter error norms\r\nare normalized by the initial tracer's norm rather than pointwise, and\r\nassertions are rank-safe under MPI: root-only diagnostics are guarded, and\r\npeak velocities are reduced across ranks.",
+    "changedFiles": 94,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-09T06:19:57Z",
+    "deletions": 8113,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-14T16:10:43Z",
+    "number": 2576,
+    "title": "Examples: consolidate, correct, and make CI assert the physics"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Use CA's buildkite as a downstream test.\r\n\r\nRemove atmos from GHA based downstream tests.\r\n\r\nThe GitHub action downstream tests for climaatmos are very flaky. They often fail due to what I believe is running out of memory. Additionally, running atmos unit tests through GHA doesn't guarantee there won't be gpu errors.  This replaces the gha based atmos downstream tests with a buildkite pipeline step that runs climaatmos buildkite ci with the relevant climacore commit.  \r\n\r\nOne downside of this is that a failure is less visible. I made the trigger a soft fail to replicate the current behavior of other downstream tests. It also makes the downstream test fail for reproducibility test failures.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-14T00:03:36Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-14T19:23:27Z",
+    "number": 2585,
+    "title": "Run atmos downgrade tests through buildkite"
+  }
+]

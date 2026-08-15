@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 260,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "closes #1829 \r\n\r\nWe have a restart test for the bucket model, but none for the full land model. This adds one for the configuration of `experiments/long_runs/snowy_land_pmodel.jl` \u2014 soil, snow, soil CO2, inland water, and a canopy using the P-model for photosynthesis \u2014 on a global domain.\r\n\r\n`test/integrated/restart.jl` runs the model for 18 steps at `\u0394t = 900 s`, checkpointing at 3 hours (a driver-update boundary, so the restarted simulation sees the same forcing), then restarts from that checkpoint and integrates to the same final time. It checks that\r\n\r\n- the checkpoint round-trips every prognostic variable exactly, including the P-model's acclimated capacities;\r\n- `find_restart`/`initial_time_from_checkpoint` recover the checkpoint date;\r\n- the restarted simulation reaches the same final state as the uninterrupted one.\r\n\r\n### Restarting a dated simulation used to error\r\n\r\n`save_checkpoint` computed the output file name with `t / (60 * 60 * 24)`, which is undefined for an `ITime` \u2014 so any simulation set up from a `start_date` and a `stop_date` (i.e. every long run) failed at the first checkpoint. The time is now written as a number of seconds together with the start date it carries, and `read_checkpoint` rebuilds the `ITime` from the two. Checkpoints without a start date are read back as before.\r\n\r\n### The restart is not bit-for-bit, and why\r\n\r\nOnly `Y` is checkpointed; the cache is rebuilt from it on restart. That is exact for nearly every cache variable, but not for `p.snow.T_sfc`: it is the initial guess of the snow surface temperature root find, which takes a single Newton step per timestep, so in an uninterrupted run it carries the previous step's value, while a restart reseeds it from the air temperature. Three hours into the run above, the restarted and uninterrupted states differ by a relative `1e-4` at worst (`soil.\u222bF_e_dt`, `canopy.energy.T`).\r\n\r\n`p.snow.T_sfc` is the *only* such quantity: restoring it and nothing else makes the restart bit-for-bit identical. The test asserts both \u2014 the `1e-3` tolerance on a plain restart, and exact agreement once `p.snow.T_sfc` is restored \u2014 so it will catch any new lagged cache variable. `docs/src/restarts.md` documents this alongside the existing driver and diagnostic caveats.\r\n\r\nMaking restarts exact would mean checkpointing `p.snow.T_sfc` (or promoting it to prognostic state); happy to do that here or in a follow-up.\r\n\r\n### Note on `global_box_domain`\r\n\r\nThe test uses `global_domain` (cubed sphere) rather than the `global_box_domain` of the long run: ClimaCore's HDF5 reader only understands `XPoint`/`YPoint`/`ZPoint` interval domains, so reading a checkpoint written on a lat/long box fails with `Invalid coord type LatPoint`. Restarts of the long run as currently configured would hit this \u2014 it needs a fix in ClimaCore's `InputOutput._scan_coord_type`.\r\n\r\n### Testing\r\n\r\n`test/integrated/restart.jl` passes (51 tests, ~2 min including compilation); `test/standalone/Bucket/restart.jl` still passes.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABKg9t0A",
+        "number": 1829,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1829"
+      }
+    ],
+    "createdAt": "2026-08-05T15:06:34Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-14T00:58:47Z",
+    "number": 1840,
+    "title": "Add a restart test for the global land model with the P-model"
+  }
+]
