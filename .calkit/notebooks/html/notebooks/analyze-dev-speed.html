@@ -7511,7 +7511,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4251ccd4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=98a951f2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8279,9 +8279,29 @@ release counts into a single tidy table, written to
     <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Light24</span><span class="p">)</span>
     <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">qualitative</span><span class="o">.</span><span class="n">Dark24</span><span class="p">)</span>
 <span class="p">)</span>
-<span class="n">color_for</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">repo</span><span class="p">:</span> <span class="n">palette</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">repo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">repo_order</span><span class="p">)</span>
+<span class="c1"># Pinned colors for the highest-profile repos so they read the same in</span>
+<span class="c1"># every figure; the remaining names draw from the palette, which has these</span>
+<span class="c1"># hues removed so nothing else reuses them.</span>
+<span class="n">PINNED_COLORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"Oceananigans"</span><span class="p">:</span> <span class="s2">"#1F77B4"</span><span class="p">,</span>  <span class="c1"># blue</span>
+    <span class="s2">"ClimaAtmos"</span><span class="p">:</span> <span class="s2">"#EDB120"</span><span class="p">,</span>  <span class="c1"># yellow</span>
+    <span class="s2">"ClimaCore"</span><span class="p">:</span> <span class="s2">"#D62728"</span><span class="p">,</span>  <span class="c1"># red</span>
+    <span class="s2">"ClimaLand"</span><span class="p">:</span> <span class="s2">"#2CA02C"</span><span class="p">,</span>  <span class="c1"># green</span>
 <span class="p">}</span>
+
+<span class="n">palette</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">c</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">palette</span>
+    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">PINNED_COLORS</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+<span class="p">]</span>
+<span class="n">color_for</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_next</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">_name</span> <span class="ow">in</span> <span class="n">repo_order</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_name</span> <span class="ow">in</span> <span class="n">PINNED_COLORS</span><span class="p">:</span>
+        <span class="n">color_for</span><span class="p">[</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">PINNED_COLORS</span><span class="p">[</span><span class="n">_name</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">color_for</span><span class="p">[</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">palette</span><span class="p">[</span><span class="n">_next</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)]</span>
+        <span class="n">_next</span> <span class="o">+=</span> <span class="mi">1</span>
 
 <span class="c1"># The count-based panels (merge rate, releases) normalize the ecosystem-wide</span>
 <span class="c1"># line by the total number of repos so it reads as a per-repo average and</span>
