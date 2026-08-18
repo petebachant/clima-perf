@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 117,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Fields that are missing one of an extruded space's dimensions read out of bounds when broadcast into a finite difference stencil on a GPU. A *level* field has no vertical dimension and a *column* field has no horizontal dimensions; both hold a single value along the dimensions they are missing and are meant to be broadcast across them.\n\n```julia\nspace = TU.FaceExtrudedFiniteDifferenceSpace(Float64; zelem = 39, helem = 12)\na = zeros(space)\nb = similar(ClimaCore.Fields.level(a, 1))          # Nv == 1\n@. ClimaCore.Operators.GradientF2C()(a + b)        # reads b at v = 1:40\n```\n\nUnder `--check-bounds=yes` this throws a `BoundsError` from inside the kernel, surfaced at the next synchronization. Without forced bounds checks the same read runs unchecked, past the end of the level field's data. The CPU path is unaffected.\n\n## Root cause\n\nTwo independent defects, which is why the bug survives disabling eager evaluation.\n\n**1. `Spaces.level` silently returned the whole extruded space on device-side spaces.**\n\nBefore a launch, `strip_space` replaces a level field's space with a `LevelPlaceholderSpace`, and the kernel rebuilds it with\n\n```julia\nreconstruct_placeholder_space(::LevelPlaceholderSpace, parent_space) =\n    Spaces.level(parent_space, left_idx(parent_space)) # extract arbitrary level\n```\n\nInside a kernel, `parent_space`'s grid is a `Grids.DeviceExtrudedFiniteDifferenceGrid`, but the `level` methods were typed on `ExtrudedFiniteDifferenceSpace2D`/`3D`, whose aliases require a host `Grids.ExtrudedFiniteDifferenceGrid`. No method matched, so the call fell through to the generic identity fallback `level(x, inds...) = x` in `src/interface.jl` and returned the extruded space unchanged:\n\n| | host | device |\n|---|---|---|\n| `Spaces.level(space, 1)` | `SpectralElementSpace2D` | `ExtrudedFiniteDifferenceSpace` |\n| `Operators.vidx(space, 69 + half)` | `1` | **`70`** |\n\n`getidx` then read `field_data[70, i, j, h]` from data with `Nv == 1`. This affects both `copyto_stencil_kernel!` and `eager_copyto_stencil_kernel!`, since both reconstruct argument spaces this way.\n\n**2. The eager kernel's `calc_level_val` read every field at the thread's own indices.**\n\nEven with a correct level space, `calc_level_val(::Field, space)` indexed `data[v, i, j, h]` with the thread's `v, i, j, h` for every field leaf. So the eager kernel read a level field at every vertical index, and a column field at every horizontal index.\n\n## Fix\n\n* `src/Spaces/extruded.jl` \u2014 add `DeviceExtrudedFiniteDifferenceSpace2D`/`3D` aliases and extend both `level` methods to cover them. The aliases key on the directions spanned by the coordinates of the local geometry rather than on the layout's dimensionality: device grids do not store their horizontal grid, and grids extruded from both 1D and 2D horizontal grids use a 4-dimensional `VIJHWithF` (a `SliceXZSpace` just has `Nj == 1`). The coordinates do distinguish them \u2014 `LocalGeometry{(1, 3), XZPoint}` versus `LocalGeometry{(1, 2, 3), LatLongZPoint}`.\n* `ext/cuda/operators_fd_eager.jl` \u2014 read the dimensions that a field is missing at index 1, matching `Operators.vidx` and `Operators.hindices`.\n\n`Grids.column` is typed on the abstract grid type, so `Spaces.column` never had defect 1; only the eager kernel mishandled column fields.\n\n## Origin\n\nDefect 1 was introduced by #1987 (`Add LevelPlaceholderSpace`, v0.14.15), which was the first code to call `Spaces.level` on a device-side space. Before it, a level field's space fell through the generic `placeholder_space` fallback and reached the kernel concrete, so `vidx` returned 1. Defect 2 came in with #2466 (`FD Operator CUDAExt`), which added the eager kernel.\n\n## Tests\n\nTwo regression tests, both of which fail on `main`:\n\n* `test/Spaces/unit_spaces.jl` \u2014 \"slicing device-side extruded spaces\" covers the root cause directly, so it stays guarded if the finite difference kernels are rewritten. It checks a cubed-sphere space and an XZ slice, since only the slice distinguishes the two alias schemes. Without the fix it reports `ExtrudedFiniteDifferenceSpace === SpectralElementSpace2D` and `nlevels == 11` instead of `1`.\n* `test/Operators/finitedifference/broadcasting_edge_cases.jl` \u2014 \"Reduced-dimension arguments of a finite difference stencil\" covers the behaviour end to end, with level and column arguments at `z_elem \u2208 (10, 20)`, which with `Nq = 2` exercises the generic and eager kernels respectively. Without the fix, 3 of its 4 assertions error: the level case on both kernels, the column case on the eager kernel only.\n\nThe tests compare type names rather than using `isa` on a device-side space, because `show` of one calls `Topologies.print_context`, which has no `DeviceSideContext` method \u2014 a failing `isa` test errors while displaying its own operand instead of reporting the mismatch.\n\n## Verification\n\nRun on an A100 with `--check-bounds=yes`, on the `.buildkite` project.\n\nResults match the CPU: `GradientF2C` bitwise identical, `DivergenceF2C` to ~1e-13 relative.\n\n| Suite | Result |\n|---|---|\n| `Spaces/unit_spaces.jl` | pass (8/8 in the new testset) |\n| `Operators/finitedifference/broadcasting_edge_cases.jl` | pass (4/4 new, 2/2 existing) |\n| `unit_column.jl`, `unit_upwind_schemes.jl`, `unit_tensor.jl`, `unit_boundary_symmetry.jl` | pass |\n| `MatrixFields/matrix_fields_broadcasting/test_scalar_1..13, 16, 17` | pass |\n| `MatrixFields/matrix_fields_broadcasting/test_non_scalar_1..5` | pass |\n\n`Fields/unit_field.jl` and `Operators/integrals.jl` were not run: `JET` was unavailable in the local environment. They do not touch the changed code paths.\n\n## Follow-ups (not in this PR)\n\n* `Spaces.slab` and `Spaces.horizontal_space` have the same host-only-alias shape and are plausibly wrong on device-side spaces in the same way. Nothing here exercises them.\n* `Topologies.print_context` has no `DeviceSideContext` method, so a device-side extruded space cannot be shown.\n* The identity fallbacks `level(x, inds...) = x` and `column(x, inds...) = x` in `src/interface.jl` are what turned a missing method into silently wrong indexing. Narrowing them would surface this class of bug loudly.\n\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\n- [x] Unit tests are included OR N/A.\n- [x] Code is exercised in an integration test OR N/A.\n- [x] Documentation has been added/updated OR N/A.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_0157GSNKuMFgkQWhbFf8zD1P\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-14T15:44:49Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-17T18:58:23Z",
+    "number": 2586,
+    "title": "Fix indexing of reduced-dimension fields in GPU finite difference ker\u2026"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "This was causing ClimaAtmos conservation checks to error. There might be a cleaner way of fixing this. I do not know why the offset needs to be wrapped in Int32, but this fix does not work without it.\r\n\r\nAlso adds a test for gpu reductions with tensors. This bug was not caught in climacore ci, climaatmos ci, or the climacoupler e2e perf test...\r\n\r\n\r\nThis PR will now release ClimaCore as well\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-17T19:13:15Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-17T23:44:44Z",
+    "number": 2591,
+    "title": "Fix warp-shuffles with tensors"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 995,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Add the horizontal component of the previously vertical-only EDMFX environment SGS diffusive flux. \n\nAdds `edmfx_sgs_horizontal_diffusive_flux` option (default `false`) for high-res configs (e.g., the gray-zone to LES regime) where the horizontal grid spacing is comparable to or smaller than the environment mixing length.\n\nWater and enthalpy follow the approach in #4753. Water diffuses as a single substance `q_tot_eff = q_tot - q_rai - q_sno`. Enthalpy flux on the form `\u03c1 K_{h,h} (\u2207\u2095s_d + (h_eff + \u03a6) \u2207\u2095q_tot_eff)`  (`h_eff` the mass-weighted specific enthalpy of the suspended water). \n\nThe momentum tendency is the horizontal divergence of `\u03c4 = -2 K_{u,h} S` calculated using the full strain rate\n- applied to u,v,w and with TKE shear production from horizontal gradients. \n\nNote that the stress and the production are not energetically consistent with each other since the work done by the stress includes cross terms such as `S\u2081\u2083 \u2202\u2093w` that the production `2 \u03c1 K_{u,h} |S_h|\u00b2` does not.\n\nAnisotropy enters only through the mixing-length grid-scale limiter.\n- added `grid_scale` kwarg to `\u1d9cmixing_length`, which defaults to the resolvability filter scale \n- the horizontal path passes the horizontal node scale, so that `l_h = min(l_phys, \u0394x_h)`. \n- diffusivities are cached once per explicit cache update (`\u1d9cK_u_h`/`\u1d9cK_h_h`)\n- new diagnostics: `lmixh`, `edth`, and `evuh`.\n\nFor prognostic updrafts, the `edmfx_horizontal_diffusion` option (default `false`) applies the grid-mean horizontal specific tendencies uniformly to the updraft scalars, matching the uniform vertical treatment of `edmfx_vertical_diffusion` (#4720). \n- the `\u03c1a\u2c7c` dry-mass counterpart of the water tendency is omitted, matching `edmfx_sgs_diffusive_flux_tendency!`, where it was removed in #4551.\n\nAdded docs describing the math in `docs/src/edmf_horizontal_diffusion.md`. \nAdded a few unit tests too.\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T00:01:06Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-17T19:52:28Z",
+    "number": 4657,
+    "title": "feat(edmfx): add horizontal component to the EDMFX SGS diffusive flux"
+  },
+  {
+    "additions": 145,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Completes the consolidation from #4699 for the EDMFX vertical path: the grid-mean SGS diffusive fluxes in `edmfx_sgs_diffusive_flux_tendency!` (total enthalpy via the dry static energy + water enthalpy decomposition, specific humidity, and grid-scale tracers with the \u03b1 and interfacial-entrainment weighting folded into the flux coefficient) now use the shared `\u1da0total_enthalpy_gradient\u1d65` and `\u1d9cdiffusive_flux_divergence\u1d65`/`\u1d9cdiffdiv\u1d65` helpers. \r\n\r\nThe TKE flux keeps its dedicated divergence operator, since its bottom boundary has a nonzero surface TKE flux, and the momentum stress keeps its strain-rate form.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-16T22:54:13Z",
+    "deletions": 155,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-17T21:47:23Z",
+    "number": 4702,
+    "title": "refactor(diffusion): route EDMFX vertical diffusive fluxes through shared helpers"
+  }
+]
