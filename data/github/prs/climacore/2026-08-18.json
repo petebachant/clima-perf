@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 100,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Address every finding from `print_explicit_imports(ClimaCore; warn_implicit_imports = false)` that can be fixed from this repo:\r\n\r\n- Remove stale explicit imports (imported but unused).\r\n- Drop self-qualification, so names a module owns are referenced directly rather than through the module itself. Where a local variable shadowed the function being called (`mesh` in Topologies, `topology` in Spaces), rename the local instead.\r\n- Access names through their owner module: `Base.rand`, `Base.inv`, `Base.unsafe_load`, `Base.read`, `DiffRules.diffrules`, and `StaticArraysCore.StaticArrayStyle`. DiffRules and StaticArraysCore become direct dependencies, since they were previously reached through ForwardDiff and StaticArrays.\r\n\r\n`DataLayouts` still imports LLVM, which defines the `unsafe_load` methods for `Core.LLVMPtr`; only the name now comes from Base, which owns it.\r\n\r\nTwo sets of stale imports are kept because their uses are invisible to static analysis, and both are commented as such:\r\n\r\n- `InputOutput` imports type names so that `read_type`'s `eval` can resolve unqualified type strings, which is what an HDF5 file records when its writer had those names in scope.\r\n- `Fields` imports `@fused_direct` to re-expose it as `Fields.@fused_direct`, which tests and downstream code use.\r\n\r\nThe remaining findings are accesses to names that dependencies do not declare public (`Base.Broadcast` internals, `ClimaComms.device`, `Adapt.@adapt_structure`, ...), which this package cannot fix.\r\n\r\n\r\nThis was done by claude\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 29,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-17T16:56:59Z",
+    "deletions": 108,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-18T15:56:54Z",
+    "number": 2590,
+    "title": "Clean up imports flagged by ExplicitImports"
+  }
+]
