@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-18T16:09:42Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-08-19T07:43:45Z",
+    "number": 5882,
+    "title": "There are no method ambiguities in `Advection`"
+  },
+  {
+    "additions": 215,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "#5849 caused [out-of-bounds reads](https://github.com/NumericalEarth/Breeze.jl/issues/911) downstream in Breeze when using `GradientBoundaryCondition`.  CC @maximilian-gelbrecht.\r\n\r\n> An array-valued boundary condition is evaluated as `condition[i, j, 1]`, which is right for a plain 2D array and for a `Field` reduced along the boundary-normal direction, but not for a `Field` windowed to a boundary plane with `indices`, e.g. `GradientBoundaryCondition(Field(-g * \u03c1, indices = (:, :, grid.Nz)))`: such a field stores its data offset to the window (its k-axis is `Nz:Nz`), so `[i, j, 1]` silently reads out of bounds under `@inbounds` (and throws a `BoundsError` with `--check-bounds=yes`). Nothing validated array-valued conditions either.\r\n>\r\n> Fields windowed to a single plane in one direction are now read at their own plane, in `getbc` methods dispatching on the `Field`'s indices type parameter, for the x, y and z boundaries. Their location and window are preserved when they are adapted for kernels, as is already done for reduced fields, so that these methods also dispatch on the GPU. `regularize_boundary_condition` now rejects a `Field` windowed to more than one plane, or windowed along a tangential direction, with an `ArgumentError`. Reduced fields and plain arrays behave as before.\r\n\r\nFix https://github.com/NumericalEarth/Breeze.jl/issues/911.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOOTHUx88AAAABNHQJoQ",
+        "number": 911,
+        "repository": {
+          "id": "R_kgDOOTHUxw",
+          "name": "Breeze.jl",
+          "owner": {
+            "id": "O_kgDODNJCww",
+            "login": "NumericalEarth"
+          }
+        },
+        "url": "https://github.com/NumericalEarth/Breeze.jl/issues/911"
+      }
+    ],
+    "createdAt": "2026-08-18T08:43:40Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-08-19T23:06:17Z",
+    "number": 5881,
+    "title": "Read Field boundary conditions windowed to a plane at their own plane"
+  }
+]
