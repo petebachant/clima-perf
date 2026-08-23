@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 113,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Precipitation (rain/snow) was erroneously subtracted in reconstruction of SGS *cloud* condensate, violating condensate conservation in the quadratures. \r\n\r\nThis PR fixes this and adds tests to make sure mid point equals grid mean. ",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-20T00:16:18Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-21T00:22:24Z",
+    "number": 4777,
+    "title": "Fixes microphysics/cloud fraction bug: erroneous subtraction of precip i"
+  },
+  {
+    "additions": 446,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "- Fit `\u03bb_lagrange` to the discrete quadrature constraint `\u03a3\u1d62 w\u1d62\u00b7max(0, \u03bb + \u03b1\u00b7S\u2032\u1d62) = q_c`  instead of the continuous Gaussian; the condensate mass constraint was previously violated by \u221215% to +160% (worst for thin clouds, q_c \u2272 0.1\u00b7\u03c3_S); now it holds to machine precision.\r\n- Add a second Newton step to `_compute_z`, removing a one-sided thin-cloud CF overestimate.\r\n- 0M: return the flux-weighted energy helper E[dq_tot\u00b7e]/E[dq], so the precipitation energy sink is the true SGS average that takes covariances between `dq_tot/dt` and `e_tot` (was off by up to +56% in mixed regions, leading to warm bias near and above the melting layer).\r\n- Adds regression tests across regimes, quadrature orders, and precisions.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-20T19:36:14Z",
+    "deletions": 47,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-21T03:11:44Z",
+    "number": 4779,
+    "title": "Make the SGS quadrature closure more self-consistent:"
+  },
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Simplify energy correction for dq_tot = 0.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-21T06:04:30Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-21T15:58:47Z",
+    "number": 4781,
+    "title": "Zhaoyi's simplification"
+  },
+  {
+    "additions": 3214,
+    "author": {
+      "id": "U_kgDOCQso7A",
+      "is_bot": false,
+      "login": "cflsepyt",
+      "name": "Gary Wu"
+    },
+    "body": "# CloudSat simulator\r\n\r\nSimulator for the 94 GHz CloudSat Cloud Profiling Radar (CPR) following COSPv2. At each callback, the model samples grid-mean cloud and precipitation into subcolumns using the configured overlap assumption. For each subcolumn, the simulator:\r\n\r\n1. distributes cloud liquid, cloud ice, rain, and snow from the 1M microphysics scheme\r\n2. diagnoses particle sizes using the 1M particle-size distributions\r\n3. computes hydrometeor backscatter and extinction, together with atmospheric gas attenuation\r\n4. integrates two-way attenuation downward from the model top\r\n5. calculate total cloud cover and CFAD\r\n\r\n## Configuration\r\n\r\nThe simulator is enabled by assigning a finite value to `dt_subcol`. It currently produces CloudSat diagnostics only with the 1M microphysics scheme.\r\n\r\n```yaml\r\nmicrophysics_model: \"1M\"\r\n\r\ndt_subcol: \"10mins\"\r\ncosp_n_subcolumns: 100\r\ncosp_overlap: \"maximum_random\"\r\n\r\ndiagnostics:\r\n  - short_name: [cloudsat_tcc, cloudsat_tcc2]\r\n    period: \"10mins\"",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-21T22:03:14Z",
+    "deletions": 501,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-21T17:43:21Z",
+    "number": 4718,
+    "title": "Wu/cloudsat simulator"
+  }
+]
