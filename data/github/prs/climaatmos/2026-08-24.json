@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Every step of a build shares one depot, and one directory in it holds the compiled GPU runtime library that every GPU kernel compilation reads. Precompiling CUDA.jl deletes that directory. So when one step precompiles CUDA.jl while GPU jobs are running, a GPU job reading the file at that moment crashes. Rare and unreproducible because the window is tiny, but each job reads the file frequently. Two steps precompiled CUDA.jl in the middle of the build: checkbounds and the new `perf/run-and-time` environment. \r\n\r\nTwo commits, the first one contains the minimal fix:\r\n- Precompile the checkbounds and `perf/run-and-time` environments in the init step to prevent competing recompilation during the job steps\r\n- Fold `perf/run-and-time` into `.buildkite`, since its only additional dep is `DataFrames`. This is not necessary to fix the issue, but simplifies the testing environments slightly.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-22T20:11:07Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-24T17:32:46Z",
+    "number": 4784,
+    "title": "Fix random GPU CI failures: `LLVM error: No such file or directory`"
+  }
+]
