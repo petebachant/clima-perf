@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Adds the Liang et al. (2026) Global Biogeochemical Cycles paper and updates two published-paper citations.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-25T04:20:05Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-08-25T07:03:25Z",
+    "number": 5893,
+    "title": "Update Oceananigans papers list"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "`accumulate_result!` samples the integrand at the current clock time and weights it by the\ninterval that just elapsed, so each subinterval contributes its right endpoint. The docstring,\nthe manual, and the comment all called this a left Riemann sum.\n\nThe sign of the first-order error follows from which rule it is \u2014 a left sum underestimates an\nincreasing integrand, a right sum overestimates it \u2014 so the label matters when reconciling\naveraged output against an offline calculation.\n\nMeasured with `f(t) = t/T` over a single window with `\u0394t = T/60`, where the exact mean is 0.5,\nthe left sum 0.4916667 and the right sum 0.5083333. Two operands in one run, differing only in\nwhether the accumulator sees a current or a stale value:\n\n```julia\n@inline ramp(i, j, k, grid, clock) = clock.time / T\n\n# recomputed whenever the accumulator reads it, so at t\u2096 it holds f(t\u2096)\nfresh = Field(KernelFunctionOperation{Center, Center, Center}(ramp, grid, model.clock))\n\n# holds whatever the callback last wrote; callbacks run after diagnostics,\n# so at t\u2096 it still holds f(t\u2096\u208b\u2081)\nlagged = CenterField(grid)\nsim.callbacks[:set] = Callback(s -> set!(lagged, s.model.clock.time / T), IterationInterval(1))\n```\n\n| operand | written | matches |\n|---|---|---|\n| `fresh` | 0.5083333 | right sum |\n| `lagged` | 0.4916667 | left sum |\n\nSo the quadrature is right-endpoint, and the left sum appears only when the operand lags. The\nlagged case is what `test_averaged_specified_times.jl` exercises, which is why the label went\nunnoticed; those test comments now attribute the left sum to the lag rather than to the\nquadrature.\n\n**Docs and comments only** \u2014 no behavior change.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-25T05:30:36Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-08-25T15:33:46Z",
+    "number": 5894,
+    "title": "Document `AveragedTimeInterval`'s quadrature as right-endpoint"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "Fixes a bug introduced in #5610 which breaks the OceananigansBenchmark package, and the io benchmarking.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-24T15:04:50Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-08-25T16:54:25Z",
+    "number": 5892,
+    "title": "Deduplicate `zarr_chunks` keyword argument"
+  }
+]

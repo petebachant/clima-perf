@@ -1,0 +1,54 @@
+[
+  {
+    "additions": 1645,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "closes #1833 \r\ncloses #1813 \r\n\r\nFollows up on #1819: turns the partitioning plots into a leaderboard, adds panels to the annual leaderboards, and makes site and global runs share one plotting path.\r\n\r\n## Partitioning leaderboard\r\n\r\nA third leaderboard alongside ERA5 and FlagshipCarbonMetrics, with one row per fraction:\r\n\r\n| Row | Observations |\r\n|---|---|\r\n| `LHF/(LHF+SHF)` | ERA5 |\r\n| `SR/(SR+SSR)` | ERA5 |\r\n| `ET/P` | ERA5 evaporation over the simulation's own (prescribed) precipitation |\r\n| `T/ET` | none gridded \u2014 shown against Wei et al. (2017), 0.57 \u00b1 0.07 |\r\n\r\nThe ERA5 artifact already contains `msror`, `mssror` and `mer`, so the first three rows get real bias maps; they are registered through a separate name list so the standard ERA5 leaderboard gains no rows. Every panel aggregates numerator and denominator before dividing: the mean of a ratio is not the ratio of the means, and a per-cell `ET/P` diverges wherever precipitation approaches zero. Replaces `create_partitioning_plots` for global runs, whose hardcoded `[:, 1:180]` obs slice only lined up at the default resolution.\r\n\r\n## New panels on the leaderboards\r\n\r\nAll three of these are on the annual leaderboards and on the partitioning one.\r\n\r\n- `LAT`: zonal mean of the annual mean, with a band of \u00b11 standard deviation along each latitude band. For a fraction the mean line still aggregates before dividing, but the band has to come from the per-cell ratios \u2014 there is no other sense in which a ratio varies along a band \u2014 which is safe because the small-denominator mask has already dropped the cells where a per-cell ratio would blow up.\r\n- `MON`: global seasonal cycle, with a band of the spread across years. Note this is the spread of a *global average*, so a thin band means the global mean is reproducible between years, not that the field is uniform.\r\n- `IAV`: area-weighted global annual mean, SIM vs OBS, one point per year, with the 1:1 line, the least squares fit, slope, r\u00b2 and \u03c3_sim/\u03c3_obs. Points run blue to red with the year and the first and last are labelled in place, so a drift reads off the plot without spending a strip of the panel on a colorbar. Only years covering all twelve months count \u2014 a partial year's mean is aliased by whichever part of the seasonal cycle it sampled \u2014 and the column is drawn only for runs with more than three of them. A fraction aggregates its numerator and denominator over the year before dividing, as its other panels do.\r\n\r\nr\u00b2 and the amplitude ratio answer different questions: whether the model varies in the right years, and whether it varies by the right amount. On this run `gpp` gets r\u00b2 0.61 with \u03c3_sim/\u03c3_obs 0.41, so it tracks the interannual signal but damps it to 40% of observed; `er` gets 0.14 and 0.17, i.e. almost no interannual variability at all.\r\n\r\n`SR/(SR+SSR)` is worse than either: slope \u22120.47, r\u00b2 0.18, amplitude ratio 1.10. The model varies its surface runoff fraction by about the right amount from year to year, but *anticorrelated* with ERA5 \u2014 which compounds the mean bias noted at the bottom of this description.\r\n\r\n## Single-column output\r\n\r\nFollowing the review suggestion in #1819: site plotting now goes through `site_timeseries`, which reads either a `DictWriter` or a `NetCDFWriter` and reports the start of each reduction period in both cases. `experiments/integrated/era5/single_site.jl` now writes NetCDF.\r\n\r\nI did not change the `default_output_writer` default for `Column`/`Point`. In-memory output is deliberate for the site and calibration workflows, and making the plotting writer-agnostic achieves the unification without it. Happy to flip the default separately.\r\n\r\n## Bugs fixed along the way\r\n\r\n- `trans` was declared `m s^-1`, but `compute_canopy_transpiration!` returns a mass flux. The ratios were fine \u2014 both sides were mass fluxes \u2014 but anything dispatching on the units string would be misled.\r\n- The `DictWriter` timestamp correction used `Month(dates[2]) - Month(dates[1])`, which returns `Month(-11)` when a run's first two outputs straddle a year boundary. It worked only because `single_site.jl` happens to start in March.\r\n- `create_partitioning_plots` saved `fig`/`fig2` outside the block that defined them, so any run without `shf`/`lhf` hit an `UndefVarError`.\r\n- Site `ET/P` came out negative: `precip` is stored downward-positive and the site path bypassed the `abs` in `_preprocess_sim_var`.\r\n\r\n## Performance\r\n\r\n`ClimaAnalysis.apply_oceanmask`, and the masks `make_lonlat_mask` builds, rebuild their mask and resample it onto the target grid on *every* call \u2014 and a leaderboard masks every monthly slice of every variable several times over (`_prepare_for_bias` alone runs three times per slice, for the sim, RMSE and bias series). Since every one of these masks NaNs cells multiplicatively, which cells are masked is the same for any field on the grid and only needs resolving once. `_resolved_mask` does that against an all-zero template on the sim grid \u2014 all-zero rather than the field itself, so a variable's own missing values are not folded into the base mask \u2014 and falls back to the original function for a field on another grid.\r\n\r\nOn 19 years of monthly output:\r\n\r\n| Leaderboard | Before | After |\r\n|---|---|---|\r\n| FlagshipCarbonMetrics | 443 s | 126 s |\r\n| ILAMB | 632 s | 121 s |\r\n| ERA5 | 1169 s | 130 s |\r\n| Partitioning | 108 s | 108 s (already hoisted) |\r\n| **Total** | **~40 min** | **~8 min** |\r\n\r\nAll ten output PNGs are byte-for-byte identical before and after.\r\n\r\n## Validation\r\n\r\nRun against 19 years of monthly output from a snowy-land long run, across all three seasonal leaderboards plus the partitioning one. That run predates `et` being added to the LandModel short diagnostics (in #1819), so `ET/P` and `T/ET` were exercised with a synthetic `et = lhf/\u03bb`; production long runs will have a real `et`. The single-column path was validated with a 5-month column run.\r\n\r\nOne result worth a look independently of this PR: `SR/(SR+SSR)` has a global bias of +0.244 (RMSE 0.442), peaking at 0.68 in May against ERA5's 0.41, with the zonal profile at ~0.8 where ERA5 is 0.05\u20130.2 across 40\u201370\u00b0N. The model routes far too much water to surface rather than subsurface runoff in the northern extratropics, worst at snowmelt.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\n<img width=\"6000\" height=\"3200\" alt=\"Partitioning_leaderboard\" src=\"https://github.com/user-attachments/assets/38fa8eb4-bad7-477d-a15c-b96434896504\" />\r\n\r\n<img width=\"6000\" height=\"3200\" alt=\"ERA5_sim_annual_time_avg_over_all_years\" src=\"https://github.com/user-attachments/assets/13047df6-55ae-4f80-828a-727d125594c6\" />\r\n\r\n<img width=\"6000\" height=\"3200\" alt=\"FlagshipCarbonMetrics_sim_annual_time_avg_over_all_years\" src=\"https://github.com/user-attachments/assets/45fb64e9-4fe1-4f33-8c73-5afca959951a\" />\r\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABJFju6g",
+        "number": 1813,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1813"
+      },
+      {
+        "id": "I_kwDOGiZe4s8AAAABK1zEng",
+        "number": 1833,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1833"
+      }
+    ],
+    "createdAt": "2026-08-03T18:14:53Z",
+    "deletions": 639,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-25T19:13:53Z",
+    "number": 1836,
+    "title": "Partitioning leaderboard, zonal-mean and interannual-spread panels"
+  }
+]
