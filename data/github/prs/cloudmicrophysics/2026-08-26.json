@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 433,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "- **Fix a factor `2^\u03b1` in the snow aspect-ratio average**: `\u03d5_av` used the\r\n  radius-based PSD slope for a diameter-based power law, inflating shape-based\r\n  (`Oblate`/`Prolate`) snow terminal velocities by ~26%. \r\n- **Make the 1M rates ForwardDiff-differentiable**: removed the\r\n  `::FT ... where {FT}` annotations for consistency with ForwardDiff and other Clima repos,\r\n  with `zero(rate)` fallbacks and `\u03f5_numerics` filters; the  integer-hardening happens now \r\n  inside `Utilities.\u03f5_numerics`. New AD tests check rates against central differences in\r\n  both precisions, plus mixed-Dual return-type sweeps in `return_type_tests.jl`.\r\n- **Suppress snow deposition above freezing** (sublimation stays active):\r\n  closes an unphysical (but tiny) vapor\u2192ice growth path reachable during transient\r\n  supersaturation spikes. \r\n- **Fail clearly on option/parameter mismatches**: passing e.g.\r\n  `WithSupersaturation()` with parameters built for `NoSupersaturation` now\r\n  throws an actionable `ArgumentError` instead of an obscure field error.\r\n- Comment/doc fixes: Chen et al. (2022) table references corrected to\r\n  B1/B3/B5, `cp_l` in the melt factor.\r\n\r\n**Results change** only for the shape-based snow terminal velocity (\u221226%) and for\r\nsnow deposition in ice-supersaturated air above freezing (now 0).\r\n\r\nMerge this *before* #779 ",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-24T18:20:08Z",
+    "deletions": 167,
+    "labels": [
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-26T01:54:47Z",
+    "number": 780,
+    "title": "1M correctness and robustness fixes"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "The shape-based snow terminal velocity derives an aspect ratio `\u03d5` from the assumed mass and area laws via a spheroid relation. With the snow apparent density (100 kg/m\u00b3), the implied `\u03d5` exceeds 1, which lies outside the domain of the Chen et al. (2022) oblate correction ; the correction (unphysically) enhanced fall speed. \r\n\r\nThis PR passes the bulk ice density (916.7 kg/m\u00b3, the P3 scheme's convention for the same relation) into the spheroid relation; the apparent density is still used in other places in the Chen coefficients. The resulting \u03d5 is documented as an effective parameter of the velocity correction, not a true geometry factor\r\n\r\nImplication: shape-based snow fall speeds decrease by ~2\u00d7, bringing all three snow-velocity options (Oblate, Prolate, prescribed-\u03d5 default) into agreement within 5\u201317%, where they previously disagreed by a factor of 2\u20133. The default (non-shape) variant is unchanged. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-24T18:00:05Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-26T02:39:01Z",
+    "number": 779,
+    "title": "Use bulk ice density in the snow aspect-ratio relation (as in P3)"
+  }
+]

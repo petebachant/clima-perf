@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "Disclaimer: \ud83e\udd16 Code and most of this PR description were generated with [Claude Code](https://claude.com/claude-code). I (Beno\u00eet, the human) have reviewed the code and it looks good to me, but I don't want to break anything so please take a look (it's a small diff)!\r\n\r\n## Summary\r\n\r\nI want to build a transport matrix by computing the tendencies from all terms, including those that are usually treated implicitly, so I tried `IsopycnalSkewSymmetricDiffusivity` with `ExplicitTimeDiscretization`, but it errored. The closure naturally defaults to `VerticallyImplicitTimeDiscretization`, so the explicit path was never exercised. \r\n\r\nI know I may be the only one finding a use for an explicit formulation, but this surfaced three latent bugs (as soon as `ExplicitTimeDiscretization()` is passed), which I think does not hurt to fix (and helps me). A minimal model errors at construction, then (once that is fixed) at the first `time_step!`, then again inside `diffusive_flux_z`.\r\n\r\n### The three bugs (all in [`isopycnal_skew_symmetric_diffusivity.jl`](https://github.com/CliMA/Oceananigans.jl/blob/main/src/TurbulenceClosures/turbulence_closure_implementations/isopycnal_skew_symmetric_diffusivity.jl))\r\n\r\n1. `build_closure_fields` returned `NamedFieldTuple()` but an empty instance is unconstructable (`MethodError`). Replaced with `NamedTuple()`.\r\n\r\n2. `compute_closure_fields!` unconditionally launched `compute_tapered_R\u2083\u2083!`, writing `closure_fields.\u03f5_R\u2083\u2083`, but that field that only exists in the implicit case. Now conditional on `VerticallyImplicitTimeDiscretization` (mirrors the triad variant).\r\n\r\n3. `explicit_\u03ba_\u2202z_c` for `ExplicitTimeDiscretization` omitted the tracer argument `c` even though it references `c` in its body (the implicit method swallows it via `args...`). Added `c` to the signature.\r\n\r\nWith these fixes, the vertical `R\u2083\u2083` term is included in the explicit tracer tendency `G\u207f` (via `explicit_\u03ba_\u2202z_c` in `diffusive_flux_z`), instead of being folded into the implicit vertical solve and omitted from `G\u207f`. None of the changes affect the default vertically-implicit path AFAICT.\r\n\r\n## Test (updated)\r\n\r\nAdds an `IsopycnalSkewSymmetricDiffusivity` regression testset to `test/test_turbulence_closures.jl`, which constructs and time-steps the closure across both time discretizations and both skew-flux formulations. Verified passing locally for `CPU` \u00d7 {`Float64`, `Float32`} (8/8).\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-30T02:35:58Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-08-26T12:54:39Z",
+    "number": 5742,
+    "title": "Fix IsopycnalSkewSymmetricDiffusivity with ExplicitTimeDiscretization"
+  }
+]
