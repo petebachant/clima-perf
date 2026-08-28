@@ -1,0 +1,78 @@
+[
+  {
+    "additions": 174,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR moves the CloudMicrophysics 1M process options into NonEquilibriumMicrophysics1M within AtmosModel. This enables direct use of these options in ClimaAtmos run scripts:\r\n\r\n```julia\r\nimport ClimaAtmos as CA\r\n\r\nmicrophysics_model = CA.NonEquilibriumMicrophysics1M(;\r\n    n_substeps = 3,\r\n    n_substeps_quad = 2,\r\n    rain_autoconversion = CA.CMP.PrescribedNd(),        # instead of Kessler1M()\r\n    cloud_ice_formation = CA.CMP.TemperatureDependent(), # instead of ConstantTimescale()\r\n    snow_autoconversion = CA.CMP.WithSupersaturation(),\r\n    rain_snow_accretion = nothing,                    # process off\r\n)\r\n\r\nsimulation = CA.Presets.aquaplanet(\r\n    Float64;\r\n    model = CA.Presets.nonequil_moist_1m(; microphysics_model),\r\n    t_end = 86400,\r\n)\r\nCA.solve_atmos!(simulation)\r\n```",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABJPMyZQ",
+        "number": 4709,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4709"
+      }
+    ],
+    "createdAt": "2026-08-07T18:31:01Z",
+    "deletions": 49,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-27T21:43:33Z",
+    "number": 4751,
+    "title": "Move 1M options into AtmosModel"
+  },
+  {
+    "additions": 95,
+    "author": {
+      "is_bot": true,
+      "login": "app/copilot-swe-agent"
+    },
+    "body": "When using the `SlabOceanSST` surface model, any surface temperature specified via `surface_condition` in a case setup is overwritten by the slab ocean's prognostic initialization. This is correct and intended behavior, but the silent overwrite can confuse users, particularly when adapting existing cases or debugging initialization values.\r\n\r\n## Changes\r\n\r\n**Warning in model initialization**\r\n- Added a conditional warning in `AtmosSurface()` (src/config/model_getters.jl, lines 833\u2013835) that emits when `SlabOceanSST` is active and a setup provides a `surface_condition` temperature\r\n- Warning informs users their value will be overwritten and directs them to `prognostic_variables.jl`\r\n- No impact on model creation or existing behavior\u2014purely informational\r\n\r\n**Test coverage**\r\n- Added `test/slab_ocean_warning.jl` with three test cases:\r\n  - Warning emitted when setup provides surface temperature with `SlabOceanSST`\r\n  - No warning when `setup_type` is `nothing`\r\n  - No warning when using `PrescribedSST` (as expected)\r\n\r\n## Example\r\n\r\n```julia\r\n# Using SlabOceanSST with a setup that provides surface_condition temperature:\r\nconfig = CA.AtmosConfig(Dict(\"prognostic_surface\" => \"SlabOceanSST\", ...))\r\nsetup_type = CA.Setups.TRMM_LBA()  # Defines surface_condition temperature\r\nsurface = CA.AtmosSurface(config, params, FT; setup_type = setup_type)\r\n\r\n# Emits warning:\r\n# \u250c Warning: `SlabOceanSST` is active; the surface temperature specified via\r\n# \u2502 `surface_condition` in the case setup will be overwritten by the slab ocean's\r\n# \u2502 prognostic initialization (see `prognostic_variables.jl`).\r\n# \u2514 @ ClimaAtmos.config.model_getters ...\r\n```\r\n\r\nCloses https://github.com/CliMA/ClimaAtmos.jl/issues/4580",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABFUsXAw",
+        "number": 4580,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4580"
+      }
+    ],
+    "createdAt": "2026-06-23T00:01:58Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-27T23:52:11Z",
+    "number": 4604,
+    "title": "Warn users when SlabOceanSST overwrites surface_condition temperature"
+  }
+]

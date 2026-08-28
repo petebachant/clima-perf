@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 718,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR introduces a way to implicitly handle (linear) boundary conditions\r\n```julia\r\n\"\"\"\r\n    struct ImplicitExplicitFlux{E, C}\r\n\r\nCondition for a vertical `Flux` boundary condition whose value is affine in the\r\nboundary-cell field value `\u03c6_b`,\r\n\r\nJ(\u03c6_b) = F\u2091 + \u03bb \u03c6_b ,\r\n\r\nwhere `F\u2091` is the `explicit_flux` and `\u03bb` is the `coefficient`. The explicit part `F\u2091` is integrated through the tendency\r\nlike an ordinary flux boundary condition, while the linear part `\u03bb \u03c6_b` is integrated implicitly by the vertical tridiagonal\r\nsolver. This removes the `\u0394z`-dependent CFL limit that an explicit flux imposes, and is unconditionally stable for dissipative\r\nfluxes (`\u03bb \u03c6_b` a sink), such as drag and linear restoring.\r\n\"\"\"\r\nstruct ImplicitExplicitFlux{E, C}\r\n    explicit_flux :: E\r\n    coefficient   :: C\r\nend\r\n```\r\n\r\nAt the beginning I thought we could implement also non-linear boundary conditions but I do think that at the moment we can do a lot of things with a linear implicit BC (a non linear would require probably AD to work properly). But happy to see what people think about it.\r\n\r\nA step forward to solve #5630 ",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-27T15:01:27Z",
+    "deletions": 318,
+    "labels": [],
+    "mergedAt": "2026-08-27T06:57:56Z",
+    "number": 5631,
+    "title": "implement an `IMEXFluxTimeDiscretization` for `FluxBoundaryCondition`"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "to capture #5631 for use in NumericalEarth.jl",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-27T07:27:51Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-08-27T10:00:06Z",
+    "number": 5899,
+    "title": "(0.110.20) Bump version from 0.110.19 to 0.110.20"
+  }
+]
