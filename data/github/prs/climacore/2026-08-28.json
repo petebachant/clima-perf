@@ -1,0 +1,85 @@
+[
+  {
+    "additions": 6071,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\nDisclosure: I used claude fable to assist with the pull request, especially for adding test cases, fixing edge case compilation issues, and writing docstrings. \r\n\r\nTransforms finite difference operators into their operator matrix equivalent through broadcast expression manipulation. Deletes `stencil_interior`, `stencil_left_boundary`, and `stencil_right_boundary` methods for operators with an operator matrix equivalent.\r\n\r\n\r\nWith the exception of  manually constructed operator matrices for `GradientF2C` and `DivergenceF2C` using the `SetValue` boundary condition, all specialized `SetValue`, `SetGradient`, `SetCurl`, and `SetDivergence` methods are deleted.\r\n\r\nNon-extrapolate boundary conditions are now applied as a `SetBoundary` to the input or output.\r\n\r\nFixes the return type of gradient of a vector.\r\n\r\nFixes the return type of divergence of a 2-Tensor.\r\n\r\nModifies the boundary conditions ofadvection operators in a breaking way.\r\nAdds to the `conv_column.jl` test. See plots [here](https://caltech.box.com/s/dq1ggh6r21lm0qxfmgfnjt5oci9y5fnm)\r\n\r\nModifies all non linear advection operators to use a single pathway.\r\n\r\nExtend eager evaluation to all domains with n_levels < 256, expressions with large element types, and periodic topologies, and masked domains.\r\n\r\n\r\ncloses #2478\r\ncloses #2449\r\ncloses #2418\r\n\r\n## Changes overview\r\n\r\n\r\n1. **Eager FD evaluation** (`ext/cuda/operators_fd_eager.jl`): one x-thread per\r\n   face level, one column per y-slot; each sub-expression of a broadcast is\r\n   evaluated once per level and cached in dynamic shared memory instead of being\r\n   re-evaluated per stencil offset. Column indices are decomposed with\r\n   `CartesianIndices` whose `Ni`/`Nj` extents are compile-time constants read\r\n   off the layout type (`vijh_params`), so the per-thread `divrem` uses\r\n   fixed divisors (an earlier draft used runtime divisors and was 1.7x slower).\r\n2. **Linear operators become matrix multiplies** inside the eager kernel: a\r\n   `GradientF2C(\u03b8)`-style node is rewritten to\r\n   `FDOperatorMatrix \u22c5 \u03b8` (`MultiplyColumnwiseBandMatrixField`), with the\r\n   operator's boundary rows folded into in-range columns\r\n   (`MatrixFields/operator_matrices.jl`). Value-fixing BCs route through a\r\n   generalized `SetBoundaryOperator` that gained projecting conditions\r\n   (`SetGradient`/`SetCurl`/`SetDivergence`) so a rewritten broadcast can\r\n   reapply the original operator's BCs.\r\n3. **Advection operators** (upwind, FCT, TVD, LinVanLeer) become\r\n   `AdvectionOperator`s / `NonLinearAdvectionOperator`s sharing one stencil and\r\n   one eager shmem handler (measured 6.1x on nested FCT expressions).\r\n4. **Boundary conditions simplified**: the one-sided advection BCs\r\n   (`FirstOrderOneSided`, `ThirdOrderOneSided`) are replaced by a parametric\r\n   **`Extrapolate{N}`** (N = 0, 1, 2 ghost-point extrapolation order); custom\r\n   callable BCs are removed. Several operators/BC combinations are deleted\r\n   outright (`AdvectionC2C/F2F`, `FluxCorrectionC2C/F2F`,\r\n   `UpwindBiasedGradient`, `LeftBiased3rdOrder*`/`RightBiased3rdOrder*`;\r\n   `Extrapolate` removed from `GradientF2C`/`DivergenceF2C`, `SetGradient`\r\n   added to `GradientF2C`).\r\n\r\n\r\n## Notable design choices and behavior changes\r\n\r\n- **Missing BC now use finite zero boundary rows** (not main's loud NaN). This is\r\n  deliberate and documented in NEWS, but interacts with the open BC-name\r\n  finding below.\r\n\r\n- **Ghost-padding advection boundaries**: all faces use the interior stencil;\r\n  out-of-range centers are clamped then replaced by the BC's extrapolation.\r\n  At the boundary face the extrapolation order caps at 1 (only 2 in-range\r\n  points); order separation is only observable at the one-in face.\r\n\r\n## Math review\r\n\r\n- changes to the examples, and particularly the advection convergence tests in `test/Operators/finitedifference/conv_column.jl` should be looked at by someone.\r\n- Naming of the modified `Extrapolate`\r\n",
+    "changedFiles": 55,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms7izlrh",
+        "number": 2418,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2418"
+      },
+      {
+        "id": "I_kwDOFT2Pms7nt4Mv",
+        "number": 2449,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2449"
+      },
+      {
+        "id": "I_kwDOFT2Pms76IWsY",
+        "number": 2478,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2478"
+      }
+    ],
+    "createdAt": "2026-07-09T22:57:40Z",
+    "deletions": 4268,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-28T17:39:14Z",
+    "number": 2544,
+    "title": "FD operator refactor "
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-28T20:37:49Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-08-28T20:40:27Z",
+    "number": 2604,
+    "title": "Delete left over debugging comments"
+  }
+]

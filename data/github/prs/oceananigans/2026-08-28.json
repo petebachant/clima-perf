@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 82,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "Closes #5901.\n\n## The fix\n\nDrop the `k\u2032 = k + 2` shift in the z-face `ivd_lower_diagonal` and evaluate `\u03bd` and `\u0394z\u1d9c` at center `m`, `\u0394z\u1da0` at the row's own face `m + 1`. That corrects both index errors at once, since the shift was the source of each. `ivd_upper_diagonal` and `ivd_diagonal` are untouched.\n\n## The test\n\nA new testset in `test_turbulence_closures.jl` assembles the tridiagonal directly from `get_coefficient` and compares it against the analytic `\u2202z(\u03bd \u2202z \u03d5)` stencil, coefficient by coefficient. The coefficients are exactly linear in `\u0394t`, so taking `\u0394t = 1` recovers the operator as `L = I \u2212 A`.\n\nIt covers both stencils \u2014 `u` at `(Face, Center, Center)` and `w` at `(Center, Center, Face)` \u2014 on uniform and stretched grids, with **`\u03bd` varying in `z`**. That combination is what the existing tests lack: they use `\u03bd = 1` on uniform grids, which is the one case a mis-indexed stencil still gets right. Both locations take their coefficient from the viscosity, so neither needs a tracer index.\n\nMax relative error against the analytic stencil, interior rows, `Nz = 32`, `Lz = 1000`:\n\n| case | before | after |\n|---|---|---|\n| `u` (z-center), uniform | 5.41e-14 | 5.41e-14 |\n| `u` (z-center), stretched | 1.88e-14 | 1.88e-14 |\n| **`w` (z-face), uniform** | **4.37e-02** | **3.94e-14** |\n| **`w` (z-face), stretched** | **2.17e-01** | **1.48e-14** |\n\nThe z-center rows are identical before and after, which is the control that the change is confined to the z-face stencil.\n\n## Regressions\n\n`test_turbulence_closures.jl`: 261/261, including the 4 new assertions.\n\n`test_dynamics.jl`: 503 pass, 1 fail, 1 broken. The failure is in `\"Tilted gravity\"`, which constructs its model with `closure = nothing` and so never reaches the vertically-implicit solver. Confirmed pre-existing by running that testset in isolation against unmodified `main` \u2014 identical 47/1 with and without this change.\n\nAlso verified on an NVIDIA T4 with `TEST_ARCHITECTURE=GPU`: 4/4. The assembly loop reads grid\nmetrics per level, which are device arrays on a stretched GPU grid, so it says `@allowscalar`\nlocally rather than lean on the `CUDA.allowscalar` wrapper `runtests.jl` puts around the suite.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABOhoYVg",
+        "number": 5901,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5901"
+      }
+    ],
+    "createdAt": "2026-08-27T20:01:28Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-08-28T20:47:03Z",
+    "number": 5904,
+    "title": "Fix the \u03bd index in the z-face vertically-implicit diffusion lower diagonal"
+  }
+]
