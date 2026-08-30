@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 2021,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Adds multi-rank distributed MPI support for DG operators for CPU and CUDA, along with communication optimizations and zero-allocation improvements:\r\n\r\n1. **Distributed DG Support (CPU & GPU)**\r\n   - Implemented distributed halo exchange and ghost-face kernels for DG operators (`add_numerical_flux_internal!`, `add_lifting_flux_internal!`, and `add_numerical_flux_boundary!`) across CPU and CUDA backends.\r\n2. **Compact Face-Strip Halo Exchanges**\r\n   - Replaced full-element slab communication with face-only halo buffers (`Topologies.GhostFaceExchange`), exchanging only the $N_q$ boundary face nodes rather than $N_q \\times N_q$ full elements.\r\n3. **Computation/Communication Overlap**\r\n   - Structured halo exchanges so non-blocking communication is initiated before interior-face loops/kernels and completed just before ghost-face application, overlapping communication with local compute (20-30% performance improvement on 4 ranks).\r\n4. **Shared Halo Exchanges Across Operators**\r\n   - Added `Operators.start_dg_ghost_exchange(args...)` and the `ghost_exchange` keyword argument, enabling multiple face operators in the same stage (e.g., numerical flux and lifting flux) to reuse a single round of halo exchange.\r\n5. **Zero-Allocation Operators**\r\n   - Replaced tuple `map` calls with `UnrolledUtilities.unrolled_map` and introduced a constant no-op exchange handle (`NO_DG_GHOST_EXCHANGE`) for singleton comms contexts, achieving 0 heap allocations across CPU DG volume, numerical flux, lifting flux, and boundary flux operators.",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-27T15:46:31Z",
+    "deletions": 233,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-29T02:03:31Z",
+    "number": 2603,
+    "title": "Enable MPI for DG and improve performance by limiting ghost exchange to faces"
+  }
+]
