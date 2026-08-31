@@ -1,16 +1,16 @@
 stages:
   benchmark-amip:
-    cmd: calkit scheduler batch --name benchmark-amip@${item.date} 
-      --environment clima --log-path 
-      'runs/amip/${item.date}/output.log' --dep scripts/run.py --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
+    cmd: calkit scheduler batch --name benchmark-amip@${item.date}
+      --environment clima --log-path
+      'runs/amip/${item.date}/output.log' --dep scripts/run.py --dep
+      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep
       repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
-      --dep 
+      --dep
       repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out
-      runs/amip/${item.date}/Manifest-v1.11.toml --out 
-      runs/amip/${item.date}/repo-revs.json --command -- calkit xenv 
-      -n main --no-check -- python scripts/run.py 
+      runs/amip/${item.date}/Manifest-v1.11.toml --out
+      runs/amip/${item.date}/repo-revs.json --command -- calkit xenv
+      -n main --no-check -- python scripts/run.py
       --date="${item.date}"
     deps:
       - scripts/run.py
@@ -40,10 +40,10 @@ stages:
         - '2025-12-20'
         - '2025-12-27'
         - '2026-01-13'
-    desc: Automatically generated from the 'benchmark-amip' stage in 
+    desc: Automatically generated from the 'benchmark-amip' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-buildkite:
-    cmd: calkit nb execute --environment bk --no-check --to html 
+    cmd: calkit nb execute --environment bk --no-check --to html
       "notebooks/buildkite.ipynb"
     deps:
       - .calkit/notebooks/cleaned/notebooks/buildkite.ipynb
@@ -57,10 +57,23 @@ stages:
       - .calkit/notebooks/html/notebooks/buildkite.html:
           cache: false
     always_changed: true
-    desc: Automatically generated from the 'fetch-buildkite' stage in 
+    desc: Automatically generated from the 'fetch-buildkite' stage in
       calkit.yaml. Changes made here will be overwritten.
+  fetch-weekly-buildkite:
+    cmd: calkit xenv -n bk --no-check -- python
+      scripts/fetch-weekly-buildkite.py
+    deps:
+      - scripts/fetch-weekly-buildkite.py
+      - .calkit/env-locks/bk
+    outs:
+      - data/buildkite-weekly:
+          cache: false
+          persist: true
+    always_changed: true
+    desc: Automatically generated from the 'fetch-weekly-buildkite'
+      stage in calkit.yaml. Changes made here will be overwritten.
   fetch-github:
-    cmd: calkit xenv -n clima-data --no-check -- python 
+    cmd: calkit xenv -n clima-data --no-check -- python
       scripts/fetch-github.py
     deps:
       - scripts/fetch-github.py
@@ -70,10 +83,10 @@ stages:
           cache: false
           persist: true
     always_changed: true
-    desc: Automatically generated from the 'fetch-github' stage in 
+    desc: Automatically generated from the 'fetch-github' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-registry:
-    cmd: calkit xenv -n clima-data --no-check -- python 
+    cmd: calkit xenv -n clima-data --no-check -- python
       scripts/fetch-registry.py
     deps:
       - scripts/fetch-registry.py
@@ -83,10 +96,10 @@ stages:
           cache: false
           persist: true
     always_changed: true
-    desc: Automatically generated from the 'fetch-registry' stage in 
+    desc: Automatically generated from the 'fetch-registry' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-citations:
-    cmd: calkit xenv -n clima-data --no-check -- python 
+    cmd: calkit xenv -n clima-data --no-check -- python
       scripts/fetch-citations.py
     deps:
       - scripts/fetch-citations.py
@@ -96,10 +109,10 @@ stages:
           cache: false
           persist: true
     always_changed: true
-    desc: Automatically generated from the 'fetch-citations' stage in 
+    desc: Automatically generated from the 'fetch-citations' stage in
       calkit.yaml. Changes made here will be overwritten.
   analyze:
-    cmd: calkit nb execute --environment analyze --no-check --to html 
+    cmd: calkit nb execute --environment analyze --no-check --to html
       "notebooks/analyze.ipynb"
     deps:
       - .calkit/notebooks/cleaned/notebooks/analyze.ipynb
@@ -135,10 +148,10 @@ stages:
           cache: false
       - .calkit/notebooks/html/notebooks/analyze.html:
           cache: false
-    desc: Automatically generated from the 'analyze' stage in 
+    desc: Automatically generated from the 'analyze' stage in
       calkit.yaml. Changes made here will be overwritten.
   analyze-dev-speed:
-    cmd: calkit nb execute --environment analyze --no-check --to html 
+    cmd: calkit nb execute --environment analyze --no-check --to html
       "notebooks/analyze-dev-speed.ipynb"
     deps:
       - .calkit/notebooks/cleaned/notebooks/analyze-dev-speed.ipynb
@@ -155,5 +168,25 @@ stages:
           cache: false
       - .calkit/notebooks/html/notebooks/analyze-dev-speed.html:
           cache: false
-    desc: Automatically generated from the 'analyze-dev-speed' stage 
+    desc: Automatically generated from the 'analyze-dev-speed' stage
       in calkit.yaml. Changes made here will be overwritten.
+  analyze-weekly:
+    cmd: calkit nb execute --environment analyze --no-check --to html
+      "notebooks/analyze-weekly.ipynb"
+    deps:
+      - .calkit/notebooks/cleaned/notebooks/analyze-weekly.ipynb
+      - .calkit/env-locks/analyze
+      - data/buildkite-weekly
+    outs:
+      - results/weekly-benchmarks.csv:
+          cache: false
+          persist: false
+      - figures/weekly-benchmarks.json:
+          cache: false
+          persist: false
+      - .calkit/notebooks/executed/notebooks/analyze-weekly.ipynb:
+          cache: false
+      - .calkit/notebooks/html/notebooks/analyze-weekly.html:
+          cache: false
+    desc: Automatically generated from the 'analyze-weekly' stage in
+      calkit.yaml. Changes made here will be overwritten.
