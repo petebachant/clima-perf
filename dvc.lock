@@ -892,3 +892,57 @@ stages:
       hash: md5
       md5: 34d75422a3d6c9f11ff5fb4245a15dca
       size: 36124
+  fetch-weekly-buildkite:
+    cmd: calkit xenv -n bk --no-check -- python 
+      scripts/fetch-weekly-buildkite.py
+    deps:
+    - path: .calkit/env-locks/bk
+      hash: md5
+      md5: 2931c13ebe749149d73be56c1e8202d1.dir
+      size: 1308
+      nfiles: 2
+    - path: scripts/fetch-weekly-buildkite.py
+      hash: md5
+      md5: 622928e770d563a99540122d2d3650e5
+      size: 8355
+    outs:
+    - path: data/buildkite-weekly
+      hash: md5
+      md5: 43c3754083d98ed0e99eb0e8dbef555d.dir
+      size: 171537872
+      nfiles: 1045
+  analyze-weekly:
+    cmd: calkit nb execute --environment analyze --no-check --to html 
+      "notebooks/analyze-weekly.ipynb"
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: bd4ac862a0f5408617ddc484d346527e.dir
+      size: 2229
+      nfiles: 2
+    - path: .calkit/notebooks/cleaned/notebooks/analyze-weekly.ipynb
+      hash: md5
+      md5: a8f6436b1d9f332362d45685c6d37732
+      size: 21503
+    - path: data/buildkite-weekly
+      hash: md5
+      md5: 43c3754083d98ed0e99eb0e8dbef555d.dir
+      size: 171537872
+      nfiles: 1045
+    outs:
+    - path: .calkit/notebooks/executed/notebooks/analyze-weekly.ipynb
+      hash: md5
+      md5: f94149457ba2ae0cb014449ae1106cbe
+      size: 326242
+    - path: .calkit/notebooks/html/notebooks/analyze-weekly.html
+      hash: md5
+      md5: 3afdc821cf1d3bd2ba7a58d4ec7fc1b1
+      size: 344686
+    - path: figures/weekly-benchmarks.json
+      hash: md5
+      md5: 4e7154b30dd92f88d488fa34ba57380c
+      size: 169864
+    - path: results/weekly-benchmarks.csv
+      hash: md5
+      md5: 992aa1e09278eaaa157e1432544b29ad
+      size: 321210
