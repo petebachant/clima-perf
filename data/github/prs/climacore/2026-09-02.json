@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 1088,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Model-level CG\u2194DG switching (#2605): a tendency written once \u2014 an element-local\r\nweak form plus one completion call \u2014 runs on both discretizations, selected by\r\nthe space.\r\n\r\n- **CG/DG as discretization alternatives.** A spectral-element grid stores its\r\n  Galerkin discretization as the singleton `Grids.CG()` (default) or\r\n  `Grids.DG()`, constructed with `discretization = Grids.DG()` and read back with `Grids.discretization(grid)` / `Spaces.discretization(space)` for\r\n  dispatch.\r\n- `Operators.tendency_completion(dydt; numflux, boundary_numflux = nothing)` built from the space and dispatched on `Spaces.discretization`: a DSS buffer\r\n  on `CG()`, interface/boundary numerical fluxes on `DG()`. `numflux` is unused\r\n  on CG, so models pass it unconditionally.\r\n- `Operators.complete_tendency!(completion, dydt, args...)` \u2014 `weighted_dss!`\r\n  on CG; on DG the mass-weighted surface term (`*= WJ` \u2192 interface/boundary\r\n  flux \u2192 `/= WJ`).\r\n- Remove allocations in DG Laplacian\r\n- The Bickley-jet CG/DG smoke test runs both discretizations.\r\n\r\n`vector_laplacian` still errors on DG (needs grad-div/curl-curl lifting), so\r\nthe switch covers flux-form tendencies for now.\r\n\r\nCo-produced with Claude",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-31T05:47:28Z",
+    "deletions": 340,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-02T02:42:13Z",
+    "number": 2609,
+    "title": "Add model-level CG\u2194DG switching via tendency completions"
+  },
+  {
+    "additions": 384,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds the functionality to do vertical interpolation for a multiple column space to get back an array whose size is the number of columns by the number of vertical levels. Horizontal interpolation is not supported for this space.\r\n\r\nI asked a LLM to implement this.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-21T18:35:30Z",
+    "deletions": 30,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-02T21:22:31Z",
+    "number": 2596,
+    "title": "Add remapping for multiple column space"
+  }
+]

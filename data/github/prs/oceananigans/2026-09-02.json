@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-01T02:33:52Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-02T11:03:19Z",
+    "number": 5915,
+    "title": "Fix typo in tupled closure methods"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes https://github.com/CliMA/Oceananigans.jl/issues/5910\r\n\r\n@glwagner I explicitly used the term \"momentum flux\" instead of \"negative of the stress tensor\" since otherwise I think it would be too verbose and a bit more confusing.\r\n\r\nClaude also found a couple of places where $\\tau$ was actually used in equations as the actual stress tensor. Since we calculate it in the code as the momentum flux, I changed those to be consistent. It also found a missing factor of 2.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABO5bWwQ",
+        "number": 5910,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5910"
+      }
+    ],
+    "createdAt": "2026-09-02T16:22:37Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2026-09-02T19:02:13Z",
+    "number": 5920,
+    "title": "Fix stress tensor nomenclature throughout the code"
+  },
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "How the implicit boundary conditions are implemented right now for momentum make it such that the implicit BC is applied to the predictor velocity as $$u^\\star = u^n + \\Delta t G_u + \\lambda u^\\star$$ before the barotropic correction. \r\n$$u^\\star$$ (if not under an `ExplicitFreeSurface`) does not know about the barotropic acceleration at the moment, so the implicit drag is reduced when compared to an explicit drag that accounts for the presence of $$\\eta^n$$ in $$u^\\star$$.\r\nFor this reason, to recover the barotropic acceleration without needing to thread the implicit BCs inside the barotropic solver which is very complicated (for the implicit free surface we would require an LU decomposition for example), we use an explicit step just to compute the implicit BCs and then remove the barotropic signal from $$u^\\star$$.\r\n\r\nMWE:\r\n\r\n```julia\r\nusing Oceananigans\r\nusing Oceananigans.BoundaryConditions: IMEXFluxBoundaryCondition\r\nusing Random, Printf\r\n\r\nconst Lx = 1e4  # m\r\nconst H  = 10   # m\r\nconst Nx = 32\r\n\r\nfunction drag_only_growth(\u0394t, C\u1d30; Nsteps = 300, \u0394\u03c4 = 15)\r\n    grid = RectilinearGrid(size = (Nx, 1), x = (0, Lx), z = (-H, 0),\r\n                           topology = (Periodic, Flat, Bounded))\r\n\r\n    drag = FieldBoundaryConditions(bottom = IMEXFluxBoundaryCondition(0, -C\u1d30))\r\n\r\n    model = HydrostaticFreeSurfaceModel(grid;\r\n                free_surface = SplitExplicitFreeSurface(grid; substeps = max(10, round(Int, 2\u0394t / \u0394\u03c4))),\r\n                momentum_advection = nothing,\r\n                tracer_advection = nothing,\r\n                tracers = (),\r\n                buoyancy = nothing,\r\n                coriolis = nothing,\r\n                closure = nothing,\r\n                boundary_conditions = (u = drag,))\r\n\r\n    # A broadband free surface, so every barotropic mode is excited\r\n    \u03b7\u1d62 = 1e-3 .* randn(MersenneTwister(1), Nx)\r\n    set!(model, \u03b7 = (x, z) -> \u03b7\u1d62[clamp(floor(Int, x / Lx * Nx) + 1, 1, Nx)])\r\n\r\n    \u03b7\u2080 = maximum(abs, interior(model.free_surface.displacement))\r\n    peak = \u03b7\u2080\r\n\r\n    for _ in 1:Nsteps\r\n        time_step!(model, \u0394t)\r\n        \u03b7 = maximum(abs, interior(model.free_surface.displacement))\r\n        isfinite(\u03b7) || return Inf\r\n        peak = max(peak, \u03b7)\r\n    end\r\n\r\n    return peak / \u03b7\u2080\r\nend\r\n\r\nprintln(\"growth = peak|\u03b7| / initial|\u03b7|,  over 300 steps.  1.0 means pure decay.\\n\")\r\n@printf(\"%8s %13s %13s %13s\\n\", \"\u0394t (s)\", \"C\u1d30 = 0.2\", \"C\u1d30 = 2\", \"C\u1d30 = 20\")\r\nfor \u0394t in (48, 56, 63, 70, 80, 95)\r\n    @printf(\"%8d %13.4g %13.4g %13.4g\\n\", \u0394t, drag_only_growth(\u0394t, 0.2), drag_only_growth(\u0394t, 2.0), drag_only_growth(\u0394t, 20.0))\r\nend\r\n```\r\n\r\nOn `main`:\r\n\r\n```\r\n  \u0394t (s)      C\u1d30 = 0.2        C\u1d30 = 2       C\u1d30 = 20\r\n      48             1     3.156e+13     3.622e+17\r\n      56             1     1.056e+13     1.062e+16\r\n      63             1     4.887e+11     3.271e+15\r\n      70             1     1.462e+12     1.444e+14\r\n      80          4.56     1.607e+14     8.908e+15\r\n      95         3.832     1.375e+12     3.848e+13\r\n```\r\n\r\nOn this branch:\r\n\r\n```\r\n  \u0394t (s)      C\u1d30 = 0.2        C\u1d30 = 2       C\u1d30 = 20\r\n      48             1             1             1\r\n      56             1             1             1\r\n      63             1             1             1\r\n      70             1             1             1\r\n      80             1             1             1\r\n      95             1             1             1\r\n```\r\n\r\ncc @jm-c ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-01T14:48:03Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-09-02T20:29:10Z",
+    "number": 5916,
+    "title": "Fix implicit boundary conditions in the barotropic solver"
+  }
+]
