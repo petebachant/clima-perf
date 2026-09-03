@@ -7517,12 +7517,17 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Weekly-coupler-benchmarks">Weekly coupler benchmarks<a class="anchor-link" href="#Weekly-coupler-benchmarks">¶</a></h1><p>Parse the weekly ClimaCoupler Buildkite jobs mirrored by the
+<h1 id="Weekly-benchmarks">Weekly benchmarks<a class="anchor-link" href="#Weekly-benchmarks">¶</a></h1><p>Parse the weekly ClimaCoupler and ClimaLand Buildkite jobs mirrored by the
 <code>fetch-weekly-buildkite</code> stage and plot their scalar metrics over time.</p>
-<p>These are the runs reported into the CliMA Slack <code>#coupler-report</code> channel:
-the target AMIP configuration (<code>climacoupler-amip</code>), the validation suite
-(<code>climacoupler-longruns</code>), and the CPU/GPU comparison
-(<code>climacoupler-cpu-gpu-benchmarks</code>).</p>
+<p>The coupler runs are those reported into the CliMA Slack <code>#coupler-report</code>
+channel: the target AMIP configuration (<code>climacoupler-amip</code>), the validation
+suite (<code>climacoupler-longruns</code>), and the CPU/GPU comparison
+(<code>climacoupler-cpu-gpu-benchmarks</code>). <code>climaland-long-runs</code> runs twice weekly,
+once as a ~2 year run and once as a 19/20 year run.</p>
+<p>Note that the land RMSE metrics behind the O3 OKRs are <strong>not</strong> available
+here. ClimaLand computes them in its leaderboard extension and renders them
+straight to PNG, so what these logs give for the land runs is throughput and
+stability, not error against observations.</p>
 </div>
 </div>
 </div>
@@ -7585,6 +7590,7 @@ series is continuous across the change.</p>
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 
@@ -7648,10 +7654,24 @@ series is continuous across the change.</p>
     <span class="n">log</span> <span class="o">=</span> <span class="n">clean_log</span><span class="p">(</span><span class="n">raw_log</span><span class="p">)</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="c1"># Throughput. Every completed run prints a final summary line; the</span>
-    <span class="c1"># per-Progress-block "sypd ≈" estimates are ignored in favour of it.</span>
+    <span class="c1"># Throughput. ClimaCoupler runs print a final "Info: SYPD:" summary</span>
+    <span class="c1"># line, which is the authoritative figure. ClimaLand runs never do --</span>
+    <span class="c1"># they only report "estimated_sypd" inside each progress block -- so</span>
+    <span class="c1"># fall back to the last finite one of those. Early blocks legitimately</span>
+    <span class="c1"># read "Inf" before enough steps have elapsed to estimate, so those are</span>
+    <span class="c1"># skipped rather than treated as a parse failure.</span>
     <span class="n">sypd</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\bInfo: SYPD:\s*([0-9.eE+-]+)"</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
-    <span class="n">out</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sypd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">sypd</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">sypd</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sypd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">'estimated_sypd = "([^"]*)"'</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">number</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="s2">"sypd"</span><span class="p">]</span> <span class="o">=</span> <span class="n">number</span>
     <span class="n">wps</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Walltime per coupling step:\s*([0-9.eE+-]+)"</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
     <span class="n">out</span><span class="p">[</span><span class="s2">"walltime_per_step_s"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">wps</span> <span class="k">else</span> <span class="kc">None</span>
 
@@ -7690,7 +7710,7 @@ series is continuous across the change.</p>
             <span class="n">config_line</span> <span class="o">=</span> <span class="n">line</span>
             <span class="k">break</span>
     <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">'"job_id" =&gt; "([^"]+)"'</span><span class="p">,</span> <span class="n">config_line</span><span class="p">)</span>
-    <span class="n">out</span><span class="p">[</span><span class="s2">"run_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">"config_job_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">cast</span> <span class="ow">in</span> <span class="p">[</span>
         <span class="p">(</span><span class="s2">"t_end"</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
         <span class="p">(</span><span class="s2">"dt"</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
@@ -7743,7 +7763,17 @@ series is continuous across the change.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">parse_iso</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">EMOJI_TOKEN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">":[a-z0-9_+-]+:"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_job_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Strip Buildkite's ``:emoji:`` tokens from a job label."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">EMOJI_TOKEN</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_iso</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"Z"</span><span class="p">,</span> <span class="s2">"+00:00"</span><span class="p">))</span>
@@ -7773,9 +7803,26 @@ series is continuous across the change.</p>
         <span class="p">),</span>
     <span class="p">}</span>
     <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parse_run_metrics</span><span class="p">(</span><span class="n">job</span><span class="p">[</span><span class="s2">"raw_log_txt"</span><span class="p">]))</span>
+    <span class="c1"># Identify the configuration. ClimaCoupler names it in its config dict;</span>
+    <span class="c1"># ClimaLand has no equivalent, and its Buildkite job label is what</span>
+    <span class="c1"># actually distinguishes the configs ("Soil" vs "Soil, 20 years"), so</span>
+    <span class="c1"># fall back to that. It also rescues any coupler job whose config dict</span>
+    <span class="c1"># did not parse.</span>
+    <span class="n">row</span><span class="p">[</span><span class="s2">"run_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"config_job_id"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">clean_job_name</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"job_name"</span><span class="p">])</span>
     <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># A job that passed ran to completion by definition. Its last progress block</span>
+<span class="c1"># is only the final checkpoint before the end -- the reporting interval</span>
+<span class="c1"># differs per model (ClimaLand prints every 10%, the coupler every few</span>
+<span class="c1"># percent) -- so the raw figure under-reports, and roughly half of all passed</span>
+<span class="c1"># jobs would otherwise look like they stopped short. Pin them to 1.0 so this</span>
+<span class="c1"># column means "how far did it get" rather than "when was progress last</span>
+<span class="c1"># printed". Failed and cancelled jobs keep their parsed value, which is the</span>
+<span class="c1"># number of interest for them.</span>
+<span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">"job_state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"passed"</span><span class="p">,</span> <span class="s2">"fraction_completed"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> jobs, </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">df</span><span class="p">[</span><span class="s2">"run_name"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 </pre></div>
@@ -7790,7 +7837,7 @@ series is continuous across the change.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>891 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-08-30 08:37:07.902000+00:00
+<pre>1045 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-08-30 08:37:07.902000+00:00
 </pre>
 </div>
 </div>
@@ -7798,47 +7845,18 @@ series is continuous across the change.</p>
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
 <pre>run_name
-amip                                        51
-cmip_edonly_bucket                          47
-cmip_edonly_land                            47
-gpu_amip_progedmf_1M_land_he16              40
-slabplanet_evolve_ocean                     40
-gpu_amip_progedmf_1M_land_he30              40
-slabplanet_aqua_evolve_ocean                39
-gpu_amip_diagedmf_io                        38
-gpu_amip_diagedmf                           38
-amip_edonly                                 27
-amip_edonly_gpu                             24
-amip_progedmf_1m_land                       24
-cmip_progedmf_land                          24
-amip_edonly_1M_gpu                          23
-amip_progedmf_land                          23
-amip_edonly_integrated_land_gpu             17
-amip_diagedmf_integrated_land_gpu           17
-amip_diagedmf_gpu                           17
-amip_diagedmf_land                          16
-amip_progedmf_land_p2k                      16
-gpu_amip_progedmf_io                        14
-gpu_amip_progedmf                           14
-amip_diagedmf                               11
-amip_diagedmf_io                            11
-cmip_diagedmf_land                          11
-amip_diagedmf_1m_land                       11
-amip_diagedmf_land_p2k                      11
-slabplanet_fixed_ocean                       6
-amip_edonly_topo_integrated_land_gpu         6
-amip_decaywithheight_integrated_land_gpu     6
-amip_decaywithheight_gpu                     6
-amip_diagedmf_topo_gpu                       6
-amip_edonly_topo_gpu                         6
-amip_diagedmf_topo_integrated_land_gpu       6
-amip_diagedmf_1m_gpu                         5
-amip_progedmf                                4
-amip_progedmf_gpu                            1
-amip_diagedmf_1m_land_gpu                    1
-amip_diagedmf_land_gpu                       1
-amip_diagedmf_land_p2k_gpu                   1
-Name: count, dtype: int64</pre>
+amip                                                                51
+cmip_edonly_land                                                    47
+cmip_edonly_bucket                                                  47
+gpu_amip_progedmf_1M_land_he16                                      40
+gpu_amip_progedmf_1M_land_he30                                      40
+                                                                    ..
+GPU AMIP with prognostic EDMF + 1M + integrated land (30 helems)     1
+GPU AMIP with diagnostic EDMF                                        1
+amip_diagedmf_land_p2k_gpu                                           1
+amip_diagedmf_land_gpu                                               1
+GPU AMIP with diagnostic EDMF and IO                                 1
+Name: count, Length: 65, dtype: int64</pre>
 </div>
 </div>
 </div>
@@ -7896,7 +7914,7 @@ Name: count, dtype: int64</pre>
 </thead>
 <tbody>
 <tr>
-<th>881</th>
+<th>1035</th>
 <td>2026-08-30 05:16:04.099000+00:00</td>
 <td>climacoupler-cpu-gpu-benchmarks</td>
 <td>gpu_amip_progedmf</td>
@@ -7905,16 +7923,16 @@ Name: count, dtype: int64</pre>
 <td>NaN</td>
 </tr>
 <tr>
-<th>882</th>
+<th>1036</th>
 <td>2026-08-30 08:37:04.926000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>amip_progedmf_land</td>
 <td>passed</td>
 <td>1.857636</td>
-<td>0.995</td>
+<td>1.000</td>
 </tr>
 <tr>
-<th>883</th>
+<th>1037</th>
 <td>2026-08-30 08:37:04.969000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>cmip_edonly_land</td>
@@ -7923,25 +7941,25 @@ Name: count, dtype: int64</pre>
 <td>0.012</td>
 </tr>
 <tr>
-<th>884</th>
+<th>1038</th>
 <td>2026-08-30 08:37:04.971000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>amip_progedmf_1m_land</td>
 <td>passed</td>
 <td>1.246314</td>
-<td>0.995</td>
+<td>1.000</td>
 </tr>
 <tr>
-<th>885</th>
+<th>1039</th>
 <td>2026-08-30 08:37:04.993000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>amip_progedmf_land_p2k</td>
 <td>passed</td>
 <td>1.861584</td>
-<td>0.995</td>
+<td>1.000</td>
 </tr>
 <tr>
-<th>886</th>
+<th>1040</th>
 <td>2026-08-30 08:37:05.026000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>cmip_edonly_bucket</td>
@@ -7950,16 +7968,16 @@ Name: count, dtype: int64</pre>
 <td>0.012</td>
 </tr>
 <tr>
-<th>887</th>
+<th>1041</th>
 <td>2026-08-30 08:37:05.028000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>amip_edonly</td>
 <td>passed</td>
 <td>1.978792</td>
-<td>0.995</td>
+<td>1.000</td>
 </tr>
 <tr>
-<th>888</th>
+<th>1042</th>
 <td>2026-08-30 08:37:05.073000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>cmip_progedmf_land</td>
@@ -7968,7 +7986,7 @@ Name: count, dtype: int64</pre>
 <td>0.023</td>
 </tr>
 <tr>
-<th>889</th>
+<th>1043</th>
 <td>2026-08-30 08:37:07.874000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>slabplanet_aqua_evolve_ocean</td>
@@ -7977,7 +7995,7 @@ Name: count, dtype: int64</pre>
 <td>1.000</td>
 </tr>
 <tr>
-<th>890</th>
+<th>1044</th>
 <td>2026-08-30 08:37:07.902000+00:00</td>
 <td>climacoupler-longruns</td>
 <td>slabplanet_evolve_ocean</td>
@@ -8063,7 +8081,7 @@ inside a GPU kernel.</p>
 </thead>
 <tbody>
 <tr>
-<th>888</th>
+<th>1042</th>
 <td>2026-08-30 08:37:05.073000+00:00</td>
 <td>cmip_progedmf_land</td>
 <td>failed</td>
@@ -8071,7 +8089,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>886</th>
+<th>1040</th>
 <td>2026-08-30 08:37:05.026000+00:00</td>
 <td>cmip_edonly_bucket</td>
 <td>failed</td>
@@ -8079,7 +8097,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>883</th>
+<th>1037</th>
 <td>2026-08-30 08:37:04.969000+00:00</td>
 <td>cmip_edonly_land</td>
 <td>failed</td>
@@ -8087,7 +8105,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>881</th>
+<th>1035</th>
 <td>2026-08-30 05:16:04.099000+00:00</td>
 <td>gpu_amip_progedmf</td>
 <td>failed</td>
@@ -8095,7 +8113,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>877</th>
+<th>1031</th>
 <td>2026-08-30 05:16:04.029000+00:00</td>
 <td>gpu_amip_progedmf_io</td>
 <td>failed</td>
@@ -8103,7 +8121,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>875</th>
+<th>1023</th>
 <td>2026-08-23 09:28:27.980000+00:00</td>
 <td>cmip_progedmf_land</td>
 <td>failed</td>
@@ -8111,7 +8129,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>870</th>
+<th>1018</th>
 <td>2026-08-23 08:37:03.996000+00:00</td>
 <td>cmip_edonly_bucket</td>
 <td>failed</td>
@@ -8119,7 +8137,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>868</th>
+<th>1016</th>
 <td>2026-08-23 08:37:03.940000+00:00</td>
 <td>cmip_edonly_land</td>
 <td>failed</td>
@@ -8127,7 +8145,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>859</th>
+<th>1001</th>
 <td>2026-08-16 10:49:46.793000+00:00</td>
 <td>cmip_progedmf_land</td>
 <td>failed</td>
@@ -8135,7 +8153,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>852</th>
+<th>994</th>
 <td>2026-08-16 08:37:03.991000+00:00</td>
 <td>cmip_edonly_bucket</td>
 <td>failed</td>
@@ -8143,7 +8161,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>849</th>
+<th>991</th>
 <td>2026-08-16 05:16:05.150000+00:00</td>
 <td>gpu_amip_progedmf_io</td>
 <td>failed</td>
@@ -8151,7 +8169,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>847</th>
+<th>989</th>
 <td>2026-08-16 05:16:04.959000+00:00</td>
 <td>gpu_amip_progedmf</td>
 <td>failed</td>
@@ -8159,7 +8177,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>842</th>
+<th>978</th>
 <td>2026-08-09 10:21:00.828000+00:00</td>
 <td>cmip_progedmf_land</td>
 <td>failed</td>
@@ -8167,7 +8185,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>837</th>
+<th>973</th>
 <td>2026-08-09 08:36:05.061000+00:00</td>
 <td>cmip_edonly_land</td>
 <td>failed</td>
@@ -8175,7 +8193,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>834</th>
+<th>970</th>
 <td>2026-08-09 08:36:04.900000+00:00</td>
 <td>cmip_edonly_bucket</td>
 <td>failed</td>
@@ -8183,7 +8201,7 @@ inside a GPU kernel.</p>
 <td>AssertionError: minimum((ice_fraction .+ land_...</td>
 </tr>
 <tr>
-<th>833</th>
+<th>969</th>
 <td>2026-08-09 05:25:03.016000+00:00</td>
 <td>gpu_amip_progedmf_io</td>
 <td>failed</td>
@@ -8191,7 +8209,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>832</th>
+<th>968</th>
 <td>2026-08-09 05:19:20.973000+00:00</td>
 <td>gpu_amip_progedmf</td>
 <td>failed</td>
@@ -8199,7 +8217,7 @@ inside a GPU kernel.</p>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
 <tr>
-<th>825</th>
+<th>952</th>
 <td>2026-08-02 08:48:23.856000+00:00</td>
 <td>cmip_progedmf_land</td>
 <td>failed</td>
@@ -8207,7 +8225,7 @@ inside a GPU kernel.</p>
 <td>UndefVarError: `ORCA1` not defined in `ClimaOc...</td>
 </tr>
 <tr>
-<th>821</th>
+<th>948</th>
 <td>2026-08-02 08:39:04.065000+00:00</td>
 <td>cmip_edonly_bucket</td>
 <td>failed</td>
@@ -8215,7 +8233,7 @@ inside a GPU kernel.</p>
 <td>UndefVarError: `ORCA1` not defined in `ClimaOc...</td>
 </tr>
 <tr>
-<th>817</th>
+<th>944</th>
 <td>2026-08-02 08:39:03.982000+00:00</td>
 <td>cmip_edonly_land</td>
 <td>failed</td>
@@ -8274,7 +8292,7 @@ hard-coded list here.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>14 active configs: amip, amip_edonly, amip_progedmf_1m_land, amip_progedmf_land, amip_progedmf_land_p2k, cmip_edonly_bucket, cmip_edonly_land, cmip_progedmf_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io, slabplanet_aqua_evolve_ocean, slabplanet_evolve_ocean
+<pre>20 active configs: GPU ClimaAtmos with prognostic EDMF, GPU ClimaAtmos without EDMF, Global bucket simulation, Snowy Land + P Model, Snowy Land + P Model (Optimal LAI), Soil, amip, amip_edonly, amip_progedmf_1m_land, amip_progedmf_land, amip_progedmf_land_p2k, cmip_edonly_bucket, cmip_edonly_land, cmip_progedmf_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io, slabplanet_aqua_evolve_ocean, slabplanet_evolve_ocean
 </pre>
 </div>
 </div>
@@ -8385,7 +8403,7 @@ hard-coded list here.</p>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Date"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
     <span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"Weekly coupler benchmarks"</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"Weekly ClimaCoupler and ClimaLand benchmarks"</span><span class="p">,</span>
     <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="s2">"h"</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mf">0.09</span><span class="p">),</span>
 <span class="p">)</span>
 

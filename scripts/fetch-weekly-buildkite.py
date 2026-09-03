@@ -1,18 +1,28 @@
-"""Mirror the weekly CliMA coupler benchmark jobs from the Buildkite API.
+"""Mirror the weekly CliMA benchmark jobs from the Buildkite API.
 
-Three Buildkite pipelines run weekly and report into the CliMA Slack
-``#coupler-report`` channel:
+Coupler pipelines, which report into the CliMA Slack ``#coupler-report``
+channel:
 
 - ``climacoupler-amip`` -- the target AMIP configuration (Mon 8pm PST)
 - ``climacoupler-longruns`` -- the validation suite (Sun 12am PST)
 - ``climacoupler-cpu-gpu-benchmarks`` -- the SYPD comparison table (Sun 12am)
 
-Buildkite ages job logs and artifacts out after roughly six months, so this
-mirrors them into the project while they still exist. Everything derived
-from a log (SYPD, walltime per step, how far a run got before dying) is
-parsed downstream in ``notebooks/analyze-weekly.ipynb`` -- the log format has
-already changed once, and keeping the raw text means a parser fix can be
-applied to history rather than only to jobs run after the fix.
+Land pipeline:
+
+- ``climaland-long-runs`` -- runs twice weekly, once as a ~2 year run and
+  once as a 19/20 year run that also builds the ILAMB leaderboard
+
+Buildkite ages job logs and artifacts out, so this mirrors them into the
+project while they still exist. Everything derived from a log (SYPD,
+walltime per step, how far a run got before dying) is parsed downstream in
+``notebooks/analyze-weekly.ipynb`` -- the log format has already changed
+once, and keeping the raw text means a parser fix can be applied to history
+rather than only to jobs run after the fix.
+
+Note that the land RMSE metrics behind the O3 OKRs are *not* in these logs.
+They are computed in ClimaLand's leaderboard extension and rendered straight
+to PNG, so mirroring logs gets throughput and stability for the land runs
+but not their error metrics.
 
 Requires ``BUILDKITE_PAT`` in the environment or in the repo's ``.env``.
 """
@@ -35,16 +45,25 @@ import dotenv
 BASE = "https://api.buildkite.com/v2/organizations/clima/pipelines"
 OUT_DIR = "data/buildkite-weekly"
 
-PIPELINES = [
-    "climacoupler-amip",
-    "climacoupler-longruns",
-    "climacoupler-cpu-gpu-benchmarks",
-]
+# Which jobs to mirror, per pipeline. The coupler and land pipelines name
+# their simulation steps completely differently, so the include pattern is
+# per-pipeline rather than one union that would be hard to keep tight.
+_COUPLER_JOBS = r"AMIP|CMIP|Slabplanet|Aquaplanet|ClimaAtmos"
 
-# Simulation jobs only. The init, reporting, profiling (nsys) and Slack
-# upload steps in these pipelines have no run metrics in them.
-JOB_INCLUDE = re.compile(r"AMIP|CMIP|Slabplanet|Aquaplanet|ClimaAtmos", re.I)
-JOB_EXCLUDE = re.compile(r"nsys|slack|compare|init\b", re.I)
+PIPELINES = {
+    "climacoupler-amip": _COUPLER_JOBS,
+    "climacoupler-longruns": _COUPLER_JOBS,
+    "climacoupler-cpu-gpu-benchmarks": _COUPLER_JOBS,
+    # Runs twice weekly: a ~2 year run plus a 19/20 year run that also
+    # builds the ILAMB leaderboard.
+    "climaland-long-runs": r"Snowy Land|Soil|Bucket",
+}
+
+# Simulation jobs only. Init, reporting, profiling (nsys), Slack uploads,
+# ILAMB leaderboard setup and the rsync-to-Azure steps carry no run metrics.
+JOB_EXCLUDE = re.compile(
+    r"nsys|slack|compare|ilamb|azure|:pipeline:|\binit\b", re.I
+)
 
 # A job whose build is still in flight can gain more log later, so only
 # mirror jobs whose own state has settled.
@@ -104,17 +123,18 @@ def get(url: str, token: str) -> dict | list | None:
     return None
 
 
-def job_is_wanted(job: dict) -> bool:
+def job_is_wanted(job: dict, include: re.Pattern) -> bool:
     name = job.get("name") or ""
     if job.get("type") != "script" or not name:
         return False
-    return bool(JOB_INCLUDE.search(name)) and not JOB_EXCLUDE.search(name)
+    return bool(include.search(name)) and not JOB_EXCLUDE.search(name)
 
 
 def mirror_pipeline(
     pipeline: str, token: str, max_builds: int, branch: str
 ) -> tuple[int, int]:
     """Mirror recent jobs for one pipeline. Returns (fetched, skipped)."""
+    include = re.compile(PIPELINES[pipeline], re.I)
     out_dir = os.path.join(OUT_DIR, pipeline)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -130,7 +150,7 @@ def mirror_pipeline(
     skipped = 0
     for build in builds:
         for job in build["jobs"]:
-            if not job_is_wanted(job):
+            if not job_is_wanted(job, include):
                 continue
             if job.get("state") not in TERMINAL_JOB_STATES:
                 continue
