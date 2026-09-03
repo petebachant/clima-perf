@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR adds the function `calendar_dt_schedule`, which returns a schedule that works for restarted simulations. This function could probably live in ClimaDiagnostics. Previously, restarted simulations did not pass `t_start` to the diagnostic schedule, causing it to immediately trigger, as the simulation starts after `t_start`.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-07T19:04:50Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-02T00:11:25Z",
+    "number": 2071,
+    "title": "Seed coupler schedules with t_start so restarts keep calendar phase"
+  },
+  {
+    "additions": 98,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis switches to using the default land model, rather than one constructed by the coupler with different parameterization choices. The motivation is that the land team is developing and improving a model which is created with our default constructor, and the coupler should use this instead of something else.\r\n\r\nThe parameterization changes are:\r\n- Pmodel instead of Farquhar + Medlyn\r\n- Peicewise soil moisture stress instead of Tuzet\r\n\r\nIn order to use the pmodel, the land model sets initial conditions using making use of T, P, q, c_co2 for the atmosphere at the surface. *these are not required* to set up the land simulation, as the land can be restarted from its' Y only. However, the atmosphere values provide a very convenient guess for reasonable initial conditions, so we use them.\r\n\r\nFor now, we approximate these using the orographic adjusted T, a surface elevation correction for Pressure and air density, and q = q_sat given the above assumptions. This can be improved in the future if it is any issue. It may not be, though, as the whole point is just to provide reasonable IC that shorten spinup time, and these may be reasonable enough already.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-29T21:10:15Z",
+    "deletions": 80,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-02T23:20:27Z",
+    "number": 2004,
+    "title": "use default land model"
+  }
+]

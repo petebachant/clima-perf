@@ -194,8 +194,8 @@ pipeline:
         - path: results/new-registry-dependents.csv
           storage: git
     analyze-dev-speed:
-      description: Analyze things like PR resolution speed to see
-        changes over time.
+      description: Analyze things like PR resolution speed to see changes
+        over time.
       kind: jupyter-notebook
       notebook_path: notebooks/analyze-dev-speed.ipynb
       environment: analyze
@@ -230,13 +230,13 @@ pipeline:
 figures:
   - path: figures/amip-speedup.json
     title: Flagship AMIP speedup
-    description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over
-      time normalized by the start of performance tracking.
+    description: Flagship AMIP benchmark (16 horiz. elem.) SYPD over time
+      normalized by the start of performance tracking.
     stage: analyze
   - path: figures/external-engagement.json
     title: External engagement
-    description: External engagement with CliMA's products on a
-      quarterly basis.
+    description: External engagement with CliMA's products on a quarterly
+      basis.
     stage: analyze
   - path: figures/weekly-benchmarks.json
     title: Weekly coupler benchmarks
@@ -250,17 +250,17 @@ figures:
   - path: figures/dev-throughput.json
     title: Software development throughput
     stage: analyze-dev-speed
-    description: Quarterly development throughput across CliMA's
-      ecosystem. Pull request time-to-merge (p50 and p90), PR merge
-      rate, and release rate. There is one trace per repository; the
-      thick gray line is the ecosystem-wide value (normalized to a
-      per-repo average on the count-based panels).
+    description: Quarterly development throughput across CliMA's ecosystem.
+      Pull request time-to-merge (p50 and p90), PR merge rate, and release
+      rate. There is one trace per repository; the thick gray line is the
+      ecosystem-wide value (normalized to a per-repo average on the count-based
+      panels).
 
 notebooks:
   - path: notebooks/analyze.ipynb
     title: Analysis
-    description: Analyze and plot the flagship AMIP benchmark (16
-      horiz. elem.) SYPD over time.
+    description: Analyze and plot the flagship AMIP benchmark (16 horiz.
+      elem.) SYPD over time.
     stage: analyze
   - path: notebooks/analyze-weekly.ipynb
     title: Weekly benchmark analysis
@@ -284,32 +284,32 @@ showcase:
 datasets:
   - path: results/amip.csv
     title: Flagship AMIP benchmark results
-    description: Results from the flagship AMIP benchmark (16 horiz.
-      elem.) over time.
+    description: Results from the flagship AMIP benchmark (16 horiz. elem.)
+      over time.
     stage: analyze
   - path: results/external-citations.csv
     title: External citation events
-    description: One row per external citing work (OpenAlex), tagged
-      with the cited CliMA paper's DOI + software package (if any) and
-      the citing work's quarter. Internal self-citations (any author
-      shared with any scraped CliMA paper) are excluded.
+    description: One row per external citing work (OpenAlex), tagged with
+      the cited CliMA paper's DOI + software package (if any) and the citing
+      work's quarter. Internal self-citations (any author shared with any
+      scraped CliMA paper) are excluded.
     stage: analyze
   - path: results/github-engagement.csv
     title: GitHub engagement events
-    description: One row per external star / fork / opened issue /
-      merged PR (login is non-CliMA-org, non-bot), with repo, event
-      type, login, timestamp, and quarter.
+    description: One row per external star / fork / opened issue / merged
+      PR (login is non-CliMA-org, non-bot), with repo, event type, login,
+      timestamp, and quarter.
     stage: analyze
   - path: results/new-registry-dependents.csv
     title: New external Julia-registry dependents
-    description: One row per (CliMA package, external dependent) pair,
-      with the dependent's repo URL and the quarter when it first
-      appeared in the Julia General registry as a dependent.
+    description: One row per (CliMA package, external dependent) pair, with
+      the dependent's repo URL and the quarter when it first appeared in
+      the Julia General registry as a dependent.
     stage: analyze
   - path: buildkite
     title: Buildkite flagship AMIP jobs
-    description: Job info and raw logs from Buildkite for the flagship
-      AMIP benchmark.
+    description: Job info and raw logs from Buildkite for the flagship AMIP
+      benchmark.
     stage: fetch-buildkite
   - path: data/buildkite-weekly
     title: Weekly coupler Buildkite jobs
@@ -330,12 +330,28 @@ datasets:
     stage: analyze-weekly
   - path: runs/amip
     title: Raw AMIP benchmark runs
-    description: Raw outputs (logs, manifests, repo revisions used)
-      from the flagship AMIP benchmark runs.
+    description: Raw outputs (logs, manifests, repo revisions used) from
+      the flagship AMIP benchmark runs.
     stage: benchmark-amip
   - path: results/dev-throughput.csv
     title: Software development throughput
-    description: One row per (repo, quarter) plus an "All repos"
-      aggregate, with merged-PR count, p50/p90 time-to-merge, and
-      release count across CliMA's GitHub repos.
+    description: One row per (repo, quarter) plus an "All repos" aggregate,
+      with merged-PR count, p50/p90 time-to-merge, and release count across
+      CliMA's GitHub repos.
     stage: analyze-dev-speed
+questions:
+  - question: How much has the flagship AMIP simulation sped up since November
+      2025?
+    evidence:
+      - kind: figure
+        path: figures/amip-speedup.json
+  - question: What is the rate of change of external engagement with CliMA's
+      products?
+    evidence:
+      - kind: figure
+        path: figures/external-engagement.json
+  - question: How has software development throughput changed over time
+      within the CliMA organization?
+    evidence:
+      - kind: figure
+        path: figures/dev-throughput.json

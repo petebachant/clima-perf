@@ -1,0 +1,94 @@
+[
+  {
+    "additions": 229,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This PR completes the adaptive-implicit vertical advection (AVID) implementation by treating `w` itself implicitly.\r\nUntil now `advective_momentum_flux_Ww` was left fully explicit, so the vertical momentum equation was still limited by the vertical CFL. The tridiagonal coefficients are now dispatched on the vertical location `\u2113z` of the field being stepped.\r\n\r\n!!!NOTE:\r\nSince `w` is both the advecting velocity and the advected quantity, `NonhydrostaticModel` now carries an `advecting_vertical_velocity` field holding a snapshot of `w\u207f` taken before any prognostic field is stepped, so that the implicit solve is not contaminated by the partially updated `w`. The field is `nothing` when the advection scheme does not need an implicit solver, and the version is bumped to `0.111.0` because of the added model field.\r\n\r\nThe dispatch of `get_coefficient` is also cleaned up. There is now a single method per diagonal with the full argument list, and the advection contribution falls back to zero for any scheme without an adaptive-implicit discretization. Alos the two `implicit_step!` methods are merged into one with defaulted `advection`, `velocities` and `density`, returning early when there is neither a vertically-implicit closure, nor an implicit advection scheme, nor a boundary condition requiring the solve.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-27T18:04:39Z",
+    "deletions": 100,
+    "labels": [],
+    "mergedAt": "2026-08-31T13:38:18Z",
+    "number": 5903,
+    "title": "(0.111.0) Complete implicit advection implementation by including `ZFaceField`s treatment"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Same as https://github.com/NumericalEarth/Breeze.jl/pull/945, we're running in https://github.com/JuliaDocs/Documenter.jl/issues/2992 also here.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-31T16:04:36Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-08-31T16:07:44Z",
+    "number": 5912,
+    "title": "[docs] Temporarily cap Documenter v1.17"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This is just an unfortunate conflict between #5903 and #5904. Ref: https://github.com/CliMA/Oceananigans.jl/pull/5903#issuecomment-5480134383.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-31T15:03:58Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-08-31T18:25:13Z",
+    "number": 5911,
+    "title": "Fix \"Vertically-implicit diffusion operator\" test after get_coefficient API change"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Spotted in https://github.com/NumericalEarth/Breeze.jl/pull/939#discussion_r3886420870.  Unclear why this wasn't done before here in Oceananigans, feels like an oversight, but let me know if I'm missing something more fundamental.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-29T12:43:25Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-08-31T21:49:28Z",
+    "number": 5909,
+    "title": "Allow host arrays as `GridFittedBottom` height on GPU grids"
+  }
+]

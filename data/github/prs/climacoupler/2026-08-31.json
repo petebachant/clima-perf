@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR removes the global time limit from the AMIP pipeline and reduces the actual run's time limit to 36 hours.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-31T17:46:00Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-08-31T17:49:14Z",
+    "number": 2096,
+    "title": "Reduce AMIP pipeline limit to 36hours"
+  },
+  {
+    "additions": 394,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Adds `experiments/calibration/param_sweep`: a sensitivity sweep for the coupled AMIP model, driven by a small Julia experiment file with two required inputs: a coupler YAML and the parameters to vary.\r\n\r\nHow it works\r\n\r\n- A sweep is a single ClimaCalibrate iteration with no ensemble update, so each member is an independent forward run of the same CouplerModelInterface the amip calibration uses.\r\n- For each parameter to vary, you can set a fixed value, a list to iterate over, or a distribution.\r\n- Parameter names are validated against the ClimaParams registry and the coupler TOML files before running\r\n\r\nSee README: experiments/calibration/param_sweep/README.md\r\n\r\nUsage: `julia --project=experiments/AMIP experiments/calibration/param_sweep/run_sweep.jl <sweep_file.jl>`. The example file given is `experiments/calibration/param_sweep/example_sweep.jl`.\r\n\r\nTODO\r\n- Add tests. I'm not sure where to test this, ideally Derecho or our GPU server.\r\n- We could probably generalize this and move it to ClimaCalibrate, but I am opening a PR here to make it available earlier.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-07T21:13:32Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-08-31T22:51:35Z",
+    "number": 2072,
+    "title": "Add parameter sweep utility"
+  }
+]
