@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 55,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nAdds a GPU regression test that runs a `ZarrWriter` write and a `FieldTimeSeries` read with scalar indexing **disabled**, closing a blind spot that allowed several GPU-unsafe defects to pass CI during #5610.\n\n## Motivation\n\n`test/runtests.jl` wraps the entire suite in `CUDA.allowscalar() do ... end`. Scalar indexing of GPU arrays is therefore permitted everywhere in the tests, while `docs/make.jl` has no such wrapper and its GPU examples run with the default `allowscalar(false)`.\n\nThe consequence is that genuinely GPU-unsafe code can pass every GPU shard. During #5610 this happened repeatedly: `collect` on device-backed `Field`s and on `OffsetArray`-wrapped coordinate/metric arrays, and most recently a change to `halo_fill_2d_metric` that broke `FieldTimeSeries` readback of every OSSG Zarr store while CI reported 76/76 green. Each was caught by the documentation build or by ad-hoc GPU runs, never by the test suite.\n\nGrid serialization and reconstruction are the paths most exposed to this, because they touch device-backed coordinates and metrics on write and fill metric halos on read.\n\n## What this adds\n\nOne testset in `test/test_zarr_writer.jl` that, for each architecture and for both interior and halo stores:\n\n1. writes a Zarr store from a `TripolarGrid` (widest device-backed surface: 2D \u03bb/\u03c6 auxiliary coordinates and horizontal metrics on write, metric halo filling on read), then\n2. reconstructs it with `FieldTimeSeries`,\n\nwith scalar indexing disabled for the duration on GPU architectures.\n\nTwo details worth noting for review:\n\n- **The guard cannot leak.** `disallowing_scalar_indexing` uses `task_local_storage(f, :ScalarIndexing, ScalarDisallowed)`, mirroring how `GPUArraysCore` implements the scoped *enable*, so the previous setting is restored on exit. An earlier iteration of this guard in #5610 used a bare `CUDA.allowscalar(false)`, which silently persisted into every subsequent testset and had to be walked back.\n- **It is a no-op on CPU**, via dispatch on `::GPU`, so the CPU shard still exercises the write/read path without a pointless guard.\n\n## Verification\n\nRun on a Tesla T4, both directions:\n\n- **Against `main` as-is:** the testset passes.\n- **With the `halo_fill_2d_metric` fix reverted** (`old_interior = view(old_data, 1:Ni, 1:Nj)` instead of the materialized slice): the testset fails with `Scalar indexing is disallowed`.\n\nThe second run is the point: it demonstrates the test detects the exact regression that previously shipped through a fully green CI board, rather than passing vacuously.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-02T23:35:49Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-09-04T05:25:38Z",
+    "number": 5923,
+    "title": "Test Zarr output writing and reading without scalar indexing"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR follows the implementation of the `HydrostaticFreeSurfaceModel` to support different momentum and tracer advection schemes, allowing also `NamedTuple` tracer advection schemes for different tracers.\r\n\r\nThis might be very useful for simulations where tracers might be advected by a less diffusive advection scheme that momentum.\r\n\r\nThe implementation in `src/` is rather simple and straightforward, most of the diffs are in the `examples/` and `validation/`.\r\n\r\nBump to 0.108 because it includes a UI change",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-12T09:03:20Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2026-09-04T20:26:53Z",
+    "number": 5578,
+    "title": "Refactor `NonhydrostaticModel` to split momentum and tracer advection"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjMzMjM2Mzkx",
+      "is_bot": false,
+      "login": "alesok",
+      "name": "Alexander Sokolov"
+    },
+    "body": "This PR fixes the issue #5898 by removing unused timescale calculation and biharmonic viscosity function.\r\n\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-04T10:58:05Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-09-04T23:36:15Z",
+    "number": 5926,
+    "title": "Refactor immersed_bickley_jet.jl by removing unused code"
+  },
+  {
+    "additions": 431,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR modifies the bounds-preserving WENO to be accurate also in multiple dimensions (and fixes the previous formulation which was not tracer conserving).\r\n\r\nThe $\\theta$ needs to be known by different cells so we could either compute it on the fly or precompute it, and since WENO is already very very expensive, I opted for the precomputation route",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-03T20:49:23Z",
+    "deletions": 111,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-09-04T23:55:35Z",
+    "number": 5924,
+    "title": "Three-dimensional bounds preserving WENO"
+  }
+]
