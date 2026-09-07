@@ -1,0 +1,90 @@
+[
+  {
+    "additions": 84,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #5927.\n\nSpecializes the index reductions `argmax`, `argmin`, `findmax` and `findmin` for `AbstractField`, alongside the existing `maximum`/`minimum` family. The search is **fused**, borrowing the structure of GPUArrays' `findminmax` but with one twist: instead of dispatching on the source (which forces materialization), a lazy broadcast of `(value, linear index)` pairs is consumed without ever being materialized \u2014 folded in place on the CPU, or reduced by `mapreducedim!` on the GPU, which GPUArrays dispatches on the one-element destination ([mapreduce.jl#L10-L11](https://github.com/JuliaGPU/GPUArrays.jl/blob/v11.5.12/src/host/mapreduce.jl#L10-L11)):\n\n```julia\nfunction locate_extremum(better, c::AbstractField, condition, mask)\n    mask = convert(eltype(c), mask)\n    operand = condition_operand(c, condition, mask)\n    tiebreak((x, i), (y, j)) = better(x, y) ? (y, j) :\n                               isequal(x, y) ? (x, min(i, j)) : (x, i)\n    indices = OffsetArray(LinearIndices(size(operand)), axes(operand))\n    pairs = Broadcast.instantiate(Broadcast.broadcasted(tuple, operand, indices))\n    value, i = fold_pairs(architecture(c), tiebreak, pairs, (mask, 1))\n    return value, CartesianIndices(axes(operand))[i]\nend\n```\n\n(The CPU fold exists because Base's `_mapreducedim!` cannot digest a `Broadcasted` source with non-`OneTo` axes \u2014 `check_reducedims` wants `axes(A, d)` \u2014 while GPUArrays' can.)\n\n(For comparison, GPUArrays' own `findmax` materializes a full copy via `fA = f.(A)` even for `f = identity` \u2014 [indexing.jl#L233-L260](https://github.com/JuliaGPU/GPUArrays.jl/blob/v11.5.12/src/host/indexing.jl#L233-L260) \u2014 so this path allocates strictly less than the generic GPU one.)\n\nSemantics: extrema are located over `interior(c)` and the returned index is in the field's own axes, so the Base identity `c[argmax(c)] == maximum(c)` holds for every field \u2014 windowed included; ties resolve to the smaller linear index (Base's convention). For default fields the index coincides with the positional interior/`nodes` numbering, so `znodes(f)[argmax(f)[3]]`-style diagnostics work unchanged. Compared with the generic `AbstractArray` fallbacks this buys:\n\n- **GPU support**: the fallbacks scalar-index; here the reduction runs in one fused kernel.\n- **Immersed-boundary consistency**: on immersed grids the fallbacks can locate an extremum inside the immersed region, while `maximum`/`minimum` mask it; routing through `condition_operand` masks immersed (and user-`condition`ed) cells with the neutral element before the search.\n- **`condition` keyword parity** with the other reductions.\n\nThe motivating use case, locating diagnostics on the grid (e.g. an inversion height in a single-column model):\n\n```julia\n\u2202z\u03b8 = Field(\u2202z(\u03b8))\nz\u1d62 = znodes(\u2202z\u03b8)[argmax(\u2202z\u03b8)[3]]\n```\n\nTests: index reductions added to `run_field_reduction_tests` (against a halo-poisoned copy, so any future fallback that scans halos fails loudly; runs on both architectures and all field locations including reduced fields), plus an immersed-grid testset asserting the raw extremum in the immersed region is skipped and `values[argmax(c)] == maximum(c)`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABPudI1w",
+        "number": 5927,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5927"
+      }
+    ],
+    "createdAt": "2026-09-04T23:27:34Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-09-06T03:20:39Z",
+    "number": 5930,
+    "title": "Interior-aware argmax, argmin, findmax and findmin for Field"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Alternative to #5935.  Close #5935.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-06T19:27:47Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-06T21:41:58Z",
+    "number": 5936,
+    "title": "Append active indices level by level instead of concatenating"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Motivated by https://github.com/NumericalEarth/NumericalEarth.jl/pull/666#discussion_r3943850225",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-06T12:07:36Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-06T23:35:00Z",
+    "number": 5934,
+    "title": "Keep active cells maps when changing the halo of an ImmersedBoundaryGrid"
+  }
+]
