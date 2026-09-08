@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 145,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "This branch fixes two related problems affecting output writers, particularly when restarting from a checkpoint with a changed `AveragedTimeInterval`.\r\n\r\n**Output-writer initialization after pickup**\r\n\r\nOutput writers are now initialized whenever a simulation is initialized, including after restoring from a checkpoint. Previously, this initialization was limited to fresh simulations at iteration zero.\r\n\r\nCheckpoint restoration also now synchronizes the writer schedule using an actual `WindowedTimeAverage`, instead of assuming that the first configured output is time averaged.\r\n\r\n**Changed `AveragedTimeInterval` after pickup**\r\n\r\nAn `AveragedTimeInterval` output writer uses two related schedules:\r\n- An outer `TimeInterval` that controls writes to disk.\r\n- An inner `AveragedTimeInterval` that controls data collection and averaging.\r\n\r\nOlder checkpoints could combine a newly configured interval with the actuation count from the previous interval. This could place the next output far into the future, causing the simulation to continue without writing output.\r\n\r\nAfter restoring a checkpoint, this branch now:\r\n- Checks whether the next averaged-output time is consistent with the restored clock and configured interval.\r\n- Resets inconsistent outer and inner schedules at the pickup time.\r\n- Clears stale partial-averaging state.\r\n- Schedules the next output for one configured interval after pickup.\r\n- Allows periodic output to continue normally thereafter.\r\n- \r\n**Regression test**\r\nThe new test reproduces a restart at day 3 where the averaged-output interval changes from 1 day to 5 days. It verifies that the restored schedules are reset and that output is written at day 8.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-26T05:34:35Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-07T03:51:53Z",
+    "number": 5896,
+    "title": "Fix multiple `OutputWriter` bugs"
+  }
+]
