@@ -1,0 +1,212 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "captures the breaking change to bounds-preserving WENO on #5924 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-05T00:05:25Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-08T03:26:51Z",
+    "number": 5931,
+    "title": "Bump version from 0.111.0 to 0.112.0"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `apply_regionally!` and `construct_regionally` decided at run time whether any argument is a `MultiRegionObject` with `findfirst(isregional, args)` and `findfirst(isregional, kwargs)`. The latter iterates a `Base.Pairs` and does not constant-fold, so type inference explored the multi-region loop, with its splatted generators, using widened argument types at every `@apply_regionally` call site. Under a single\r\n> `@apply_regionally build_active_cells_map(grid, ib)` Julia inferred `build_active_cells_map(::Any, ::Any)` (2.6 s) and `build_active_cells_map(::Union{AbstractGrid{..., <:Distributed}}, ::Any)` (3.7 s) in addition to the concrete method (0.27 s); the same happens in `Field` constructors, `update_state!` and every other user of the macro.\r\n> \r\n> Dispatch on `isregional(args) || isregional(values(kwargs))` instead, which folds to `false` for non-regional arguments, and move the loop into `multi_region_apply!` / `multi_region_construct`. These stay `@inline`: a `@noinline` variant made inference specialize them separately wherever the arguments are abstract and raised the number of method instances inferred while constructing a `HydrostaticFreeSurfaceModel` from 72.5k to 81k; with `@inline` it is 75.4k and total inference time is unchanged.\r\n> \r\n> Constructing an `ImmersedBoundaryGrid` on a 90x45x20 `LatitudeLongitudeGrid` with `active_cells_map = true` goes from 13.8 s to 8.6 s on a cold session (Julia 1.12.7).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T08:52:03Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-08T12:14:26Z",
+    "number": 5942,
+    "title": "Skip the multi-region branch statically in apply_regionally! and construct_regionally"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `inflate_grid_halo_size` inferred as `Any` even when the grid already had sufficient halos: `inflate_halo_size` accumulated the required halo in a loop over the heterogeneous tuple of tendency terms, which does not constant-fold, and `with_halo` returns a grid whose type depends on the halo values. Since the constructor rebinds `grid` to the result, every later step of `NonhydrostaticModel` (field construction, boundary condition regularization, solver and timestepper setup, `update_state!`) was inferred with an abstract grid and dispatched dynamically.\r\n> \r\n> Write `inflate_halo_size` as a recursion over the tendency terms, so it folds when `required_halo_size_*` are compile-time constants, and split `inflate_grid_halo_size` so the (inlined) comparison decides at compile time whether the `with_halo` branch is reachable. With the default `RectilinearGrid` halo and WENO(5) + AnisotropicMinimumDissipation, `Base.return_types(inflate_grid_halo_size, ...)` is now the concrete grid type; it is still `Any` when inflation actually happens, the case that already warns the user to pass `halo=...` explicitly.\r\n> \r\n> The warning message was missing a `*` between its second and third strings, so its second half was evaluated as a separate expression and never printed; the strings are now concatenated.\r\n> \r\n> On its own this does not reduce construction time yet, because other values in the constructor (`materialize_model_advection`, `TracerFields`, `regularize_field_boundary_conditions`, `with_tracers`) are also inferred as abstract `NamedTuple`s; those are addressed separately.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T09:12:47Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-08T13:09:41Z",
+    "number": 5944,
+    "title": "Make halo inflation in NonhydrostaticModel type stable"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The current `Average` freezes the volume at construction. This is incorrect for a mutable grid where the volume might change in time. This PR corrects it.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-16T09:43:33Z",
+    "deletions": 21,
+    "labels": [],
+    "mergedAt": "2026-09-08T15:01:40Z",
+    "number": 5800,
+    "title": "Bugfix in Averaging for mutable grids"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This seems to help a bit on CPU, I'm not sure about the GPU impact (but the summary below suggests it should be effectively unchanged?)\r\n\r\n> `partition(::MappedKernel, ...)` returned the `dynamic` flag computed by `NDIteration.partition` from the length of the index map, a runtime value, so the flag had type `Union{DynamicCheck, NoDynamicCheck}`. The KernelAbstractions CPU backend union-splits on it and compiles two specializations of every kernel launched over an active-cells map, plus two of `__run` / `__thread_run` each. In a `HydrostaticFreeSurfaceModel` on an immersed 90x45x20 grid with `active_cells_map = true` this doubled the inference and LLVM time of the momentum, tracer and CATKE kernels (for example `compute_hydrostatic_free_surface_Gv!` was inferred twice, 5.2 s + 5.0 s, and codegen'd twice, 0.78 s + 0.77 s).\r\n> \r\n> Always return `DynamicCheck()`: the mapped `__validindex` then costs one integer comparison per work item, and only one specialization exists. The first `time_step!` of that model goes from 72 s to 45 s and its construction from 194 s to 180 s on a cold session (Julia 1.12.7); the steady-state step time is unchanged. GPU launches share this `partition`; they simply always carry the bounds check, which was already needed whenever the map length is not a multiple of the workgroup size.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T09:01:32Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-08T15:18:59Z",
+    "number": 5943,
+    "title": "Always bounds-check mapped kernels"
+  },
+  {
+    "additions": 55,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "at the moment, only the schedule of a callback can be restored. However, for some particular callbacks that carry a state, it is necessary to checkpoint and restore also the state itself.\r\n\r\nThis PR provides a hook to checkpoint a callback and restore.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T12:40:25Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-08T15:51:27Z",
+    "number": 5829,
+    "title": "Restore the state of a callback"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`mask_immersed_field_xy!` was called using `:xy` which on a immersed grid with an active map automatically calls the kernel using the surface active cell map. This means that the immersed cells were never visited, and `mask_immersed_field_xy!` was basically a no-op.\r\n\r\nThis PR fixes it by using `KernelParameters` which do not allow automatic use of an active cells map",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-28T11:20:22Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-08T15:51:45Z",
+    "number": 5828,
+    "title": "Fix `mask_immersed_field_xy!` on an immersed grid with an active map"
+  },
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "Closes #5902.\n\nWhether a field's boundary conditions are opened was decided by `FTSBC`, a list of four condition\ntypes. A condition that holds a `FieldTimeSeries` without being one is not on it, so the series is\nnever found and its in-memory window never advances \u2014 silently on CPU, as `CUDA error 700` on GPU.\n\nAsk `has_field_time_series` instead, the check #5740 introduced and already uses for the generic,\n`Tuple`, `NamedTuple` and `FieldBoundaryConditions` paths. A model that owns no series still pays\nnothing: the `FieldBoundaryConditions` method begins with that check, so such a field resolves to\n`Tuple{}` at compile time and nothing runs.\n\n`FTSBC`, `FieldBCsFTS`, `FieldFTS` and the seven `*FTSBCS` aliases have no remaining users and have\nbeen removed.\n\nThe test runs over `archs` and covers all three ways to attach a series to a boundary condition;\nreverting the fix fails it. Locally `test_output_readers.jl` (11605) and `test_boundary_conditions.jl`\n(312) pass on CPU, and on a Tesla T4 with `TEST_ARCHITECTURE=GPU` (10739 and 312).\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABOhusrQ",
+        "number": 5902,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5902"
+      }
+    ],
+    "createdAt": "2026-08-27T20:56:30Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2026-09-08T17:54:24Z",
+    "number": 5905,
+    "title": "Find a series held by any boundary condition, not just four listed ones"
+  },
+  {
+    "additions": 206,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This is a larger change than the previous PRs of the batch\r\n\r\n> Several per-step loops of `NonhydrostaticModel` iterated heterogeneous\r\n> tuples with runtime indices or names: the AB2/RK3 substep loop\r\n> (`for (i, name) in enumerate(keys(model_fields))` with `exclude_periphery\r\n> = i < 4` and `Val(i-3)`), the tracer-tendency loop, the flux boundary\r\n> condition loop (`foreach(i -> ..., 1:length(prognostic_fields))`),\r\n> `cache_previous_tendencies!`, the AMD diffusivity loop, and the closure\r\n> tuple loops in `compute_closure_fields!` / `step_closure_prognostics!`.\r\n> Each `launch!` inside them was a dynamic call with about twenty boxed\r\n> arguments. `compute_auxiliaries!` also passed the kernel parameters as\r\n> the runtime symbol `:xyz`, `make_pressure_correction!` scaled the\r\n> pressure through `Field` broadcasting, and the FFT solvers looped over\r\n> their heterogeneous transform tuples.\r\n> \r\n> Rewrite these as recursions over `Val`-wrapped names, the pattern already\r\n> used by `HydrostaticFreeSurfaceModel`; the AB2 and RK3 steps share\r\n> `step_prognostic_fields!`, which takes the launch closures for velocities\r\n> and tracers so that `exclude_periphery` is a literal at the launch site.\r\n> Tuples such as `fields(model)` and the advecting velocities are rebuilt\r\n> at each level of the recursions rather than passed down, because passing\r\n> them allocates. The default `\u03ba_parameters` becomes `Val(:xyz)`, which\r\n> keeps the active-cells-map semantics of `:xyz` while being static, and\r\n> the pressure is scaled by a kernel over the same interior range the\r\n> broadcast used. The velocity `implicit_step!` receives `nothing` as\r\n> tracer index (as in the hydrostatic model) instead of `Val(i - 3)`; no\r\n> viscosity dispatches on it.\r\n> \r\n> Allocations per `time_step!` on a 16x12x10 grid (Julia 1.12.7, CPU):\r\n> \r\n>   RK3, WENO(5), AMD, T/S                     1,185,968 -> 1,616 B\r\n>   AB2, same                                    395,184 ->   560 B\r\n>   RK3, closure tuple (AMD + ScalarDiffusivity) 1,217,696 -> 1,616 B\r\n>   RK3, implicit VerticalScalarDiffusivity,\r\n>        immersed grid with active map         1,171,232 -> 5,120 B\r\n>   AB2, stretched grid (Fourier-tridiagonal)    507,584 -> 1,424 B\r\n> \r\n> All five produce bit-identical fields after five steps, as do the\r\n> hydrostatic configurations that share the closure-tuple and transform\r\n> code. The CPU nonhydrostatic budgets in `test/test_memory_allocation.jl`\r\n> are tightened accordingly (5.8e5-6.5e5 -> 1,700-10,500 bytes); the GPU\r\n> and distributed budgets are left unchanged since they were not measured.\r\n> \r\n> ---\r\n> \r\n> With a tuple of closures, `implicit_step!` filtered the vertically implicit\r\n> closures with a generator, `Tuple(closure[n] for n = 1:N if ...)`, whose\r\n> result has a length unknown to the compiler. Every implicit step (one per\r\n> velocity component and tracer, per stage) therefore dispatched `solve!`\r\n> dynamically with boxed arguments. `hasclosure` received the closure type as a\r\n> plain value rather than a `::Type{T}` argument, so `closure isa ClosureType`\r\n> was evaluated dynamically for every tracer at every stage, and\r\n> `RiBasedVerticalDiffusivity` rebuilt the top tracer boundary conditions with a\r\n> `NamedTuple` generator on every call to `compute_closure_fields!`.\r\n> \r\n> The filter is now a recursion over the tuple, `hasclosure` specializes on the\r\n> closure type, and the Ri-based closure uses `map` over the tracers.\r\n> \r\n> Measured per time step on CPU (16\u00d712\u00d710 grid, T and S tracers, split-explicit\r\n> free surface, quasi-Adams-Bashforth):\r\n> \r\n>     (CATKE, HorizontalScalarDiffusivity):        345 allocs, 326 KB -> 5 allocs, 592 B\r\n>     (HorizontalScalar, VerticalScalar implicit):  350 allocs,  83 KB -> 2 allocs,  64 B\r\n>     RiBasedVerticalDiffusivity:                    29 allocs,  23 KB -> 2 allocs,  64 B\r\n> \r\n> Results are bit-identical to `main` for these configurations after five time\r\n> steps, with both the quasi-Adams-Bashforth and split Runge-Kutta steppers.",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T09:34:39Z",
+    "deletions": 124,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-08T21:15:17Z",
+    "number": 5945,
+    "title": "Make NonhydrostaticModel time stepping allocation free"
+  }
+]
