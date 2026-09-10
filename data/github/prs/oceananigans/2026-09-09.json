@@ -1,0 +1,133 @@
+[
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Motivated by https://github.com/NumericalEarth/NumericalEarth.jl/pull/671",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T13:55:24Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-09-09T05:56:32Z",
+    "number": 5948,
+    "title": "Implement a distribute tripolar grid helper"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Getting rid of splatted generators seems to be a recurring theme \ud83d\ude1b \r\n\r\n> The multi-region branches of `apply_regionally!`, `construct_regionally` and `multi_region_apply!` splatted `(getregion(arg, r) for arg in args)` generators into the regional call. Whenever inference reached one of these branches (every call whose `isregional` check does not fold), Julia had to infer iteration over a `Base.Generator` whose type embeds the full argument tuple type. On Julia 1.12 the compiler's `abstract_iteration` specialises its own `inferiterate` closures on the iterator type, so every distinct argument tuple made the compiler compile itself again, at roughly 15-30 ms per specialisation. Running `test_output_writers.jl` at `-O0 --check-bounds=yes` produced over 20000 such specialisations, about 380 s of codegen alone.\r\n> \r\n> Mapping `getregion` over the argument tuple and the keyword NamedTuple sidesteps generator iteration entirely. (Splatting the tuple-recursive `getregion(::Tuple, r)` instead is much worse when the argument types are abstract, because inference has to unroll the recursion through `t[2:end]`.) With this change a `HydrostaticFreeSurfaceModel` on a `TripolarGrid` takes 4.7 s instead of 8.1 s to construct, and initialising a NetCDF writer on a new grid type is 30-40% faster.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T23:04:39Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-09T07:31:52Z",
+    "number": 5951,
+    "title": "Splat regional arguments with map instead of generators"
+  },
+  {
+    "additions": 304,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This is actually something I have not thought about before, but it might allows us to gain a lot of efficiency and it became very easy with claude that can compute and test the coefficients correctly:\r\n\r\nWENO's smoothness computation take by far the largest share of computation in WENO (~70% of the flops). These smoothness operators are computed as straight coefficients times the WENO stencil values themselves, because the reference we used gave that explicit form. However, we know already that all smoothness operators are quadratic in the values and can be rewritten in terms of differences. The example is the typical 5th order weno stencil computation that can be rewritten as \r\n\r\n```math\r\n\\begin{align}\r\n  \\beta_0 &= \\tfrac{13}{12}\\left(\\psi_1 - 2\\psi_2 + \\psi_3\\right)^2\r\n           + \\tfrac{1}{4}\\left(3\\psi_1 - 4\\psi_2 + \\psi_3\\right)^2, \\\\[2pt]\r\n  \\beta_1 &= \\tfrac{13}{12}\\left(\\psi_1 - 2\\psi_2 + \\psi_3\\right)^2\r\n           + \\tfrac{1}{4}\\left(\\psi_1 - \\psi_3\\right)^2, \\\\[2pt]\r\n  \\beta_2 &= \\tfrac{13}{12}\\left(\\psi_1 - 2\\psi_2 + \\psi_3\\right)^2\r\n           + \\tfrac{1}{4}\\left(\\psi_1 - 4\\psi_2 + 3\\psi_3\\right)^2 .\r\n\\end{align}\r\n```\r\n\r\nwhile in main, the same operation is written as\r\n```math\r\n\\beta = \\psi_1(C_1\\psi_1 + C_2\\psi_2 + C_3\\psi_3) + \\psi_2(C_4\\psi_2 + C_5\\psi_3) + \\psi_3 C_6 \\psi_3\r\n```\r\nwhich expands to\r\n```math\r\n\\begin{align}\r\n\\beta_0 &= 10\\,\\psi_1^2 - 31\\,\\psi_1\\psi_2 + 11\\,\\psi_1\\psi_3 + 25\\,\\psi_2^2 - 19\\,\\psi_2\\psi_3 +  4\\,\\psi_3^2, \\\\[2pt]\r\n\\beta_1 &=  4\\,\\psi_1^2 - 13\\,\\psi_1\\psi_2 +  5\\,\\psi_1\\psi_3 + 13\\,\\psi_2^2 - 13\\,\\psi_2\\psi_3 +  4\\,\\psi_3^2, \\\\[2pt]\r\n\\beta_2 &=  4\\,\\psi_1^2 - 19\\,\\psi_1\\psi_2 + 11\\,\\psi_1\\psi_3 + 25\\,\\psi_2^2 - 31\\,\\psi_2\\psi_3 + 10\\,\\psi_3^2 .\r\n\\end{align}\r\n```\r\n\r\nmany more coefficients and operations. \r\nThe same for WENO3, where this identity is a bit more explicit:\r\nmain:\r\n```math \r\n\\begin{align}\r\n\\beta_0 &= \\psi_1^2 - 2\\,\\psi_1\\psi_2 + \\psi_2^2, \\\\\r\n\\beta_1 &= \\psi_1^2 - 2\\,\\psi_1\\psi_2 + \\psi_2^2 .\r\n\\end{align}\r\n```\r\ndiff form:\r\n```math\r\n\\begin{align}\r\n\\beta_0 &= \\left(\\psi_2 - \\psi_1\\right)^2, \\\\\r\n\\beta_1 &= \\left(\\psi_2 - \\psi_1\\right)^2 .\r\n\\end{align}\r\n```\r\n\r\nExactly like WENO5 and WENO3, also all the other smoothness operators can be rewritten in that form, provided we recompute all the coefficients to fit the difference form rather than the straight value form, for which Claude is quite amazing (he verified all the coefficients and formulations and matched them to machine precision). This allows us to reduce the smoothness operations by ~33 - 50%, so I am quite excited to see if this translates to an effective speed up of the code.\r\n\r\nThe nice thing of this rewriting is that it is very simple and localized to one function. Another advantage is that, for the Float32 smoothness, we not need to subtract a mean to the values, given the difference form already deals with a ``normalized'' operation.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-07T00:41:09Z",
+    "deletions": 197,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-09T12:36:04Z",
+    "number": 5937,
+    "title": "Improve WENO's stencil computation efficiency"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "With a `SplitRungeKuttaTimeStepper`, `model.clock.last_\u0394t` was written only once, in `maybe_prepare_first_time_step!` at iteration 0, and then kept the first step's value for the whole run.\r\n\r\nThis PR records `\u0394t` in `clock.last_\u0394t` at the final stage, next to `tick_time!`, and adds a test that steps `NonhydrostaticModel` (QAB2, RK3) and `HydrostaticFreeSurfaceModel` (QAB2, SplitRungeKutta2\u20135) twice with different `\u0394t` and checks that `clock.last_\u0394t` equals the most recent one.\r\n\r\nResolves #5953",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABQZD0Cw",
+        "number": 5953,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5953"
+      }
+    ],
+    "createdAt": "2026-09-09T04:41:54Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-09T13:33:17Z",
+    "number": 5954,
+    "title": "Update `clock.last_\u0394t` every time step with `SplitRungeKuttaTimeStepper`"
+  },
+  {
+    "additions": 36,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `initialize_nc_file` runs once per output file, but its body was inferred and compiled from scratch for every distinct model type, including the grid-metrics branch when `include_grid_metrics = false`. On a new grid topology this cost about 5 s at `-O0 --check-bounds=yes`, more than constructing the model itself, and the NetCDF writer tests construct hundreds of distinct model types.\r\n> \r\n> [`Base.@nospecializeinfer`](https://docs.julialang.org/en/v1/base/base/#Base.@nospecializeinfer) together with [`@nospecialize`](https://docs.julialang.org/en/v1/base/base/#Base.@nospecialize) on the model, grids and outputs makes Julia infer the body once with abstract argument types; the few calls inside dispatch dynamically, so only the code paths that actually execute get compiled for each new type. Initializing a NetCDF writer without grid metrics on a new grid topology now takes 0.3 s instead of 5.8 s.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T23:07:40Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-09T19:53:19Z",
+    "number": 5952,
+    "title": "Do not specialize output writers on the model type"
+  }
+]
