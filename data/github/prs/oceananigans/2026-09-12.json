@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I mentioned multiple times that reusing same label is problematic, now it's biting us :slightly_smiling_face: \r\nTaken out of #5799.\r\n\r\n> The stratified Couette flow validation script sets initial conditions via closures that reached into `model.grid` for the domain extents, and a nested `print_progress` function reassigned `model`, which turned the captured variable into a `Core.Box`. On KernelAbstractions 0.10 the CPU backend compiles kernels like GPU backends do, so these closures were rejected as non-bitstype kernel arguments:\r\n> \r\n>     KernelError: passing non-bitstype argument\r\n>       .\u03b5 is of type var\"#\u03b5#20\" which is not isbits.\r\n>         .model is of type Core.Box which is not isbits.\r\n> \r\n> Capture `Lx` and `Lz` as plain numbers instead, and stop reassigning `model` inside `print_progress`, so the closures only hold numbers and compile on every backend.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T15:59:44Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-09-12T07:15:07Z",
+    "number": 5965,
+    "title": "Remove various `Core.Box`es being captured by closures in tests"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This shouldn't touch the GPU code path (but haven't benchmarked that one locally!), but only speed up the CPU execution by enabling vectorisation.\r\n\r\n> `heuristic_workgroup` picks a GPU-shaped `(16, 16)` workgroup for every\r\n> architecture. The KernelAbstractions CPU backend executes each block as a\r\n> loop over `CartesianIndices(workgroup)`, so a two-dimensional workgroup\r\n> becomes a nested loop with a 16-long inner trip count that LLVM neither\r\n> vectorizes nor pipelines well. On CPU we now use `(W1, 1)` (or `(1, W2)`\r\n> when the first dimension has extent 1), computed from the size the\r\n> kernel actually spans rather than from the grid size, so `:xz`/`:yz`\r\n> kernels get the right first dimension. The GPU heuristic is unchanged.\r\n> \r\n> Measured on a single thread (Julia 1.12.7, AVX-512 machine), per step:\r\n> \r\n>   NonhydrostaticModel 64^3, default advection    91 -> 29 ms\r\n>   NonhydrostaticModel 32^3, WENO(5) + AMD, RK3    40 -> 24 ms\r\n>   HydrostaticFreeSurfaceModel 90x45x20 lat-lon   242 -> 178 ms\r\n>   same, immersed without active_cells_map        537 -> 464 ms\r\n> \r\n> Micro-benchmarks at 64^3: `c = 2a + b` 456 -> 90 us, seven-point\r\n> Laplacian 791 -> 215 us. Skinny domains (4x256x256, 512x512x1) are\r\n> also faster, and the gain persists with 8 Julia threads (64^3:\r\n> 34 -> 24 ms). Kernels launched with an active-cells map are 1-D and\r\n> unaffected.\r\n> \r\n> Results change only at the level of floating-point round-off (relative\r\n> differences ~1e-16 after a few steps): the 1-D loops now vectorize, and\r\n> `muladd`/`div_fast` in the kernels allow different contraction in\r\n> vector code. Any multi-dimensional workgroup shape gives bit-identical\r\n> results, so this is a codegen effect rather than a change of the\r\n> iteration space.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T08:46:24Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-12T09:30:05Z",
+    "number": 5941,
+    "title": "Use a row-spanning workgroup for CPU kernel launches"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This addresses a race condition observed in #5968: some data is being read while it's being written to https://github.com/CliMA/Oceananigans.jl/blob/bba9b74327226ac000dea481f6bd83be8e3edd7e/src/Models/HydrostaticFreeSurfaceModels/z_star_coordinate.jl#L57 causing correctness test failures.  Splitting a kernel has probably some performance implications, but correctness is quite important, too.\r\n\r\n> `_update_zstar_scaling!` wrote `grid.z.\u03b7\u207f[i, j]` and, in the same kernel, computed the face scalings `\u03c3\u1da0\u1d9c`, `\u03c3\u1d9c\u1da0` and `\u03c3\u1da0\u1da0` by interpolating `\u03b7\u207f` from the neighbouring columns `i-1` and `j-1`. Those neighbours are written by other work items, so on the GPU each thread read a mix of old and new `\u03b7\u207f` values depending on scheduling. The CPU backend processes the columns in order, so it always saw the updated neighbours and was not affected.\r\n> \r\n> In the tripolar z-star conservation test the stale reads left `\u03c3\u1d9c\u1da0` inconsistent with `\u03b7\u207f` by up to 1.4e-5, so the sum of the active cell thicknesses in a column no longer matched the column depth (1.4e-4 m), the corrected velocities drifted from the barotropic transport by 2e-10, and the vertical velocity at the surface, which must cancel to round-off, grew to 3e-14 on the GPU (3e-21 on the CPU), failing the `< eps` check in https://github.com/CliMA/Oceananigans.jl/blob/bba9b74327226ac000dea481f6bd83be8e3edd7e/test/zstar_conservation_test_utils.jl#L50 Launching the scaling kernel a second time changed `\u03c3\u1d9c\u1da0` by 1.4e-5 on the GPU and by nothing on the CPU.\r\n> \r\n> `update_zstar_scaling!(grid, \u03b7)` now stores `\u03b7\u207f` in one launch and computes the scalings in a second one. With the fix the GPU surface residual is 2e-21 and `test_zstar_conservation_tripolar.jl`, `_explicit.jl`, `_implicit.jl` and `test_diffusion_stencils.jl` pass on the GPU with Julia 1.13 and 1.12 and on the CPU.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-12T19:51:40Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-09-12T22:34:18Z",
+    "number": 5972,
+    "title": "Update z-star scaling in two kernel passes"
+  }
+]
