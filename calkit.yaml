@@ -101,6 +101,25 @@ pipeline:
         - path: buildkite
           delete_before_run: false
           storage: git
+    fetch-weekly-buildkite:
+      description: >
+        Mirror job metadata and raw logs for the weekly CliMA benchmark
+        Buildkite pipelines: the three ClimaCoupler ones that report into
+        the CliMA Slack #coupler-report channel (climacoupler-amip,
+        climacoupler-longruns, climacoupler-cpu-gpu-benchmarks) plus
+        climaland-long-runs. Buildkite ages logs out, so this keeps a copy
+        while they still exist. Jobs already mirrored are skipped, so
+        re-running is cheap; pass a larger --max-builds to backfill.
+        Metrics are parsed downstream in analyze-weekly, not here, so a
+        parser fix can be applied to history.
+      kind: python-script
+      script_path: scripts/fetch-weekly-buildkite.py
+      environment: bk
+      always_run: true
+      outputs:
+        - path: data/buildkite-weekly
+          delete_before_run: false
+          storage: git
     fetch-github:
       description: >
         Incrementally fetch CliMA-org GitHub data (PRs, issues, repo stats,
@@ -189,6 +208,24 @@ pipeline:
           storage: git
         - path: figures/dev-throughput.json
           storage: git
+    analyze-weekly:
+      description: >
+        Parse the mirrored weekly Buildkite logs into a table of scalar
+        metrics (SYPD, walltime per coupling step, how far each run got
+        before finishing or crashing, crash signature) and plot them over
+        time.
+      kind: jupyter-notebook
+      notebook_path: notebooks/analyze-weekly.ipynb
+      environment: analyze
+      html_storage: git
+      executed_ipynb_storage: git
+      inputs:
+        - from_stage_outputs: fetch-weekly-buildkite
+      outputs:
+        - path: results/weekly-benchmarks.csv
+          storage: git
+        - path: figures/weekly-benchmarks.json
+          storage: git
 
 figures:
   - path: figures/amip-speedup.json
@@ -201,6 +238,14 @@ figures:
     description: External engagement with CliMA's products on a quarterly
       basis.
     stage: analyze
+  - path: figures/weekly-benchmarks.json
+    title: Weekly benchmarks
+    stage: analyze-weekly
+    description: >
+      Scalar metrics over time for the weekly ClimaCoupler and ClimaLand
+      benchmark runs. One trace per active configuration. Panels are throughput (SYPD), the fraction of
+      the configured run length actually simulated (crosses mark jobs that
+      did not pass, so a low value reads as a crash), and job wallclock.
   - path: figures/dev-throughput.json
     title: Software development throughput
     stage: analyze-dev-speed
@@ -216,6 +261,12 @@ notebooks:
     description: Analyze and plot the flagship AMIP benchmark (16 horiz.
       elem.) SYPD over time.
     stage: analyze
+  - path: notebooks/analyze-weekly.ipynb
+    title: Weekly benchmark analysis
+    description: >
+      Parse the mirrored weekly ClimaCoupler and ClimaLand Buildkite logs
+      and plot SYPD, run length before crash, and wallclock over time.
+    stage: analyze-weekly
   - path: notebooks/buildkite.ipynb
     title: Fetch Buildkite jobs from their API
     description: Fetch Buildkite benchmark data for comparison.
@@ -259,6 +310,22 @@ datasets:
     description: Job info and raw logs from Buildkite for the flagship AMIP
       benchmark.
     stage: fetch-buildkite
+  - path: data/buildkite-weekly
+    title: Weekly benchmark Buildkite jobs
+    description: >
+      Job info and raw logs from the weekly ClimaCoupler and ClimaLand
+      Buildkite benchmark pipelines, mirrored before Buildkite's retention
+      window removes them. One JSON file per job, named by build number and
+      job ID.
+    stage: fetch-weekly-buildkite
+  - path: results/weekly-benchmarks.csv
+    title: Weekly benchmark metrics
+    description: >
+      One row per weekly benchmark job, with the configuration it ran
+      (run name, h_elem, dt, t_end), its throughput (SYPD, walltime per
+      coupling step), how far it got before finishing or crashing, and its
+      crash signature if it failed.
+    stage: analyze-weekly
   - path: runs/amip
     title: Raw AMIP benchmark runs
     description: Raw outputs (logs, manifests, repo revisions used) from
