@@ -1,0 +1,239 @@
+[
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The triad scheme was not working because the diffusivity method did not have the correct signature and the implicit vertical advection was not working.\r\n\r\nI also added some tests that make sure that the triad scheme is 100% adiabatic, which luckily it is.\r\n\r\nAlso, the `k_skew` kwarg was ignored, so I added the GM part to the triad scheme. Also with its own check that the GM component is exactly antisymmetric (which, once again, luckily it is).\r\n\r\nThe `IsopycnalSkewSymmetricDiffusivity`, on the other hand, is neither adiabatic in `k_symmetric` nor exactly antisymmetric in `k_skew`. \r\nI will add a video which shows the comparison\r\n\r\nNote that the GM scheme in the triads is _identical to machine precision_ to the advective GM using a centered scheme (it is actually an identity)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-07T04:50:10Z",
+    "deletions": 64,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      },
+      {
+        "color": "AAFEBB",
+        "description": "Fudge factors and hand-waving",
+        "id": "MDU6TGFiZWwzMDMxMzc4MDU1",
+        "name": "parameterizations"
+      }
+    ],
+    "mergedAt": "2026-09-14T05:59:17Z",
+    "number": 5938,
+    "title": "Bugfix the triad scheme and add GM to it"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Yet another issue from #5968: [Julia v1.13 changed the hashing algorithm](https://julialang.org/blog/2026/09/julia-1.13-highlights/#hashing_changes), which affects ordering of `Dict` items (which are ***NOT*** to be considered sorted in any stable way).  Similarly to #5974, this makes the code more future-proof by avoiding implementation details.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T09:50:38Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-14T07:24:17Z",
+    "number": 5977,
+    "title": "Keep NetCDF grid positional arguments in file order"
+  },
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Motivated by a larger number of ambiguities in [Julia v1.13](https://github.com/CliMA/Oceananigans.jl/pull/5968) (due to new methods in the LinearAlgebra stdlib, see c13c06eee4b9ab29a953c22ab08d2193b25ce4f1) compared to v1.12, I went with just reducing ambiguities, so now they're the same between v1.12 and v1.13.  There's still a long way to go, but I feel like reducing ambiguities by 30% in one go is a nice result.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T19:52:19Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-09-14T07:30:32Z",
+    "number": 5978,
+    "title": "Crack down on ambiguities in `AbstractOperations`"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Yet another issue related to the [change of the hashing algorithm in Julia v1.13](https://julialang.org/blog/2026/09/julia-1.13-highlights/#hashing_changes), like #5977: this affected the order of iterating over `Dict`, which has never been considered stable, so relying on the exact order in tests (including doctests) is brittle, and error-prone.  The proposed future-proof solution is not to rely on the `Dict` iteration order, and instead always sort consistently the elements we want to iterate over.\r\n\r\nHopefully this resolves the last Oceananigans's side issue in #5968.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T22:15:21Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2026-09-14T07:43:10Z",
+    "number": 5980,
+    "title": "Print dictionary-backed collections in sorted order"
+  },
+  {
+    "additions": 417,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Right now `NetCDFWriter` can write duplicate times after picking up from a checkpoint, which is always wrong.\r\n\r\nThis PR adds a new kwarg to `NetCDFWriter` called `duplicate_times` which dictates what happens when an existing time is encountered. You can either `:skip` writing (which is what `JLD2Writer` currently does) or you can `:overwrite`. Either way the output is more correct as there won't be any duplicate times in the output file.\r\n\r\nWould be nice if we could remove all output that are further ahead of `model.clock.time` but I think that NetCDF cannot shorten its time dimension.\r\n\r\nResolves #5873 ",
+    "changedFiles": 120,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABMioxOA",
+        "number": 5873,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5873"
+      }
+    ],
+    "createdAt": "2026-08-13T01:46:18Z",
+    "deletions": 299,
+    "labels": [],
+    "mergedAt": "2026-09-14T11:36:26Z",
+    "number": 5874,
+    "title": "(0.113.0) Handle duplicate times in `NetCDFWriter` and rename `overwrite_existing` to `overwrite_files`"
+  },
+  {
+    "additions": 218,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "# I used Claude to help prepare this PR.  This is the first PR for the velocities, a second one will follow for Tracers. There is also a request/issue on radiating tangential barotropic velocities at the boundary.  Here we go:\n\n# Add `ObliqueRadiation`: a two-dimensional open boundary radiation scheme\n\n## What this adds\n\n`ObliqueRadiation` diagnoses both components of the phase-speed vector, following\nRaymond & Kuo (1984), where `NormalRadiation` diagnoses the boundary-normal component only:\n\n```\n\u2202\u03c6/\u2202t + c\u2099 \u2202\u03c6/\u2202n + c\u209c \u2202\u03c6/\u2202t\u0302 = \u2212(\u03c6 \u2212 \u03c6\u1d49\u02e3\u1d57)/\u03c4\n\nc\u2099 = \u2212(\u2202\u209c\u03c6)(\u2202\u2099\u03c6)/|\u2207\u03c6|\u00b2,   c\u209c = \u2212(\u2202\u209c\u03c6)(\u2202_t\u0302\u03c6)/|\u2207\u03c6|\u00b2,   |\u2207\u03c6|\u00b2 = (\u2202\u2099\u03c6)\u00b2 + (\u2202_t\u0302\u03c6)\u00b2\n```\n\nThe tangential derivative is upwinded and `c\u209c` is limited to a tangential Courant number\nof one, as in ROMS (`u3dbc_im.F`, `RADIATION_2D`). Inflow/outflow, nudging and\n`use_boundary_velocity` behave as in `NormalRadiation`, and so do the defaults\n(`\u03c4_in = 0`, `\u03c4_out = Inf`). When `\u2202_t\u0302\u03c6 = 0` it reduces to the normal-incidence update. It is used\nlike `NormalRadiation`: as the `scheme` of a `NormalFlowBoundaryCondition` or a\n`ValueBoundaryCondition`. The tangential term is applied on lateral boundaries; top and\nbottom use the normal-incidence update.\n\n## Demonstration\n\nAn idealized nesting case: a small \"neck\" sub-basin, open at both ends, cut out of a\nlarger dumbbell-shaped parent domain and driven at its boundaries by the parent's own\nsolution (a baroclinic dipole eddy transiting the neck). The green lines mark the open\nboundaries; the bottom row pastes the sub-domain's solution back into the parent, so any\nmismatch shows up as a visible seam.\n\n`NormalRadiation` (existing):\n\n![NormalRadiation](https://raw.githubusercontent.com/enri66/OpenBoundaryTestCases/main/media/neck_substituted_normalradiation.gif)\n\n`ObliqueRadiation` (this PR), same parent, same boundaries:\n\n![ObliqueRadiation](https://raw.githubusercontent.com/enri66/OpenBoundaryTestCases/main/media/neck_substituted_obliqueradiation.gif)\n\n## Structure\n\nFollowing review, the radiation machinery is shared rather than duplicated:\n\n- `AbstractRadiationScheme` is a supertype of `NormalRadiation` and `ObliqueRadiation`.\n  `RBC`, storage allocation and `show` are defined once over it, so the new scheme needs\n  no regularization method and no tripolar tie-breakers.\n- One set of `radiate_*_halo!` methods. On lateral boundaries the update dispatches on\n  the scheme through `radiation_update`: `normal_radiation_update` for `NormalRadiation`,\n  `oblique_radiation_update` for `ObliqueRadiation`.\n- `oblique_radiation.jl` holds the docstring, struct, constructor, kernel and tangential\n  differencing. The tangential differences use the boundary and first-interior values of\n  the previous iteration, kept in two arrays double-buffered on iteration parity, so a\n  fill never reads values it writes.\n\n`NormalRadiation` results are bitwise unchanged, and the method-ambiguity list is\nunchanged.\n\n## Testing\n\nTwo tests in `test_open_boundary_conditions_hydrostatic.jl`, alongside the existing\n`NormalRadiation` tests:\n\n1. With zero tangential differences the oblique update equals the normal update,\n   on outflow and inflow, and differs from it when a tangential gradient is present.\n2. On a `HydrostaticFreeSurfaceModel` with centered advection, mirroring the initial\n   tracer and the tangential velocity mirrors the solution.\n\n## Two things learned while testing this, which may be more useful than the scheme\n\nThese came out of using the open-boundary machinery for nested/downscaled runs (a\nsub-domain cut out of a larger parent, boundary data sampled from the parent). Both\nconcern existing code rather than this PR, but they are worth recording.\n\n### Radiating the *tangential* velocity is possible today, and matters a lot\n\nThe tangential velocity at a west/east boundary is `(Center, Face, Center)` \u2014\n**`Center` in the boundary-normal direction** \u2014 which is exactly what the `Value`\nclassification dispatches on. So\n\n```julia\nv_bcs = FieldBoundaryConditions(west = ValueBoundaryCondition(v_ext; scheme = NormalRadiation(...)))\n```\n\nalready works with existing code, and its advecting velocity (the normal flow, one\ncell in) is physically the right one. Measured in a nested configuration, against a\nparent solution, as enstrophy in the sub-domain relative to the parent's own\n(1.000 is perfect):\n\n| tangential `v` treatment | result |\n|---|---|\n| prescribed from the parent (hard Dirichlet) | 1.611 |\n| `GradientBoundaryCondition(0)` | 0.330 |\n| **radiated** | **0.923** |\n\nOver-specifying `v` puts a discontinuity straight into `\u2202v/\u2202x`, and since\n`\u03b6 = \u2202v/\u2202x \u2212 \u2202u/\u2202y` that shows up as a vorticity band sitting on the boundary.\n`Gradient(0)` removes it but is over-dissipative. Radiating it is much better than\neither, and in our tests mattered considerably more than which normal-velocity scheme\nwas chosen. The docs currently show only normal components being given schemes, so\nthis may be worth documenting.\n\n### Nudging timescale should track how much you trust the exterior data\n\nWith an exact parent, `inflow_timescale = 0` (clamp) clearly beat `1 day`: relaxing\nthe clamp roughly quadrupled the error. Marchesiello et al.'s \u03c4_in \u2248 1 day assumes the\nexterior data is a coarse climatology to nudge toward rather than impose; with accurate\nexterior data, clamping is better.\n\n## References\n\n- Raymond, W. H., & Kuo, H. L. (1984). A radiation boundary condition for\n  multi-dimensional flows. *QJRMS*, 110(464), 535\u2013551.\n- Orlanski, I. (1976). A simple boundary condition for unbounded hyperbolic flows.\n  *JCP*, 21(3), 251\u2013269.\n- Marchesiello, P., McWilliams, J. C., & Shchepetkin, A. (2001). Open boundary\n  conditions for long-term integration of regional oceanic models.\n  *Ocean Modelling*, 3(1-2), 1\u201320.\n\n\nSeparately filed: https://github.com/CliMA/Oceananigans.jl/issues/5961 \u2014 `Value`-classification\nradiation schemes throw on barotropic fields, which came up while testing this in a nested\nconfiguration.\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T10:46:18Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-14T13:12:16Z",
+    "number": 5962,
+    "title": "Add ObliqueRadiation: a two-dimensional open boundary radiation scheme"
+  },
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Up for debate, but motivation is try and make the benchmarks more robust against noise: https://github.com/CliMA/Oceananigans.jl/pull/5974#issuecomment-5654167623.  Let's see also what's the impact against total run time of the benchmarks, if it's way too long it may not be worth it.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T20:46:47Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-14T21:28:30Z",
+    "number": 5979,
+    "title": "Time benchmarks over several windows and record package versions"
+  },
+  {
+    "additions": 248,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I stuck to the non-invasive changes, but with this we're down to only 9 ambiguities (from 185 on `main`, 289 two days ago) \ud83d\ude08 \r\n\r\nEdit: comment from the bot\r\n\r\n> One behavioural note: the impenetrable-plus-polar case now fills both sides even when `fill_normal_flow_bcs=false` (the wall side is set to zero, which is harmless); all previously reachable cases behave exactly as before.",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T11:08:50Z",
+    "deletions": 138,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-09-14T21:28:55Z",
+    "number": 5983,
+    "title": "Crack down on all method ambiguities"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "You'd think I was done chasing issues related to ordering of `Dict` iteration spotted in #5968, but I was not, sigh.\r\n\r\n> `gather_dimensions` collected the spatial dimensions of an output grid in a plain `Dict`, as did `gather_vertical_dimensions` and `suffix_grid_keys`. `Dict` iteration follows `hash`, and the string hash changed in Julia 1.13, so the order in which `NetCDFWriter` defined the dimensions in the file and listed them in its `show` method differed between Julia versions. The `NetCDFWriter` doctests failed on Julia 1.13 with the dimensions permuted (`x_faa, z_aac, y_aca, x_caa, z_aaf, y_afa` instead of the 1.12 order `y_afa, x_faa, x_caa, y_aca, z_aaf, z_aac`).\r\n> \r\n> The dimension containers are now `OrderedDict{String, Any}`, so dimensions follow the order in which they are constructed: x faces and centers, y faces and centers, z faces and centers, then `particle_id`. On an `OrthogonalSphericalShellGrid` the 2D auxiliary coordinates come in stagger order (cc, fc, cf, ff) followed by the vertical dimensions. This ordering is the same on every Julia version and matches the order in which the writer defines the dimensions in the file, so the `show` output is identical before and after the file is created. The doctest outputs are updated accordingly.\r\n> \r\n> The five `NetCDFWriter` doctests pass on Julia 1.13.0 and 1.12.7, and the file dimension order matches the printed order for `RectilinearGrid`, Lagrangian particles and `TripolarGrid` outputs.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T15:03:31Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-14T21:29:23Z",
+    "number": 5987,
+    "title": "Gather output dimensions in construction order"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 297,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Purpose\r\n\r\nThis PR fixes the numerical instability of the 1-moment non-equilibrium cloud formation when the relaxation timescale is much shorter than the substep of the linearized solver. With `cloud_ice_formation = PrescribedIceNumber` and the default `cloud_ice_sedimentation_number_concentration = 5e8 m\u207b\u00b3`, the deposition/sublimation timescale is 1.6\u20137 s against 60 s substeps in the coarse AMIP configuration. The coarse AMIP run crashed with NaNs after ~2 days, while `TemperatureDependent` (\u03c4 \u2265 300 s) with the same freezing code was stable.\r\n\r\n## Cause\r\n\r\nIn `_linearized_implicit_step` the instantaneous vapor \u2192 condensate rate was applied as a constant over the substep (capped at ice saturation using the substep-start temperature) and the sublimation rate as a decay capped by the available condensate rather than by the vapor deficit. When \u0394t/\u03c4 \u226b 1 both caps were active and their asymmetry produced a period-2 deposition/sublimation flip-flop: deposit all the excess, latent heating leaves the parcel subsaturated, sublimate nearly all the ice, overshoot to supersaturation, repeat.\r\n\r\n## Changes\r\n\r\n- `src/MicrophysicsNonEq.jl`: new `\u03c4_vap_to_q_lcl(opt, \u2026)` / `\u03c4_vap_to_q_icl(opt, \u2026)` returning the relaxation timescale (without \u0393) used by the matching `conv_q_vap_to_q_*` method (`Inf` when disabled). The evaporation/sublimation bound becomes `min(\u2212sat_excess, \u0393 q)/(\u03c4 \u0393)`, i.e. the rate is bounded by `q/\u03c4` and the relaxation target is exactly `max(q \u2212 deficit/\u0393, 0)`.\r\n- `src/BulkMicrophysicsTendencies.jl`: `_microphysics_source_terms` also returns the two timescales. In `_linearize(\u2026, \u0394t)` the transfer over a substep is the time average of the exact relaxation, `\u0394q = S \u0394t \u03c6(\u0394t/\u03c4)` with `\u03c6(x) = (1 \u2212 e^{\u2212x})/x` (Morrison & Milbrandt 2015, Appendix C, eqs. C6\u2013C7; new helper `_relaxation_average_factor`), so the substep never crosses the equilibrium and the instantaneous rate is recovered for \u0394t \u226a \u03c4. A source enters `e` as a non-negative constant; a sink enters `M` as an implicit decay with coefficient `D = |\u0394q| /\r\n (max(q + \u0394q, q_min) \u0394t)`, which removes exactly `|\u0394q|` when acting alone. Following review feedback, sinks are kept implicit so that condensate positivity is structural: every added `M` entry is a non-negative decay and `I/\u0394t \u2212 M` is an M-matrix, hence non-negative inputs give non-negative condensate for any combination of processes, independent of the tendency clip. A plain `S/q` decay was not used because with \u03c4 of a few seconds it removes essentially all condensate at the slightest subsaturation and re-creates the oscillating behavior. \r\n- Docs (`BulkTendencies.md`, `MicrophysicsNonEq.md`, `API.md`) and tests: limits of the averaging factor; stiff deposition/sublimation approach ice saturation without crossing it; a 10 % subsaturated ice cloud with autoconversion and snow closes the deficit, stays non-negative and does not overshoot saturation; two pre-existing structural tests updated to the new signature.\r\n\r\n## Validation\r\n\r\n- Offline (AMIP parameters, \u0394t = 180 s, 3 substeps, Float32): the 265 K case converges monotonically (\u0394T +0.16, +0.07, +0.06, +0.01 K per step); all states between 205 and 271 K are damped; subsaturated ice clouds with competing sinks close the deficit exactly with no sign changes; no negative condensate anywhere.\r\n- Tests: `bulk_tendencies_tests.jl` 191/191 (Float64, Float32), `microphysics_noneq_tests.jl` 39/39, `type_stability_tests.jl` 130/130, `return_type_tests.jl` (mixed Dual/plain) pass; JuliaFormatter clean.\r\n- Coupled coarse AMIP (ClimaCoupler, `PrescribedIceNumber`, Float32, dt = 180 s, per-step NaN check): a full 366-day year completes with no NaN at 1.99 SYPD on one A100, where the unpatched code fails at 2.2 days. These runs used an earlier iteration of this branch that differed only in how sinks enter the solver; the final form is identical to it on all offline test cases.\r\n\r\n## Notes for reviewers\r\n\r\n- Results change slightly for the slow options: the transfer per substep is `\u03c6(\u0394t/\u03c4)` times the instantaneous rate (0.91 for \u03c4 = 300 s and 60 s substeps).\r\n- Two properties shared with the existing donor-based linearization: an implicit sink coefficient also acts on mass entering the row in the same substep (freezing into a sublimating ice pool, melting into an evaporating liquid pool), and rain evaporation / snow sublimation keep their constant-rate treatment.\r\n- Physics, separate from this PR: with 5e8 m\u207b\u00b3 the deposition timescale is \u2264 7 s at any T < 0 \u00b0C, so `PrescribedIceNumber` glaciates supercooled clouds within a step or two (liquid fraction 0.5 near 272 K instead of ~258 K in the previous default). A sensitivity sweep over the prescribed number is under way.\r\n- Will need to test if the new version is also stable in AMIP\r\n- A more complete follow-up would adopt the joint supersaturation formulation of MM15 Appendix C, eqs. C1\u2013C7: a single relaxation variable with the combined liquid and ice timescale and the WBF transfer as an explicit liquid-to-ice term, so the two phases' competition for vapor is partitioned within a substep rather than across substeps. Carrying temperature as an unknown is not required for this, since the latent-heat feedback of each phase change is already in \u0393 and \u03c6. Its one remaining benefit, fusion heat shifting the same-substep saturation targets, is at most a few tenths of a kelvin per substep and is damped by the implicit sinks.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-11T21:44:46Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "2213f4",
+        "description": "Non equilibrium microphysics",
+        "id": "LA_kwDOFzm_uM8AAAACDB8CEQ",
+        "name": "NonEq \ud83d\udca7\ud83e\uddca"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-14T17:05:11Z",
+    "number": 787,
+    "title": "Add MM2015 solver for fast vapor-cloud processes"
+  }
+]
