@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 190,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`time_average(fts, bounds, window)` is a `FieldTimeSeries` reduction onto a coarser cadence, e.g. eight-day composites onto months: each sample is weighted by its overlap with the window, `NaN` samples drop out cell by cell, and the windows tile the record from `first(bounds)`. A final window shorter than `window` is truncated with a warning. It reads one sample at a time through `fts[n]`, so a partly resident `InMemory(k)` series works, and the result keeps the input's grid, indices and time indexing with times at the window centers.\n\n```julia\nusing Oceananigans\nusing Oceananigans.Units\n\nfts = FieldTimeSeries(\"composites.jld2\", \"T\"; backend=InMemory(2))\nbounds = [fts.times; fts.times[end] + 8days]   # sample n covers [bounds[n], bounds[n+1])\nmonthly = time_average(fts, bounds, 30days)\n```\n\nOnce #5761 lands, this should become a lazy `FieldTimeSeriesOperation` whose window is computed from its overlapping samples on slide, with `time_average` materializing it. A windowed average changes the time axis, so it isn't one of those operations yet.\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-03T23:56:15Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-05T00:20:47Z",
+    "number": 5925,
+    "title": "Add time_average for FieldTimeSeries"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The new `update_advection!` is ambiguous, both bounds-preserving weno and adaptive implicit advection need it and only one path could be taken.\r\nThis PR fixes the bug by taking both updates into account",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-05T17:45:36Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-09-05T21:30:15Z",
+    "number": 5933,
+    "title": "Correctly dispatch `update_advection!`"
+  }
+]

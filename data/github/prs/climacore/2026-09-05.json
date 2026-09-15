@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 637,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Accelerates `cartesian_tensor_divergence` and `cartesian_tensor_divergence!` on CPU and GPU:\r\n\r\n- **Memoized 2D rotation field**: `local_to_cartesian` depends only on $(\\lambda, \\phi)$, so on extruded spaces the rotation field is now memoized on `Spaces.horizontal_space(space)` rather than duplicating $N_z$ levels in 3D. Cuts rotation cache memory by $N_z$ (**30x** at $N_z = 30$) and keeps matrix entries resident in GPU cache during column broadcasts (L1 cache for small problems).\r\n- **DG kernel fusion**: Fused $WJ$ normalization and Cartesian-to-local rotation (`@. out = adjoint(rotation) * (-out / lgeom.WJ)`), eliminating a kernel launch and a global memory round-trip over the 3D tensor field.\r\n- **Robustness & correctness**: Memoizes a dedicated `_momentum_dss_buffer(out)` to fix CG tendency-type mismatch errors present on `main`, checks scratch field widths for 2-component momentum fluxes, and enables native GPU testing across all tensor-divergence test sets.\r\n- **Test cleanup and updates**: Cleans up tests (abstracts out utilities) and expands them slightly\r\n\r\n---\r\n\r\n## A100 GPU Performance (vs `main`)\r\n\r\nMeasured on NVIDIA A100-SXM4-40GB on 3D extruded topography grids ($N_q = 4$, $N_z = 30$, 50 synchronized samples):\r\n\r\n| Grid & Discretization | `main` | This PR | Speedup |\r\n| :--- | :---: | :---: | :---: |\r\n| **$helem=16$, Float32 CG** | 0.259 ms | **0.237 ms** | **1.09x** |\r\n| **$helem=16$, Float32 DG** | 1.094 ms | **0.240 ms** | **4.56x** |\r\n| **$helem=16$, Float64 CG** | 0.392 ms | **0.358 ms** | **1.09x** |\r\n| **$helem=16$, Float64 DG** | 0.425 ms | **0.374 ms** | **1.14x** |\r\n| **$helem=30$, Float32 CG** | 0.938 ms | **0.794 ms** | **1.18x** |\r\n| **$helem=30$, Float32 DG** | 1.101 ms | **0.967 ms** | **1.14x** |\r\n| **$helem=30$, Float64 CG** | 1.448 ms | **1.269 ms** | **1.14x** |\r\n| **$helem=30$, Float64 DG** | 1.574 ms | **1.399 ms** | **1.13x** |\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-04T17:23:40Z",
+    "deletions": 261,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-05T18:09:39Z",
+    "number": 2626,
+    "title": "Accelerate tensor divergence (and minor robustness fixes)"
+  }
+]

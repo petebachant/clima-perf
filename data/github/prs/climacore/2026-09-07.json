@@ -1,0 +1,41 @@
+[
+  {
+    "additions": 103,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "**Stack 1/4** \u2014 base `main`. Next: #2613 (`tr/meshes-fixes`).\n\nTwo self-contained `Geometry/coordinates.jl` fixes, one commit each.\n\n> **Note:** this previously also carried a fix for #1936 (`_coordinate` /\n> `_coordinate_type` for `LatLong` points). That commit has been dropped \u2014\n> the lat/long axis order needs a decision that is being deferred. See below.\n\n### 1. `YZPoint` field typo (not filed)\n\n`_coordinate(p::YZPoint, ::Val{1})` read `p.x`, but `YZPoint`'s fields are `y`\nand `z`:\n\n```julia\njulia> Geometry.coordinate(Geometry.YZPoint(1.0, 2.0), 1)\nERROR: type YZPoint has no field x\n```\n\nThat breaks `Meshes.containing_element`/`reference_coordinates` for any\n`RectilinearMesh` built from a Y interval and a Z interval. The 2D point testset\nonly exercised `XYPoint` and `XZPoint`, which is why it was never caught;\n`YZPoint` is added to it.\n\n### 2. Make `Point`s composable (#1476)\n\n`XYPoint(XPoint(1.0), YPoint(2.0))` was a `MethodError`. Added constructors that\ncompose a point from its lower-dimensional parts for the `XY`/`XZ`/`YZ`, `XYZ`\nand `LatLong`/`LatLongZ`/`LatLongP` families. They forward to the existing\n`product_coordinates`, so mixed component types promote\n(`XYPoint(XPoint(1.0f0), YPoint(2.0)) === XYPoint(1.0, 2.0)`) and composing\nmismatched axes stays a `MethodError`. `LatLongPoint` takes its two parts in\neither order, mirroring `product_coordinates`.\n\nCartesian points are left alone: `product_coordinates` has no methods for them,\nso composing them is a larger change than this issue asks for.\n\n### Why #1936 was dropped\n\n`LatLongPoint`'s axis order is genuinely ambiguous, because both\n`product_coordinates(::LatPoint, ::LongPoint)` and the reverse produce a\n`LatLongPoint`, and the two real consumers disagree:\n\n| | `intervalmesh1` | needs `Val{1}` \u2192 |\n| --- | --- | --- |\n| ClimaDiagnostics (`islatlonbox`) | Lat | `LatPoint` |\n| #1936's reporter (their stack trace) | Long | `LongPoint` |\n\nClimaDiagnostics also *pirates* these exact signatures as an explicit\n\"Workaround for ClimaCore #1936\"\n([netcdf_writer_coordinates.jl:781-784](https://github.com/CliMA/ClimaDiagnostics.jl/blob/3e5bad4556a13c6bb6ffc9619a539caf4fab1315/src/netcdf_writer_coordinates.jl#L781-L784)),\nmapping `Val{1}` to `LatPoint`. Whichever order ClimaCore picks, loading\nClimaDiagnostics silently redefines `_coordinate` and leaves it disagreeing with\n`_coordinate_type`. So fixing #1936 needs a decision on the canonical order plus\na coordinated removal of that workaround, which is out of scope here.\n\n### Testing\n\n`test/Geometry/unit_geometry.jl` passes (new testsets: `2D XY,XZ,YZ Points`\n99/99, `Composable Points` 37/37). `Domains`, `Meshes`, `Spaces`, `Fields`,\n`InputOutput` and `Remapping` unit tests all pass.\n\nCloses #1476\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01HJ8VbwbMadrhvCtBV3jkjc",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms5yUeaL",
+        "number": 1476,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/1476"
+      }
+    ],
+    "createdAt": "2026-08-31T21:39:40Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-07T23:49:16Z",
+    "number": 2612,
+    "title": "Geometry: fix YZPoint typo, make Points composable"
+  }
+]

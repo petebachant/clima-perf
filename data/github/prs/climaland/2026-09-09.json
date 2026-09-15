@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nas far as I can tell, the relative humidity should be in percent here\r\nhttps://www.nature.com/articles/s41467-018-03629-7#Sec12\r\n\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-06T00:03:50Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-09T15:24:44Z",
+    "number": 1843,
+    "title": "relative humidity is in percent"
+  },
+  {
+    "additions": 130,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis PR does a few things to try and improve our P-model implementation:\r\n- We used to call \"compute pmodel outputs\" and compare the output of that against an R implementation of the pmodel as a unit test. However, that used _duplicate code_ to compute the output, i.e. it did not use the same functions (`compute_optimal_capacities`, and `compute_blended_photosynthesis`) that we do in our simulations. I now use the same functions for both. To enable this, I removed a few intermediate quantities which are not output from our `compute_optimal_capacities` & `compute_blended_photosynthesis`. As long as the remaining GPP, Vcmax25, Jmax25 etc are tested and correct, I assume that the intermediate quantities are also correct.\r\n- Simpler viscosity correction. It was kind of crazy what we were doing, we dont need this complicated of a formula. I changed to one that should hold between 250 and 390K which should be plenty for the canopy. The tests still pass.\r\n- I tried to make our pmodel functions match the Ren et al paper and Stocker et al paper more closely, e.g. computing \"L\" and limiting L to be real (c* > mj), instead of clipping in other places (e.g. clipping m)\r\n- avoid multiplying and dividing by zero if beta = 0 (ci -> gamma star, mc ->0, mj -> 0, but mc/mj is defined)\r\n\r\n## To-do\r\n\r\nFix downgrades (will be fixed in #1866)\r\n\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-01T21:29:53Z",
+    "deletions": 270,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-09T18:14:07Z",
+    "number": 1865,
+    "title": "Clearer PModel equations, better testing, simple viscosity correction"
+  },
+  {
+    "additions": 221,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nWhen computing SIF using the Farquhar model, only one PFT is modelled per cell, so we do not need to worry about averaging the contributions from C3 and C4 plants (because the PFT determines if the plant is C3 or C4). For the Pmodel, this is not the case.\r\n\r\nThis PR extends how we compute SIF so that we compute the blended contribution of C3 and C4 plants correctly. This means we average SIF, and not Vcmax and J/Jmax.\r\n\r\nI also fixed a bug in a unit (unrelated).\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n- dispatch update_SIF!() over the photosynthesis model type, necessarily this creates unique helpers for computing SIF at a point.\r\n- bypass previous get_J_over_Jmax, get_Vcmax_leaf which internally blend quantities between c3 and c4 plants, these are now computed separately; remote J over Jmax function as no longer used\r\n- isolate the lee et al SIF model update\r\n\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-02T15:47:20Z",
+    "deletions": 60,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-09T19:50:08Z",
+    "number": 1867,
+    "title": "Fix C3/C4 blending in SIF"
+  }
+]

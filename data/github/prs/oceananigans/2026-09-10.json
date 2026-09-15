@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "`test_divergence_free_solution_on_rectangular_grids` does not take a floating-point type, so calling it inside the `float_types` loop ran the same 32 Float64 configurations twice. The second pass costs about 20 s of solver time on CI's single-threaded `-O0` runner for no extra coverage.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-09T11:36:47Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-10T00:04:54Z",
+    "number": 5959,
+    "title": "Run the rectangular-grid CG solver sweep once"
+  },
+  {
+    "additions": 412,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `NonhydrostaticModel` and `HydrostaticFreeSurfaceModel` were inferred almost\r\n> entirely on abstract types: tracer names arrive as a runtime `Tuple` of\r\n> `Symbol`s, so every `NamedTuple` built from them (tracer fields, advection\r\n> schemes, boundary conditions, closures, forcing, background fields, closure\r\n> fields) was abstract, and each abstract value poisoned everything after it.\r\n> `@snoop_inference` on the nonhydrostatic constructor showed 825 dynamic-dispatch\r\n> inference roots and 14 s of 27 s inference on abstract signatures; the\r\n> hydrostatic constructor on a plain latitude-longitude grid had 3510 roots and\r\n> 162 s of 203 s on abstract signatures, including `ImmersedBoundaryGrid`\r\n> constructors for `ConformalCubedSphereGrid` that the model never uses.\r\n> \r\n> Both constructors now validate the user input, then hand the tracer names and\r\n> the timestepper name over as `Val` type parameters through `Base.invokelatest`,\r\n> which stops the compiler from also inferring the second stage with the names\r\n> unknown. Boundary conditions can depend on runtime values (whether a\r\n> latitude-longitude grid reaches a pole), so the fields, solvers and timestepper\r\n> are built behind a second barrier once the boundary conditions are regularized.\r\n> \r\n> The helpers on the constructor path build their containers without generators.\r\n> A new `Utils.named_tuple(f, names)` unrolls over the names with its own\r\n> recursion: going through `map` or `ntuple` made the compiler mistake the `map`\r\n> and `ntuple` calls inside the `Field` constructor for recursion and widen the\r\n> result. The closures whose result type depends on the name are marked\r\n> `Base.@constprop :aggressive`, as are `with_tracers`, `TracerFields`,\r\n> `regularize_field_boundary_conditions`, `permute_boundary_conditions`,\r\n> `BackgroundFields`, `tracer_diffusivities`, `constructor_field_names`,\r\n> `BuoyancyForce`, the `Field` constructors, the CATKE closure-field builders and\r\n> the hydrostatic tendency-field builders.\r\n> \r\n> Windowed fields (the free surface displacement, for example) had halo-filling\r\n> kernels whose static size was read from the data array at runtime, so their type\r\n> could not be inferred even with constant indices; the size now comes from\r\n> `total_size(grid, loc, indices)`, which the `Field` constructor already\r\n> enforces for the data. `similar` still depends on the runtime window of a\r\n> field, so the state cached by `SplitRungeKuttaTimeStepper` in the hydrostatic\r\n> model is built from the grid instead, and the `TimeStepper(:SplitRungeKuttaN)`\r\n> shortcuts use literal coefficient tuples instead of `tuple(collect(...)...)`.\r\n> \r\n> The `Field` constructors take the element type as `::Type{T}` so that the data\r\n> eltype is known, `total_size`/`total_length`/`KernelParameters` are `@inline`,\r\n> and the periodic halo-fill size is computed from `total_size` so that it folds.\r\n> The halo-fill ordering in `permute_boundary_conditions` is now a compile-time\r\n> sort by priority (`fill_priority`) that preserves the previous `sortperm`\r\n> order (checked for 65 topology/location/boundary-condition combinations,\r\n> including `Flat` directions). This also removes the `Base.isless` methods on\r\n> `Nothing`, `Missing` and `BoundaryCondition` that `sortperm` needed, which were\r\n> the type piracy in `BoundaryConditions` and 45 of the method ambiguities\r\n> counted by the quality-assurance test. `initialize_boundary_transport`\r\n> accumulates the scheme-boundary names in tuples instead of `Vector{Symbol}`.\r\n> \r\n> Measured on CPU (Julia 1.12.7, one thread, shared machine):\r\n> \r\n>     NonhydrostaticModel 32\u00b3, WENO(5), AMD, T/S, RK3:\r\n>         construction 29.5 s -> 10.8 s (106 M -> 61 M allocations),\r\n>         inference roots 825 -> 252, abstract inference 14 s -> 0.8 s\r\n>     HydrostaticFreeSurfaceModel 90\u00d745\u00d720 lat-lon, split-explicit, CATKE,\r\n>     WENOVectorInvariant, TEOS10, SplitRungeKutta3:\r\n>         construction 142 s -> 44 s (inference roots 3510 -> 338, instances 72.5 k -> 15.7 k)\r\n>     the same on an ImmersedBoundaryGrid with active cells map:\r\n>         construction 185 s -> 71 s\r\n> \r\n> Results are bit-identical to `main` for the nonhydrostatic (RK3/AB2, closure\r\n> tuples, vertically implicit on an immersed grid, Fourier-tridiagonal solver)\r\n> and hydrostatic (immersed and plain latitude-longitude) workloads after five\r\n> time steps.\r\n> \r\n> Remaining abstract pieces: on latitude-longitude grids the default north and\r\n> south boundary conditions depend on the latitude values, so fields built with\r\n> default boundary conditions are inferred as a small union there (rectilinear\r\n> grids infer concretely throughout, and the hydrostatic constructor's return\r\n> type is concrete); the nonhydrostatic FFT pressure solver's transforms depend\r\n> on runtime values in `plan_transforms`.",
+    "changedFiles": 43,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T09:43:56Z",
+    "deletions": 288,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-09-10T00:12:18Z",
+    "number": 5946,
+    "title": "Make the model constructors type stable"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Other issue popped up in #5968: some functions were using the internal Julia function `Base.initarray!`, which was changed in a breaking way for us.  The proposed solution is to avoid using internals entirely here, to make the code more future-proof.\r\n\r\n> `initialize_reduced_field!` called `Base.initarray!` with `&` and `|` for `all` and `any`. Julia 1.13 reduces `all!`/`any!` with the new `Base.and_all`/`Base.or_any` and dropped the `&`/`|` methods of `initarray!`, so every `all`/`any` of a field failed:\r\n> \r\n>     MethodError: no method matching initarray!(::CuArray{Bool, 3}, ::typeof(identity), ::typeof(&), ::Bool, ::ConditionalOperation{...})\r\n> \r\n> The other initializers relied on `Base.initarray!` with `Base.add_sum` and `Base.mul_prod`, and on `Base.mapfirst!`, which can change the same way. Replace them with the equivalent operations spelled out: a `fill!` with the neutral element for `sum`, `prod`, `all` and `any`, and a `map!` of the operand's first slice along the reduced dimensions for `maximum` and `minimum`. These launch the same kernels as before and need no version conditionals; `and_all`/`or_any` do not exist before 1.13 and the compat floor stays at Julia 1.10.\r\n> \r\n> Also correct the neutral mask of `any` from `true` to `false`: masked (conditional or immersed) cells made `any` return `true` regardless of the wet cells.\r\n> \r\n> Add tests for `all`/`any` reductions of Boolean fields, which were only covered by an MPI test: plain, with `dims`, in place, with a `condition`, and on an immersed grid, on every architecture.\r\n> \r\n> Build the first-slice view of a reduced field type-stably\r\n> \r\n> The `ntuple` over the dimensions returned a `UnitRange` for reduced dimensions and the operand's `Base.OneTo` axis otherwise, so the type of the slice depended on a runtime check and the `view`/`map!` call dispatched dynamically, adding about ten allocations to every `maximum`/`minimum` and costing several times the kernel time on the GPU. The initializer also did not specialize on `f`, which it only passes on.\r\n> \r\n> Build the slice by recursion over the axes, keeping each axis type, and specialize on `f`. The initializer now allocates the same as `Base.mapfirst!` for conditional operands and within 200 bytes of it otherwise.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-12T22:43:45Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-09-13T12:32:42Z",
+    "number": 5974,
+    "title": "Initialize reduced fields without Base's reduction internals"
+  }
+]
