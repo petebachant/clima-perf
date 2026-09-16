@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 189,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds the necessary functionality to support ClimaAtmos simulation of multiple columns. This includes allowing the user to pass the `deep` keyword argument to `Grids.ExtrudedFiniteDifferenceGrid` when using the convenience constructor for a multiple column grid/space and missing functionality for `MultiPointSpace` that ClimaAtmos need.\r\n\r\nIn addition, the metric of a `MultiPointSpace` was changed to be the identity matrix which is consist with a `PointSpace`.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T23:52:07Z",
+    "deletions": 45,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-15T00:07:36Z",
+    "number": 2635,
+    "title": "Change metric of multiple column grid to identity matrix"
+  },
+  {
+    "additions": 95,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "`mul_return_type` promoted the element type of a `Number * Tensor` product but kept the storage type, giving a type such as `Tensor{1, Dual, B, SVector{1, Float64}}` that `*` cannot produces. Conversions read `parent(v)`, so under inference the product came out `Float`; a broadcast that had to be materialized into an intermediate allocated the intermediate as `Float` and did not write `Dual` values. This blocked ClimaAtmos's Smagorinsky\u2013Lilly closure under the autodiff Jacobians.\r\n\r\nThe storage type is now promoted with `similar_type`, preserving the `Adjoint` structure of covectors. Unpromoted cases are unchanged. \r\n\r\nThis also adds unit tests and a column-level regression test.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T14:04:19Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-15T23:39:17Z",
+    "number": 2638,
+    "title": "Promote the storage type in `Number * Tensor` return types"
+  }
+]

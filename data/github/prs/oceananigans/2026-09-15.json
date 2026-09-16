@@ -1,0 +1,200 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "These require minimal code changes, should have little to no impact on user code.\r\n\r\nRef: #5601.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T00:27:12Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-09-15T07:31:09Z",
+    "number": 5993,
+    "title": "Resolve type piracy in BuoyancyFormulations, Grids and Models"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Noticed while reviewing #5983 after merge, should have spotted this before opening the PR, sigh.  Doesn't change much in practice, but (1) it's always better style to have globals to be const or ar least typed, and (2) this prevents accidental rebindings which could very theoretically cause inconsistencies.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T23:59:27Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-09-15T07:32:01Z",
+    "number": 5992,
+    "title": "Mark some global variables as `const`"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> Once the output file exists, `show(::NetCDFWriter)` listed the file's dimensions by looking up a variable of the same name for every dimension and taking its length. On an `OrthogonalSphericalShellGrid` the horizontal dimensions `i_caa`, `i_faa`, `j_aca` and `j_afa` are bare logical indices with no coordinate variable (the coordinates are the 2D `\u03bb_*`/`\u03c6_*` auxiliary variables), so printing a `TripolarGrid` writer after its first write raised a NetCDF \"Variable not found\" error.\r\n> \r\n> The `show` method now iterates the dataset's dimension table, which yields `name => length` pairs directly and covers dimensions without a coordinate variable. The tripolar NetCDF test checks the printed summary after the run.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T14:54:50Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-15T07:32:55Z",
+    "number": 5986,
+    "title": "Read dimension lengths from the dataset when showing a NetCDFWriter"
+  },
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Slight improvement over #5980: directly use `OrderedDict` on already sorted data, instead of sorting a `Dict` when reading it.\r\n\r\n> `FieldDataset` stored its time series in a `Dict{String}` and, since #5980, its `show` method sorted the names to be independent of the string hash. All three constructors build that dictionary from an already ordered source: the JLD2 `timeseries` group keys (JLD2 keeps links in an `OrderedDict`, so this is the order the writer created them), a tuple of symbols, or a `NamedTuple` of fields. Sorting therefore discarded a meaningful order for no gain. The dictionary is now an `OrderedDict` and `show` iterates it directly, so the fields are listed in file or construction order.\r\n> \r\n> `output_names` and `prettykeys` sorted the keys of every `AbstractDict`, including an `OrderedDict` a user passes deliberately to fix the output order. Both now keep the order of an `OrderedDict` and still sort plain `Dict` inputs, whose order was scrambled by hashing before Oceananigans saw them. `NetCDFWriter` stored its constructed outputs in a plain `Dict`, so it listed and defined them in hash order even for ordered inputs; it now stores them in an `OrderedDict` built from `output_names`, and the per-output grid lookup used to number multiple grids is ordered too. `time_average_outputs` only had a `Dict` method for dictionary inputs, so the `OrderedDict` fell through to the no-op fallback and averaged schedules were not applied; it now accepts any `AbstractDict` and returns an `OrderedDict` in the same order. `test_time_average_outputs_containers` in `test_output_writers.jl` checks the helper with a `NamedTuple`, a `Dict` and an `OrderedDict`, and a `NetCDFWriter` built from an `OrderedDict` with an averaged schedule; it fails without the `AbstractDict` method. `OrderedCollections` is added to the test project for it.\r\n> \r\n> The `field_time_series.md` doctests already list fields in write order (`u`, `v`, `w`), so their outputs are unchanged. Verified on Julia 1.13.0: the `field_time_series.md` doctests via `Documenter.doctest`, the `NetCDFWriter` docstring blocks (identical apart from the `dimensions:` line, which commit 45407888b on `mg/julia-v1.13` fixes separately), the `FieldDataset` test sets in `test_output_readers.jl` (110/110), the \"Time averaging of output\" test set in `test_output_writers.jl` (24/24), and the whole of `test_netcdf_writer.jl` (3730/3730) with `--check-bounds=yes`.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T16:00:17Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-09-15T07:38:09Z",
+    "number": 5988,
+    "title": "Keep field and output order in FieldDataset and ordered writer inputs"
+  },
+  {
+    "additions": 70,
+    "author": {
+      "id": "MDQ6VXNlcjI3OTU2OTc0",
+      "is_bot": false,
+      "login": "maximilian-gelbrecht",
+      "name": "Maximilian Gelbrecht"
+    },
+    "body": "\r\nThis came up while working on Reactant for Terrarium. Let me know if you want to tackle these problems differently. Happy to adjust anything here, E.g. if there's a way around materializing the lazy operators. Note that in Terrarium we often use stretched grids in the z-axis defined by arrays, which isn't often used in Oceananigans or Breeze as it seems to me, that's one of the reasons we fall into some previously uncovered bugs as it seems. Text below is LLM-generated. \r\n\r\nTwo failures of operation-backed `Field`s on a `ReactantState` grid, both in the Reactant extension.\r\n\r\n## 1. `compute!` fails to compile on grids with array-valued coordinates\r\n\r\n`Field(a * b)` and `Field(zspacings(\u2026))` failed with\r\n\r\n```\r\nInvalidIRError: compiling MethodInstance for gpu__compute!(\u2026)\r\nReason: unsupported dynamic function invocation (call to getindex)\r\n```\r\n\r\nwhenever the grid's coordinates are array-valued (a stretched `z`, or any `LatitudeLongitudeGrid`).\r\n\r\n**Cause.** `traced_type_inner` gives `BinaryOperation` and `KernelFunctionOperation` the eltype of\r\ntheir traced grid, which is a `TracedRNumber` once a coordinate array is traced. Since\r\n`AbstractOperation <: AbstractArray{T, N}`, the operation then satisfies `Reactant.AnyTracedRArray`,\r\nwhose `getindex` is ambiguous with the operation's own `getindex(\u03b2, i, j, k)`. The `_compute!` kernel\r\nhit the ambiguous call and GPUCompiler rejected it. `UnaryOperation`, `MultiaryOperation` and\r\n`Derivative` were unaffected only because they have no `traced_type_inner` override.\r\n\r\n**Fix.** Keep the traced eltype \u2014 Reactant needs it to route reductions through\r\n`overloaded_mapreduce` \u2014 and resolve the ambiguity instead, in favour of Oceananigans' `getindex`\r\n(Reactant's wrapped-array indexing cannot work on an operation, which has no parent array). The\r\noperations' `getindex` bodies are factored into `evaluate_binary_operation` and\r\n`evaluate_kernel_function_operation` so the extension forwards to them without duplication.\r\n\r\nNote the ambiguity is driven by eltype alone: `AnyTracedRArray` is `AbstractArray{TracedRNumber{T}, N}`,\r\nso any operation with a traced eltype satisfies it. Separately, `Adapt.parent_type` is now defined for\r\n`AbstractOperation` as the type itself \u2014 an operation computes its values rather than wrapping a\r\nbuffer, so it is its own ancestor. This follows the existing `FunctionField` precedent and silences a\r\nvery noisy Reactant warning; it does not affect the ambiguity.\r\n\r\n## 2. Reductions of operations raise `Scalar indexing is disallowed.`\r\n\r\n`sum(c * d)`, `Field(Integral(c * d, dims = 3))` and `Field(Average(c * d, dims = 3))` failed on\r\n`ReactantState` grids.\r\n\r\n**Cause.** Reactant defines `Base.mapreducedim!` for its own arrays, but only as the reduction\r\n*destination*; it delegates to `mapreduce`, whose `overloaded_mapreduce` has fast paths only for\r\nsources it can materialize (`TracedRArray`, `AnyTracedRArray`, `AbstractArray{<:ReactantPrimitive}`).\r\nA lazy operation hits the fallback, which walks it element-by-element. On a GPU this does not arise\r\nbecause GPUArrays' `mapreducedim!` indexes the source inside a kernel.\r\n\r\n**Fix.** In the extension, reductions of an `AbstractOperation` on a Reactant grid first compute the\r\noperation into a `Field`, then reduce that \u2014 its data is a real array Reactant reduces natively.\r\n`mean`/`mean!` and `Integral`/`Average` funnel through `sum`/`sum!` and are covered too.\r\n\r\n## Verification\r\n\r\n`compute!` verified for `BinaryOperation`, `UnaryOperation`, `MultiaryOperation`,\r\n`KernelFunctionOperation` and `Derivative` on `RectilinearGrid` (uniform and array-valued z),\r\n`LatitudeLongitudeGrid` and `ImmersedBoundaryGrid`. `sum`, `maximum`, `minimum`, `mean`, `Integral`\r\nand `Average` over `c * d` now return the same values under Reactant as on the CPU.\r\n\r\nTwo regression testsets added to `test/test_reactant_unit.jl`. `test_abstract_operations.jl` passes\r\non CPU; `test_reactant_unit.jl` is unchanged against its baseline.\r\n\r\n## Known limitation\r\n\r\nAn array-valued *horizontal* coordinate (`x`/`y`) still breaks grid adaptation for every operation\r\nkind: `Adapt.adapt_structure` reconstructs `RectilinearGrid` through an inner constructor that\r\nconstrains `\u0394x\u1da0\u1d43\u1d43` and `\u0394x\u1d9c\u1d43\u1d43` to a common type parameter, but the adapted `CuTracedArray`s carry\r\ntheir size in a type parameter and so no longer share a type. Pre-existing and not addressed here.\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-15T11:22:58Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-15T13:31:12Z",
+    "number": 5880,
+    "title": " Fix reductions of `AbstractOperation`s under Reactant"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In main, there is a different behavior for an explicit and implicit drag (o BC) for immersed bot and top cells.\r\nWhile an explicit drag of a face (u or v) applies if either the neighboring tracer cells are immersed, the implicit one would apply if **both** are immersed, leaving the immersed boundary that organizes as a staircase completely without drag.\r\nThis image shows how many cells were affected (left without drag) in the ocean\r\n<img width=\"1125\" height=\"1125\" alt=\"implicit_drag_sections\" src=\"https://github.com/user-attachments/assets/1bf4d5cc-76db-4dda-92b9-e957b35a5c97\" />\r\n\r\n\r\n\r\nThis PR fixes this bug (we could call it feature but I think it is a bug)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T07:32:30Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-09-15T18:59:36Z",
+    "number": 5997,
+    "title": "Correct the implicit drag immersed mask"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "In #5968 I [noticed](https://github.com/CliMA/Oceananigans.jl/pull/5968#discussion_r3999767491) that memory allocations for kernel launch on GPU went up a bit in Julia v1.13.  The culprit was an issue [already fixed in Julia `master`](https://github.com/JuliaLang/julia/pull/61654) (and the fix should be included also in v1.13.1), but it turned out that we could reduce the memory allocations with a [small change in `Adapt.jl`](https://github.com/JuliaGPU/Adapt.jl/pull/119), and actually bring them down for Julia v1.12 too as well (and with that change memory allocations count between v1.12 and v1.13 is pretty much the same).  With this PR I'm lowering the upper bounds, to reflect the new state of things (the upper bounds for distributed hadn't been changed for a while, so the large reduction is probably not just due to https://github.com/JuliaGPU/Adapt.jl/pull/119 but various other improvements, not reflected in that set)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T15:10:38Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-15T23:01:20Z",
+    "number": 6004,
+    "title": "Tighten up memory allocations bounds"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "There were a couple of issues\r\n\r\n* one of the Reactant tests was testing correctness by comparing the Reactant computation with...another Reactant computation, which (surprise!) agreed with each other.  Changed this to use the `CPU()` architecture as reference\r\n* Distributed tests write files to the test directory (which is by itself bad practice because the package directories are assumed to be immutable), and then delete them at the end of the job, but one such file (`test/distributed_large_pencil_tests.jl`) was checked in in #4668 and remained stale since, and is being overwritten and then deleted whenever tests are run.  With this PR the stale file is deleted, and all scripts are run in temporary directories, outside of the root of this repository",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T12:16:31Z",
+    "deletions": 35,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-15T23:01:33Z",
+    "number": 5998,
+    "title": "Fix some issues in test suite"
+  }
+]
