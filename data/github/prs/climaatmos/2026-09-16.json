@@ -1,0 +1,122 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nExcludes the precompile caches from the seeding depot. This is a fix to the ci issue, where the depot pipeline would attempt to access files that no longer existed.\r\n\r\nDisclosure: this was pretty much entirely made by claude, and I barely understand the bash syntax\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T19:00:14Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T00:01:10Z",
+    "number": 4829,
+    "title": "Rebuild compiled/ in each depot version instead of inheriting it"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T18:00:22Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T15:11:06Z",
+    "number": 4825,
+    "title": "Update to CM 0.40"
+  },
+  {
+    "additions": 1372,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This interface-changing PR moves the grid, parameters, and setup arguments from`AtmosSimulation` to `AtmosModel`. This allows the Setup traits to always be applied. Closes #4696.\r\n\r\nInterface changes:\r\n```julia\r\n# Previous -- RCEMIP script must add Setups traits manually to the model\r\ninsolation = CA.RCEMIPIIInsolation()\r\nsetup = CA.Setups.RCEMIPIIProfile_300()\r\ntemperature = CA.Setups.surface_temperature_model(setup)\r\nmodel = CA.AtmosModel(; insolation, temperature)\r\nsimulation = CA.AtmosSimulation{FT}(; model, params, context, grid, setup)\r\n\r\n# New -- the setup applies everything properly\r\nmodel = CA.AtmosModel(grid; params, setup = CA.Setups.RCEMIPIIProfile_300())\r\nsimulation = CA.AtmosSimulation(model; context)\r\n```\r\n\r\nChanges\r\n- Move grid, params, setup into `AtmosModel`. These non-physics fields are dropped when Adapting for the GPU.\r\n- Added `physics_hash(::AtmosModel)` which hashes the model without grid, params, or setup, so a restart checks the physics only. The grid is separately checked: a restart now errors if the file's grid does not match the model's grid, instead of quietly using the file's.\r\n- For the `AtmosModel` constructor, sources now set each field with clear priority: kwargs > setup traits > defaults\r\n- New Setups.setup_model_traits asks the setup for all its values at once. The config code reads that instead of calling each setup hook itself\r\n- Removed baroclinic_wave and bomex Presets since they are now defined just by the corresponding Setup case",
+    "changedFiles": 51,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABI9P1BQ",
+        "number": 4696,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4696"
+      }
+    ],
+    "createdAt": "2026-07-30T23:39:26Z",
+    "deletions": 1009,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T17:37:21Z",
+    "number": 4737,
+    "title": "Move grid, params, setup fields into AtmosModel"
+  },
+  {
+    "additions": 158,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "\r\nClimaCore keeps backwards-compatibility shims for the DataLayouts, Geometry and Operators rewrites. This removes every remaining use of them here, so those shims can be deleted upstream. All results should be unchanged.\r\n\r\nThis mainly changed a few things:\r\n\r\nUsage of AxisTensor after the Geometry refactor\r\n\r\nDataLayouts after the DataLayouts refactor\r\nMatMul /cdot to * ; This was changed a long time ago\r\nRecursiveApply -> autobroadcaasters\r\n\r\nDisclosure: This commit was heavily assisted by claude\r\n\r\n\r\n\r\nThe rest of this PR description was made by claude. Feel free to ignore if it is not useful.\r\n\r\n\r\n## Deprecated usage changes\r\n\r\n| Deprecated | Replacement | Where |\r\n|---|---|---|\r\n| `Geometry.AxisTensor{T, N, B, S}` | `Geometry.Tensor{N, T, B, S}` (T and N swapped) | 4 code sites + docstrings |\r\n| `Geometry.AxisTensor(bases, comps)` | `Geometry.Tensor(comps, bases)` | `g\u00b3\u02b0` |\r\n| `Geometry.components(x)` | `parent(x)` | `g\u00b3\u02b0` |\r\n| `Geometry.ContravariantAxis{(3,)}` / `{(1, 2)}` | `Contravariant3Axis` / `Contravariant12Axis` | `temporary_quantities.jl` |\r\n| `DataLayouts.AbstractData` | `DataLayouts.DataLayout` | 6 |\r\n| `Operators.Weak{Divergence,Gradient,Curl}` | `{Divergence,Gradient,Curl}{WeakForm}` | `abbreviations.jl` |\r\n| `MatrixFields.\u22c5` | `*` | 75, `manual_sparse_jacobian.jl` |\r\n| `FaceFiniteDifferenceSpace(mesh)` | `(device, mesh)` | 6 tests (one dead, deleted) |\r\n| `ClimaCore.RecursiveApply` | `Utilities.add`/`drop_auto_broadcasters` | 4 files |\r\n\r\nFor `RecursiveApply`, `sum_over_quadrature_points` now wraps its accumulators once and unwraps once rather than at every step, and `unrolled_dotproduct`'s private recursion moved to `_unrolled_dotproduct` so the wrap/unwrap boundary sits at the public two-argument entry point. Plain `zero(T)` would not do: the reduction builds zeros of composite types.\r\n\r\nThree dead imports are dropped along the way (`Geometry: AxisTensor` in both restart test files, the unused `RecursiveApply` import in `cloud_fraction.jl`), and `docs/src/discretization.md` no longer claims the code uses the legacy weak-operator names.\r\n\r\n## Verification\r\n\r\n- **Bit-for-bit identical results.** Ten implicit steps of a prognostic-EDMFX Bomex column with 1M microphysics, run once with these changes and once with `src/` reverted: `max abs diff: 0.0` across the full state vector. Repeated against a shim-free ClimaCore with the same result.\r\n- **The `\u22c5` \u2192 `*` rewrite is AST-equivalent**, checked by parsing before/after and normalising both operators to left-folded binary `*`. `\u22c5` parsed as a binary operator with `*`'s precedence and left associativity, and `MatrixFields` reduces an n-ary `*` broadcast left-associatively (`MatrixFields.jl:107`), so the two agree.\r\n- **Each alias substitution is type-identical**, confirmed by reflection against ClimaCore: `AxisTensor{FT, 2, \u2026} === Tensor{2, FT, \u2026}`, `AbstractData{<:Real} == DataLayout{<:Real}`, `WeakDivergence() === Divergence{WeakForm}()`, and `Geometry.components(v) === parent(v)`.\r\n\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T00:28:17Z",
+    "deletions": 161,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T18:48:32Z",
+    "number": 4814,
+    "title": "Replace deprecated ClimaCore names, aliases and constructors"
+  }
+]

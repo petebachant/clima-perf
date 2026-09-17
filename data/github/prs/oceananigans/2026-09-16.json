@@ -1,0 +1,246 @@
+[
+  {
+    "additions": 118,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR resolves #5989 by making the vertical tridiagonal solve mask inactive cells beneath the bottom.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRQUZXg",
+        "number": 5989,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5989"
+      }
+    ],
+    "createdAt": "2026-09-14T19:20:00Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-16T03:06:05Z",
+    "number": 5991,
+    "title": "Keep non-finite values in immersed cells out of the vertically implicit column solve"
+  },
+  {
+    "additions": 153,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR resolves #6002 by fixing a couple of things.\r\n\r\nFirstly, it fixes the `Val{3}` coefficient sum. `\u03b3\u00b9 + \u03b6\u00b3` should have been `\u03b3\u00b3 + \u03b6\u00b3`.\r\n\r\nSecond, when the scheme decides how much of w to treat implicitly, it correctly determines which \u0394t to plug into the CFL number. It must be the length of the substep that is about to run.\r\n\r\nBefore stages 2 and 3, the clock has recorded the substep that just ran, so the code works out the current step's \u0394t from it and scales to the upcoming stage.\r\n\r\nBefore stage 1, the next step's \u0394t isn't known yet, so the code assumes it equals the previous step's \u0394t, the same guess QAB2 makes. That is exact for constant \u0394t, and it also happens to be correct at the very first update_state! of a run.\r\n\r\nThis PR adds a few tests:\r\n\r\n1. A unit test that checks that the lookup function returns the right stage length for each of the three stages.\r\n2. A time-stepping test that runs two real time steps and, right before each substep, reads the \u0394t the scheme actually stored and compares it to that substep's true length.\r\n3. An equivalence test that runs a simple flow with a small \u0394t so that AVID doesn't kick in, and checks the adaptive scheme gives the same answer as plain explicit advection to round-off. Then with a slightly larger \u0394t so that AVID does kick in.\r\n\r\nRunning the MWE from #6002 now prints a ratio of 1.00 at every stage.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRaCo3g",
+        "number": 6002,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6002"
+      }
+    ],
+    "createdAt": "2026-09-15T19:00:16Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-09-16T03:07:20Z",
+    "number": 6008,
+    "title": "Fix the stage \u0394t used by AVID + RK3"
+  },
+  {
+    "additions": 116,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR resolves #6003 by correctly advancing the clock at each RK stage.\r\n\r\nRunning the MWE from #6003 on this PR versus `main` (CPU, Float64), we see the expected 2nd, 3rd, 4th, and 5th order convergence rates:\r\n\r\n| | `main` | this PR | expected |\r\n|---|---|---|---|\r\n| `:SplitRungeKutta2` | 1.06, 1.03 | 2.12, 2.06 | 2 |\r\n| `:SplitRungeKutta3` | 1.02, 1.01 | 3.12, 3.06 | 3 |\r\n| `:SplitRungeKutta4` | 1.02, 1.01 | 4.12, 4.06 | 4 |\r\n| `:SplitRungeKutta5` | 1.02, 1.01 | 5.12, 5.06 | 5 |\r\n\r\nThis PR also adds some nice convergence tests:\r\n1. An exact integration test: `\u2202c/\u2202t = t` is integrated exactly by every split RK scheme once the stages see the stage times.\r\n2. An nth order convergence test: `\u2202c/\u2202t = \u2212c + t` has the exact solution `c(t) = t \u2212 1 + e\u207b\u1d57`, is affine in `(t, c)`, so an `N`-stage scheme must converge at order `N` when the stage times are right and degrades to first order when they are not.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRacNsg",
+        "number": 6003,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6003"
+      }
+    ],
+    "createdAt": "2026-09-15T19:41:14Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-09-16T03:32:27Z",
+    "number": 6009,
+    "title": "`SplitRungeKuttaTimeStepper`: evaluate time-dependent forcings and BCs at the correct time"
+  },
+  {
+    "additions": 830,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Closes #5815.\n\nComputes the time derivative of an output while a simulation runs, so budgets can be closed online instead of by differencing two saved snapshots offline. Following the discussion in the issue it is an output-side abstraction rather than an operator, structured like `WindowedTimeAverage`: an `AbstractDiagnostic` that is added to `simulation.diagnostics` automatically when it appears in the `outputs` of a writer.\n\n```julia\n\u2202\u209c\u222bc\u00b2 = TimeDerivative(Integral(c^2))\n\nsimulation.output_writers[:budget] = JLD2Writer(model, (; \u2202\u209c\u222bc\u00b2, \u222b\u03c7), schedule=TimeInterval(1))\n```\n\nWorks with `Field`s, `AbstractOperation`s and `Reduction`s, with the JLD2, NetCDF and Zarr writers, and standalone via `simulation.diagnostics` (`result` is a `Field`). Checkpointing is supported.\n\nTwo things I would like input on:\n\n- The difference is backward, so the result is centered at `t\u207f - \u0394t/2` rather than at the output timestamp. A centered variant would cost one more buffer and lag the model by a step. Currently documented rather than corrected.\n- `\u2202t` is not exported as an alias, since the discussion pushed away from operator naming. Easy to add if wanted.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABJ52ehQ",
+        "number": 5815,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5815"
+      }
+    ],
+    "createdAt": "2026-07-27T00:29:40Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-09-16T11:09:03Z",
+    "number": 5823,
+    "title": "Add `TimeDerivative` for computing \u2202\u209c of outputs during a simulation"
+  },
+  {
+    "additions": 117,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6000.\r\n\r\n`bounce_immersed_particle` now tests the cell the particle is in, `(i, j, k)`, and reflects the particle back into the cell it occupied before it was advected, off that cell's faces. Because the reflected position always lies within the previous cell, a particle that starts a step in the fluid ends it in the fluid.\r\n\r\nThe reflection is computed from the particle's advected position *before* domain boundary conditions are applied, which `advect_particle` now passes along.\r\n\r\nRunning the MWE from #6000:\r\n\r\nBefore (`main` branch):\r\n\r\nhttps://github.com/user-attachments/assets/5329d3a9-f5e7-4225-949b-29dc903f40ec\r\n\r\nAfter (this PR):\r\n\r\nhttps://github.com/user-attachments/assets/b5da8020-d4db-4c6b-87fe-6643b9b77e4b",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRZS0Jw",
+        "number": 6000,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6000"
+      }
+    ],
+    "createdAt": "2026-09-15T16:09:02Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2026-09-16T13:30:55Z",
+    "number": 6005,
+    "title": "Bounce Lagrangian particles off immersed boundaries"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6011\r\n\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRgy_tg",
+        "number": 6011,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6011"
+      }
+    ],
+    "createdAt": "2026-09-16T05:12:27Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-16T13:54:41Z",
+    "number": 6012,
+    "title": "Apply the linear operator once per `ConjugateGradientSolver` iteration"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6010 so that the MWE from the issue now correctly returns\r\n\r\n```\r\n[\u0394z\u1d9c\u1d9c\u1d9c(1, 1, k, grid) for k in 3:6]   # [1.0, 0.3, 1.0, 1.0]  before and after\r\n[\u0394z\u1d9c\u1d9c\u1da0(1, 1, k, grid) for k in 3:6]   # [1.0, 1.0, 1.0, 1.0]  before\r\n                                      # [1.0, 1.0, 0.65, 1.0] after\r\n```\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABRgqvIg",
+        "number": 6010,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6010"
+      }
+    ],
+    "createdAt": "2026-09-16T13:42:50Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-16T17:05:20Z",
+    "number": 6013,
+    "title": "Fix the face spacing above partial cells on `PartialCellBottom` grids"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "note: I had claude do this update\r\n\r\n\r\n\r\n`ClimaCore.DataLayouts.AbstractData` was an alias for `DataLayout`, kept for backwards compatibility when the DataLayouts module was rewritten in ClimaCore v0.15.0. ClimaCore v0.16 removes it (CliMA/ClimaCore.jl#2633), so this spells it `DataLayout`. The two are the same type \u2014 a spelling change only.\r\n\r\nThis is the fix for the `downstream ClimaCoupler.jl` failure on CliMA/ClimaCore.jl#2633, which currently errors with `UndefVarError: AbstractData not defined in ClimaCore.DataLayouts`.\r\n\r\n## Changes\r\n\r\nNine uses across three files:\r\n\r\n- `src/Checkpointer.jl` (5) \u2014 `restore!`'s signature and docstring, and `is_leaf`\r\n- `experiments/test/compare_amip.jl` (2) \u2014 the `_compare` helpers\r\n- `experiments/test/compare_cmip.jl` (2) \u2014 the `_compare` helpers\r\n\r\nA full sweep of the repo for every name ClimaCore v0.16 removes found nothing else: no Geometry aliases (`AxisTensor`, `AxisVector`, `Axis2Tensor`, the generic `*Axis{I}`, `Geometry.components` on tensors), no `IJFH`/`IJHF`, no `ColumnField`, no single-argument `level(field)`, no `WeakDivergence`/`WeakGradient`/`WeakCurl`, no `LeftBiased*`/`RightBiased*`, no `{First,Third}OrderOneSided`, no `PointCloud*`/`PointColumnEnsemble*`, no `MatrixFields.\u22c5`, and no `RecursiveApply`.\r\n\r\n(`src/CalibrationTools.jl` matches a substring search for \"AbstractData\", but those are this repo's own `AbstractDataLoader` and are unrelated.)\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T02:45:22Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T20:13:28Z",
+    "number": 2110,
+    "title": "Replace DataLayouts.AbstractData, removed in ClimaCore v0.16"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Required for the nightly AMIP build, I will update the manifests once https://github.com/CliMA/ClimaAtmos.jl/pull/4833 and https://github.com/CliMA/ClimaLand.jl/pull/1879 are merged.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-16T22:00:59Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T23:02:18Z",
+    "number": 2119,
+    "title": "Widen ClimaCore compat to 0.16, 1"
+  }
+]
