@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 38,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Removesthe backwards-compatibility shims left behind by the DataLayouts, Geometry and Operators rewrites. Three of them were still in use here. \r\n\r\n## Deprectated name updates\r\n\r\n**`MatrixFields.\u22c5` \u2192 `*`** \u2014 18 operator uses in `energy_hydrology.jl`, `Biogeochemistry.jl` and `rre.jl`. `\u22c5` is no longer exported by `MatrixFields` in v0.16, so the four `import ClimaCore.MatrixFields: @name, \u22c5` lines now import only `@name` (two of them never used the operator). `*` has denoted matrix multiplication since ClimaCore v0.14.27.\r\n\r\n**`ClimaCore.RecursiveApply.rzero(T)` \u2192 `zero(T, space)`** \u2014 `ClimaLand.jl`, `models.jl` and `Canopy.jl`. The whole `RecursiveApply` module was a compatibility layer over the `AutoBroadcaster` wrappers added in v0.14.52.  The two `models.jl` docstrings that told implementers to define `rzero` now describe the `zero` requirement instead.\r\n\r\n`Operators.WeakDivergence` -> `Operators.Divergence{Operators.WeakForm}` \r\n\r\n\r\n\r\nEDIT:\r\nTODO: remove new recursive apply usage added in https://github.com/CliMA/ClimaLand.jl/commit/b0a36d4d9e768a3d43eb92fbdc89fdbaad947c88\r\n\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T00:27:19Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-16T16:54:44Z",
+    "number": 1872,
+    "title": "Replace deprecated ClimaCore names removed in ClimaCore v0.16"
+  }
+]

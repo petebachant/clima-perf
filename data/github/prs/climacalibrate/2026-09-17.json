@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 175,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR does a clean up by removing or summarizing verbose documentation and rearranging and improving the tests. The warnings with `maxlog` are removed since it is more important that the warnings are shown instead of being suppressed. For example, you could have fixed something because of the warning, but it was not fixed since the warning was suppressed.\r\n\r\nMention of `NaNStatistics` was removed from the user facing documentation since ClimaAnalysis already load it and it is unlikely that ClimaAnalysis will remove it as a dependency.\r\n\r\nThe fields of struct are now not documented. It is not intended for users to know about these fields or use them. This gives developers the freedom to change the internals without changing the public API. For example, https://github.com/CliMA/ClimaCalibrate.jl/pull/362 needed to change the fields of the `SVDplusDCovariance` observation recipe.\r\n\r\n\r\nThis PR also removes the error hints for missing packages. I don't see this being too useful with the exception of the plotting. For the ClimaAnalysis extensions, most of the functions require passing a `OutputVar` so I don't see how an user is trying to use a function but don't have ClimaAnalysis loaded.\r\n\r\nI asked a LLM to assist me with making the changes.",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-11T22:49:21Z",
+    "deletions": 630,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-17T00:02:41Z",
+    "number": 373,
+    "title": "Cleaning up docs and tests"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "The CI uses the latest version of Julia (currently 1.13) which could be problematic since new versions of Julia could break CI. This PR fix this to Julia 1.12 and exclude Aqua 0.8.17 which is breaking the Aqua tests.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T21:01:44Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-17T21:21:07Z",
+    "number": 374,
+    "title": "Fix CI to Julia 1.12 and exclude Aqua 0.8.17"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR use ParallelTestRunner and run CI on MacOS only on main. The former is to speed up the GHA CI tests and the latter is to not hit the organization limit of 5 active MacOS runners.\r\n\r\nThe speedup seems to be about 1.5 to 2 times faster (the speed up for 1.10 is only because the precompiled cache).",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T21:51:45Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2026-09-17T23:04:39Z",
+    "number": 375,
+    "title": "Use ParallelTestRunner and run CI on MacOS only on main"
+  }
+]
