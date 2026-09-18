@@ -7823,6 +7823,14 @@ series is continuous across the change.</p>
 <span class="c1"># number of interest for them.</span>
 <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">"job_state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"passed"</span><span class="p">,</span> <span class="s2">"fraction_completed"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
 
+<span class="c1"># Simulated years actually reached. For a run that passed, the configured</span>
+<span class="c1"># length is what it simulated, for the same reason fraction_completed is</span>
+<span class="c1"># pinned above: the last progress block is only the final checkpoint. Land</span>
+<span class="c1"># runs have no parsed t_end, so they fall back to the last reported value.</span>
+<span class="n">df</span><span class="p">[</span><span class="s2">"simulated_years"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"last_sim_days"</span><span class="p">]</span> <span class="o">/</span> <span class="mf">365.0</span>
+<span class="n">completed</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"job_state"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"passed"</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">df</span><span class="p">[</span><span class="s2">"t_end_days"</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">completed</span><span class="p">,</span> <span class="s2">"simulated_years"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">completed</span><span class="p">,</span> <span class="s2">"t_end_days"</span><span class="p">]</span> <span class="o">/</span> <span class="mf">365.0</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> jobs, </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">df</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">df</span><span class="p">[</span><span class="s2">"run_name"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 </pre></div>
@@ -7837,7 +7845,7 @@ series is continuous across the change.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>1045 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-08-30 08:37:07.902000+00:00
+<pre>1100 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-09-18 20:05:09.868000+00:00
 </pre>
 </div>
 </div>
@@ -7845,11 +7853,11 @@ series is continuous across the change.</p>
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
 <pre>run_name
-amip                                                                51
-cmip_edonly_land                                                    47
-cmip_edonly_bucket                                                  47
-gpu_amip_progedmf_1M_land_he16                                      40
-gpu_amip_progedmf_1M_land_he30                                      40
+amip                                                                53
+cmip_edonly_land                                                    49
+cmip_edonly_bucket                                                  49
+gpu_amip_progedmf_1M_land_he16                                      42
+gpu_amip_progedmf_1M_land_he30                                      42
                                                                     ..
 GPU AMIP with prognostic EDMF + 1M + integrated land (30 helems)     1
 GPU AMIP with diagnostic EDMF                                        1
@@ -7914,94 +7922,94 @@ Name: count, Length: 65, dtype: int64</pre>
 </thead>
 <tbody>
 <tr>
-<th>1035</th>
-<td>2026-08-30 05:16:04.099000+00:00</td>
-<td>climacoupler-cpu-gpu-benchmarks</td>
-<td>gpu_amip_progedmf</td>
-<td>failed</td>
-<td>NaN</td>
-<td>NaN</td>
-</tr>
-<tr>
-<th>1036</th>
-<td>2026-08-30 08:37:04.926000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>amip_progedmf_land</td>
+<th>1090</th>
+<td>2026-09-15 03:12:05.877000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Soil, 20 years</td>
 <td>passed</td>
-<td>1.857636</td>
-<td>1.000</td>
+<td>146.074</td>
+<td>1.0</td>
 </tr>
 <tr>
-<th>1037</th>
-<td>2026-08-30 08:37:04.969000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_edonly_land</td>
-<td>failed</td>
-<td>NaN</td>
-<td>0.012</td>
-</tr>
-<tr>
-<th>1038</th>
-<td>2026-08-30 08:37:04.971000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>amip_progedmf_1m_land</td>
+<th>1091</th>
+<td>2026-09-16 03:12:04.801000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Snowy Land + P Model</td>
 <td>passed</td>
-<td>1.246314</td>
-<td>1.000</td>
+<td>133.210</td>
+<td>1.0</td>
 </tr>
 <tr>
-<th>1039</th>
-<td>2026-08-30 08:37:04.993000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>amip_progedmf_land_p2k</td>
+<th>1092</th>
+<td>2026-09-16 03:24:02.812000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Soil</td>
 <td>passed</td>
-<td>1.861584</td>
-<td>1.000</td>
+<td>291.555</td>
+<td>1.0</td>
 </tr>
 <tr>
-<th>1040</th>
-<td>2026-08-30 08:37:05.026000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_edonly_bucket</td>
-<td>failed</td>
-<td>NaN</td>
-<td>0.012</td>
-</tr>
-<tr>
-<th>1041</th>
-<td>2026-08-30 08:37:05.028000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>amip_edonly</td>
+<th>1093</th>
+<td>2026-09-16 03:39:50.804000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Global bucket simulation</td>
 <td>passed</td>
-<td>1.978792</td>
-<td>1.000</td>
+<td>334.008</td>
+<td>1.0</td>
 </tr>
 <tr>
-<th>1042</th>
-<td>2026-08-30 08:37:05.073000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_progedmf_land</td>
-<td>failed</td>
-<td>NaN</td>
-<td>0.023</td>
-</tr>
-<tr>
-<th>1043</th>
-<td>2026-08-30 08:37:07.874000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>slabplanet_aqua_evolve_ocean</td>
+<th>1094</th>
+<td>2026-09-16 03:51:03.854000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Snowy Land + P Model (Optimal LAI)</td>
 <td>passed</td>
-<td>0.026263</td>
-<td>1.000</td>
+<td>129.624</td>
+<td>1.0</td>
 </tr>
 <tr>
-<th>1044</th>
-<td>2026-08-30 08:37:07.902000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>slabplanet_evolve_ocean</td>
+<th>1095</th>
+<td>2026-09-17 20:42:06.602000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Global bucket simulation</td>
 <td>passed</td>
-<td>0.026240</td>
-<td>1.000</td>
+<td>304.464</td>
+<td>1.0</td>
+</tr>
+<tr>
+<th>1096</th>
+<td>2026-09-17 20:42:06.693000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Snowy Land + P Model</td>
+<td>passed</td>
+<td>119.633</td>
+<td>1.0</td>
+</tr>
+<tr>
+<th>1097</th>
+<td>2026-09-17 20:42:06.733000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Soil</td>
+<td>passed</td>
+<td>271.505</td>
+<td>1.0</td>
+</tr>
+<tr>
+<th>1098</th>
+<td>2026-09-18 20:04:07.013000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Soil</td>
+<td>passed</td>
+<td>261.979</td>
+<td>1.0</td>
+</tr>
+<tr>
+<th>1099</th>
+<td>2026-09-18 20:05:09.868000+00:00</td>
+<td>climaland-long-runs</td>
+<td>Global bucket simulation</td>
+<td>passed</td>
+<td>298.437</td>
+<td>1.0</td>
 </tr>
 </tbody>
 </table>
@@ -8080,6 +8088,86 @@ inside a GPU kernel.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<th>1086</th>
+<td>2026-09-13 08:39:06.108000+00:00</td>
+<td>amip_progedmf_1m_land</td>
+<td>failed</td>
+<td>0.164</td>
+<td>Found NaN</td>
+</tr>
+<tr>
+<th>1085</th>
+<td>2026-09-13 08:39:05.074000+00:00</td>
+<td>cmip_edonly_land</td>
+<td>failed</td>
+<td>0.006</td>
+<td>AssertionError: minimum((ice_fraction .+ land_...</td>
+</tr>
+<tr>
+<th>1082</th>
+<td>2026-09-13 08:39:04.997000+00:00</td>
+<td>cmip_progedmf_land</td>
+<td>failed</td>
+<td>0.184</td>
+<td>AssertionError: minimum((ice_fraction .+ land_...</td>
+</tr>
+<tr>
+<th>1081</th>
+<td>2026-09-13 08:39:04.975000+00:00</td>
+<td>cmip_edonly_bucket</td>
+<td>failed</td>
+<td>0.006</td>
+<td>AssertionError: minimum((ice_fraction .+ land_...</td>
+</tr>
+<tr>
+<th>1073</th>
+<td>2026-09-12 15:13:04.061000+00:00</td>
+<td>amip</td>
+<td>failed</td>
+<td>0.082</td>
+<td>Found NaN</td>
+</tr>
+<tr>
+<th>1067</th>
+<td>2026-09-08 03:11:04.623000+00:00</td>
+<td>Snowy Land, 19 years</td>
+<td>failed</td>
+<td>0.900</td>
+<td>Units in the simulation-output NetCDF do not m...</td>
+</tr>
+<tr>
+<th>1066</th>
+<td>2026-09-06 10:27:42.832000+00:00</td>
+<td>cmip_progedmf_land</td>
+<td>failed</td>
+<td>0.023</td>
+<td>a DomainError was thrown during kernel executi...</td>
+</tr>
+<tr>
+<th>1065</th>
+<td>2026-09-06 09:43:48.985000+00:00</td>
+<td>cmip_edonly_land</td>
+<td>failed</td>
+<td>0.012</td>
+<td>AssertionError: minimum((ice_fraction .+ land_...</td>
+</tr>
+<tr>
+<th>1061</th>
+<td>2026-09-06 08:39:04.554000+00:00</td>
+<td>cmip_edonly_bucket</td>
+<td>failed</td>
+<td>0.012</td>
+<td>AssertionError: minimum((ice_fraction .+ land_...</td>
+</tr>
+<tr>
+<th>1045</th>
+<td>2026-09-01 03:10:05.092000+00:00</td>
+<td>Snowy Land, 19 years</td>
+<td>failed</td>
+<td>0.900</td>
+<td>Units in the simulation-output NetCDF do not m...</td>
+</tr>
 <tr>
 <th>1042</th>
 <td>2026-08-30 08:37:05.073000+00:00</td>
@@ -8160,86 +8248,6 @@ inside a GPU kernel.</p>
 <td>0.047</td>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
-<tr>
-<th>991</th>
-<td>2026-08-16 05:16:05.150000+00:00</td>
-<td>gpu_amip_progedmf_io</td>
-<td>failed</td>
-<td>NaN</td>
-<td>a DomainError was thrown during kernel executi...</td>
-</tr>
-<tr>
-<th>989</th>
-<td>2026-08-16 05:16:04.959000+00:00</td>
-<td>gpu_amip_progedmf</td>
-<td>failed</td>
-<td>NaN</td>
-<td>a DomainError was thrown during kernel executi...</td>
-</tr>
-<tr>
-<th>978</th>
-<td>2026-08-09 10:21:00.828000+00:00</td>
-<td>cmip_progedmf_land</td>
-<td>failed</td>
-<td>0.046</td>
-<td>AssertionError: minimum((ice_fraction .+ land_...</td>
-</tr>
-<tr>
-<th>973</th>
-<td>2026-08-09 08:36:05.061000+00:00</td>
-<td>cmip_edonly_land</td>
-<td>failed</td>
-<td>0.023</td>
-<td>AssertionError: minimum((ice_fraction .+ land_...</td>
-</tr>
-<tr>
-<th>970</th>
-<td>2026-08-09 08:36:04.900000+00:00</td>
-<td>cmip_edonly_bucket</td>
-<td>failed</td>
-<td>0.047</td>
-<td>AssertionError: minimum((ice_fraction .+ land_...</td>
-</tr>
-<tr>
-<th>969</th>
-<td>2026-08-09 05:25:03.016000+00:00</td>
-<td>gpu_amip_progedmf_io</td>
-<td>failed</td>
-<td>NaN</td>
-<td>a DomainError was thrown during kernel executi...</td>
-</tr>
-<tr>
-<th>968</th>
-<td>2026-08-09 05:19:20.973000+00:00</td>
-<td>gpu_amip_progedmf</td>
-<td>failed</td>
-<td>NaN</td>
-<td>a DomainError was thrown during kernel executi...</td>
-</tr>
-<tr>
-<th>952</th>
-<td>2026-08-02 08:48:23.856000+00:00</td>
-<td>cmip_progedmf_land</td>
-<td>failed</td>
-<td>NaN</td>
-<td>UndefVarError: `ORCA1` not defined in `ClimaOc...</td>
-</tr>
-<tr>
-<th>948</th>
-<td>2026-08-02 08:39:04.065000+00:00</td>
-<td>cmip_edonly_bucket</td>
-<td>failed</td>
-<td>NaN</td>
-<td>UndefVarError: `ORCA1` not defined in `ClimaOc...</td>
-</tr>
-<tr>
-<th>944</th>
-<td>2026-08-02 08:39:03.982000+00:00</td>
-<td>cmip_edonly_land</td>
-<td>failed</td>
-<td>NaN</td>
-<td>UndefVarError: `ORCA1` not defined in `ClimaOc...</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -8292,7 +8300,7 @@ hard-coded list here.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>20 active configs: GPU ClimaAtmos with prognostic EDMF, GPU ClimaAtmos without EDMF, Global bucket simulation, Snowy Land + P Model, Snowy Land + P Model (Optimal LAI), Soil, amip, amip_edonly, amip_progedmf_1m_land, amip_progedmf_land, amip_progedmf_land_p2k, cmip_edonly_bucket, cmip_edonly_land, cmip_progedmf_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io, slabplanet_aqua_evolve_ocean, slabplanet_evolve_ocean
+<pre>18 active configs: GPU ClimaAtmos with prognostic EDMF, GPU ClimaAtmos without EDMF, Global bucket simulation, Soil, amip, amip_edonly, amip_progedmf_1m_land, amip_progedmf_land, amip_progedmf_land_p2k, cmip_edonly_bucket, cmip_edonly_land, cmip_progedmf_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io, slabplanet_aqua_evolve_ocean, slabplanet_evolve_ocean
 </pre>
 </div>
 </div>
@@ -8318,8 +8326,8 @@ hard-coded list here.</p>
     <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.06</span><span class="p">,</span>
     <span class="n">subplot_titles</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Throughput (SYPD)"</span><span class="p">,</span>
-        <span class="s2">"Fraction of configured run length simulated"</span><span class="p">,</span>
-        <span class="s2">"Job wallclock (hours)"</span><span class="p">,</span>
+        <span class="s2">"Run length"</span><span class="p">,</span>
+        <span class="s2">"Simulated years"</span><span class="p">,</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
@@ -8386,9 +8394,14 @@ hard-coded list here.</p>
     <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
         <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
             <span class="n">x</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">"date"</span><span class="p">],</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">"job_hours"</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">"simulated_years"</span><span class="p">],</span>
             <span class="n">name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
             <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">customdata</span><span class="o">=</span><span class="n">sub</span><span class="p">[[</span><span class="s2">"job_state"</span><span class="p">,</span> <span class="s2">"last_sim_days"</span><span class="p">]]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">""</span><span class="p">),</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"%{x|%Y-%m-</span><span class="si">%d</span><span class="s2">}&lt;br&gt;%</span><span class="si">{y:.3g}</span><span class="s2"> simulated years&lt;br&gt;"</span>
+                <span class="s2">"%</span><span class="si">{customdata[0]}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;"</span>
+            <span class="p">),</span>
             <span class="o">**</span><span class="n">style</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
@@ -8398,8 +8411,10 @@ hard-coded list here.</p>
 <span class="c1"># Throughput spans two orders of magnitude across these configs</span>
 <span class="c1"># (slabplanet ~0.03 SYPD vs AMIP &gt;2), so a linear axis hides all structure</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"SYPD"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"log"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"</span><span class="si">% o</span><span class="s2">f target"</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">105</span><span class="p">],</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"hours"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Length (%)"</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">105</span><span class="p">],</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># Simulated length spans from 20-minute benchmark jobs to 20-year land runs,</span>
+<span class="c1"># so this axis is logarithmic for the same reason as the throughput one</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Simulated years"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"log"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Date"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
     <span class="n">height</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
