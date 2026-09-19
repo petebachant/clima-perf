@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "ClimaCore 1.0 dropped some `Spaces.issubspace` methods on purpose (they would let a center level count as a subspace of a face level, which is wrong). v1.12.2 added them back inside ClimaLand, which is type piracy. This removes them and fixes the broadcasts on our side instead.\r\n\r\nChanges\r\n- `\u0394z_top` and `\u0394z_bottom` used to live on the top and bottom face levels. They  are surface quantities, so they now live on the surface space, same as `z_sfc`\r\n-  The top-face local geometry used in the Jacobian boundary terms (soil andsoilco2) now gets projected onto the surface space before use.\r\n- The free-drainage bottom BCs use `bottom_center_to_surface` instead of `Fields.level`\r\n- Also restores the plain `Aqua.test_piracies(ClimaLand)`",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T20:26:02Z",
+    "deletions": 76,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-18T01:46:20Z",
+    "number": 1882,
+    "title": "Remove ClimaCore type piracy"
+  }
+]

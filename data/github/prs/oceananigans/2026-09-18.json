@@ -1,0 +1,147 @@
+[
+  {
+    "additions": 140,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "The `simulations` test group is by far the slowest of all, which limits overall CI turnaround time.  I've been trying to reduce its time for a while, this is a new attempt in the series, locally I get a 20% speedup, let's see the impact on CI (but we have a huge variability on CI, it can range from 1 to 3 hours, perhaps depending on the system load?).  The PR is slightly easier to review by [ignoring whitespace changes](https://github.com/CliMA/Oceananigans.jl/pull/6017/changes?w=1) (in particular for changes in `test/test_netcdf_writer.jl`)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABR2gv7g",
+        "number": 6022,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6022"
+      }
+    ],
+    "createdAt": "2026-09-17T08:31:45Z",
+    "deletions": 261,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-18T12:48:17Z",
+    "number": 6017,
+    "title": "Try to speed up `simulations` test group"
+  },
+  {
+    "additions": 283,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Unlike #5998 this doesn't fix straight up bugs, but just simplifies some test workloads, by hoisting loop invariant constants out of loops (for example some times the same grids are recomputed all over again inside loops).  This PR is easier to review by [ignoring whitespace changes](https://github.com/CliMA/Oceananigans.jl/pull/5999/changes?w=1)",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T12:22:00Z",
+    "deletions": 268,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-18T18:15:14Z",
+    "number": 5999,
+    "title": "Various minor improvements to the test suite"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "https://github.com/CliMA/Oceananigans.jl/pull/5823 was merged with a couple of print statements that I used to verify it was doing the thing. My bad!",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-18T13:42:04Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-18T18:52:17Z",
+    "number": 6032,
+    "title": "Remove leftover print statements"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6023.\r\n\r\nThe `incompressible_in_time` test in `test/test_time_stepping.jl` ran 12 cases with Nt \u2208 {1, 10, 100} at 32\u00b3. This PR shrinks the grid to 16\u00b3 and drops the 100-step case since it's not necessary to test.\r\n\r\nThe divergence after a step does not accumulate, so long integrations add nothing. And the 10-step case checks that it does not accumulate anyway.\r\n\r\nClaude estimates pretty good time savings on Buildkite, but will check what we get:\r\n\r\n| | CPU (coverage build) | GPU |\r\n|---|---|---|\r\n| before (32\u00b3, Nt \u2208 {1, 10, 100}) | 1655 s | 53 s |\r\n| after (16\u00b3, Nt \u2208 {1, 10}) | \u2248 69 s | \u2248 49 s |\r\n| saved | **\u2248 26 min (96 %)** | \u2248 4 s |",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABR2jXVw",
+        "number": 6023,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6023"
+      }
+    ],
+    "createdAt": "2026-09-18T12:52:13Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-18T20:23:06Z",
+    "number": 6030,
+    "title": "Test incompressibility on a 16\u00b3 grid with 1 and 10 time steps"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjk4MjQyNDQ=",
+      "is_bot": false,
+      "login": "Pangoraw",
+      "name": "Paul Berg"
+    },
+    "body": "This is a NFC, Reactant cannot raise this pattern of `ifelse(a, b, c)::Union{Int64,Float32}`. Instead it converts `i\u2081` before.\r\n\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T13:13:42Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-18T23:23:51Z",
+    "number": 6018,
+    "title": "Remove type instability in interpolate"
+  }
+]
