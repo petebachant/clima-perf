@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 109,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nMultiply the horizontal resolved-gradient (geometric) SGS variance term of #4802 by w = Ri\u208a\u00b2 / (Ri\u208a\u00b2 + Ri\u2080\u00b2), Ri\u208a = max(N\u00b2, 0) / max(2 S\u00b2, \u03b5), Ri\u2080 = k Ri_crit, with N\u00b2 the saturated moist buoyancy gradient in every cell and S\u00b2 the cached strain-rate norm. The term then acts only in air that is absolutely stable to a saturated displacement and not turbulent, where the turbulence closure cannot carry the variance.\r\n\r\nNote: This is a temporary solution. It helps with the boundary layer and tropical RH, but the physical explanation is not entirely clear. A more physical solution may be some maximum length scale for the horizontal mixing length that depends on stability.\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T19:53:14Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-19T03:37:48Z",
+    "number": 4837,
+    "title": "Richardson-number stability weight on the geometric SGS variance term"
+  },
+  {
+    "additions": 225,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "The implicit diffusion Jacobian already had a Smagorinsky branch, but the vertical Smagorinsky\u2013Lilly tendency was always applied explicitly, so with `implicit_diffusion: true` the solver linearized a term that was not in the implicit right-hand side. The tendency now follows `diff_mode`, the eddy viscosity is refreshed on every Newton iterate, and the fields it writes live in the autodiff Jacobians. A vertically-acting Smagorinsky closure now satisfies the implicit-diffusion configuration check, and the three checks in `check_case_consistency`, previously chained with `elseif`, are independent.\r\n\r\nRunning under `use_auto_jacobian`/`use_dense_jacobian` requires ClimaCore 0.16.3 (CliMA/ClimaCore.jl `ts/promote`), whose `Number * Tensor` return types keep `Dual` storage; the compat bound enforces this. So this will only work after ClimaCore [PR 2638](https://github.com/CliMA/ClimaCore.jl/pull/2638) merges.\r\n\r\nAlso: the number-density redistribution in vertical diffusion, hyperdiffusion, the viscous sponge, and the PROPHET diffusive flux looked up `\u03c1n_icl`, a field no configuration carries; it now looks up `\u03c1n_ice`. Four AMD precomputed fields that no tendency read are no longer allocated. \r\n\r\n`vapor_constraint_qtot` is documented as leaving `\u03c1q_tot` unchanged.\r\n\r\nCo-produced with Fable 5.1",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T14:56:58Z",
+    "deletions": 77,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-19T06:57:22Z",
+    "number": 4824,
+    "title": "Apply the vertical Smagorinsky diffusion implicitly; drop unused AMD cache"
+  },
+  {
+    "additions": 2409,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "New pages: LES subgrid-scale closures (Smagorinsky-Lilly, anisotropic minimum dissipation, constant horizontal diffusion) and forcings and idealized cases (subsidence, large-scale advection, column Coriolis, the composed external-forcing terms and nudging, Held-Suarez, prescribed flow). \r\n\r\nRewritten: topography (elevation sources, smoothing rule, linear and SLEVE warps as implemented, what sloped coordinates imply for the discretization) and the global-simulations guide (resolution and timestep choice, common numerical configurations, the tested production configurations, output, scale). \r\n\r\nSymbol and source tables added to the microphysics and gravity-wave pages. \r\n\r\nNo changes to source code. Best reviewed by reading the built docs.\r\n\r\nProduced with Claude 5.1",
+    "changedFiles": 61,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-13T14:26:00Z",
+    "deletions": 1213,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-19T14:59:03Z",
+    "number": 4823,
+    "title": "Further docs additions/revisions"
+  }
+]
