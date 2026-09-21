@@ -1,0 +1,131 @@
+[
+  {
+    "additions": 686,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Follows up on [this discussion](https://github.com/CliMA/Oceananigans.jl/pull/5351#issuecomment-4958310268) in #5351 and is split out of #5864, which now only adds the convenience constructor.\n\nThis PR adds the `target_transport` keyword to `NormalRadiation`, `ObliqueRadiation` and `GravityWaveRadiation` (the Flather condition), bringing them in line with `PerturbationAdvection` (#5479); `ObliqueRadiation` came in with the merge of `main` (#5962). The target can be a number or a callable of the grid, and the keyword only acts on `NormalFlowBoundaryCondition`s.\n\n- `NormalRadiation` and `ObliqueRadiation` with `target_transport = Q` pin the net transport `\u222eu\u00b7dA` through the existing `has_target_transport` / `get_target_transport` interface, so the targeted corrections already in `NonhydrostaticModel` and `HydrostaticFreeSurfaceModel` apply unchanged (exact in the former, approximate in the latter, as for `PerturbationAdvection`). The target is the trailing field of every `AbstractRadiationScheme`, so `show` and the storage materialization handle it generically.\n- `GravityWaveRadiationBoundaryCondition((U, \u03b7); target_transport = Q)` pins the barotropic transport `\u222eU\u00b7dl`: after the Flather fill of every barotropic substep, and after the end-of-step refills, the targeted face is shifted uniformly to the target, so the free surface sees exactly `Q` and only the shape of the Flather profile survives. Without a target nothing changes. Targets are refused at construction on multi-region and distributed grids, where the face integral would be partial.\n- The keyword conversion shared by the schemes lives in `convert_target_transport`; the targeted-transport tests run for `PerturbationAdvection`, `NormalRadiation` and `ObliqueRadiation`, plus an interface test; section 11 of the boundary conditions docs covers `NormalRadiation` with a doctest.\n\n- [x] Tests for `target_transport` on `GravityWaveRadiation`.\n\nThis standardizes the interface and capabilities of all radiation boundary conditions / schemes.\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-11T13:40:35Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-20T16:34:42Z",
+    "number": 5969,
+    "title": "Add `target_transport` to `NormalRadiation`, `ObliqueRadiation` and `GravityWaveRadiation`"
+  },
+  {
+    "additions": 771,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This will probably require a few iterations to get it right, but it's a start.\r\n\r\n***NOTE*** (especially for @ali-ramadhan): this will require a change to the CI infrastructure: since each jobs will need to spawn multiple concurrent processes, we'll want to reduce the number of agents, I was thinking something like 4 or 6.\r\n\r\nFix #4847, fix #4825, fix #6026.",
+    "changedFiles": 159,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7O6YoM",
+        "number": 4825,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4825"
+      },
+      {
+        "id": "I_kwDOCRy_aM7Q94Xe",
+        "number": 4847,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4847"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABR2zhcA",
+        "number": 6026,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6026"
+      }
+    ],
+    "createdAt": "2026-09-18T22:10:23Z",
+    "deletions": 1267,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-20T21:58:17Z",
+    "number": 6035,
+    "title": "Run the test suite with ParallelTestRunner"
+  },
+  {
+    "additions": 123,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR resolves #6025 by addressing the second part. It modifies `buildkite.yaml` so that `test_enzyme.jl` and other CPU-only tests only run in the CPU test groups.\r\n\r\n`test_orthogonal_spherical_shell_time_stepping.jl` has been modified to also run on the GPU.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABR2uJDg",
+        "number": 6025,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6025"
+      }
+    ],
+    "createdAt": "2026-09-19T03:13:31Z",
+    "deletions": 108,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-20T23:27:30Z",
+    "number": 6039,
+    "title": "Buildkite: Stop re-running CPU-only tests in the GPU jobs"
+  }
+]
