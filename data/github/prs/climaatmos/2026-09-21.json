@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 174,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "The `--manytests` restart job runs one test per grid, and each grid compiles its own copy of the model, which pushed the single step over its time limit. This splits it into one Buildkite step per grid (sphere, box, column) on CPU and GPU via a new `--grid` flag, and removes the recompilation that made the job slow inthe first place.\r\n\r\nOther Changes\r\n- `AtmosNumerics` stores `test_dycore_consistency` and `reproducible_restart` as `Bool` fields instead of type parameters. This prevents new type instances of AtmosNumerics from being compiled with different values.\r\n-  Restart tests load `PrecompileCI` before ClimaAtmos when it is reachable\r\n- Documented that `fill_with_nans!` is currently a no-op: the `test_dycore_consistency` has not been working for ~2 years.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-18T18:51:42Z",
+    "deletions": 82,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-21T21:41:53Z",
+    "number": 4840,
+    "title": "Split restart test per domain"
+  }
+]

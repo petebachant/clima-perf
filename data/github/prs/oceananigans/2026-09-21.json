@@ -1,0 +1,63 @@
+[
+  {
+    "additions": 107,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\n\n- Adds a \\`needs_simulation_context\\` trait that returns \\`true\\` for \\`ContinuousBoundaryFunction\\` and \\`DiscreteBoundaryFunction\\` BC conditions (fills that require \\`clock\\`/\\`model_fields\\`) and \\`false\\` for everything else, including \\`Open\\` OBC types\n- Guards \\`fill_halo_regions!(v)\\` in \\`set_to_field!\\` so it is skipped when the source field carries a CBF/DBF BC \u2014 previously this crashed when \\`fill_halo_regions!\\` was called without clock on such a field\n- Guards \\`fill_halo_regions!(to_field)\\` in \\`interpolate!\\` similarly, using \\`fill_open_bcs=false\\` so the distributed MPI exchange still runs for OBC fields while clock-dependent fills are skipped\n- Short-circuits \\`on_architecture\\` in \\`set_to_field!\\` when architectures already match, avoiding spurious \\`ImmersedBoundaryGrid\\` reconstruction that triggered \\`materialize_immersed_boundary\\` \u2192 unguarded \\`fill_halo_regions!\\` on uninitialized MultiRegion connectivity\n- Exports \\`needs_simulation_context\\` from \\`BoundaryConditions\\`\n\nNew test file \\`test/test_set_field_interpolation.jl\\` covers interpolation correctness, the copy path, all \\`needs_simulation_context\\` dispatch cases (CBF Flux, Open+DBF, Open+number, FieldBCs), and the CBF-destination crash. All 11 tests pass on CPU.\n\n## Update 1\n\n\\`fill_normal_flow_bcs=false\\` was blanket-skipping the fill for all NormalFlow BCs, not just ones needing simulation context \u2014 regressed plain impenetrability fills (e.g. \\`w=0\\`). Fixed by checking each NFBC's own condition via \\`normal_flow_needs_simulation_context\\`. Full CPU unit test suite passes locally.\n\n## Update 2: distributed GPU \\`InvalidIRError\\` fix\n\nOn distributed GPU, \\`fill_halo_regions!(field)\\` can be called without \\`clock\\`/\\`model_fields\\` during model initialisation (before the clock is live). For \\`RNFBC\\` fields (\\`NormalFlowBoundaryCondition\\` with a \\`NormalRadiation\\` scheme) the call chain reaches \\`_fill_*_halo!\\` with \\`args=()\\`. The exact-signature radiation methods don't match, the plain \\`NFBC\\` catch-all fires, and \\`getbc\\` tries to call the \\`DiscreteBoundaryFunction\\` with missing args \u2014 causing \\`InvalidIRError: call to gpu_gc_pool_alloc\\` when the GPU kernel is compiled for the first time.\n\nFix: add variadic \\`_fill_*_halo!(... bc::RNFBC, loc, args...) = nothing\\` fallbacks for all six faces. They are more specific than the \\`NFBC\\` catch-all (\\`RNFBC \u2282 NFBC\\`) so they intercept the bad dispatch and return \\`nothing\\`. The exact-signature radiation methods still win at time-stepping when the full \\`(loc::FAA, clock, model_fields)\\` args are present.\n\nValidated on 4-GPU GH200 simulations (1\u00d74 and 2\u00d72 partitions) \u2014 both previously crashed at first kernel compilation with this error.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-12T14:45:53Z",
+    "deletions": 98,
+    "labels": [],
+    "mergedAt": "2026-09-21T12:40:53Z",
+    "number": 5866,
+    "title": "Thread model.clock, fields(model) through set!/interpolate! halo fills"
+  },
+  {
+    "additions": 55,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T09:46:16Z",
+    "deletions": 57,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-09-21T15:05:47Z",
+    "number": 6045,
+    "title": "Resolve issues in Zarr extension pointed out by ExplicitImport"
+  },
+  {
+    "additions": 345,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "I used Claude to help prepare this PR. This is the second of the two open-boundary PRs \u2014 #5962 added `ObliqueRadiation` for the velocities; this one adds tracer reservoirs. It is independent of #5962 (branches off `main`, touches different files) and can be reviewed in either order.\n\n# Add `TracerReservoir`: open boundary tracer reservoirs\n\n## The problem\n\nA prescribed-value tracer open boundary has no memory. The instant the boundary-normal\nflow reverses, water re-entering the domain carries the exterior value `c\u1d49\u02e3\u1d57` \u2014 no matter\nwhat just left through that same face. Across a tidal cycle, an eddy brushing the\nboundary, or any oscillating flow, that manufactures a spurious tracer flux: the domain\nexports its own water and imports someone else's, even when the net displacement over the\ncycle is exactly zero.\n\n## What this adds\n\nInspired by the experience in MOM6, `TracerReservoir` carries one extra value per boundary point, `c\u02b3`, the concentration of\nthe water sitting just outside the boundary face. It is relaxed not in time but in\n**distance advected**: each step the flow moves `d = |u\u2099| \u0394t` across the face, and `c\u02b3` is\nrelaxed over a length scale `L` toward whichever reservoir the flow is filling,\n\n```\nc\u02b3 \u2190 (c\u02b3 + a c\u2605) / (1 + a),   a = d / L\n```\n\ntaken as a backward-Euler step, so it is unconditionally stable for any `\u0394t`. Target and\nlength scale follow the flow direction:\n\n- **Outflow** \u2014 `c\u2605 = c\u1d35` (adjacent interior value), `L = outflow_length_scale`. The\n  reservoir fills with the water the domain is exporting.\n- **Inflow** \u2014 `c\u2605 = c\u1d49\u02e3\u1d57` (prescribed exterior value), `L = inflow_length_scale`. The\n  reservoir is flushed toward the external state.\n\nThe boundary halo cell is then set to `c\u02b3`, so returning water carries back what recently\nleft, converging to `c\u1d49\u02e3\u1d57` only after a length `inflow_length_scale` of sustained inflow.\n\nEach length scale has three regimes, matching MOM6:\n\n| `L` | behaviour |\n|---|---|\n| `0` (default) | **instant** \u2014 `c\u02b3 = c\u2605` every step. Outflow becomes zero-gradient; inflow snaps to `c\u1d49\u02e3\u1d57`. This is the memoryless behaviour of a plain `ValueBoundaryCondition`. |\n| `0 < L < Inf` | **finite** \u2014 relaxation over the distance `L`. |\n| `Inf` | **frozen** \u2014 `c\u02b3` never changes in that flow direction. |\n\nBoth length scales default to `0` so `TracerReservoir()` reproduces\nthe memoryless behaviour exactly and the reservoir is strictly opt-in. There is no\nuniversal value to default to: the useful `inflow_length_scale` is a property of the flow\nat the boundary, not of the scheme.\n\nUsed like the other `Value` schemes \u2014 as the `scheme` of a `ValueBoundaryCondition` on a\n`Center`-located tracer field. It carries no condition on the velocities, so it is used\nalongside a scheme for the boundary-normal velocity (`NormalRadiation`, `ObliqueRadiation`\nor `PerturbationAdvection`) and the barotropic pair.\n\n## The defining property\n\nWith `inflow_length_scale = outflow_length_scale = 0`, `TracerReservoir()` is bitwise\nidentical to a memoryless `ValueBoundaryCondition`: the outflow halo equals the interior\nvalue (zero-gradient), the inflow halo equals `c\u1d49\u02e3\u1d57`. Nonzero length scales interpolate\nbetween that limit and a frozen reservoir, with memory. That equivalence at `L = 0` is the\nfirst test.\n\n## Demonstration\n\n`validation/open_boundaries/tracer_reservoir.jl` runs a uniform, spatially-constant\noscillating flow with zero net displacement per period, so a uniform tracer should be\nunchanged by the boundary. The memoryless default loses ~7-8% of the tracer per period \u2014\na real physical loss, not noise, from substituting the exterior value for the water that\njust left. A frozen or finite-length-scale reservoir recovers it:\n\n![TracerReservoir vs memoryless](https://raw.githubusercontent.com/enri66/OpenBoundaryTestCases/main/media/tracer_reservoir.png)\n\n## Choosing `inflow_length_scale`\n\nThe benefit is **not monotone** \u2014 freezing the reservoir is not the best choice and can be\nmuch worse than a finite length scale. A reservoir holds *one number* per boundary point.\nDuring outflow it tracks the boundary concentration; at the reversal it holds whatever\nvalue was there at that instant, then feeds that *constant* back in \u2014 while the water that\nactually returns is the far tail of what left and has a *declining* profile. Relaxing\ntoward `c\u1d49\u02e3\u1d57` during inflow mimics that decline, and the length scale at which it matches\nis set by the parcel excursion `D = 2U/\u03c9` (for an oscillation of amplitude `U`, frequency\n`\u03c9`), not by the width of the tracer structure. Scanning a translating-patch problem over\ntwo patch widths \u00d7 two excursions puts the optimum at\n\n```\ninflow_length_scale \u2248 0.3 D\n```\n\nwith the error there roughly 8\u00d7 smaller than memoryless. The scaling is with `D` and not\nwith the structure width \u2014 as it must be for a scheme that relaxes over a distance\nadvected. It degrades when nearly all of the tracer leaves the domain (`D \u2273 4\u00d7` the\nstructure width), where no single-valued reservoir can help and the optimum is\nill-defined. The docstring says all of this.\n\n`outflow_length_scale = 0` is almost always right: the domain should record the water it\nexports immediately, which makes the outflow condition zero-gradient \u2014 the standard choice.\n\n## Implementation notes\n\n- **No existing scheme is modified.** The whole addition is one new file plus an export and\n  an include. `NormalRadiation`, `ObliqueRadiation` and `PerturbationAdvection` are\n  untouched.\n- **No new infrastructure.** The reservoir slab is one 2-D array over the boundary face\n  (per tracer, per boundary), allocated through the existing\n  `materialize_radiation_storage` / `regularize_boundary_condition` hooks. It follows\n  `NormalRadiation`'s anchor/latest convention so multi-stage steppers re-step from a\n  fixed anchor rather than compounding. Initialized to `c\u1d49\u02e3\u1d57` on the first halo fill,\n  matching MOM6's `tres = t`.\n- **Independent of `NormalRadiation`'s kernels.** The reservoir update is a single small\n  `@inline` function \u2014 it does not reuse or duplicate the radiation math. The six\n  `_fill_*_halo!` methods are the same per-boundary dispatch every scheme in\n  `open_boundary_schemes/` already has (they differ only in which velocity component and\n  index they read, and the inflow-sign convention).\n- The advecting velocity is taken at the boundary **face**, not one cell into the interior:\n  it is the flux through that face that carries tracer across the boundary, and it is what\n  MOM6's reservoir uses (`uhr` at the segment face).\n- `Value` classification, `Center`-located fields, all six boundaries.\n\n## Testing\n\nTwo `@testset`s in `test_open_boundary_conditions_hydrostatic.jl` (all 11 tests in that\nfile pass; the 9 pre-existing ones are unchanged):\n\n1. **Length-scale regimes**, checked directly on the `reservoir_update` kernel where the\n   expected values are exact: instant takes the upstream value regardless of history;\n   frozen never moves on inflow; finite is the backward-Euler step\n   `(c\u02b3 + a c\u1d49\u02e3\u1d57)/(1 + a)`; a stationary flow advects nothing, so a finite-`L` reservoir\n   is unchanged.\n\n2. **Recovers exported water**, end-to-end on a `HydrostaticFreeSurfaceModel` with a\n   prescribed, spatially uniform, oscillating flow `u = U\u2080 sin \u03c9t`. Over a whole period\n   the net displacement is exactly zero, so a uniform tracer must be unchanged. The frozen\n   reservoir returns exactly what it exported (`1.0000` to `atol = 1e-6`); a memoryless\n   boundary manufactures a real deficit (loses several percent of the domain's water in a\n   single cycle with zero net displacement); a finite length scale sits between the two.\n   The same run with the reservoir on the west boundary and the flow reversed gives the\n   same result.\n\n\n\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-10T15:10:20Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2026-09-21T19:19:24Z",
+    "number": 5964,
+    "title": "Add TracerReservoir: open boundary tracer reservoirs"
+  }
+]
