@@ -1,0 +1,112 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "All tests are already passing downstream in Breeze.jl, so there's hope this will work out-of-the-box here as well \ud83e\udd1e\r\n\r\nNote: I' also proposing to remove the warning about the version number when starting Oceananigans, honestly I found that a bit annoying in the past.  Anyway, I put it as a separate commit to make it easy to revert it, in case people don't agree with its removal.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-11T07:59:41Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-09-22T00:02:27Z",
+    "number": 5968,
+    "title": "Run tests with Julia v1.13"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "With the new setup in #6025 the number of concurrent GPU workers is decided based on the available memory, but that information isn't printed anywhere.  I noticed that we're often getting 3 or 4 GPU workers, instead of the expected 6, I'm adding a print to show the available memory, to better understand the end result.  Also, reduce the GPU memory budget for each worker from 4 to 3 GiB, with the hope of getting slightly more concurrent workers on average.  If it doesn't cause too much resource contention we may even reduce to 2 GiB, same as the CUDA.jl tests, but I'll postpone that to a follow up PR if this works well for some time.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T11:22:11Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-22T07:26:00Z",
+    "number": 6046,
+    "title": "Tweak number of workers for GPU jobs and print free GPU memory"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `CubedSphereConformalMapping` stored its \u03be and \u03b7 coordinates as whatever the branch that built them produced: ranges for a uniform mapping, `Vector{FT}` for a non-uniform one. Since those are type parameters, two otherwise identical cubed sphere grids had different types, and every kernel, model and solver specialized separately for each.\r\n> \r\n> That is what made the cubed sphere simulation tests expensive. They are 72% and 81% compilation, and they build the same model twice, once per mapping. Grid size and halo size are already type parameters (`GridSize{Nx, Ny, Nz, Hx, Hy, Hz}`, src/Grids/abstract_grid.jl), so these grids agreed on everything except the four coordinate fields.\r\n> \r\n> Collect all four into `Vector{FT}`. They are grid metadata, read by `on_architecture`, `Adapt.adapt_structure` and grid reconstruction, and never indexed inside a kernel, so the only effect is that the two mappings now share a specialization. A uniform mapping pays four small vectors per panel, about 264 bytes each here, in place of four ranges.\r\n> \r\n> multi_region/cubed_sphere_simulation 12:08 -> 8:28 and multi_region/cubed_sphere_simulation_immersed 18:29 -> 11:40, with peak memory down from 3.5 to 2.8 GB and 7.1 to 5.7 GB. Measured against main those files started at 13:08 and 19:48. The `multi_region` and `tripolar_grid` suites pass.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T14:04:29Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-22T07:26:49Z",
+    "number": 6047,
+    "title": "Give uniform and non-uniform cubed sphere mappings one concrete type"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T07:35:12Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-09-22T15:43:03Z",
+    "number": 6042,
+    "title": "Disambiguate the checkpointer test's `restore_prognostic_state!` method"
+  },
+  {
+    "additions": 277,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "Following a suggestion by @glwagner , this PR adds `TimeOffset(parent_schedule, offset)`, a schedule that actuates when its parent does and once more at a signed time offset: after each parent actuation for `offset > 0`, before the next one for `offset < 0`. The time step is aligned so the model lands exactly on the offset time. This gives time derivatives (#5823) a deterministic snapshot time without predicting future steps.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T00:51:24Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-09-22T16:54:56Z",
+    "number": 5981,
+    "title": "Add `TimeOffset` schedule"
+  }
+]
