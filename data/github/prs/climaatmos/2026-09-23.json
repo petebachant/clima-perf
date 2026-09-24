@@ -1,0 +1,114 @@
+[
+  {
+    "additions": 384,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR updated to CM.jl v 0.41. We now have to pass vertical velocity into 1M bulk microphysics tendencies",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T21:29:11Z",
+    "deletions": 120,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T04:51:26Z",
+    "number": 4847,
+    "title": "Update to CM 0.41"
+  },
+  {
+    "additions": 800,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "### Physics\r\n- **Pressure drag coefficient.** The momentum equation floored the environment area at `1 \u2212 a_max` and the TKE return-to-isotropy source at `a_min`, four orders of magnitude apart, so the energy removed from the draft and the energy given to TKE used different coefficients. Both now call one function, `pressure_drag_coefficient`. (@sajjadazimi please check if this is consistent with what you want).\r\n- **AMD eddy viscosity.** Its numerator and denominator shared one scratch tensor and the denominator was evaluated lazily, so it read the filter-scaled velocity gradient in place of the unscaled one. That left the viscosity smaller by roughly the square of the filter width (order `1e6` in a 3.2 km box) and with the units of an inverse time, so the closure was close to inactive. The denominator is now evaluated before the scaled derivative overwrites the tensor, in both the horizontal and the vertical closure. Spotted in review; the bug predates this branch.\r\n- **LES energy flux.** Smagorinsky\u2013Lilly, AMD, and constant horizontal diffusion diffused a lumped `h_tot`, unlike the other diffusive terms, which use the split form `-\u03c1 D [\u2207s_d + (h_eff + \u03a6) \u2207q_tot_eff]`. The LES closures now use the same split. The AMD scalar diffusivity comes from one helper, and its horizontal form divides by the physical gradient norm, as the vertical form already did (the horizontal used covariant components).\r\n- **Hyperdiffusion exclusion set.** The cloud-species loop scaled `\u03c1n_ice`, but the exclusion tuple listed `\u03c1n_lcl` and `\u03c1n_rai` only, so `\u03c1n_ice` also received the full-strength `\u2207\u2074` tendency, and the P3 rime species `\u03c1q_rim` and `\u03c1b_rim` received the full-strength tendency alone. The rime species now scale with cloud ice, and the exclusion sets are named `hyperdiffusion_excluded_gs_names` and `hyperdiffusion_excluded_sgs_names`, equal to the sedimenting-tracer registries today.\r\n- **SGS tracer indexing.** Inside `for j in 1:n` loops, the entrainment tendency, the updraft constraints, the Rayleigh sponge, and the sedimentation cache hardcoded updraft 1, so with several updrafts the first would have received all tendencies. They now index updraft `j`. Latent at the default of one updraft.\r\n- **PROPHET velocity solve.** Documentation only: the `1/a\u2070` factors were right and the prose describing them was wrong. The velocity-proportional entrainment scales with the relative velocity, and the pairwise form drag carries the environment weight `\u03c1\u0302\u2070/\u03c1`, which together give the factors in the code.\r\n\r\n### Configuration and setups\r\n- **ERA5 forcing-file checks.** `return false` sat inside the `NCDataset` `do` block and exited only the closure, so both checks always returned `true` and a cached file that did not cover the run was kept. The block's value is now returned.\r\n- **Config base names.** `is_unique_basename` compared an extension-stripped name against names with the extension, so it always returned `true`; the disambiguating branch also referenced an undefined `path_sep`. Both fixed, and the comparison now skips non-YAML files under `config/`.\r\n- **ISDAC and Larcform1 TKE.** ISDAC had `prognostic_tke ? profile : 0`, the reverse of the other setups; Larcform1 accepted `prognostic_tke` and ignored it. ISDAC now follows the shared convention and Larcform1 drops the keyword.\r\n- **Standalone `DecayingProfile`.** A setup built without `params` stored `nothing` for the thermodynamics parameters and failed in `center_initial_condition`. It now falls back to the model's parameters.\r\n- **Surface overrides.** `SurfaceBoundaryOverrides.p` and `.beta` were stored and never read; ten setups set `p` to no effect. The fields are removed. (@nefrathenrici please check this)\r\n- **Keyword constructors.** `AtmosNumerics` and the `EDMFXModel` convenience constructor ended in `kwargs...` that the body never read, so a misspelled option was accepted silently. The catch-all is removed.\r\n- **Double vertical mixing.** Nothing rejected `vert_diff` together with PROPHET, AMD, or a vertically acting Smagorinsky closure. Model construction now rejects all three. AMD acts on both axes whatever its configuration, so it conflicts unconditionally; a horizontal-only `smagorinsky_lilly: \"UV\"` still pairs with `vert_diff`. (@szy21 asked for `amd_les` to be included, which it now is.)\r\n- **AMD configurations** inherited the default hyperdiffusion while the Smagorinsky configurations switch it off. Both AMD configurations now set `hyperdiff: ~`.\r\n- **`orographic_gravity_wave: \"linear\"`** constructed a type with no tendency method and called a function defined nowhere. The option and `LinearOrographicGravityWave` are removed.\r\n\r\n### Tests and reproducibility\r\n- New coverage for the ERA5 forcing-file checks, the base-name check, the keyword constructors, the `vert_diff` guard, the pressure drag coefficient, the hyperdiffusion exclusion set over the 1M/2M/2MP3 species, a parameter-free `DecayingProfile` simulation, and a new `test/parameterized_tendencies/les_energy_split_tests.jl` covering the split enthalpy flux for all three LES closures.\r\n\r\nCo-produced with Fable 5.1\r\n",
+    "changedFiles": 53,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T11:59:34Z",
+    "deletions": 417,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T13:09:29Z",
+    "number": 4842,
+    "title": "Fixes various bugs/consistency issues that surfaced while writing docs"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T23:51:51Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T17:22:51Z",
+    "number": 4848,
+    "title": "Remove the unused lateral mixing parameter"
+  },
+  {
+    "additions": 71,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "To improve code quality, I used [LintApp.jl](https://github.com/julia-vscode/LintApp.jl) with `unused_function_argument = \"off\"` and ask a LLM to fix the majority of the issues found. I reviewed each edit before committing them. ",
+    "changedFiles": 54,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T20:42:36Z",
+    "deletions": 153,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T22:42:16Z",
+    "number": 4843,
+    "title": "Apply lint fixes"
+  }
+]

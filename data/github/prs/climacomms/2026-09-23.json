@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 86,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\nOrders device buffers across CUDA streams around MPI operations, as a step toward addressing the zero-receive failures in multi-GPU vector DSS tests in ClimaCore on L40S ([ddss_ne32_cs.jl](https://buildkite.com/clima/climacore-ci/builds/7732#01a0892c-2f26-4444-ab08-d30ddc1da4d7)). (This PR in itself may not fix the failure.)\r\n\r\n`CUDA.jl` launches kernels on per-task non-blocking streams (`CU_STREAM_NON_BLOCKING`), which do not automatically synchronize with the legacy default stream or with UCX's internal CUDA streams, and `CUDA.synchronize()` only synchronizes the calling Julia task's stream.\r\n\r\n- Adds `ClimaComms.device_synchronize(::AbstractDevice)` (`CUDA.device_synchronize()` on `CUDADevice`, a no-op on CPU devices).\r\n- Calls it before posting MPI operations in `ClimaComms.start`, after `MPI.Waitall` in `ClimaComms.finish`, and around MPI collectives on array buffers (`reduce`, `reduce!`, `allreduce`, `allreduce!`, `gather`). Collectives on scalars and other host values skip the synchronization.\r\n- `reduce!` and `allreduce!` on `MPICommsContext` now return `nothing`, as documented and as on `SingletonCommsContext`.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T01:47:25Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-09-23T19:56:10Z",
+    "number": 151,
+    "title": "Synchronize CUDA device across MPI streams"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 1922,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Codecov reports 55% on main, but that is `src` at 79% plus ~3000 lines of `ext` at 1%. This PR raises the number by testing what should be tested and excluding what Buildkite already covers.\n\n## Codecov exclusion\n`codecov.yml` ignores `ext/land_sim_vis/` and `LandSimulationVisualizationExt.jl` (~1230 lines). Plotting and leaderboard code runs in every Buildkite fluxnet and long-run job, so unit tests there would be redundant. Nothing else is excluded; the Fluxnet and neural snow extensions stay counted and are tested below.\n\n## Tests added\n- **Neural snow / SNOTEL tools** (`test/standalone/Snow/tool_tests.jl`, 385 assertions): re-enabled after being commented out in #1726. The two Box CSV downloads are replaced by local fixtures in `test/standalone/Snow/data/` via a new `DataTools.df_from_string`, so no network access is needed.\n- **Fluxnet extension** (`test/integrated/fluxnet_sim.jl`): forcing construction, data dates, comparison data and observation-based initial conditions for US-MOz.\n- **Diagnostics compute methods** (`test/diagnostics/compute_methods.jl`): for each model type, every diagnostic in `get_possible_diagnostics` must be defined and computable on an initialized state.\n- **Show methods**, **`LandSimulation` interface** (float/date constructors, `solve!`, crash reporting, output-dir warning), **perturbed ERA5 drivers**, and model/utility fallbacks (`isdivisible`, `check_land_equality`, checkpoint model-hash warning).\n\n## Changes to `src` and why they are needed\nAll of these were surfaced by the new tests; none change results for configurations that worked before.\n\n- **`define_diagnostics.jl`: `a0d`, `a0a`, `pra`, `sco2_ppm` now use `conditional_add_diagnostic_variable!`.** Every other diagnostic is registered through that function, which adds the variable only if its short name is in the model's `get_possible_diagnostics` list. These four called `add_diagnostic_variable!` directly, so they were registered for every model, including ones whose compute function would throw (e.g. a bucket model got a soil CO2 ppm entry). The new test asserts that the registered set equals the possible set. Models that support them are unaffected: the optimal LAI biomass model already adds the three `a0*`/`pra` names and `SoilCO2Model` already lists `sco2_ppm`. `Val(:all)` still adds everything.\n- **`land_compute_methods.jl`: `compute_10cm_water_mass!`** used `land_model.soil.domain` and the top-level `p.sfc_scratch`/`p.subsfc_scratch`, which only exist for integrated models, so the diagnostic crashed for a standalone `EnergyHydrology` even though it is in that model's possible list. It now uses the soil-owned scratch fields and the output field.\n- **`land_compute_methods.jl`: new `compute_photosynthesis_net_leaf!` and `compute_respiration_leaf!`.** The `\"an\"` and `\"rd\"` diagnostics referenced these functions but they were never defined, so requesting either raised `UndefVarError`.\n- **`land_compute_methods.jl`: `compute_soilco2_ppm!` accepts `SoilCO2Model`; snow diagnostics accept `SnowModel`.** Both standalone models list these diagnostics as possible, but the compute methods only accepted integrated models. The cache paths are identical.\n- **`perturbed_drivers.jl`: default `time_interpolation_method`.** The default was `LinearInterpolation(PeriodicCalendar(Dates.Year(1), DateTime(Dates.year(stop_date))))`, but `stop_date` is not an argument of either function and no such global exists, so relying on the default raised `UndefVarError`. It now defaults to `LinearInterpolation(PeriodicCalendar())`, matching `prescribed_forcing_era5`. Note the semantic difference: the original expression intended a one-year period anchored to the stop year, which only differs from wrapping over the whole file when the forcing spans more than one year. For the 2008 low-res file used by the two long-run experiments that call these functions, the two are equivalent. If the anchored version is the intent, the alternative is to add `stop_date` as a positional argument like `prescribed_forcing_era5`; happy to do that instead.\n- **`ext/data_scraping/WebTools.jl`:** `df_from_url` is split into a download step plus `df_from_string`, so the SNOTEL tests can parse local fixtures with the same code path.\n\n## Wall time (local, Julia 1.12, single process, excluding package load)\n| Test | Group | Time |\n|---|---|---|\n| Neural snow tools | core | ~63 s |\n| Show methods | core | 11 s |\n| LandSimulation interface | core | 27 s |\n| Utilities / variable types additions | core | < 5 s |\n| Diagnostics compute methods | simulations | ~4 min (LandModel 1.5 min, SoilCanopy 1 min) |\n| Fluxnet extension additions | simulations | ~45 s |\n| Perturbed drivers | simulations | ~15 s |\n\nRoughly +2 min on the core job and +5 min on the simulations job. The simulations job needs the `fluxnet_sites` artifact (176 MB, cached in the CI depot).\n\nNot run locally: the complete core and simulations groups (killed for memory while running concurrently); every touched file was run individually and passes, and the unchanged `diagnostics_tests.jl` passes against the src fixes.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T21:41:52Z",
+    "deletions": 40,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T20:23:24Z",
+    "number": 1883,
+    "title": "Raise unit test coverage and fix diagnostics found by the new tests"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "`profile_and_benchmark` in `experiments/benchmarks/benchmark_utils.jl` reported its mean and standard deviation only through `@info`. This PR also writes them to timings.toml in the benchmark's output directory:\r\n```\r\naverage_timing_s = 0.0794\r\nstd_timing_s = 0.00123\r\n```\r\nI am adding ClimaLand benchmarks to ClimaCore's end to end performance pipeline in https://github.com/CliMA/ClimaCore.jl/pull/2655 and this PR will make it easier to parse the performance metrics.\r\n\r\nNo change to what the benchmarks do. TOML was already a dependency, and the file is only written when the benchmarks run, so the external-profiler path is untouched.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T17:09:46Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-23T23:12:58Z",
+    "number": 1889,
+    "title": "benchmarks: Write the timings to a file"
+  }
+]
