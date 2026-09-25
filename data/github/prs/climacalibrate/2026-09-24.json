@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 385,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Slurm workers are launched with a blocking `srun`, so a worker is a step inside the driver's allocation rather than a job of its own, and its job id is never read. PBS ids are read from qsub and discarded. That leaves nothing to tie a worker to its allocation, which #360 needs for a worker registry.\r\n\r\nThis PR makes each worker its own batch job and keeps the id:\r\n\r\n- `SlurmManager.launch` now submits with `sbatch --parsable` instead of `srun`, so `SlurmManager` allocations no longer nest, matching existing `PBSManager` behavior. The job id is parsed from stdout and stored in `WorkerConfig.userdata`.\r\n- The startup poll no longer watches an `srun` process. It asks `squeue` or `qstat` every 30 s about jobs still waited on and skips any that left the queue before connecting. A submission the scheduler rejects is reported from its own error message.\r\n- `sbatch` inherits SLURM_* from an enclosing allocation, so the submission environment strips them, reusing the list from the HPC backend.\r\n- Fixes a bug in how the submission environment was built. deepcopy(ENV) returns ENV itself, since EnvDict has no fields to copy, so the delete! calls meant to strip SLURM_* from a copy were removing them from the driver process. Dict{String, String}(ENV) makes a real copy. This didn't really matter when only submit_job did it, but the worker path now does it on every add_workers.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T22:41:00Z",
+    "deletions": 208,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      },
+      {
+        "color": "4b989c",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACw_Cc9A",
+        "name": "Launch Derecho"
+      }
+    ],
+    "mergedAt": "2026-09-24T18:12:21Z",
+    "number": 379,
+    "title": "Make each worker its own batch job, store job ID per worker"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR makes a release of ClimaCalibrate v0.6.\r\n\r\nTODO\r\n\r\n- [X] Check land calibration using SLURM\r\n- [X] Check coupler calibration using SLURM\r\n- [ ] Check land calibration using PBS",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T00:25:11Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      },
+      {
+        "color": "4b989c",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACw_Cc9A",
+        "name": "Launch Derecho"
+      }
+    ],
+    "mergedAt": "2026-09-24T20:52:23Z",
+    "number": 378,
+    "title": "Release v0.6"
+  }
+]

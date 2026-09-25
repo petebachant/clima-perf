@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR fixes the first of the two bugs in #6048.\r\n\r\nThe solver asks a closure for its implicit vertical viscosity through the `\u03bdz\u1d9c\u1d9c\u1d9c` extractor that carries the tracer index `id`. That extractor is only used by the solver. For 3D closures it now returns `2\u03bd`, so the solver steps the whole of `\u03c4\u2083\u2083`.\r\n\r\nThe alternative would have been to keep `\u03bd` in the solver and return `-\u03bd \u2202z w` explicitly, mirroring what is done for `u`. That would bring back an explicit vertical-diffusion stability limit on `w`, which is exactly what the implicit discretization exists to remove, so stepping the full `2\u03bd` implicitly is the better choice.\r\n\r\nThe existing stencil test that reads the solver's tridiagonal rows and compares them with `\u2202z(\u03bdz \u2202z \u03d5)` on uniform and stretched grids now runs `ScalarDiffusivity` alongside `VerticalScalarDiffusivity` and checks that the expected `w` rows use `2\u03bd` and the expected `u` rows use `\u03bd`.\r\n\r\nA new \"vertically-implicit viscous stress on w\" test builds a small vortex between free-slip walls from the discrete wavenumbers, so that it is exactly divergence-free on the C-grid and an exact eigenmode of the discrete Laplacian. It first checks that the explicit `ScalarDiffusivity` operator returns the analytic eigenvalue, then for `ScalarDiffusivity`, `SmagorinskyLilly` and `AnisotropicMinimumDissipation` compares the explicit `-\u2202\u2c7c\u03c4\u2083\u2c7c` plus the increment of `implicit_step!` against the tendency of the fully explicit closure, at every face from 3 to `Nz`. The time discretization must not change the operator.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T04:35:25Z",
+    "deletions": 13,
+    "labels": [],
+    "mergedAt": "2026-09-24T12:30:48Z",
+    "number": 6051,
+    "title": "Restore the vertical viscosity of w for 3D closures with VITD"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "This PR fixes the second of the two bugs in #6048. The first one is fixed in #6051. The two bugs and their fixes are independent. I thought it would be cleaner to have two PRs, one per bug.\r\n\r\nThe fix here is to apply one rule everywhere: an off-diagonal coefficient is masked by the face it belongs to, never by a cell.\r\n\r\nFor fields at faces (`w`), the upper diagonal of row `k` is masked by face `k`, and the lower diagonal of row `m + 1` by face `m + 1`. A face on the bottom or on an immersed boundary therefore gets an identity row. The row just above keeps the flux toward that face in its diagonal, which is what a Dirichlet condition needs, plus a harmless coupling to the zero boundary value.\r\n\r\nFor fields at centers, the lower diagonal used to be masked by the cell below the flux; it is now masked by the face that carries the flux, as the upper diagonal already was. This changes nothing for active cells. Its only effect is to decouple the first immersed cell above an immersed ceiling, which previously still read the active cell below it and acquired a nonzero value inside the solid.\r\n\r\n`viscous_flux_wz` for a vertically implicit closure on a bounded grid is now zero everywhere. There is no boundary flux of `w` left to apply explicitly. Note: Its `k == Nz + 1` branch was dead code as `\u03c4\u2083\u2083` lives at cell centers `1:Nz`.\r\n\r\nThe implicit-advection coefficients in `implicit_vertical_advection.jl` already masked their `w` rows by faces, so the diffusion coefficients now follow the same convention. The solver docstring says which rows are identity rows.\r\n\r\nThis PR also adds two tests:\r\n\r\n1. The existing \"Vertically-implicit diffusion operator\" tests read the solver's rows and compares them with `\u2202z(\u03bd \u2202z \u03d5)`; it used to skip the first and last row. It now checks every row, boundary rows included, against an expected operator in which an inactive cell or a boundary face gets an identity row and an active cell loses the flux through a boundary face.\r\n\r\n2. A vortex in x\u2013z between free-slip walls, built from the discrete wavenumbers so that it is an exact, divergence-free eigenmode of the discrete Laplacian, is stepped once with `VerticalScalarDiffusivity(VerticallyImplicitTimeDiscretization())` and no advection. Nothing is then stepped explicitly and the projection has nothing to do, so the step must be exactly backward Euler on the mode: `\u03d5\u00b9 = \u03d5\u2070 / (1 + \u0394t \u03bd m\u00b2)` at every face of `w` and every cell of `u`, for any `\u0394t`.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T00:27:43Z",
+    "deletions": 37,
+    "labels": [],
+    "mergedAt": "2026-09-24T16:18:57Z",
+    "number": 6060,
+    "title": "Make the vertically implicit solve of `w` respect `w = 0` on the bottom and on immersed faces"
+  },
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I think this change addresses a real compiler pitfall (the first paragraph below is very plausible), but I'm not convinced by the solution proposed by the bot, the extra `CPUKernelAdaptor` struct feels like a hack (apparently it's needed to avoid a stack overflow in `Adapt.adapt(CPU(), args)`).\r\n\r\n> On GPUs, kernel arguments are adapted so that fields reach kernels as their data, but on the CPU `convert_to_device` returned the arguments unchanged. CPU kernels therefore specialized on full `Field` types, including their boundary conditions, and every distinct combination of boundary-condition types recompiled every kernel.\r\n> \r\n> Adapt CPU kernel arguments with a dedicated `CPUKernelAdaptor`.  Like the GPU adaptors it strips fields to their data; unlike them it passes grids and user functions through unchanged.  Rebuilding grids buys nothing on the CPU and only enlarges the launch code: it stopped `iterate_split_explicit_in_halo!` from being inlined, which made every barotropic substep allocate its kernel arguments.  Recursing into closures can loop forever on self-referential closures (`Core.Box`), which `set!(field, function)` is given in the test suite.\r\n> \r\n> `mask_immersed_field!` now passes location instances rather than types to its 4-argument method: types passed as values are only inferred as `DataType` when the callee is not inlined, which made its kernel launch type-unstable.\r\n> \r\n> Adds `@inferred` tests that `convert_to_device` on CPU is type-stable and allocation-free, and that fields differing only in boundary conditions are converted to the same types.\r\n> \r\n> Run times and allocations per time step are unchanged (within noise) for nonhydrostatic and hydrostatic (split-explicit and implicit free surface, immersed and latitude-longitude grids) models, while time to first step drops, e.g. from 7.7 s to 5.3 s for a split-explicit model on an immersed grid and from 19 s to 7.0 s for a latitude-longitude model.  In Breeze's `acoustic_substepping_open_boundaries.jl` test, which builds many models that differ in their boundary conditions, allocations drop from 342M to 332M on top of the `time_step!(sim)` inference barrier (368M to 355M without it).",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T22:38:19Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-09-24T16:31:55Z",
+    "number": 6068,
+    "title": "Strip field metadata from CPU kernel arguments"
+  }
+]
