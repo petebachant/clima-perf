@@ -1,9 +1,8 @@
 schema: '2.0'
 stages:
   run-2026-01-01:
-    cmd: calkit slurm batch --name run-2026-01-01 --environment clima --dep 
-      scripts/run.py --out envs/2026-01-01 -s --gpus=1 -s --time=120 -- 
-      scripts/run.sh 2026-01-01
+    cmd: calkit slurm batch --name run-2026-01-01 --environment clima --dep scripts/run.py
+      --out envs/2026-01-01 -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-01
     deps:
     - path: scripts/run.py
       hash: md5
@@ -24,28 +23,22 @@ stages:
       size: 144821
       nfiles: 2
   benchmark-amip@2026-01-01:
-    cmd: calkit slurm batch --name benchmark-amip@2026-01-01 --environment clima
-      --log-path 'runs/amip/2026-01-01/output.log' --dep scripts/run.py --dep 
-      .calkit/env-locks/main/linux-64.txt --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out runs/amip/2026-01-01/Manifest-v1.11.toml --out 
-      runs/amip/2026-01-01/repo-revs.json -s --gpus=1 -s --time=120 -- 
-      scripts/run.sh 2026-01-01
+    cmd: calkit slurm batch --name benchmark-amip@2026-01-01 --environment clima --log-path
+      'runs/amip/2026-01-01/output.log' --dep scripts/run.py --dep .calkit/env-locks/main/linux-64.txt
+      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out runs/amip/2026-01-01/Manifest-v1.11.toml --out runs/amip/2026-01-01/repo-revs.json
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-01
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -75,28 +68,22 @@ stages:
       md5: 2348e05c8b4bc5a04938ad36bf27e1a6
       size: 838
   benchmark-amip@2026-01-10:
-    cmd: calkit slurm batch --name benchmark-amip@2026-01-10 --environment clima
-      --log-path 'logs/benchmark-amip/2026-01-10.log' --dep scripts/run.py --dep
-      .calkit/env-locks/main/linux-64.txt --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out envs/2026-01-10/Manifest-v1.11.toml --out 
-      envs/2026-01-10/repo-revs.json -s --gpus=1 -s --time=120 -- scripts/run.sh
-      2026-01-10
+    cmd: calkit slurm batch --name benchmark-amip@2026-01-10 --environment clima --log-path
+      'logs/benchmark-amip/2026-01-10.log' --dep scripts/run.py --dep .calkit/env-locks/main/linux-64.txt
+      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out envs/2026-01-10/Manifest-v1.11.toml --out envs/2026-01-10/repo-revs.json
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-10
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -126,16 +113,13 @@ stages:
       md5: a7c7421f05142ce69b19021987c6ab0d
       size: 49421
   benchmark-amip@2025-11-01:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-11-01 --environment 
-      clima --log-path 'runs/amip/2025-11-01/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-11-01/Manifest-v1.11.toml --out 
-      runs/amip/2025-11-01/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-11-01"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-11-01 --environment clima
+      --log-path 'runs/amip/2025-11-01/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-11-01/Manifest-v1.11.toml
+      --out runs/amip/2025-11-01/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-11-01"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -147,13 +131,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -179,16 +161,13 @@ stages:
       md5: 853b684db1411aa0df806c7e169ea3e4
       size: 838
   benchmark-amip@2025-12-06:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-12-06 --environment 
-      clima --log-path 'runs/amip/2025-12-06/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-12-06/Manifest-v1.11.toml --out 
-      runs/amip/2025-12-06/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-12-06"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-12-06 --environment clima
+      --log-path 'runs/amip/2025-12-06/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-12-06/Manifest-v1.11.toml
+      --out runs/amip/2025-12-06/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-12-06"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -200,13 +179,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -232,16 +209,13 @@ stages:
       md5: 02f7bc29de3d232d80d8019522137564
       size: 838
   benchmark-amip@2025-12-20:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-12-20 --environment 
-      clima --log-path 'runs/amip/2025-12-20/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-12-20/Manifest-v1.11.toml --out 
-      runs/amip/2025-12-20/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-12-20"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-12-20 --environment clima
+      --log-path 'runs/amip/2025-12-20/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-12-20/Manifest-v1.11.toml
+      --out runs/amip/2025-12-20/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-12-20"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -253,13 +227,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -285,28 +257,22 @@ stages:
       md5: ab3f692fe9498d9551d8f91ede79a351
       size: 838
   benchmark-amip@2026-01-12:
-    cmd: calkit slurm batch --name benchmark-amip@2026-01-12 --environment clima
-      --log-path 'logs/benchmark-amip/2026-01-12.log' --dep scripts/run.py --dep
-      .calkit/env-locks/main/linux-64.txt --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out envs/2026-01-12/Manifest-v1.11.toml --out 
-      envs/2026-01-12/repo-revs.json -s --gpus=1 -s --time=120 -- scripts/run.sh
-      2026-01-12
+    cmd: calkit slurm batch --name benchmark-amip@2026-01-12 --environment clima --log-path
+      'logs/benchmark-amip/2026-01-12.log' --dep scripts/run.py --dep .calkit/env-locks/main/linux-64.txt
+      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out envs/2026-01-12/Manifest-v1.11.toml --out envs/2026-01-12/repo-revs.json
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-12
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -336,16 +302,13 @@ stages:
       md5: b1fb473fe681b3db5bc0b8cd3c935c05
       size: 42884
   benchmark-amip@2025-12-27:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-12-27 --environment 
-      clima --log-path 'runs/amip/2025-12-27/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-12-27/Manifest-v1.11.toml --out 
-      runs/amip/2025-12-27/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-12-27"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-12-27 --environment clima
+      --log-path 'runs/amip/2025-12-27/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-12-27/Manifest-v1.11.toml
+      --out runs/amip/2025-12-27/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-12-27"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -357,13 +320,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -389,8 +350,7 @@ stages:
       md5: 3a902906216558a7a155cf6793a845fb
       size: 838
   analyze:
-    cmd: calkit nb execute --environment analyze --no-check --to html 
-      "notebooks/analyze.ipynb"
+    cmd: calkit nb execute --environment analyze --no-check --to html "notebooks/analyze.ipynb"
     deps:
     - path: .calkit/env-locks/analyze
       hash: md5
@@ -464,28 +424,22 @@ stages:
       md5: 69606b8a9bc85d7aff1e91adb9d8bd69
       size: 2992
   benchmark-amip@2026-01-14:
-    cmd: calkit slurm batch --name benchmark-amip@2026-01-14 --environment clima
-      --log-path 'runs/amip/2026-01-14/output.log' --dep scripts/run.py --dep 
-      .calkit/env-locks/main/linux-64.txt --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out runs/amip/2026-01-14/Manifest-v1.11.toml --out 
-      runs/amip/2026-01-14/repo-revs.json -s --gpus=1 -s --time=120 -- 
-      scripts/run.sh 2026-01-14
+    cmd: calkit slurm batch --name benchmark-amip@2026-01-14 --environment clima --log-path
+      'runs/amip/2026-01-14/output.log' --dep scripts/run.py --dep .calkit/env-locks/main/linux-64.txt
+      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out runs/amip/2026-01-14/Manifest-v1.11.toml --out runs/amip/2026-01-14/repo-revs.json
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-14
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -515,16 +469,13 @@ stages:
       md5: 8435018afeaeaa65dfbf0d2b680274ee
       size: 838
   benchmark-amip@2026-01-13:
-    cmd: calkit scheduler batch --name benchmark-amip@2026-01-13 --environment 
-      clima --log-path 'runs/amip/2026-01-13/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2026-01-13/Manifest-v1.11.toml --out 
-      runs/amip/2026-01-13/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2026-01-13"
+    cmd: calkit scheduler batch --name benchmark-amip@2026-01-13 --environment clima
+      --log-path 'runs/amip/2026-01-13/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2026-01-13/Manifest-v1.11.toml
+      --out runs/amip/2026-01-13/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2026-01-13"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -536,13 +487,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -568,28 +517,22 @@ stages:
       md5: 14201206a633957bd005c0abab3dbc28
       size: 838
   benchmark-amip@2026-01-06:
-    cmd: calkit slurm batch --name benchmark-amip@2026-01-06 --environment clima
-      --log-path 'runs/amip/2026-01-06/output.log' --dep scripts/run.py --dep 
-      .calkit/env-locks/main/linux-64.txt --dep 
-      repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --out runs/amip/2026-01-06/Manifest-v1.11.toml --out 
-      runs/amip/2026-01-06/repo-revs.json -s --gpus=1 -s --time=120 -- 
-      scripts/run.sh 2026-01-06
+    cmd: calkit slurm batch --name benchmark-amip@2026-01-06 --environment clima --log-path
+      'runs/amip/2026-01-06/output.log' --dep scripts/run.py --dep .calkit/env-locks/main/linux-64.txt
+      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --out runs/amip/2026-01-06/Manifest-v1.11.toml --out runs/amip/2026-01-06/repo-revs.json
+      -s --gpus=1 -s --time=120 -- scripts/run.sh 2026-01-06
     deps:
     - path: .calkit/env-locks/main/linux-64.txt
       hash: md5
       md5: 1754a191da44126403fab3c104fbdaa6
       size: 577
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -619,16 +562,13 @@ stages:
       md5: bed50a25c50a5980223a76e91100377a
       size: 838
   benchmark-amip@2025-11-03:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-11-03 --environment 
-      clima --log-path 'runs/amip/2025-11-03/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-11-03/Manifest-v1.11.toml --out 
-      runs/amip/2025-11-03/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-11-03"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-11-03 --environment clima
+      --log-path 'runs/amip/2025-11-03/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-11-03/Manifest-v1.11.toml
+      --out runs/amip/2025-11-03/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-11-03"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -640,13 +580,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -672,8 +610,7 @@ stages:
       md5: 853b684db1411aa0df806c7e169ea3e4
       size: 838
   fetch-buildkite:
-    cmd: calkit nb execute --environment bk --no-check --to html 
-      "notebooks/buildkite.ipynb"
+    cmd: calkit nb execute --environment bk --no-check --to html "notebooks/buildkite.ipynb"
     deps:
     - path: .calkit/env-locks/bk
       hash: md5
@@ -699,16 +636,13 @@ stages:
       size: 11788541
       nfiles: 185
   benchmark-amip@2025-11-02:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-11-02 --environment 
-      clima --log-path 'runs/amip/2025-11-02/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-11-02/Manifest-v1.11.toml --out 
-      runs/amip/2025-11-02/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-11-02"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-11-02 --environment clima
+      --log-path 'runs/amip/2025-11-02/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-11-02/Manifest-v1.11.toml
+      --out runs/amip/2025-11-02/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-11-02"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -720,13 +654,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -752,16 +684,13 @@ stages:
       md5: 853b684db1411aa0df806c7e169ea3e4
       size: 838
   benchmark-amip@2025-11-04:
-    cmd: calkit scheduler batch --name benchmark-amip@2025-11-04 --environment 
-      clima --log-path 'runs/amip/2025-11-04/output.log' --dep scripts/run.py 
-      --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml --dep 
-      repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml 
-      --dep 
-      repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
-      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out 
-      runs/amip/2025-11-04/Manifest-v1.11.toml --out 
-      runs/amip/2025-11-04/repo-revs.json --command -- calkit xenv -n main 
-      --no-check -- python scripts/run.py --date="2025-11-04"
+    cmd: calkit scheduler batch --name benchmark-amip@2025-11-04 --environment clima
+      --log-path 'runs/amip/2025-11-04/output.log' --dep scripts/run.py --dep repos/ClimaCoupler.jl/toml/amip_progedmf_1m.toml
+      --dep repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+      --dep repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+      --dep .calkit/env-locks/main --dep .calkit/env-locks/clima --out runs/amip/2025-11-04/Manifest-v1.11.toml
+      --out runs/amip/2025-11-04/repo-revs.json --command -- calkit xenv -n main --no-check
+      -- python scripts/run.py --date="2025-11-04"
     deps:
     - path: .calkit/env-locks/clima
       hash: md5
@@ -773,13 +702,11 @@ stages:
       md5: c6f7cad1c52dd0d75ce9408ee9d96c1b.dir
       size: 1154
       nfiles: 2
-    - path: 
-        repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
+    - path: repos/ClimaCoupler.jl/config/atmos_configs/climaatmos_progedmf_1m.yml
       hash: md5
       md5: 8743b95b52b4a72ef72b1135ad094afd
       size: 1150
-    - path: 
-        repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
+    - path: repos/ClimaCoupler.jl/config/benchmark_configs/amip_progedmf_1m_land_he16.yml
       hash: md5
       md5: 577bef53fd5c8e8eb2897c6d236dec53
       size: 461
@@ -805,8 +732,7 @@ stages:
       md5: 853b684db1411aa0df806c7e169ea3e4
       size: 838
   fetch-registry:
-    cmd: calkit xenv -n clima-data --no-check -- python 
-      scripts/fetch-registry.py
+    cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-registry.py
     deps:
     - path: .calkit/envs/clima-data/pixi.lock
       hash: md5
@@ -823,8 +749,7 @@ stages:
       size: 35703
       nfiles: 2
   fetch-citations:
-    cmd: calkit xenv -n clima-data --no-check -- python 
-      scripts/fetch-citations.py
+    cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-citations.py
     deps:
     - path: .calkit/envs/clima-data/pixi.lock
       hash: md5
@@ -858,8 +783,7 @@ stages:
       size: 22765133
       nfiles: 10106
   analyze-dev-speed:
-    cmd: calkit nb execute --environment analyze --no-check --to html 
-      "notebooks/analyze-dev-speed.ipynb"
+    cmd: calkit nb execute --environment analyze --no-check --to html "notebooks/analyze-dev-speed.ipynb"
     deps:
     - path: .calkit/env-locks/analyze
       hash: md5
@@ -893,8 +817,7 @@ stages:
       md5: 913b501c027f2cf0c6f7151730d5e72b
       size: 36206
   fetch-weekly-buildkite:
-    cmd: calkit xenv -n bk --no-check -- python 
-      scripts/fetch-weekly-buildkite.py
+    cmd: calkit xenv -n bk --no-check -- python scripts/fetch-weekly-buildkite.py
     deps:
     - path: .calkit/env-locks/bk
       hash: md5
@@ -912,8 +835,7 @@ stages:
       size: 176079308
       nfiles: 1123
   analyze-weekly:
-    cmd: calkit nb execute --environment analyze --no-check --to html 
-      "notebooks/analyze-weekly.ipynb"
+    cmd: calkit nb execute --environment analyze --no-check --to html "notebooks/analyze-weekly.ipynb"
     deps:
     - path: .calkit/env-locks/analyze
       hash: md5
@@ -947,8 +869,7 @@ stages:
       md5: 1605b0940aa76f76d64a46520a7f9c4a
       size: 363540
   analyze-repo-changes:
-    cmd: calkit xenv -n analyze --no-check -- python 
-      scripts/analyze-repo-changes.py
+    cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-repo-changes.py
     deps:
     - path: .calkit/env-locks/analyze
       hash: md5
@@ -966,8 +887,8 @@ stages:
       size: 10955
     - path: scripts/projecttoml-graph.py
       hash: md5
-      md5: 42588e011c9b50de1cc417b5adadb6da
-      size: 10793
+      md5: ae541928ac8b60b1355809efb14f9634
+      size: 13842
     outs:
     - path: figures/repo-cochange.json
       hash: md5
@@ -982,8 +903,7 @@ stages:
       md5: ac6e17ef8108b89eff5d75ffe037045b
       size: 9687
   example-release-cascade:
-    cmd: calkit xenv -n analyze --no-check -- python 
-      scripts/example-release-cascade.py
+    cmd: calkit xenv -n analyze --no-check -- python scripts/example-release-cascade.py
     deps:
     - path: .calkit/env-locks/analyze
       hash: md5
@@ -1001,10 +921,44 @@ stages:
       size: 4387
     - path: scripts/projecttoml-graph.py
       hash: md5
-      md5: 42588e011c9b50de1cc417b5adadb6da
-      size: 10793
+      md5: ae541928ac8b60b1355809efb14f9634
+      size: 13842
     outs:
     - path: results/example-release-cascade.json
       hash: md5
       md5: 4eecdd7a6341e216a878e9d3420b3944
       size: 2569
+  estimate-colocation-saving:
+    cmd: calkit xenv -n analyze --no-check -- python scripts/estimate-colocation-saving.py
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: bd4ac862a0f5408617ddc484d346527e.dir
+      size: 2229
+      nfiles: 2
+    - path: data/github
+      hash: md5
+      md5: 4618bd08f0801209687d5a72340a1eba.dir
+      size: 22765133
+      nfiles: 10106
+    - path: scripts/estimate-colocation-saving.py
+      hash: md5
+      md5: 3c37f606abfb7d9c0fe29b2595f93826
+      size: 14351
+    - path: scripts/projecttoml-graph.py
+      hash: md5
+      md5: ae541928ac8b60b1355809efb14f9634
+      size: 13842
+    outs:
+    - path: figures/colocation-saving.json
+      hash: md5
+      md5: 1be4a001057fdfd6f723f0d7d3884bbe
+      size: 10872
+    - path: results/colocation-by-repo.csv
+      hash: md5
+      md5: 205c8a85b489a1f4871e20eb06b89e00
+      size: 813
+    - path: results/colocation-saving.json
+      hash: md5
+      md5: dd986ddbe8ab0015b3c6b0958641765c
+      size: 702

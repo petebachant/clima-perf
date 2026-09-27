@@ -265,6 +265,29 @@ pipeline:
       outputs:
         - path: results/example-release-cascade.json
           storage: git
+    estimate-colocation-saving:
+      description: >
+        Estimate how much dependency-propagation work co-locating tightly
+        coupled packages into shared repos could remove. Counts cascade
+        events (a dependency update following a release in another package
+        within two weeks), splits them into mechanical compat/manifest
+        bookkeeping versus substantive adaptation, and reports the
+        mechanical share per year and per repo. Volume only: dependency
+        updates already merge in well under a day, so the saving is in
+        eliminated CI and review cycles, not wall-clock latency.
+      kind: python-script
+      script_path: scripts/estimate-colocation-saving.py
+      environment: analyze
+      inputs:
+        - data/github
+        - scripts/projecttoml-graph.py
+      outputs:
+        - path: results/colocation-saving.json
+          storage: git
+        - path: results/colocation-by-repo.csv
+          storage: git
+        - path: figures/colocation-saving.json
+          storage: git
 
 figures:
   - path: figures/amip-speedup.json
@@ -302,6 +325,15 @@ figures:
       and their dependencies on the right, with link width by how much
       evidence the history gives for that link. Package-level thresholds
       and timings behind it are in results/repo-cochange.csv.
+  - path: figures/colocation-saving.json
+    title: Release burden and reach by repo
+    stage: estimate-colocation-saving
+    description: >
+      Releases per repo since it was first tagged, with the upstream-driven
+      (reactive) share overlaid and the number of external Julia-registry
+      dependents annotated at the right. Shows which packages carry the
+      release/Registrator/propagation burden and how many users outside
+      CliMA that burden actually serves.
 
 notebooks:
   - path: notebooks/analyze.ipynb
@@ -407,6 +439,24 @@ datasets:
       dependency updates it triggered, and which downstream packages then cut
       their own release.
     stage: example-release-cascade
+  - path: results/colocation-saving.json
+    title: Co-location saving estimate
+    description: >
+      Volume estimate of the dependency-propagation work co-locating
+      tightly coupled packages could remove: cascade events per year, the
+      mechanical (absorbed) versus substantive (still-work) split, release
+      counts and the upstream-driven share, and how many packages have any
+      external registry dependents. Explicitly a volume, not wall-clock,
+      estimate.
+    stage: estimate-colocation-saving
+  - path: results/colocation-by-repo.csv
+    title: Release and propagation burden by repo
+    description: >
+      One row per repo, with cascade events and their mechanical subset,
+      total and upstream-driven release counts, and external registry
+      dependents, over the 2021-Q2 to 2026-Q3 window. Ranks the packages
+      where co-locating coupled deps would remove the most ceremony.
+    stage: estimate-colocation-saving
 questions:
   - question: How much has the flagship AMIP simulation sped up since November
       2025?
@@ -458,3 +508,48 @@ questions:
       recent example is the {example_source} release on {example_date},
       which pulled in updates from {example_downstream} downstream packages,
       {example_released} of which then cut their own release.
+  - question: >
+      How much development speed could be gained by co-locating tightly
+      coupled CliMA packages into shared repos, so they could update in a
+      single pull request?
+    evidence:
+      - kind: figure
+        path: figures/colocation-saving.json
+      - kind: result
+        path: results/colocation-saving.json
+        values:
+          events_per_year: events_per_year
+          n_events: n_cascade_events
+          frac_mechanical: frac_mechanical
+          frac_substantive: frac_substantive
+          eliminable_per_year: eliminable_events_per_year
+          pr_per_year: pr_propagation_per_year
+          n_releases: n_releases
+          releases_per_year: releases_per_year
+          reactive_releases: n_reactive_releases
+          frac_reactive: frac_reactive_releases
+          pkgs_with_users: packages_with_external_users
+          pkgs_releasing: packages_releasing
+          years: years_covered
+    answer: >
+      The saving is real but modest in PR terms, and the stronger case for
+      co-location is against release drudgery rather than PR count. On
+      volume: over {years:.1f} years there were {n_events} cascade events
+      ({events_per_year:.0f}/year), {frac_mechanical:.0%} of them mechanical
+      compat or manifest bookkeeping that a shared repo would absorb, so
+      about {eliminable_per_year:.0f} propagation PRs per year eliminated (a
+      PR-title cross-check brackets this at {pr_per_year:.0f}/year). That
+      alone is not compelling, because those PRs already merge in under a
+      day. The per-release ritual is the bigger drag: the tracked packages
+      cut {n_releases} releases in that window ({releases_per_year:.0f}/year),
+      and {frac_reactive:.0%} of them ({reactive_releases}) are upstream-driven
+      -- the version bump, Registrator tag, and downstream propagation exist
+      only to keep the version graph consistent, not to ship a feature. Most
+      of those releases serve no one outside the org: only {pkgs_with_users}
+      of {pkgs_releasing} releasing packages have any external registry
+      dependents, while the busiest ones (ClimaAtmos, ClimaCore, ClimaLand)
+      each cut around a hundred releases on entirely internal demand. So
+      co-location of the low-level stack is best judged as cutting mechanical
+      release and propagation overhead for packages with no external users,
+      not as a wall-clock or PR-count win; the {frac_substantive:.0%}
+      substantive remainder (interface adaptation) would still be work.

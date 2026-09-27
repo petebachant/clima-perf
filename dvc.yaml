@@ -221,3 +221,23 @@ stages:
           persist: false
     desc: Automatically generated from the 'example-release-cascade' stage in
       calkit.yaml. Changes made here will be overwritten.
+  estimate-colocation-saving:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/estimate-colocation-saving.py
+    deps:
+      - scripts/estimate-colocation-saving.py
+      - data/github
+      - scripts/projecttoml-graph.py
+      - .calkit/env-locks/analyze
+    outs:
+      - results/colocation-saving.json:
+          cache: false
+          persist: false
+      - results/colocation-by-repo.csv:
+          cache: false
+          persist: false
+      - figures/colocation-saving.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'estimate-colocation-saving' stage in
+      calkit.yaml. Changes made here will be overwritten.

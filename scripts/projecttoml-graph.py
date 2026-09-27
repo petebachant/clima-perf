@@ -115,6 +115,19 @@ DEP_UPDATE_RE = re.compile(
     re.I,
 )
 
+# A *mechanical* dependency update: bounds bookkeeping that a bundling of
+# the packages into one repo would absorb into the triggering change
+# itself. CompatHelper commits, compat-entry edits, manifest/.toml
+# refreshes. The rest -- interface adaptation, a feature that pulled the
+# new version in -- is substantive and would still be work after
+# co-location, just done in a different repo.
+MECHANICAL_RE = re.compile(
+    r"compathelper|compat entry|bump compat|widen compat|"
+    r"update tomls?|update project\.toml|update manifests?|"
+    r"bump .*compat|project\.toml|update dependenc",
+    re.I,
+)
+
 
 def is_release(message: str) -> bool:
     return bool(RELEASE_RE.search(message))
@@ -124,6 +137,12 @@ def is_dep_update(message: str) -> bool:
     if is_release(message):
         return False
     return bool(DEP_UPDATE_RE.search(message))
+
+
+def is_mechanical_update(message: str) -> bool:
+    """Whether a dependency update is bounds bookkeeping rather than work
+    that adapts to the new version."""
+    return is_dep_update(message) and bool(MECHANICAL_RE.search(message))
 
 
 def load_commits(root: Path | None = None) -> list[Commit]:
@@ -184,6 +203,74 @@ def cascade_links(
             if (c.date - nearest) <= timedelta(days=window_days):
                 counts[(src, c.repo)] += 1
     return counts
+
+
+@dataclass(frozen=True)
+class CascadeEvent:
+    """One repo-day of dependency propagation attributed to a release.
+
+    A release often triggers several updates in a dependent that all land
+    the same day and merge as a single PR, so events are grouped by
+    (repo, day) rather than counted per commit.
+    """
+
+    repo: str
+    date: datetime
+    source: str
+    mechanical: bool
+    n_commits: int
+
+
+def cascade_events(
+    commits: list[Commit], window_days: int = CASCADE_WINDOW_DAYS
+) -> list[CascadeEvent]:
+    """The dependency updates that followed a release, grouped into events.
+
+    Each is attributed to the nearest preceding release in another package
+    within the window. A repo-day counts as mechanical only if every commit
+    that day is mechanical: one substantive commit means the update was
+    real work, not just bounds bookkeeping.
+    """
+    rels = releases(commits)
+    by_day: dict[tuple[str, object], list[Commit]] = defaultdict(list)
+    source_of: dict[tuple[str, object], str] = {}
+    for c in commits:
+        if not is_dep_update(c.message):
+            continue
+        best_src = None
+        best_lag = None
+        for src, times in rels.items():
+            if src == c.repo:
+                continue
+            prior = [t for t in times if t <= c.date]
+            if not prior:
+                continue
+            lag = c.date - max(prior)
+            if lag <= timedelta(days=window_days) and (
+                best_lag is None or lag < best_lag
+            ):
+                best_lag = lag
+                best_src = src
+        if best_src is None:
+            continue
+        key = (c.repo, c.date.date())
+        by_day[key].append(c)
+        source_of.setdefault(key, best_src)
+
+    events = []
+    for key, members in by_day.items():
+        members.sort(key=lambda c: c.date)
+        events.append(
+            CascadeEvent(
+                repo=key[0],
+                date=members[0].date,
+                source=source_of[key],
+                mechanical=all(is_mechanical_update(c.message) for c in members),
+                n_commits=len(members),
+            )
+        )
+    events.sort(key=lambda e: (e.date, e.repo))
+    return events
 
 
 # Known CliMA package names, used to read a dependency out of a commit
