@@ -7332,7 +7332,12 @@ a.anchor-link {
     if (!diagrams.length) {
       return;
     }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
+    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
+    if(elkUrl) {
+      const elkLayouts = (await import(elkUrl)).default;
+      mermaid.registerLayoutLoaders(elkLayouts);
+    }
     const parser = new DOMParser();
 
     mermaid.initialize({
@@ -7429,7 +7434,8 @@ a.anchor-link {
      * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
      */
     function cleanMermaidSvg(svg) {
-      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+      return `${SVG_XML_HEADER}${svg}`;
     }
 
 
@@ -7455,6 +7461,285 @@ a.anchor-link {
       }
       return `<${tag} ${rest}>`;
     }
+
+
+  /**
+   * Named HTML entities with their decimal equivalent codes.
+   *
+   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
+   * */
+  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
+<!ENTITY aacute "&#225;">
+<!ENTITY Acirc "&#194;">
+<!ENTITY acirc "&#226;">
+<!ENTITY acute "&#180;">
+<!ENTITY AElig "&#198;">
+<!ENTITY aelig "&#230;">
+<!ENTITY Agrave "&#192;">
+<!ENTITY agrave "&#224;">
+<!ENTITY alefsym "&#8501;">
+<!ENTITY Alpha "&#913;">
+<!ENTITY alpha "&#945;">
+<!ENTITY amp "&#38;">
+<!ENTITY and "&#8869;">
+<!ENTITY ang "&#8736;">
+<!ENTITY Aring "&#197;">
+<!ENTITY aring "&#229;">
+<!ENTITY asymp "&#8776;">
+<!ENTITY Atilde "&#195;">
+<!ENTITY atilde "&#227;">
+<!ENTITY Auml "&#196;">
+<!ENTITY auml "&#228;">
+<!ENTITY bdquo "&#8222;">
+<!ENTITY Beta "&#914;">
+<!ENTITY beta "&#946;">
+<!ENTITY brvbar "&#166;">
+<!ENTITY bull "&#8226;">
+<!ENTITY cap "&#8745;">
+<!ENTITY Ccedil "&#199;">
+<!ENTITY ccedil "&#231;">
+<!ENTITY cedil "&#184;">
+<!ENTITY cent "&#162;">
+<!ENTITY Chi "&#935;">
+<!ENTITY chi "&#967;">
+<!ENTITY circ "&#710;">
+<!ENTITY clubs "&#9827;">
+<!ENTITY cong "&#8773;">
+<!ENTITY copy "&#169;">
+<!ENTITY crarr "&#8629;">
+<!ENTITY cup "&#8746;">
+<!ENTITY curren "&#164;">
+<!ENTITY dagger "&#8224;">
+<!ENTITY Dagger "&#8225;">
+<!ENTITY darr "&#8595;">
+<!ENTITY dArr "&#8659;">
+<!ENTITY deg "&#176;">
+<!ENTITY Delta "&#916;">
+<!ENTITY delta "&#948;">
+<!ENTITY diams "&#9830;">
+<!ENTITY divide "&#247;">
+<!ENTITY Eacute "&#201;">
+<!ENTITY eacute "&#233;">
+<!ENTITY Ecirc "&#202;">
+<!ENTITY ecirc "&#234;">
+<!ENTITY Egrave "&#200;">
+<!ENTITY egrave "&#232;">
+<!ENTITY empty "&#8709;">
+<!ENTITY emsp "&#8195;">
+<!ENTITY ensp "&#8194;">
+<!ENTITY epsilon "&#949;">
+<!ENTITY Epsilon "&#917;">
+<!ENTITY equiv "&#8801;">
+<!ENTITY Eta "&#919;">
+<!ENTITY eta "&#951;">
+<!ENTITY ETH "&#208;">
+<!ENTITY eth "&#240;">
+<!ENTITY Euml "&#203;">
+<!ENTITY euml "&#235;">
+<!ENTITY exist "&#8707;">
+<!ENTITY fnof "&#402;">
+<!ENTITY forall "&#8704;">
+<!ENTITY frac12 "&#189;">
+<!ENTITY frac14 "&#188;">
+<!ENTITY frac34 "&#190;">
+<!ENTITY frasl "&#8260;">
+<!ENTITY Gamma "&#915;">
+<!ENTITY gamma "&#947;">
+<!ENTITY ge "&#8805;">
+<!ENTITY gt "&#62;">
+<!ENTITY harr "&#8596;">
+<!ENTITY hArr "&#8660;">
+<!ENTITY hearts "&#9829;">
+<!ENTITY hellip "&#8230;">
+<!ENTITY Iacute "&#205;">
+<!ENTITY iacute "&#237;">
+<!ENTITY Icirc "&#206;">
+<!ENTITY icirc "&#238;">
+<!ENTITY iexcl "&#161;">
+<!ENTITY Igrave "&#204;">
+<!ENTITY igrave "&#236;">
+<!ENTITY image "&#8465;">
+<!ENTITY infin "&#8734;">
+<!ENTITY int "&#8747;">
+<!ENTITY Iota "&#921;">
+<!ENTITY iota "&#953;">
+<!ENTITY iquest "&#191;">
+<!ENTITY isin "&#8712;">
+<!ENTITY Iuml "&#207;">
+<!ENTITY iuml "&#239;">
+<!ENTITY Kappa "&#922;">
+<!ENTITY kappa "&#954;">
+<!ENTITY Lambda "&#923;">
+<!ENTITY lambda "&#955;">
+<!ENTITY lang "&#9001;">
+<!ENTITY laquo "&#171;">
+<!ENTITY larr "&#8592;">
+<!ENTITY lArr "&#8656;">
+<!ENTITY lceil "&#8968;">
+<!ENTITY ldquo "&#8220;">
+<!ENTITY le "&#8804;">
+<!ENTITY lfloor "&#8970;">
+<!ENTITY lowast "&#8727;">
+<!ENTITY loz "&#9674;">
+<!ENTITY lrm "&#8206;">
+<!ENTITY lsaquo "&#8249;">
+<!ENTITY lsquo "&#8216;">
+<!ENTITY lt "&#60;">
+<!ENTITY macr "&#175;">
+<!ENTITY mdash "&#8212;">
+<!ENTITY micro "&#181;">
+<!ENTITY middot "&#183;">
+<!ENTITY minus "&#8722;">
+<!ENTITY Mu "&#924;">
+<!ENTITY mu "&#956;">
+<!ENTITY nabla "&#8711;">
+<!ENTITY nbsp "&#160;">
+<!ENTITY ndash "&#8211;">
+<!ENTITY ne "&#8800;">
+<!ENTITY ni "&#8715;">
+<!ENTITY not "&#172;">
+<!ENTITY notin "&#8713;">
+<!ENTITY nsub "&#8836;">
+<!ENTITY Ntilde "&#209;">
+<!ENTITY ntilde "&#241;">
+<!ENTITY Nu "&#925;">
+<!ENTITY nu "&#957;">
+<!ENTITY Oacute "&#211;">
+<!ENTITY oacute "&#243;">
+<!ENTITY Ocirc "&#212;">
+<!ENTITY ocirc "&#244;">
+<!ENTITY OElig "&#338;">
+<!ENTITY oelig "&#339;">
+<!ENTITY Ograve "&#210;">
+<!ENTITY ograve "&#242;">
+<!ENTITY oline "&#8254;">
+<!ENTITY Omega "&#937;">
+<!ENTITY omega "&#969;">
+<!ENTITY Omicron "&#927;">
+<!ENTITY omicron "&#959;">
+<!ENTITY oplus "&#8853;">
+<!ENTITY or "&#8870;">
+<!ENTITY ordf "&#170;">
+<!ENTITY ordm "&#186;">
+<!ENTITY Oslash "&#216;">
+<!ENTITY oslash "&#248;">
+<!ENTITY Otilde "&#213;">
+<!ENTITY otilde "&#245;">
+<!ENTITY otimes "&#8855;">
+<!ENTITY Ouml "&#214;">
+<!ENTITY ouml "&#246;">
+<!ENTITY para "&#182;">
+<!ENTITY part "&#8706;">
+<!ENTITY permil "&#8240;">
+<!ENTITY perp "&#8869;">
+<!ENTITY Phi "&#934;">
+<!ENTITY phi "&#966;">
+<!ENTITY Pi "&#928;">
+<!ENTITY pi "&#960;">
+<!ENTITY piv "&#982;">
+<!ENTITY plusmn "&#177;">
+<!ENTITY pound "&#163;">
+<!ENTITY prime "&#8242;">
+<!ENTITY Prime "&#8243;">
+<!ENTITY prod "&#8719;">
+<!ENTITY prop "&#8733;">
+<!ENTITY Psi "&#936;">
+<!ENTITY psi "&#968;">
+<!ENTITY quot "&#34;">
+<!ENTITY radic "&#8730;">
+<!ENTITY rang "&#9002;">
+<!ENTITY raquo "&#187;">
+<!ENTITY rarr "&#8594;">
+<!ENTITY rArr "&#8658;">
+<!ENTITY rceil "&#8969;">
+<!ENTITY rdquo "&#8221;">
+<!ENTITY real "&#8476;">
+<!ENTITY reg "&#174;">
+<!ENTITY rfloor "&#8971;">
+<!ENTITY Rho "&#929;">
+<!ENTITY rho "&#961;">
+<!ENTITY rlm "&#8207;">
+<!ENTITY rsaquo "&#8250;">
+<!ENTITY rsquo "&#8217;">
+<!ENTITY sbquo "&#8218;">
+<!ENTITY Scaron "&#352;">
+<!ENTITY scaron "&#353;">
+<!ENTITY sdot "&#8901;">
+<!ENTITY sect "&#167;">
+<!ENTITY shy "&#173;">
+<!ENTITY Sigma "&#931;">
+<!ENTITY sigma "&#963;">
+<!ENTITY sigmaf "&#962;">
+<!ENTITY sim "&#8764;">
+<!ENTITY spades "&#9824;">
+<!ENTITY sub "&#8834;">
+<!ENTITY sube "&#8838;">
+<!ENTITY sum "&#8721;">
+<!ENTITY sup "&#8835;">
+<!ENTITY sup1 "&#185;">
+<!ENTITY sup2 "&#178;">
+<!ENTITY sup3 "&#179;">
+<!ENTITY supe "&#8839;">
+<!ENTITY szlig "&#223;">
+<!ENTITY Tau "&#932;">
+<!ENTITY tau "&#964;">
+<!ENTITY there4 "&#8756;">
+<!ENTITY Theta "&#920;">
+<!ENTITY theta "&#952;">
+<!ENTITY thetasym "&#977;">
+<!ENTITY thinsp "&#8201;">
+<!ENTITY THORN "&#222;">
+<!ENTITY thorn "&#254;">
+<!ENTITY tilde "&#732;">
+<!ENTITY times "&#215;">
+<!ENTITY trade "&#8482;">
+<!ENTITY Uacute "&#218;">
+<!ENTITY uacute "&#250;">
+<!ENTITY uarr "&#8593;">
+<!ENTITY uArr "&#8657;">
+<!ENTITY Ucirc "&#219;">
+<!ENTITY ucirc "&#251;">
+<!ENTITY Ugrave "&#217;">
+<!ENTITY ugrave "&#249;">
+<!ENTITY uml "&#168;">
+<!ENTITY upsih "&#978;">
+<!ENTITY Upsilon "&#933;">
+<!ENTITY upsilon "&#965;">
+<!ENTITY Uuml "&#220;">
+<!ENTITY uuml "&#252;">
+<!ENTITY weierp "&#8472;">
+<!ENTITY Xi "&#926;">
+<!ENTITY xi "&#958;">
+<!ENTITY Yacute "&#221;">
+<!ENTITY yacute "&#253;">
+<!ENTITY yen "&#165;">
+<!ENTITY Yuml "&#376;">
+<!ENTITY yuml "&#255;">
+<!ENTITY Zeta "&#918;">
+<!ENTITY zeta "&#950;">
+<!ENTITY zwj "&#8205;">
+<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
+
+  /**
+   * A reasonably strict xml declaration.
+   */
+  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
+
+  /**
+   * The beginning of the XML doctype declaration.
+   */
+  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
+
+  /**
+   * The end of the XML docype declaration.
+   */
+  const DOCTYPE_END = ']>';
+
+  /**
+   * A full header for an SVG XML document.
+   */
+  const SVG_XML_HEADER = `${XML_DECL}
+    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
 
     void Promise.all([...diagrams].map(renderOneMarmaid));
   });
@@ -7845,7 +8130,7 @@ series is continuous across the change.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>1123 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-09-26 15:14:04.898000+00:00
+<pre>1130 jobs, 2025-09-07 05:11:03.887000+00:00 to 2026-09-27 08:42:05.990000+00:00
 </pre>
 </div>
 </div>
@@ -7853,17 +8138,17 @@ series is continuous across the change.</p>
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
 <pre>run_name
-amip                                                                54
-cmip_edonly_land                                                    50
-cmip_edonly_bucket                                                  50
-slabplanet_evolve_ocean                                             43
-gpu_amip_progedmf_1M_land_he16                                      43
-                                                                    ..
-GPU AMIP with prognostic EDMF + 1M + integrated land (30 helems)     1
-GPU AMIP with diagnostic EDMF                                        1
-amip_diagedmf_land_p2k_gpu                                           1
-amip_diagedmf_land_gpu                                               1
-GPU AMIP with diagnostic EDMF and IO                                 1
+amip                                             54
+cmip_edonly_land                                 50
+cmip_edonly_bucket                               50
+gpu_amip_progedmf_1M_land_he30                   44
+gpu_amip_progedmf_1M_land_he16                   44
+                                                 ..
+amip_progedmf_gpu                                 1
+GPU CMIP: diag. EDMF + integrated land            1
+GPU CMIP: prog. EDMF + integrated land            1
+Current AMIP: diagedmf + 0M + integrated land     1
+Aquaplanet: evolving slab ocean                   1
 Name: count, Length: 65, dtype: int64</pre>
 </div>
 </div>
@@ -7922,76 +8207,13 @@ Name: count, Length: 65, dtype: int64</pre>
 </thead>
 <tbody>
 <tr>
-<th>1113</th>
-<td>2026-09-20 09:13:58.756000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_edonly_bucket</td>
-<td>passed</td>
-<td>0.982393</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1114</th>
-<td>2026-09-20 12:30:24.967000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_edonly_land</td>
-<td>passed</td>
-<td>0.957703</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1115</th>
-<td>2026-09-20 15:13:13.938000+00:00</td>
-<td>climacoupler-longruns</td>
-<td>cmip_progedmf_land</td>
-<td>passed</td>
-<td>0.944752</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1116</th>
-<td>2026-09-22 03:12:04.999000+00:00</td>
-<td>climaland-long-runs</td>
-<td>Snowy Land, 19 years</td>
-<td>passed</td>
-<td>94.218000</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1117</th>
-<td>2026-09-22 03:12:05.055000+00:00</td>
-<td>climaland-long-runs</td>
-<td>Soil, 20 years</td>
-<td>passed</td>
-<td>131.561000</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1118</th>
-<td>2026-09-23 03:13:05.298000+00:00</td>
-<td>climaland-long-runs</td>
-<td>Soil</td>
-<td>passed</td>
-<td>253.816000</td>
-<td>1.0</td>
-</tr>
-<tr>
-<th>1119</th>
-<td>2026-09-23 03:13:05.301000+00:00</td>
-<td>climaland-long-runs</td>
-<td>Snowy Land + P Model</td>
-<td>passed</td>
-<td>113.891000</td>
-<td>1.0</td>
-</tr>
-<tr>
 <th>1120</th>
 <td>2026-09-23 03:13:05.325000+00:00</td>
 <td>climaland-long-runs</td>
 <td>Global bucket simulation</td>
 <td>passed</td>
 <td>290.343000</td>
-<td>1.0</td>
+<td>1.000</td>
 </tr>
 <tr>
 <th>1121</th>
@@ -8000,7 +8222,7 @@ Name: count, Length: 65, dtype: int64</pre>
 <td>Snowy Land + P Model (Optimal LAI)</td>
 <td>passed</td>
 <td>106.609000</td>
-<td>1.0</td>
+<td>1.000</td>
 </tr>
 <tr>
 <th>1122</th>
@@ -8010,6 +8232,69 @@ Name: count, Length: 65, dtype: int64</pre>
 <td>failed</td>
 <td>NaN</td>
 <td>NaN</td>
+</tr>
+<tr>
+<th>1123</th>
+<td>2026-09-27 05:18:04.008000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>gpu_amip_progedmf_1M_land_he30</td>
+<td>passed</td>
+<td>0.091428</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1124</th>
+<td>2026-09-27 05:18:04.130000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>gpu_amip_progedmf_1M_land_he16</td>
+<td>passed</td>
+<td>0.312369</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1125</th>
+<td>2026-09-27 05:18:05.902000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>gpu_amip_progedmf_io</td>
+<td>passed</td>
+<td>0.213261</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1126</th>
+<td>2026-09-27 05:18:05.946000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>GPU ClimaAtmos with prognostic EDMF</td>
+<td>passed</td>
+<td>0.702839</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1127</th>
+<td>2026-09-27 05:18:05.950000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>GPU ClimaAtmos without EDMF</td>
+<td>passed</td>
+<td>0.841145</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1128</th>
+<td>2026-09-27 05:18:05.966000+00:00</td>
+<td>climacoupler-cpu-gpu-benchmarks</td>
+<td>gpu_amip_progedmf</td>
+<td>passed</td>
+<td>0.845833</td>
+<td>1.000</td>
+</tr>
+<tr>
+<th>1129</th>
+<td>2026-09-27 08:42:05.990000+00:00</td>
+<td>climacoupler-longruns</td>
+<td>amip_progedmf_1m_land</td>
+<td>failed</td>
+<td>NaN</td>
+<td>0.082</td>
 </tr>
 </tbody>
 </table>
@@ -8088,6 +8373,14 @@ inside a GPU kernel.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<th>1129</th>
+<td>2026-09-27 08:42:05.990000+00:00</td>
+<td>amip_progedmf_1m_land</td>
+<td>failed</td>
+<td>0.082</td>
+<td>Found NaN</td>
+</tr>
 <tr>
 <th>1122</th>
 <td>2026-09-26 15:14:04.898000+00:00</td>
@@ -8240,14 +8533,6 @@ inside a GPU kernel.</p>
 <td>NaN</td>
 <td>a DomainError was thrown during kernel executi...</td>
 </tr>
-<tr>
-<th>1030</th>
-<td>2026-08-30 05:16:04.029000+00:00</td>
-<td>gpu_amip_progedmf_io</td>
-<td>failed</td>
-<td>NaN</td>
-<td>a DomainError was thrown during kernel executi...</td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -8300,7 +8585,7 @@ hard-coded list here.</p>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>20 active configs: GPU ClimaAtmos with prognostic EDMF, GPU ClimaAtmos without EDMF, Global bucket simulation, Snowy Land + P Model, Snowy Land + P Model (Optimal LAI), Soil, amip, amip_edonly, amip_progedmf_1m_land, amip_progedmf_land, amip_progedmf_land_p2k, cmip_edonly_bucket, cmip_edonly_land, cmip_progedmf_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io, slabplanet_aqua_evolve_ocean, slabplanet_evolve_ocean
+<pre>12 active configs: GPU ClimaAtmos with prognostic EDMF, GPU ClimaAtmos without EDMF, Global bucket simulation, Snowy Land + P Model, Snowy Land + P Model (Optimal LAI), Soil, amip, amip_progedmf_1m_land, gpu_amip_progedmf, gpu_amip_progedmf_1M_land_he16, gpu_amip_progedmf_1M_land_he30, gpu_amip_progedmf_io
 </pre>
 </div>
 </div>
