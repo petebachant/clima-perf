@@ -194,8 +194,8 @@ pipeline:
         - path: results/new-registry-dependents.csv
           storage: git
     analyze-dev-speed:
-      description: Analyze things like PR resolution speed to see changes
-        over time.
+      description: Analyze things like PR resolution speed to see changes over
+        time.
       kind: jupyter-notebook
       notebook_path: notebooks/analyze-dev-speed.ipynb
       environment: analyze
@@ -226,6 +226,45 @@ pipeline:
           storage: git
         - path: figures/weekly-benchmarks.json
           storage: git
+    analyze-repo-changes:
+      description: >
+        Work out which clusters of CliMA packages change together, from the
+        Project.toml commit history. Builds a layered dependency graph (an
+        edge is read from commit messages that name the package that
+        changed, e.g. "use ClimaCore v0.14.46"), a per-quarter co-change
+        correlation of each package's commit counts, and the fraction of
+        dependency updates that follow a release in another package within
+        two weeks. Writes figures/repo-cochange.json and
+        results/repo-cochange.csv.
+      kind: python-script
+      script_path: scripts/analyze-repo-changes.py
+      environment: analyze
+      inputs:
+        - data/github
+        - scripts/projecttoml-graph.py
+      outputs:
+        - path: results/repo-cochange.csv
+          storage: git
+        - path: results/repo-cochange-summary.json
+          storage: git
+        - path: figures/repo-cochange.json
+          storage: git
+    example-release-cascade:
+      description: >
+        Trace one concrete release cascade from the Project.toml history:
+        the release with the widest downstream fan-out in the last two
+        years, the dependency updates it triggered, and which of those
+        packages then cut their own release. Writes
+        results/example-release-cascade.json.
+      kind: python-script
+      script_path: scripts/example-release-cascade.py
+      environment: analyze
+      inputs:
+        - data/github
+        - scripts/projecttoml-graph.py
+      outputs:
+        - path: results/example-release-cascade.json
+          storage: git
 
 figures:
   - path: figures/amip-speedup.json
@@ -235,31 +274,40 @@ figures:
     stage: analyze
   - path: figures/external-engagement.json
     title: External engagement
-    description: External engagement with CliMA's products on a quarterly
-      basis.
+    description: External engagement with CliMA's products on a quarterly basis.
     stage: analyze
   - path: figures/weekly-benchmarks.json
     title: Weekly benchmarks
     stage: analyze-weekly
     description: >
       Scalar metrics over time for the weekly ClimaCoupler and ClimaLand
-      benchmark runs. One trace per active configuration. Panels are throughput (SYPD), the fraction of
+      benchmark runs. One trace per active configuration. Panels are throughput (SYPD),
+      the fraction of
       the configured run length actually simulated (crosses mark jobs that
       did not pass, so a low value reads as a crash), and job wallclock.
   - path: figures/dev-throughput.json
     title: Software development throughput
     stage: analyze-dev-speed
-    description: Quarterly development throughput across CliMA's ecosystem.
-      Pull request time-to-merge (p50 and p90), PR merge rate, and release
-      rate. There is one trace per repository; the thick gray line is the
+    description: Quarterly development throughput across CliMA's ecosystem. Pull
+      request time-to-merge (p50 and p90), PR merge rate, and release rate.
+      There is one trace per repository; the thick gray line is the
       ecosystem-wide value (normalized to a per-repo average on the count-based
       panels).
+  - path: figures/repo-cochange.json
+    title: Repo co-change clusters
+    stage: analyze-repo-changes
+    description: >
+      Which CliMA packages change together, as a Sankey dependency graph
+      built from Project.toml commit messages. Dependents are on the left
+      and their dependencies on the right, with link width by how much
+      evidence the history gives for that link. Package-level thresholds
+      and timings behind it are in results/repo-cochange.csv.
 
 notebooks:
   - path: notebooks/analyze.ipynb
     title: Analysis
-    description: Analyze and plot the flagship AMIP benchmark (16 horiz.
-      elem.) SYPD over time.
+    description: Analyze and plot the flagship AMIP benchmark (16 horiz. elem.)
+      SYPD over time.
     stage: analyze
   - path: notebooks/analyze-weekly.ipynb
     title: Weekly benchmark analysis
@@ -283,27 +331,27 @@ showcase:
 datasets:
   - path: results/amip.csv
     title: Flagship AMIP benchmark results
-    description: Results from the flagship AMIP benchmark (16 horiz. elem.)
-      over time.
+    description: Results from the flagship AMIP benchmark (16 horiz. elem.) over
+      time.
     stage: analyze
   - path: results/external-citations.csv
     title: External citation events
-    description: One row per external citing work (OpenAlex), tagged with
-      the cited CliMA paper's DOI + software package (if any) and the citing
-      work's quarter. Internal self-citations (any author shared with any
-      scraped CliMA paper) are excluded.
+    description: One row per external citing work (OpenAlex), tagged with the
+      cited CliMA paper's DOI + software package (if any) and the citing work's
+      quarter. Internal self-citations (any author shared with any scraped CliMA
+      paper) are excluded.
     stage: analyze
   - path: results/github-engagement.csv
     title: GitHub engagement events
-    description: One row per external star / fork / opened issue / merged
-      PR (login is non-CliMA-org, non-bot), with repo, event type, login,
+    description: One row per external star / fork / opened issue / merged PR
+      (login is non-CliMA-org, non-bot), with repo, event type, login,
       timestamp, and quarter.
     stage: analyze
   - path: results/new-registry-dependents.csv
     title: New external Julia-registry dependents
-    description: One row per (CliMA package, external dependent) pair, with
-      the dependent's repo URL and the quarter when it first appeared in
-      the Julia General registry as a dependent.
+    description: One row per (CliMA package, external dependent) pair, with the
+      dependent's repo URL and the quarter when it first appeared in the Julia
+      General registry as a dependent.
     stage: analyze
   - path: buildkite
     title: Buildkite flagship AMIP jobs
@@ -328,15 +376,37 @@ datasets:
     stage: analyze-weekly
   - path: runs/amip
     title: Raw AMIP benchmark runs
-    description: Raw outputs (logs, manifests, repo revisions used) from
-      the flagship AMIP benchmark runs.
+    description: Raw outputs (logs, manifests, repo revisions used) from the
+      flagship AMIP benchmark runs.
     stage: benchmark-amip
   - path: results/dev-throughput.csv
     title: Software development throughput
-    description: One row per (repo, quarter) plus an "All repos" aggregate,
-      with merged-PR count, p50/p90 time-to-merge, and release count across
-      CliMA's GitHub repos.
+    description: One row per (repo, quarter) plus an "All repos" aggregate, with
+      merged-PR count, p50/p90 time-to-merge, and release count across CliMA's
+      GitHub repos.
     stage: analyze-dev-speed
+  - path: results/repo-cochange.csv
+    title: Repo co-change counts
+    description: One row per (repo, quarter), splitting Project.toml commits
+      into release version bumps and dependency updates (compat or manifest
+      changes), used to measure how clusters of CliMA packages move together.
+    stage: analyze-repo-changes
+  - path: results/repo-cochange-summary.json
+    title: Repo co-change summary
+    description: >
+      Summary statistics for the repo co-change question: the strongest
+      correlated package pair, the share of dependency updates that follow a
+      release in another package within two weeks, and ClimaAtmos's upstream
+      dependencies.
+    stage: analyze-repo-changes
+  - path: results/example-release-cascade.json
+    title: Example release cascade
+    description: >
+      One concrete release cascade from the Project.toml history: the
+      release with the widest downstream fan-out in the last two years, the
+      dependency updates it triggered, and which downstream packages then cut
+      their own release.
+    stage: example-release-cascade
 questions:
   - question: How much has the flagship AMIP simulation sped up since November
       2025?
@@ -348,8 +418,43 @@ questions:
     evidence:
       - kind: figure
         path: figures/external-engagement.json
-  - question: How has software development throughput changed over time
-      within the CliMA organization?
+  - question: How has software development throughput changed over time within
+      the CliMA organization?
     evidence:
       - kind: figure
         path: figures/dev-throughput.json
+  - question: What clusters of CliMA repos often change together?
+    evidence:
+      - kind: figure
+        path: figures/repo-cochange.json
+      - kind: result
+        path: results/repo-cochange-summary.json
+        values:
+          strongest_pair: strongest_pair
+          strongest_corr: strongest_corr
+          frac_cascade: frac_cascade
+          n_dep_updates: n_dep_updates
+          n_cascade_updates: n_cascade_updates
+          n_upstream: n_upstream_of_climaatmos
+      - kind: result
+        path: results/example-release-cascade.json
+        values:
+          example_source: source_repo
+          example_date: source_date
+          example_downstream: n_downstream_repos
+          example_released: n_downstream_repos_that_released
+    answer: >
+      The tightest correlated pair is {strongest_pair} (r = {strongest_corr}
+      over quarterly Project.toml commit counts), but the real cluster is
+      the dependency stack itself: ClimaAtmos sits on {n_upstream} tracked
+      upstream packages, and the co-change figure shows ClimaCore,
+      ClimaParams, Thermodynamics, and ClimaComms as the foundations most
+      of the stack links back to, with ClimaAtmos, ClimaLand, and
+      ClimaCoupler as the top-level apps that compose them. What holds the
+      cluster together is the release cascade rather than independent work:
+      {n_cascade_updates} of {n_dep_updates} dependency updates
+      ({frac_cascade:.0%}) land within two weeks of a release in another
+      package, i.e., a dependent pulls in the new version and re-tags. A
+      recent example is the {example_source} release on {example_date},
+      which pulled in updates from {example_downstream} downstream packages,
+      {example_released} of which then cut their own release.

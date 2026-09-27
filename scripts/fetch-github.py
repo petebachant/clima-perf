@@ -81,10 +81,19 @@ ISSUE_REPOS = [
     "SurfaceFluxes", "Insolation", "Oceananigans", "ClimaTimeSteppers", "ClimaSeaIce",
 ]
 
-# Repos whose Project.toml commit history we track for propagation analysis.
+# Repos whose Project.toml commit history we track for propagation
+# analysis. This is the set that shows up as a dependency in another
+# package's Project.toml, so the release cascade is visible end to end:
+# the low-level utilities everything builds on, the mid-level physics
+# packages, and the top-level apps (ClimaAtmos, ClimaLand, ClimaCoupler).
 PROJECTTOML_REPOS = [
     "ClimaAtmos", "ClimaCore", "ClimaParams", "Thermodynamics",
-    "CloudMicrophysics", "ClimaLand",
+    "CloudMicrophysics", "ClimaLand", "ClimaCoupler",
+    "SurfaceFluxes", "Insolation", "RRTMGP",
+    "ClimaUtilities", "ClimaDiagnostics", "ClimaAnalysis",
+    "ClimaTimeSteppers", "ClimaComms", "ClimaSeaIce",
+    "ClimaOcean", "EnsembleKalmanProcesses", "CalibrateEmulateSample",
+    "ClimaCalibrate",
 ]
 
 
