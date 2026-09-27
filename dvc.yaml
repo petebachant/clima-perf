@@ -241,3 +241,44 @@ stages:
           persist: false
     desc: Automatically generated from the 'estimate-colocation-saving' stage in
       calkit.yaml. Changes made here will be overwritten.
+  summarize-amip-speedup:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/summarize-amip-speedup.py
+    deps:
+      - scripts/summarize-amip-speedup.py
+      - results/amip.csv
+      - .calkit/env-locks/analyze
+    outs:
+      - results/amip-speedup-summary.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'summarize-amip-speedup' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  summarize-engagement:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/summarize-engagement.py
+    deps:
+      - scripts/summarize-engagement.py
+      - results/external-citations.csv
+      - results/github-engagement.csv
+      - results/new-registry-dependents.csv
+      - .calkit/env-locks/analyze
+    outs:
+      - results/engagement-summary.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'summarize-engagement' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  summarize-dev-throughput:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/summarize-dev-throughput.py
+    deps:
+      - scripts/summarize-dev-throughput.py
+      - results/dev-throughput.csv
+      - .calkit/env-locks/analyze
+    outs:
+      - results/dev-throughput-summary.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'summarize-dev-throughput' stage in
+      calkit.yaml. Changes made here will be overwritten.

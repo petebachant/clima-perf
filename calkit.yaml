@@ -288,6 +288,49 @@ pipeline:
           storage: git
         - path: figures/colocation-saving.json
           storage: git
+    summarize-amip-speedup:
+      description: >
+        Reduce the flagship AMIP results to the headline figures for the
+        speedup question: the latest and recent-median speedup relative to
+        the November 2025 baseline, plus the peak. Writes
+        results/amip-speedup-summary.json.
+      kind: python-script
+      script_path: scripts/summarize-amip-speedup.py
+      environment: analyze
+      inputs:
+        - results/amip.csv
+      outputs:
+        - path: results/amip-speedup-summary.json
+          storage: git
+    summarize-engagement:
+      description: >
+        Reduce the three external-engagement event streams (citations,
+        GitHub engagement, registry dependents) to per-quarter trend rates
+        for the engagement question. Writes
+        results/engagement-summary.json.
+      kind: python-script
+      script_path: scripts/summarize-engagement.py
+      environment: analyze
+      inputs:
+        - results/external-citations.csv
+        - results/github-engagement.csv
+        - results/new-registry-dependents.csv
+      outputs:
+        - path: results/engagement-summary.json
+          storage: git
+    summarize-dev-throughput:
+      description: >
+        Reduce the ecosystem-wide development-throughput aggregate to trend
+        and first-versus-last figures for the throughput question. Writes
+        results/dev-throughput-summary.json.
+      kind: python-script
+      script_path: scripts/summarize-dev-throughput.py
+      environment: analyze
+      inputs:
+        - results/dev-throughput.csv
+      outputs:
+        - path: results/dev-throughput-summary.json
+          storage: git
 
 figures:
   - path: figures/amip-speedup.json
@@ -457,22 +500,105 @@ datasets:
       dependents, over the 2021-Q2 to 2026-Q3 window. Ranks the packages
       where co-locating coupled deps would remove the most ceremony.
     stage: estimate-colocation-saving
+  - path: results/amip-speedup-summary.json
+    title: Flagship AMIP speedup summary
+    description: >
+      Headline speedup figures for the AMIP question: latest and recent-median
+      speedup relative to the November 2025 baseline, plus the peak.
+    stage: summarize-amip-speedup
+  - path: results/engagement-summary.json
+    title: External engagement summary
+    description: >
+      Per-quarter trend rates for external citations, GitHub engagement, and
+      new Julia-registry dependents, plus a combined rate, for the engagement
+      question.
+    stage: summarize-engagement
+  - path: results/dev-throughput-summary.json
+    title: Development throughput summary
+    description: >
+      Ecosystem-wide trend and first-versus-last figures for merged PRs,
+      time-to-merge, and releases, for the throughput question.
+    stage: summarize-dev-throughput
 questions:
   - question: How much has the flagship AMIP simulation sped up since November
       2025?
     evidence:
       - kind: figure
         path: figures/amip-speedup.json
+      - kind: result
+        path: results/amip-speedup-summary.json
+        values:
+          baseline_date: baseline_date
+          latest_date: latest_date
+          latest_speedup: latest_speedup
+          recent_median: recent_median_speedup
+          peak_speedup: peak_speedup
+          peak_date: peak_date
+    answer: >
+      About {latest_speedup}x. The flagship AMIP benchmark (16 horiz. elem.)
+      ran at 1.0x on the {baseline_date} baseline and {latest_speedup}x on
+      the latest run ({latest_date}); the recent median is {recent_median}x,
+      so the current level is a bit above four times the baseline. The peak
+      was {peak_speedup}x on {peak_date}. The gain is a stepwise climb rather
+      than a smooth ramp: it roughly doubled by mid-2026 and reached current
+      levels when ClimaCore and the coupler picked up the newer layouts and
+      timesteppers.
   - question: What is the rate of change of external engagement with CliMA's
       products?
     evidence:
       - kind: figure
         path: figures/external-engagement.json
+      - kind: result
+        path: results/engagement-summary.json
+        values:
+          combined_per_year: combined.per_year_slope
+          combined_first: combined.first_window_mean
+          combined_last: combined.last_window_mean
+          cit_per_year: citations.per_year_slope
+          eng_per_year: github_events.per_year_slope
+          deps_per_year: registry_dependents.per_year_slope
+          deps_first: registry_dependents.first_window_mean
+          deps_last: registry_dependents.last_window_mean
+    answer: >
+      External engagement is growing steadily, not flattening. Across the
+      three channels tracked, activity rises by about {combined_per_year}
+      events per year, from {combined_first} per quarter in the earliest
+      window to {combined_last} per quarter most recently. Paper citations
+      contribute {cit_per_year} per year and GitHub stars, forks, issues, and
+      merged PRs from outside the org contribute {eng_per_year} per year, both
+      close to linear over the period. New external Julia-registry dependents
+      are the smallest channel but also rising, at {deps_per_year} per year
+      ({deps_first} to {deps_last} per quarter). The growth is broad rather
+      than driven by one product.
   - question: How has software development throughput changed over time within
       the CliMA organization?
     evidence:
       - kind: figure
         path: figures/dev-throughput.json
+      - kind: result
+        path: results/dev-throughput-summary.json
+        values:
+          pr_first: merged_prs.first_year_mean
+          pr_last: merged_prs.last_year_mean
+          pr_mult: pr_throughput_multiple
+          pr_slope: merged_prs.per_year_slope
+          ttm_first: median_ttm_days.first_year_mean
+          ttm_last: median_ttm_days.last_year_mean
+          rel_first: releases.first_year_mean
+          rel_last: releases.last_year_mean
+          rel_mult: release_rate_multiple
+          n_repos: n_repos_tracked
+    answer: >
+      Throughput has grown by more than an order of magnitude without the
+      review bottleneck getting much worse. Merged pull requests rose from
+      {pr_first} per quarter in the first year to {pr_last} per quarter most
+      recently, about a {pr_mult}x increase and a steady {pr_slope} PRs per
+      year gain across {n_repos} repos. Releases grew even faster, from
+      {rel_first} to {rel_last} per quarter ({rel_mult}x). Median
+      time-to-merge edged up from {ttm_first} to {ttm_last} days, so the
+      typical PR still lands in about a day even as volume exploded; the p90
+      tail widened more, reflecting the longer-running PRs that come with a
+      larger codebase and heavier CI.
   - question: What clusters of CliMA repos often change together?
     evidence:
       - kind: figure
