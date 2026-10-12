@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 210,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR adds logging for setup and first-step timings in order to better measure compilation times for the flagship AMIP simulation. We could also add a pipeline to benchmark time-to-first simulation across upstream changes.\r\n\r\n### The core change\r\n\r\n`Utilities.@timed_log \"message\" expr` logs an expression's wall time, allocations, and compile time (from Base.cumulative_compile_time_ns deltas) and returns its value. It wraps each CoupledSimulation setup phase (atmosphere, boundary space, land fraction, land, ocean, sea ice, coupler fields, diagnostics, initial exchange), the atmosphere and land extension sub-phases, and the two warmup steps in run!. Reported SYPD and walltime are unchanged.\r\n\r\n### Results\r\n88% of the 2100 s wait for the flagship AMIP first step to run is compilation. The first use of this instrumentation found the atmosphere's Jacobian construction, which a ClimaCore change then cut from ~300 s to 30 s and the whole wait from ~2400 s to ~2100 s.\r\n\r\n### Tips for faster compilation\r\n- Use `julia -O0` to prevent LLVM optimization. drops runtime performance\r\n- Disable default diagnostics: `use_land_diagnostics: false`, `output_default_diagnostics: false`, drop `extra_atmos_diagnostics`.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T18:20:58Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-05T22:12:15Z",
+    "number": 2144,
+    "title": "Log compilation and first-step timings"
+  },
+  {
+    "additions": 130,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "In subseasonal mode, if era5_initial_condition_dir doesn't have the IC files for start_date, the coupler now downloads them using `ClimaInitialConditions.ERA5`. ClimaAtmos already does the same. If `era5_initial_condition_dir` is unset, the `wxquest_initial_conditions` artifact is still used.\r\n\r\n- Update `Input.get_era5_filepaths` to download ERA5 IC files if they are not on disk. Only the root rank downloads for MPI runs\r\n- Updates the docs and Documenter to v1 and pass `warnonly = true` to `makedocs` in `docs/make.jl`, fixing Documenter at 0.27 is not necessary.\r\n\r\nBlocked until the next ClimaAtmos release.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T17:40:41Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-05T22:14:54Z",
+    "number": 2135,
+    "title": "Use ClimaInitialConditions to fetch subseasonal ICs"
+  }
+]

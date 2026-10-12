@@ -1,0 +1,91 @@
+[
+  {
+    "additions": 118,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Taking it out of #6086 so that we have a baseline on `main` to run the benchmarks in that PR against.\r\n\r\n> Adds a `nonhydrostatic` case to the benchmark suite (`--case=nonhydrostatic`): a stratified, rotating current in a 1 km \u00d7 1 km \u00d7 500 m box that is periodic in x and y, with `WENO(order=5)` advection. `--pressure_solver` picks the grid, and with it the pressure solver:\r\n> \r\n> - `FFT`: a uniform `RectilinearGrid`, with the `FFTBasedPoissonSolver`;\r\n> - `FourierTridiagonal`: a `RectilinearGrid` stretched in z, with the `FourierTridiagonalPoissonSolver`;\r\n> - `ConjugateGradient`: an `ImmersedBoundaryGrid` with a seamount, with the `ConjugateGradientPoissonSolver`.\r\n> \r\n> The benchmark pipeline runs all three at 64\u00b3 on GPU 2, as the \"Nonhydrostatic Pressure Solver Sweep\" group.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-04T09:14:43Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-04T13:16:57Z",
+    "number": 6146,
+    "title": "Add nonhydrostatic pressure-solver benchmarks"
+  },
+  {
+    "additions": 309,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6079.\r\n\r\nThis should be a draft PR but I'm opening as a regular PR in case it needs to be for the benchmarks to run via the GitHub label.\r\n\r\nI want to review, test, and benchmark this PR more before requesting review.\r\n\r\n## What this PR changes\r\n\r\n### 1. The solver's scalars live on the GPU\r\n\r\n`ConjugateGradientSolver` now stores `\u03c1`, `\u03c1\u2071\u207b\u00b9`, `p\u1d40q` (that is, `p \u22c5 q`), `\u03b1`, and `\u03b2` in one-element arrays that live on the same architecture as the fields:\r\n\r\n```julia\r\n# before\r\n\u03c1 = dot(z, r)                   # copies \u03c1 to the CPU\r\n...\r\n\u03b1 = \u03c1 / dot(p, q)               # copies p \u22c5 q to the CPU\r\n\r\n# after\r\n\u03c1 = dot!(solver.\u03c1, z, r)        # stays on the GPU\r\n...\r\np\u1d40q = dot!(solver.p\u1d40q, p, q)    # stays on the GPU\r\nsolver.\u03b1 .= \u03c1 ./ p\u1d40q            # a one-element broadcast, on the GPU\r\n```\r\n\r\n`\u03b2 = \u03c1 / \u03c1\u2071\u207b\u00b9` is computed the same way. The broadcasts that use `\u03b1` and `\u03b2` \u2014 `p = z + \u03b2 p`, `x = x + \u03b1 p`, and `r = r - \u03b1 q` \u2014 did not need to change: a one-element array broadcasts like a scalar, so the kernels read `\u03b1` and `\u03b2` directly from GPU memory. At the end of an iteration, `\u03c1\u2071\u207b\u00b9 = \u03c1` is a swap of the two arrays.\r\n\r\nThe convergence test, `solver.residual_norm(r) \u2264 tolerance`, still needs `|r|` on the CPU, so it is now the only copy per iteration.\r\n\r\n### 2. `dot!`, an in-place dot product for fields\r\n\r\n`Oceananigans.Fields.dot!(r, a, b)` computes exactly what `dot(a, b)` computes \u2014 including skipping immersed cells, and working for windowed fields such as the free-surface displacement \u2014 but stores the result in the one-element array `r` instead of returning it to the CPU. `LinearAlgebra.dot` is now `dot!` followed by reading `r[1]`, so the two cannot drift apart.\r\n\r\nOn distributed and multi-region grids, `dot!` gets the value from the existing `dot` (an MPI all-reduce, or a sum over regions on the CPU) and copies it into `r`, so those keep one round trip per dot product, as before.\r\n\r\n### 3. `ZeroMeanGaugeCondition`, a gauge condition that doesn't read back\r\n\r\n`ZeroMeanGaugeCondition(grid)` replaces `enforce_zero_mean_gauge!` as the default gauge condition of `ConjugateGradientPoissonSolver`. It does the same thing \u2014 it subtracts the mean over the active cells from the solution and from the residual, and zeros the inactive cells \u2014 but\r\n\r\n* the means are computed in place, with `sum!` into one-element fields and a division on the GPU, and\r\n* the number of active cells, a property of the grid, is counted once when the gauge condition is built, instead of twice per iteration.\r\n\r\nOn distributed grids, the existing distributed `sum!` and `conditional_length` reduce across ranks, as `mean` did.\r\n\r\n### 4. `validate_grid` checks `===` before `==`\r\n\r\n`a.grid === b.grid || a.grid == b.grid`: comparing a grid with itself is now free, so building `a * b` from two fields on the same immersed grid no longer compares bottom heights on the GPU. This helps every `BinaryOperation` of two fields, not only the solver.\r\n\r\n### 5. Documentation\r\n\r\nThe pseudocode in the `solve!` docstring computed `\u03c1` before `z` and had `\u03b2 = \u03c1\u2071\u207b\u00b9 / \u03c1`; it now matches the implementation.\r\n\r\n## Performance\r\n\r\nTesla V100, CUDA.jl 6.4, Julia 1.12.7, Float64. Each number is the best of two runs of each version, alternating between `main` and this branch. The machine is shared, so every measurement was repeated until no other process ran on the GPU while it was being taken. The split-explicit time step, which does not use the conjugate-gradient solver, is a control for run-to-run noise (about 5 %).\r\n\r\n| | `main` | this PR | speedup | host syncs, `main` \u2192 this PR |\r\n|---|---:|---:|---:|---:|\r\n| Implicit free-surface solve, 1\u00b0 `LatitudeLongitudeGrid` (360\u00d7160, \u2248 44 iterations) | 11.1 ms | 8.4 ms | 1.3\u00d7 | 268 \u2192 94 |\r\n| \u2014 one iteration | 0.27 ms | 0.15 ms | 1.7\u00d7 | 4 \u2192 0 |\r\n| Implicit free-surface solve, \u00bc\u00b0 (1440\u00d7640, \u2248 200 iterations) | 86 ms | 67 ms | 1.3\u00d7 | 1246 \u2192 402 |\r\n| `ConjugateGradientPoissonSolver`, 64\u00d764\u00d732 immersed (8 iterations) | 7.8 ms | 4.3 ms | 1.8\u00d7 | 148 \u2192 20 |\r\n| `ConjugateGradientPoissonSolver`, 128\u00d7128\u00d764 immersed (10 iterations) | 20.5 ms | 15.7 ms | 1.3\u00d7 | 184 \u2192 24 |\r\n| `NonhydrostaticModel` RK3 step with that solver, 64\u00d764\u00d732 | 14.5 ms | 9.9 ms | 1.5\u00d7 | 300 \u2192 46 |\r\n| `NonhydrostaticModel` RK3 step with that solver, 128\u00d7128\u00d764 | 48.5 ms | 38.4 ms | 1.3\u00d7 | 390 \u2192 54 |\r\n| `HydrostaticFreeSurfaceModel` AB2 step, 360\u00d7160\u00d740, `GridFittedBottom`, CATKE, `ImplicitFreeSurface()` | 41.9 ms | 30.6 ms | 1.4\u00d7 | 718 \u2192 106 |\r\n| Same with `SplitExplicitFreeSurface` (control: no conjugate gradient) | 14.6 ms | 14.8 ms | 1.0\u00d7 | 0 \u2192 0 |\r\n\r\nThe GPU does about the same work as before. In the free-surface solver it runs two more tiny kernels per iteration (the one-element broadcasts for `\u03b1` and `\u03b2`); in the Poisson solver on an immersed grid it does less, because the active cells are no longer counted every iteration. What changed is how much of the time the GPU sits idle. In the hydrostatic example, the extra cost of the implicit free surface over the split-explicit one drops from 27 ms to 16 ms per step.",
+    "changedFiles": 13,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABTNOBtw",
+        "number": 6079,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6079"
+      }
+    ],
+    "createdAt": "2026-09-25T23:59:12Z",
+    "deletions": 64,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-04T19:08:46Z",
+    "number": 6086,
+    "title": "Keep the conjugate-gradient scalars on the GPU"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Taken out of #5799: `push!` can't be used in CPU kernels with KernelAbstractions 0.10.  Also, for the same reason, this test didn't run on GPU before, with this change it works on GPU and is compatible with the CPU backend for KernelAbstractions 0.10.  CC @enri66.\r\n\r\n> The test that time-dependent barotropic boundary conditions see each substep's time recorded the times with `push!` into a `Vector` from the boundary condition function. Boundary conditions are evaluated in kernels, and this only worked while CPU kernels were plain Julia code: with KernelAbstractions 0.10 the kernel doesn't compile on the POCL CPU backend (a `MethodError` in `push!`).\r\n> \r\n> Pass a preallocated array as the parameters of the boundary function and store each time at the position of its substep, computed from the substep clock's `last_stage_\u0394t`. Only substep clocks, which have `stage = 0`, are recorded, not the model clock used for the other halo fills. A frozen substep clock would store every time in the same position, so the test still fails in that case, as checked by freezing it. As the recording no longer needs a CPU, the test now runs on every test architecture, GPUs included.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-04T13:06:06Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-04T23:03:10Z",
+    "number": 6149,
+    "title": "Record barotropic substep times without `push!` in a boundary condition"
+  }
+]

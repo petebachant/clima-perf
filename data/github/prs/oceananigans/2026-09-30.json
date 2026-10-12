@@ -1,0 +1,238 @@
+[
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjg3NDQwODk5",
+      "is_bot": false,
+      "login": "RanaPriyansh",
+      "name": ""
+    },
+    "body": "Fixes #5499.\n\nAdapting a `ScalarDiffusivity` closure substitutes the diffusivity type for its required halo size. This can make model construction fail when it compares the halo requirement with an integer.\n\nRead the halo size from the third type parameter in both `Adapt.adapt_structure` and `on_architecture`. The regression tests check both conversion paths, coefficient preservation, and the formulation and time discretization.\n\nValidation on `dae38053`: `turbulence_closures/closures` passed 343 assertions, `memory_allocation` passed 47, and `unit/quality_assurance` passed 107. All three processes exited successfully. These CPU runs used Julia 1.12.7 on macOS arm64. Hosted Linux and GPU results remain separate.\n\nThe original baseline checks reproduced both numeric conversion failures. Repaired-source checks covered numeric and callable diffusivities and model halo setup. Those baseline observations belong to the original submission.\n\nCodex used.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM792dng",
+        "number": 5499,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5499"
+      }
+    ],
+    "createdAt": "2026-09-28T08:19:42Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-30T01:56:54Z",
+    "number": 6093,
+    "title": "fix: preserve ScalarDiffusivity halo size during conversion"
+  },
+  {
+    "additions": 212,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR adds a C-D scheme for Coriolis which removes the noise associated with the C-grid Coriolis scheme following [CD-grid paper](https://oceans.mit.edu/JohnMarshall/wp-content/uploads/2013/08/A-New-Treatment-of-the-Coriolis-Terms_47.pdf). It is still a bit of a hack I think because it inputs a lot the spurious viscosity that makes everything a little too smooth, but it might be still a good solution for very coarse setups like what is shown in #5996",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-24T13:34:44Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-30T06:30:56Z",
+    "number": 6072,
+    "title": "CD-scheme for Coriolis"
+  },
+  {
+    "additions": 106,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "On a Float32 grid, `\u0394t` could reach kernels as Float64 (e.g. via `aligned_time_step`), which Metal can't compile. This converts it once per `time_step!` instead of at individual launch sites.\n\n- `Oceananigans.Utils.kernel_time_step(arch, grid, \u0394t) = convert(eltype(grid), \u0394t)`, called once in `time_step!` for `QuasiAdamsBashforth2`, `RungeKutta3` and `SplitRungeKutta3`; Reactant passes `\u0394t` through.\n- Removes the per-site and in-kernel `\u0394t` conversions this makes redundant.\n- The clock keeps ticking with the unconverted `\u0394t`.\n\nPorted from #5940 (the time-step half). Closes #6066.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABS2O6TA",
+        "number": 6066,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6066"
+      }
+    ],
+    "createdAt": "2026-09-30T04:38:03Z",
+    "deletions": 56,
+    "labels": [],
+    "mergedAt": "2026-09-30T07:27:02Z",
+    "number": 6114,
+    "title": "Convert \u0394t to the grid's float type once per time step"
+  },
+  {
+    "additions": 67,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`Base.cbrt(::Float32)` refines in Float64, which Metal can't compile (JuliaGPU/Metal.jl#952). The upstream fix, JuliaGPU/Metal.jl#953 (Metal 1.11), needs GPUCompiler 2, which Enzyme and Reactant don't support yet, so this is a temporary workaround.\n\n- Adds `f32_safe_cbrt(x) = cbrt(x)`, overridden on Metal as `copysign(abs(x)^(1f0/3f0), x)`, and uses it in CATKE and Smagorinsky.\n- `test/metal` runs the CATKE reproducer from #5939 and marks `Base.cbrt(::Float32)` on Metal `@test_broken`, with a TODO to remove this workaround once Oceananigans can use Metal \u2265 1.11.\n\nPorted from #5940 (the `cbrt` half). Stacked on #6114. Closes #5939.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABQHFXjg",
+        "number": 5939,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5939"
+      }
+    ],
+    "createdAt": "2026-09-30T04:38:40Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-30T07:27:03Z",
+    "number": 6115,
+    "title": "Work around Base.cbrt(::Float32) on Metal"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "## Summary\n\nFollow-up to [Simone's comment on #5970](https://github.com/CliMA/Oceananigans.jl/pull/5970#issuecomment-5647126382) (\ud83d\udc4d'd there as a separate PR).\n\nThe clock used to fill `U`, `V` and `\u03b7` halos during split-explicit barotropic subcycling was built once before the substep loop, at the macro time step's starting time, and reused unchanged for every substep. A time-dependent barotropic boundary condition (e.g. a tidal Flather condition) therefore saw the same stale time on every one of the ~30-50 substep evaluations instead of the time actually advancing through them.\n\nNow a fresh clock is built each substep from the fixed barotropic `\u0394\u03c4` and spliced into the pre-converted halo-fill arguments right before the last of them (`barotropic_model_fields`), the same lightweight way `averaging_weight`/`transport_weight` are already threaded per substep \u2014 so the argument-conversion hoisting this loop relies on for performance (documented in the existing comment above the loop) is untouched.\n\n## Test plan\n\n- [x] New test in `test/test_split_explicit_free_surface_boundaries.jl`: a time-dependent `GravityWaveRadiationBoundaryCondition` records every clock time it's evaluated at during one time step; asserts more than one distinct time is seen, evenly spaced by the barotropic `\u0394\u03c4`. Verified this test fails against the pre-fix code (`length(substep_times) > 1` fails with exactly 1).\n- [x] Full `test_split_explicit_free_surface_boundaries.jl` suite passes (52/52 existing + 2/2 new).\n- [x] `hydrostatic_free_surface` test group passes (339 passed, 7 known-broken unchanged, 0 failed).\n- [x] `hydrostatic_regression` test group passes (48/48, residuals ~1e-7, unchanged from baseline).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T10:11:59Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-30T09:48:14Z",
+    "number": 5982,
+    "title": "Advance the clock through split-explicit barotropic substeps"
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Zipper halos do not have a particular priority in main. However, they substitute the interior values for a `RightCenterFolded` meaning that the top / bottom halo might happen before meaning that the interior vertical halo can be (slightly) stale and numerical errors can accumulate.\r\n\r\nMWE:\r\n```julia\r\ngrid = TripolarGrid(size = (8, 24, 2), z = (-2, 0), halo = (2, 2, 2), pivot = TPivot)\r\nc = CenterField(grid)\r\nset!(c, [i for i in 1:Nx, j in 1:Ny, k in 1:Nz])\r\nfill_halo_regions!(c)\r\nNx, Ny, Nz = size(grid)\r\nfor i in Nx\u00f72+1:Nx-1\r\n    @info \"column $i is a copy of column $(Nx - i)\" interior = c[i, Ny, Nz] top_halo = c[i, Ny, Nz+1]\r\nend\r\n```\r\n \r\nOn main it gives\r\n\r\n```\r\n\u250c Info: column 5 is a copy of column 3\r\n\u2502   interior = 3.0\r\n\u2514   top_halo = 5.0\r\n\u250c Info: column 6 is a copy of column 2\r\n\u2502   interior = 2.0\r\n\u2514   top_halo = 6.0\r\n\u250c Info: column 7 is a copy of column 1\r\n\u2502   interior = 1.0\r\n\u2514   top_halo = 7.0\r\n```\r\n\r\nOn this PR:\r\n\r\n```\r\n\u250c Info: column 5 is a copy of column 3\r\n\u2502   interior = 3.0\r\n\u2514   top_halo = 3.0\r\n\u250c Info: column 6 is a copy of column 2\r\n\u2502   interior = 2.0\r\n\u2514   top_halo = 2.0\r\n\u250c Info: column 7 is a copy of column 1\r\n\u2502   interior = 1.0\r\n\u2514   top_halo = 1.0\r\n```\r\n\r\nI have also checked the distributed is correct. On different partitions:\r\n\r\n| partition | `main`: interior / top halo | this PR: interior / top halo |\r\n|---|---|---|\r\n| serial | 3 / **5**, 2 / **6**, 1 / **7** | 3 / 3, 2 / 2, 1 / 1 |\r\n| 1\u00d72 | 3 / **5**, 2 / **6**, 1 / **7** | 3 / 3, 2 / 2, 1 / 1 |\r\n| 1\u00d74 | 3 / **5**, 2 / **6**, 1 / **7** | 3 / 3, 2 / 2, 1 / 1 |\r\n| 2\u00d72 | 3 / 3, 2 / 2, 1 / 1 | 3 / 3, 2 / 2, 1 / 1 |\r\n\r\nSo, ironically, the 2x2 partition which used MPI everywhere and it is the most complicated, was the only correct one \ud83d\ude05 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T09:46:29Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-09-30T11:10:24Z",
+    "number": 6117,
+    "title": "Correct Zipper halo priority"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "`NormalRadiation`, `ObliqueRadiation` and `TracerReservoir` keep arrays between time steps: the anchor and latest boundary and interior values, and `ObliqueRadiation`'s previous-iteration values. The checkpointer does not save them, so a model picked up from a checkpoint restarts its open boundaries from zeros.\n\n`prognostic_state(::Field)` now includes the field's boundary conditions. A boundary condition has no state unless its scheme is one of these, and then its state is the scheme's arrays: `radiation_buffers(scheme)` returns the arrays that `radiation_buffers(scheme, arch, FT, size)` allocates. Checkpoints written before this change still load.\n\nThe open boundary checkpointing test now also runs `NormalRadiation` and `ObliqueRadiation`, gives its tracer a `TracerReservoir` boundary, and checks that the restored boundary state of both fields equals the checkpointed one.\n\n#6092 adds a per-point anchor iteration to these schemes; whichever of the two merges second adds it to `radiation_buffers(scheme)`. With both, a restart reproduces an uninterrupted run exactly.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T17:28:39Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-30T14:22:25Z",
+    "number": 6113,
+    "title": "Checkpoint the state of radiating open boundary schemes"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MjY5NjIy",
+      "is_bot": false,
+      "login": "masonlee277",
+      "name": "mason"
+    },
+    "body": "`bounds_preserving_limiter` regularizes both denominators by adding `\u03b5\u2082`:\n\n```julia\n\u03b8\u1d50\u1d43\u02e3 = abs((c\u1d50\u1d43\u02e3 - c\u1d62) / (M - c\u1d62 + \u03b5\u2082))\n\u03b8\u1d50\u2071\u207f = abs((c\u1d50\u2071\u207f - c\u1d62) / (m - c\u1d62 + \u03b5\u2082))\n```\n\n`m \u2264 c\u1d62 \u2264 M`, so adding `\u03b5\u2082` keeps `M - c\u1d62 + \u03b5\u2082` away from zero but moves `m - c\u1d62 + \u03b5\u2082` toward it, and cancels it when the reconstruction undershoots by exactly `\u03b5\u2082`. If the cell also rests on the lower bound, `\u03b8\u1d50\u2071\u207f = 0/0` and `\u03b8` is `NaN`:\n\n```julia\nusing Oceananigans\nusing Oceananigans.Advection: materialize_advection, bounds_preserving_limiter\n\ngrid = RectilinearGrid(CPU(), Float32, size=16, x=(0, 1), topology=(Periodic, Flat, Flat))\nscheme = materialize_advection(WENO(Float32; order=5, bounds=(0, 1)), grid)\nc = CenterField(grid)\nc[9, 1, 1] = 4.615384f-20\n\nbounds_preserving_limiter(8, 1, 1, grid, scheme, c) # NaN32 on main\n```\n\nIt needs an exact floating-point coincidence, so it is rare. This subtracts `\u03b5\u2082` on the lower side. Elsewhere `\u03b8` is bit-identical in `Float32` and moves by at most 6e-13 (relative) in `Float64`.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-18T22:18:50Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-09-30T16:03:57Z",
+    "number": 6037,
+    "title": "Fix the sign of the lower-side regularizer in the bounds-preserving limiter"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjkwNDM0Nzk0",
+      "is_bot": false,
+      "login": "awiteck",
+      "name": "Aidan Witeck"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T19:27:28Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-30T20:45:37Z",
+    "number": 6124,
+    "title": "Bump semver PATCH 0.113.4 -> 0.113.5"
+  },
+  {
+    "additions": 340,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "## Summary\n\nAdds the generic machinery to force and open-boundary-drive the astronomical tide, independent of any particular tidal atlas:\n\n- `TidalHarmonics(reference_date; constituents, ramp_time)`: frequencies, phases, and nodal factors of the ten primary tidal constituents (`M2`, `S2`, `N2`, `K2`, `K1`, `O1`, `P1`, `Q1`, `Mf`, `Mm`), from Schureman (1958) / Kowalik and Luick (2019).\n- `tidal_forcing(harmonics)`: a barotropic `(u, v)` forcing from the equilibrium tide's pressure gradient.\n- `tidal_boundary_conditions(grid, harmonics, dataset; kw...)`: Flather (1976) conditions on `U`/`V` and Chapman (1985) radiation on `\u03b7`, sampling `dataset` through the new `tidal_atlas_constants` extension point (implemented for a specific atlas downstream, e.g. TPXO, in NumericalEarth.jl).\n\nA single `TidalHarmonics` instance feeds both the body force and the boundary conditions so they stay in phase.\n\n## Test plan\n\n- [x] New unit tests, `Tidal astronomy` (frequencies/phases checked against NOAA CO-OPS published angular speeds) and `Equilibrium tidal body force` (a small basin's modeled response compared against the analytical equilibrium tide), added to test_open_boundary_conditions_hydrostatic.jl.\n- [x] Full Open Boundary Conditions for HydrostaticFreeSurfaceModel testset passes, 11/11.\n- [x] Downstream integration verified against a synthetic tidal atlas and against NOAA tide gauges in a regional Mid-Atlantic Bight configuration (NumericalEarth.jl).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-12T14:08:42Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-09-30T21:31:30Z",
+    "number": 5970,
+    "title": "Add tidal astronomy, equilibrium forcing, and boundary conditions"
+  }
+]

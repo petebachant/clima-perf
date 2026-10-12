@@ -1,0 +1,68 @@
+[
+  {
+    "additions": 509,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\n\nCuts compilation latency (TTFX) for a 5-stage ClimaCore workload by **64%**: **18.80s \u2192 6.75s (2.79\u00d7)**.\nThe package image shrinks ~20% (322 MB \u2192 257 MB). Runtime results are bit-for-bit identical to `main`.\n\n## What changed\n\n| # | Area | Stage | Mechanism |\n|---|---|---|---|\n| 1 | **FieldVector `copyto!`** | 3.05s \u2192 0.35s | `is_cpu_linear_compatible` is a pure type check, so it constant-folds and Base's 5D Cartesian broadcast loop is no longer compiled for every leaf |\n| 2 | **DataLayouts loops & scopes** | 2.67s \u2192 0.72s | Internal methods are positional only (`_foreach_slice`; `copyto!` takes the mask as a third positional argument), replacing `Core.kwcall` forwarding; `ThisThreadPool` inlines the loop body once instead of twice; `@nospecialize` barriers on thread launch |\n| 3 | **Grids & precompile** | 4.81s \u2192 2.48s | `Base.inferencebarrier` stops union-splitting on the runtime `deep` flag; single-threaded CPU paths are precompiled |\n| 4 | **MatrixFields & Geometry** | 5.59s \u2192 1.76s | Dead `LocalGeometry` constructions and interior-point `column_axes` calls removed from `multiply_matrix_at_index` |\n\nThe shallower inference also lets the compiler elide views it previously kept, so 3 `@test_broken`\nallocation tests in `inference_examples.jl` now pass with 0 bytes on Julia 1.11+ (they stay\n`@test_broken` on 1.10, which still allocates).\n\n## Bug fix\n\n`Y .= (x,)` on a `FieldVector` threw `DimensionMismatch`, because the FieldVector's `BlockedOneTo`\naxes were passed to each leaf array unchanged. A 1-tuple is what `Base.broadcastable` produces for\ncustom scalars, so this now behaves like `Y .= Ref(x)`. Regression test included.\n\n## API change\n\n`copyto!` for `Field`s, `DataLayout`s, and spectral and column-stencil broadcasts takes the optional\n`DataMask` as a third positional argument, `copyto!(dest, bc, mask)`, in place of the `mask`\nkeyword. Nothing in this repo, its tests, or ClimaAtmos, ClimaLand, ClimaTimeSteppers, ClimaCoupler,\nor ClimaDiagnostics passes that keyword. Keyword forwarding costs inference time even with\n`@inline` and no recursion limits: on a Field-broadcast workload, a keyword variant of this PR\ninfers 27 more method instances and spends 0.50 s instead of 0.39 s in inference. The documented\n`fill!(field, value; mask)` and the `foreach_*` keywords are unchanged.\n\nBroadcasting a multi-element tuple into a `DataLayout` also honors the mask now.\n\n## Trade-offs for reviewers\n\n- **Multithreaded TTFX.** With `@nospecialize(f)` on `parallelize_over`/`launch_pool_threads`, a\n  threaded loop body is reached by dynamic dispatch. It is compiled at the first threaded call\n  instead of being cached by (single-threaded) precompile workloads. The dispatch costs one call\n  per loop launch, next to the `Threads.@spawn` calls.\n- **Allocation tests under threads.** A `DataLayout`'s `DataScope` comes from its array type, not\n  from the `ClimaComms` device, so `CPUSingleThreaded` tests still spawn threads under `julia -t4`.\n  The new `TU.@test_allocations` marks those assertions Broken when the default pool has more than\n  one thread. It is resolved at macro-expansion time and expands to exactly `@test` otherwise, so it\n  cannot shift the allocation counts it guards. CI runs these files single-threaded, so CI\n  behavior is unchanged.\n\n## Suggested review order\n\n1. `src/Fields/fieldvector.jl`: item 1 and the bug fix.\n2. `src/DataLayouts/loops.jl` and `scopes.jl`: item 2.\n3. The rest: comments, precompile statements, and dead-code removal.\n\n## Testing\n\n- CPU test files on Julia 1.11.9, with no branch-introduced failures; `unit_loops.jl` under `--threads=4`.\n- `inference_examples.jl` on 1.10.10 and 1.11.9.\n- Bit-for-bit differential against `main` on 11 FieldVector broadcast forms plus `norm`/`sum`.\n- Aqua ambiguity count 24 (limit 27); none from the new methods.\n- ClimaAtmos, ClimaLand, ClimaTimeSteppers, and ClimaCoupler use none of the changed internals; downstream CI jobs pass.\n\n## Follow-up issue to file\n\nMake the `ClimaComms` device, rather than the array type, select a `DataLayout`'s `DataScope`, so\nthat `CPUSingleThreaded` implies single-threaded execution. The scope is a type parameter of every\n`DataLayout`, so this changes public-facing types.\n\nProduced with Gemini and Claude\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T22:57:54Z",
+    "deletions": 131,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T05:37:35Z",
+    "number": 2656,
+    "title": "Reduce TTFX across grids, DataLayouts loops, operators, and FieldVectors"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "Automated PR to sync `docs/dev-guides` with the latest changes from `CliMA/DeveloperGuides`.\n\n> [!CAUTION]\n> **Merge with a merge commit, NOT with squash merge.** Squash-merging destroys the subtree metadata and breaks future syncs.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T03:32:33Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-01T17:05:25Z",
+    "number": 2667,
+    "title": "chore: sync dev guides with central repo"
+  },
+  {
+    "additions": 561,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "Within each element, restrict a field onto the nodal basis of a lower-degree quadrature with a lumped (diagonal) mass matrix and interpolate it back to the element's own quadrature points, so the result lives on the input space and composes with other spectral operators in one broadcast, e.g. `@. lumped(norm_sqr(grad(f)))`. The default GLL{2} gives the bilinear corner basis; GL{1} gives the element mean. It reproduces constants and conserves every element's WJ-weighted integral to round-off, and is a no-op on spaces without a horizontal element.\r\n\r\nMotivation: the nodal `norm_sqr(grad(f))` carries the end-of-interval error of polynomial differentiation, which rectifies into a same-sign excess at element edges and corners (edge/interior 1.7, corner/interior 2.9 for a red spectrum on the cubed sphere) that a weighted DSS cannot remove, imprinting the element mesh on any positive-definite consumer such as a gradient-based SGS variance. The lumped restriction brings both ratios to within 4% of one while conserving each element's integral of the invariant.\r\n\r\nImplementation: the WJ-weighted argument is published through a slab-sized buffer (so the register-resident output of Gradient can be read across threads), the coarse values are accumulated by direct double sums into a small buffer of the same layout type, and the prolongation writes a register-resident destination; only one buffer of each byte size is live at a time (buffer reuse invariant). Zero allocations per call on CPU.\r\n\r\nTests: a unit test on plane, sphere, extruded, 1D and column spaces against a parent-array reference (including the edge-bias check), an allocation gate, JET checks, and GPU-vs-CPU value checks in gpu_rectilinear.jl.\r\n\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T05:15:37Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T23:11:42Z",
+    "number": 2639,
+    "title": "Add LumpedRestriction spectral element operator"
+  }
+]

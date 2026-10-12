@@ -1,0 +1,146 @@
+[
+  {
+    "additions": 50,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Taken out of #5799",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-04T10:53:52Z",
+    "deletions": 134,
+    "labels": [],
+    "mergedAt": "2026-10-05T07:37:11Z",
+    "number": 6147,
+    "title": "[CI] Consolidate all tests in GitHub Actions into a single job"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Fixes #4165, fixes #4659.\r\n\r\n> `ContinuousForcing` and `ContinuousBoundaryFunction` stored the positions\r\n> of their `field_dependencies` within `model_fields` as plain `Int`s.\r\n> Indexing `model_fields` with a runtime `Int` is only type-stable when all\r\n> its entries have the same type.  On GPUs this is usually the case, since\r\n> fields are adapted to `OffsetArray`s, but not when `SplitExplicitFreeSurface`\r\n> adds its barotropic velocities `U` and `V`, which stay `Field`s.  The\r\n> lookup then becomes a dynamic `getfield`, which fails to compile with\r\n> `unsupported call to an unknown function (call to ijl_get_nth_field_checked)`.\r\n> That is why the issue appears with `LatitudeLongitudeGrid` and\r\n> `ImmersedBoundaryGrid`, whose default free surface is split-explicit, but\r\n> not with a plain `RectilinearGrid`.  On CPUs the same lookup is always\r\n> type-unstable, because `Field`s at different locations have different types.\r\n> \r\n> Wrap the indices in `Val`, so the field is selected at compile time.  The\r\n> `field_arguments` methods now dispatch on `NTuple{N, Any}`, since a tuple\r\n> of different `Val`s is not an `NTuple{N}` of a single type.  Plain integer\r\n> indices keep working.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM6su6I_",
+        "number": 4165,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4165"
+      },
+      {
+        "id": "I_kwDOCRy_aM7BsaIt",
+        "number": 4659,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4659"
+      }
+    ],
+    "createdAt": "2026-10-02T23:08:41Z",
+    "deletions": 29,
+    "labels": [],
+    "mergedAt": "2026-10-05T13:01:56Z",
+    "number": 6141,
+    "title": "Make field-dependency indices compile-time constants"
+  },
+  {
+    "additions": 181,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "at the moment the tripolar grid does not have associated topology-aware operators, so serial runs on a tripolar grid with a split explicit free surface need to extend the halos even if we do not do any communication.\r\n\r\nThis PR implements the needed operators such that we never need to use extended halos for serial grids. This also allows us to use active cells maps for the split explicit free surface! (active maps are defined only for the interior at the moment so we cannot use them with extended halos).\r\n\r\nI ll enable the performance benchmarks given that here we are trading less computation (extended halos) with a slightly weirder memory access which might be detrimental. I hope not, but let's see...\r\n\r\nI have also pushed the `ifelse` on the index rather than in the outer method. In this way we are not doing twice the operation, but only having different indices in different threads which lead to much smaller data movement than before",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T11:53:48Z",
+    "deletions": 150,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-05T17:30:18Z",
+    "number": 6154,
+    "title": "Implement topology-aware operators for the tripolar fold"
+  },
+  {
+    "additions": 111,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MjY5NjIy",
+      "is_bot": false,
+      "login": "masonlee277",
+      "name": "mason"
+    },
+    "body": "`\u03b2` and `\u03c4` scale with the square of the reconstructed field while `\u03f5` is absolute, so a flat sub-stencil beside a large jump drives `\u03c4 / (\u03b2\u1d63 + \u03f5)` arbitrarily high. In `Float32` its square overflows for jumps \u2273 1e5, so `\u03b1 = Inf` and every weight is `NaN`. I hit this advecting number concentrations of ~3e5 kg\u207b\u00b9 in a `Float32` run.\n\n```julia\nusing Oceananigans\n\ngrid = RectilinearGrid(CPU(), Float32, size=16, x=(0, 1), topology=(Periodic, Flat, Flat))\nmodel = NonhydrostaticModel(grid; advection=WENO(Float32; order=5), tracers=:c)\nset!(model, u=1, c = x -> x > 0.5 ? 1f7 : 0)\ntime_step!(model, 1e-3)\n\nany(isnan, model.tracers.c) # true on main\n```\n\nThis divides every `\u03b1\u1d63` by `M\u00b2`, with `M = max(1, \u03c4 / dmin)` and `dmin = min\u1d63(\u03b2\u1d63 + \u03f5)`. No term can then exceed `C\u2605\u1d63`, and `M\u00b2` cancels when the weights are normalized, so the weights are unchanged. Neither factor divides by `\u03c4`, which is zero in smooth flow.\n\nThe tests compare the `Float32` weights beside a 3e5 jump with a `Float64` reference and pin the smooth-flow limit, for orders 5, 7, 9 and both dividers.\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-16T22:53:09Z",
+    "deletions": 69,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-05T18:38:24Z",
+    "number": 6015,
+    "title": "Rescale the ZWENO \u03b1 weights so Float32 cannot overflow to NaN"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Perhaps a bit aggressive, but it's probably more interesting to benchmark a physical simulation rather than just crunching NaNs.  Anyway, there are more NaNs after those resolved by #6125, so this should wait for the time being.\r\n\r\n> `benchmark_time_stepping` reported timings without looking at the model, so a configuration that blows up during the benchmark window was timed as if it were healthy. The z-star grid-type benchmarks did exactly that on every main build: the model went NaN after ~250 of its 505 time steps and the remaining steps were timed on a NaN state, which went unnoticed until a CUDA.jl change made the same blow-up throw a `DomainError` inside a kernel instead.\r\n> \r\n> Check the state with `Oceananigans.Diagnostics.hasnan`, the check that the default `NaNChecker` of a `Simulation` uses, once the timing windows are done, and throw an error naming the benchmark if it fails. The check runs outside the timed region, so it does not affect the measurements.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T08:28:06Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "8B0000",
+        "description": "IN BIG BOLD RED CAPS WITH FLASHING SIRENS",
+        "id": "MDU6TGFiZWwxNDg3NjMzNDUz",
+        "name": "\ud83d\udea8 DO NOT MERGE \ud83d\udea8"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-05T22:33:25Z",
+    "number": 6127,
+    "title": "Fail benchmarks whose model state contains NaN"
+  }
+]

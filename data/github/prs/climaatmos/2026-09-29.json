@@ -1,0 +1,152 @@
+[
+  {
+    "additions": 204,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nAlso moves the quadrature and cloud fraction parameters out of `TurbulenceConvectionParameters` to a new struct `SGSQuadratureParameters`.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T20:53:37Z",
+    "deletions": 130,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T02:17:58Z",
+    "number": 4856,
+    "title": "move sgs parameters out of provisional parameters"
+  },
+  {
+    "additions": 49,
+    "author": {
+      "id": "MDQ6VXNlcjQwNjExNzM2",
+      "is_bot": false,
+      "login": "sjavis",
+      "name": "Sam Avis"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThis refactors the `set_sgs_moments_and_cloud_fraction!` function to use the `foreach_point` construct (part of #4745).\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n- [x] Pass the fields to `foreach_point` directly. (Leaving this as DataLayouts because there is an issue when using the Fields)\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n- This uses `foreach_point` to fuse the broadcasted evaluations of sgs moments and cloud fraction into a single kernel. The runtime of the function is reduced by 20%.\r\n- Also uses local caching for `sgs_moments` inside `foreach_point` although this has negligable impact. It's possible the compiler is doing this optimisation anyway.\r\n- Removes repeated computation of `\u1d9cq_lcl + \u1d9cq_icl`. This reduces register usage.\r\n\r\nUsing the `sgs.jl` test case in `perf/run-and-time/`:\r\n\r\n| Case | Mean runtime (ms) | Registers |\r\n| --- | --- | --- |\r\n| Baseline | 1.398 | 201 & 173 |\r\n| `foreach_point` | 1.133 | 225 |\r\n| + local caching | 1.129 | 225 |\r\n| + `\u1d9cq_c` | 1.134 | 219 |\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-24T11:08:47Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T16:29:49Z",
+    "number": 4785,
+    "title": "feat: use foreach_point in `set_sgs_moments_and_cloud_fraction!`"
+  },
+  {
+    "additions": 690,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "If the relevant IC files were missing, ClimaAtmos previously stopped at an error telling you to go run WeatherQuest's Python script by hand. It now fetches and converts the data itself. \r\n\r\nChanges\r\n- Depend on [InitialConditions.jl](https://github.com/CliMA/InitialConditions.jl/), which will be registered on Sep 25. `weather_model_data_path` now calls `InitialConditions.ERA5.fetch_initial_conditions` when no raw file is present.\r\n- Add `to_z_levels_3d_model` in `src/utils/era5_model_levels.jl`, ported from WeatherQuest. ERA5 stores the atmosphere on hybrid levels whose height varies per column with surface pressure and temperature, so it reconstructs geopotential height by hydrostatic integration over the IFS coefficients, then interpolates each column onto the target altitudes. Pressure comes from the same coefficients and is written as p_3d, interpolated in log pressure.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-21T21:09:04Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T19:08:50Z",
+    "number": 4845,
+    "title": "Fetch ERA5 initial conditions with InitialConditions.jl"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "The EDMF surface scalar coefficient, the baroclinic wave factor, the idealized insolation constants, the non-orographic gravity wave number and the gray radiation inputs are computed in `FT` to avoid unintended type promotion to `Float64`. `Float64` results are unchanged.\r\n\r\n`Float32` results change in the last bits, so the reference counter moves to 418.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T18:07:14Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T20:53:34Z",
+    "number": 4857,
+    "title": "fix: unintended type promotion"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T19:03:27Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T22:28:44Z",
+    "number": 4859,
+    "title": "Add the TemperatureDependentIceNumber cloud ice formation option"
+  },
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose\r\nThis PR replaces the balance-derived `l_TKE` in the mixing-length closure with a single empirical form that unifies the Lopez-Gomez production-dissipation balance and a bounded amplitude:\r\n\r\nl_TKE = l_inf \u00b7 \u221ax \u00b7 (1 + x) \u00b7 exp(\u2212x)  \r\nwhere\r\n\u03c4_\u03b5 = c_tke \u00b7 \u221a(c_d/a_pd),   capped at \u03c4_\u03b5_max\r\nx   = TKE / (l_inf / \u03c4_\u03b5)\u00b2\r\n\r\n- **Small-x limit** (weak TKE / strong forcing): `(1 + x)\u00b7exp(\u2212x) \u2192 1`, so `l_TKE \u2192 \u03c4_\u03b5 \u00b7 \u221aTKE = c_tke \u00b7 \u221a(c_d/a_pd) \u00b7 \u221aTKE` \u2014 the Lopez-Gomez P = \u03b5 balance scale (with the `c_tke` prefactor).\r\n\r\n- **Adaptive reference TKE** `tke_ref = (l_inf/\u03c4_\u03b5)\u00b2`: stronger local forcing (smaller `\u03c4_\u03b5`) raises `tke_ref`, so higher TKE is admitted before the decay kicks in.\r\n\r\n- **Bounded amplitude**: `l_TKE` peaks at `x = 1` with `max(l_TKE) = (2/e)\u00b7l_inf \u2248 0.74\u00b7l_inf`. Beyond the peak, `(1 + x)\u00b7exp(\u2212x)` provides a self-limiting brake that damps runaway TKE without touching the local shear/buoyancy balance in the sub-peak regime.\r\n\r\n- **`\u03c4_\u03b5_max`** caps the local dissipation timescale, representing the residual eddy turnover from background processes. The cap is inert wherever local production is strong (`c_tke\u00b7\u221a(c_d/a_pd) \u226a \u03c4_\u03b5_max`).\r\n\r\n## New parameters (ClimaParams v1.1.17)\r\n  \r\nThree parameters are used:\r\n  \r\n  | Parameter                    | Default | Units  | Role                                                                                          |\r\n  |------------------------------|---------|--------|-----------------------------------------------------------------------------------------------|\r\n| `mixing_length_tke_coeff`    | 1.05    | \u2013      | `c_tke`: prefactor on the LG balance timescale (`\u03c4_\u03b5 = c_tke\u00b7\u221a(c_d/a_pd)`).|\r\n| `mixing_length_tke_l_inf`    | 200     | m      | Base BL mixing length; peak `l_TKE \u2248 0.74\u00b7l_inf`.|\r\n| `mixing_length_tke_tau_max`  | 600     | s      | Cap on `\u03c4_\u03b5`; residual eddy turnover time for background processes.|\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-24T22:56:16Z",
+    "deletions": 49,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T23:38:12Z",
+    "number": 4853,
+    "title": "TKE and mixing length fixes"
+  }
+]

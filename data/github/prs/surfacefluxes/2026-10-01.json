@@ -1,0 +1,93 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/github-actions"
+    },
+    "body": "Automated PR to sync `docs/dev-guides` with the latest changes from `CliMA/DeveloperGuides`.\n\n> [!CAUTION]\n> **Merge with a merge commit, NOT with squash merge.** Squash-merging destroys the subtree metadata and breaks future syncs.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T03:32:04Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-01T17:03:22Z",
+    "number": 265,
+    "title": "chore: sync dev guides with central repo"
+  },
+  {
+    "additions": 2192,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Three separately reviewable commits.\r\n\r\n**1. Roughness sublayer rework.** `PhysickGarrattRSL` and `HarmanFinniganRSL` become `LinearRSL` and `ExponentialRSL`, named for the form of the RSL factor: the old names misattributed the formulas, since the exponential factor exp[\u2212c(1 \u2212 z/z_RSL)] is Garratt's (1980) form used by Physick & Garratt (1995), not the stability- and canopy-dependent factor of Harman & Finnigan (2007), and Physick & Garratt did not use a linear ramp. The RSL factor \u03bc(z) multiplies the MOST gradient function, and the profile correction is the integral of \u03c6(z/L)(1 \u2212 \u03bc)/z from the forcing height to the RSL top, so it depends on stability, includes the neutral Prandtl number for scalars, and is layer-averaged for `LayerAverageScheme`. Profiles are anchored at the RSL top, so z0 and d are the apparent canopy values, following Physick & Garratt (1995, Eqs. 7 and 9), Harman & Finnigan (2007, 2008), and Bonan (2019). Exchange coefficients stay positive and finite over tall canopies; coefficients, u*, \u03b8*, q*, the solver residual, and profile recovery all use the same corrected profile.\r\n\r\nThe previous implementation had the following problems:\r\n- The correction was anchored at z0 with a negative sign, so it enhanced the exchange coefficients. Combined with apparent canopy values of z0 and d, which already include the RSL effect, this double-counted it, and the corrected profile F\u0302 = F + P could become negative over tall canopies or in strongly unstable conditions, giving negative or infinite exchange coefficients.\r\n- The correction ignored stability and the neutral Prandtl number, so it was inconsistent with \u03c6\u0302 = \u03c6(z/L) \u03bc(z), and the point-value form was also used with `LayerAverageScheme`.\r\n- \u03b8*, q*, and profile recovery omitted the correction while Cd and Ch included it, so scales, fluxes, and recovered profiles were mutually inconsistent.\r\n\r\n**2. Solver convergence flag.** The `converged` flag also accepts the step from the last iterate to the final regula falsi interpolant, since the bracket width alone misreports converged solves when one endpoint stays fixed.\r\n\r\n**3. Stability caps.** New `SurfaceFluxConfig` field `stability_cap` (default `NoStabilityCap()`). `ConstantStabilityCap(\u03b6_max)` caps the stability parameter at a positive constant; `MaxHeatFluxStabilityCap()` caps it at the stability of maximum sensible heat flux at fixed wind, beyond which MOST predicts runaway surface cooling. Beyond the cap the exchange coefficients are frozen, the bulk Richardson number is linear in \u03b6, and the solve always has a root. `SurfaceFluxConditions` gains `L_eff` for profile recovery consistent with the capped fluxes; the previous positional constructor still works. This is needed to prevent decoupling of the canopy from the surface in stable conditions (e.g., at night).\r\n\r\nProduced with Gemini and Claude.\r\n\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T06:27:00Z",
+    "deletions": 786,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T17:35:30Z",
+    "number": 264,
+    "title": "Roughness sublayer rework and stability caps for stable stratification"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "(Required for v1.3.0 registration) ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T17:54:40Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T18:08:48Z",
+    "number": 266,
+    "title": "Fix julia compat entry (RootSolvers conflict) "
+  },
+  {
+    "additions": 212,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Follow-up to #264.\r\n\r\n## Fixes\r\n\r\n1. **Float32 contamination by default parameters.** `LinearRSL()`, `ExponentialRSL()`, and `ConstantStabilityCap(0.5)` store Float64 parameters, and Float32 solves returned `SurfaceFluxConditions{Float64}` with a type-unstable `effective_obukhov_length`. The parameters are now converted to the input type in the flux computation (`float_parameter`); dual parameters are kept for differentiation with respect to them. NEWS and the docs already claimed this conversion.\r\n2. **Far probe for caps above 10.** The far-probe extrapolation used the secant through \u03b6 = 0 and 10, which underestimates the root when the cap exceeds 10; with `ConstantStabilityCap(50)` the solve saturated at \u03b6 = 100 (`converged = false`). The stable mid probe now moves to a cap that lies in (10, \u03b6_max), so the extrapolation is exact for a fixed surface state and the root is bracketed for caps up to \u03b6_max.\r\n3. **u\u2605 bracket without a sign change (pre-existing).** With `DeardorffGustinessSpec` the gustiness at fixed \u03b6 is proportional to u\u2605, so the inner equation has no solution for \u03b6 more unstable than the free-convection limit. RootSolvers then returned the endpoint of smaller residual, 1e-4 m/s, and the \u03b6 solve converged to spurious roots with u\u2605 = 1e-4 m/s and sensible heat fluxes near 800 to 1000 W/m\u00b2 over surfaces with z0m of order 1 m. The endpoint on the side of the root is now returned (4 m/s in that case), which steers the \u03b6 solve back to the region with a consistent u\u2605. Near the free-convection limit the \u03b6 residual is steep, and the default 7 refinement iterations may report `converged = false`; 40 iterations converge in all tested cases.\r\n\r\n## Tests\r\n\r\n- Float32 solves with the default Float64 RSL models and caps return `SurfaceFluxConditions{Float32}`.\r\n- Caps of 50 with roots below and beyond \u03b6 = 100 converge with residual \u2264 1e-6 of the neutral residual; probe-point unit tests.\r\n- Deardorff gustiness over z0m = 1 cm and 1 m at winds from 0.1 to 5 m/s: u\u2605 inside the bracket, \u03b6 in the region with a consistent u\u2605, and a sign change of the inner residual at the solution.",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T18:09:55Z",
+    "deletions": 46,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T23:11:08Z",
+    "number": 267,
+    "title": "Fix Float32 contamination, far-probe bracketing for caps above 10, and the ustar bracket endpoint"
+  }
+]

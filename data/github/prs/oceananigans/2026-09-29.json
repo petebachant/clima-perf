@@ -1,0 +1,194 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I was wondering how come benchmarks weren't running, and I noticed that [a job](https://buildkite.com/clima/oceananigans-benchmarks-1/builds/10699) had been stuck for over 6 _**days**_.  I'm setting some timeouts to all commands, to prevent similar issues.\r\n\r\nAlso, I'm taking the occasion to add emojis to the labels of the new commands in the Buildkite pipeline ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-24T20:38:35Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-29T06:08:43Z",
+    "number": 6075,
+    "title": "[CI] Add timeouts to Buildkite commands"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This reduces memory allocations by 10x for the nonhydrostatic, active immersed case.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T21:32:14Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-09-29T06:09:20Z",
+    "number": 6107,
+    "title": "Specialize `step_prognostic_fields!` on the substep closures"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> With `non_uniform_conformal_mapping = true`, every panel of a `ConformalCubedSphereGrid` ran `optimized_non_uniform_conformal_cubed_sphere_coordinates`, an ensemble optimization which depends only on the panel size and spacing, so the six panels repeated the same computation.  It dominated the construction of the grid: 3.4 GiB and 1.5 s for a 9\u00d79 panel size, compared with 36 MiB and 0.04 s with the uniform mapping.\r\n> \r\n> Compute the coordinates once in `ConformalCubedSphereGrid` and pass them to all panels as their conformal mapping.  The optimization reseeds the global RNG, so the grids and the RNG state afterwards are bit-for-bit unchanged.  Building a 9\u00d79 grid now takes 0.6 GiB and 0.3 s, and allocations on CPU drop from 95 to 46 GB in `multi_region/cubed_sphere`, from 74 to 41 GB in `multi_region/cubed_sphere_simulation` and from 102 to 70 GB in `multi_region/cubed_sphere_simulation_immersed`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T10:54:00Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-09-29T06:09:55Z",
+    "number": 6097,
+    "title": "Optimize non-uniform cubed sphere coordinates once per grid, not per panel"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I want to see how it goes.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-25T23:31:10Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-09-29T06:10:11Z",
+    "number": 6085,
+    "title": "[CI] Run Enzyme/Reactant tests with Julia v1.13"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "PR #5631 regressed the performance of an hydrostatic model even when no IMEX boundary conditions are present.\r\nThe regression is not huge but noticeable and not noise see 42f04ae (the peak in the figure is actually noise)\r\n<img width=\"1262\" height=\"463\" alt=\"image\" src=\"https://github.com/user-attachments/assets/e318385b-71fe-4f00-8cc6-3d9795b61a90\" />\r\n\r\nIt is not a gigantic regression but we still do not want to allow it and end up in a ``death by thousands cut'' sitation.\r\nThis PR attempts to bring the performance back to the previous main.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-02T22:38:23Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-09-29T06:32:58Z",
+    "number": 5921,
+    "title": "Fix performance problems introduced by IMEX PR"
+  },
+  {
+    "additions": 114,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This is a bit of a hack (like whenever you use `@generated`), I'm not 100% happy about this, but bringing kernel launch memory allocations down to ~100 bytes at least for the CPU case is extremely tempting \ud83d\ude2c  At least the change isn't very large, it's mostly replacing existing lines of code (and only ~50 of them)",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T09:43:37Z",
+    "deletions": 55,
+    "labels": [],
+    "mergedAt": "2026-09-29T14:11:40Z",
+    "number": 6109,
+    "title": "Bring down CPU launch memory allocations"
+  },
+  {
+    "additions": 143,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "The explicit tracer flux of AdaptiveVerticallyImplicitDiscretization is capped with the total advecting velocity (transport + biogeochemical drift + closure auxiliary velocity + advective forcing), but implicit_step! received only the transport velocities. Above the explicit Courant limit the flux of the drift velocity was therefore silently dropped: a tracer sinking at Courant number 4 descended 15 m instead of 120 m in three steps. The implicit solve now receives the same total velocity as the explicit flux in both the split Runge-Kutta and AB2 steps.\r\n\r\nClaude found this bug when I was getting it todo some other stuff and fixed it and seems reasonable to me.\r\n\r\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-25T17:19:18Z",
+    "deletions": 41,
+    "labels": [],
+    "mergedAt": "2026-09-29T15:24:43Z",
+    "number": 6083,
+    "title": "Include drift velocities in the implicit part of adaptive implicit tracer advection"
+  },
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjI3OTU2OTc0",
+      "is_bot": false,
+      "login": "maximilian-gelbrecht",
+      "name": "Maximilian Gelbrecht"
+    },
+    "body": "Resolves #5900\r\n\r\nClaude-generated summary: \r\n\r\n## Time interpolation of an in-memory `FieldTimeSeries` at a traced time\r\n\r\n`fts[Time(t)]` could not be traced under Reactant when `t` is a traced number, which is what\r\n`clock.time` is inside a compiled time-stepping loop. This is needed, for example, to `set!` a\r\nprescribed field from a forcing climatology during `update_state!`.\r\n\r\nTwo things blocked it, both in the consumers of the (already traceable) interpolation indices:\r\n\r\n- `getindex(::FieldTimeSeries, ::Time)` branches on `if n\u2081 == n\u2082`, a traced `Bool`.\r\n- `getindex(::InMemoryFTS, n::Int)` cannot select a snapshot at an index known only at run time.\r\n\r\n### Changes\r\n\r\nAll in the Reactant extension, `src/` is untouched:\r\n\r\n- `getindex(fts::TotallyInMemoryFTS, n::TracedRNumber)` returns the snapshot as a dynamic slice\r\n  of the underlying data.\r\n- `getindex(fts::TotallyInMemoryFTS, ::Time{<:TracedRNumber})` computes the indices with the\r\n  existing `TimeInterpolator` and interpolates by broadcasting over the two snapshots. The\r\n  `n\u2081 == n\u2082` branch is dropped rather than traced: the interpolator returns `\u00f1 = 0` in that case,\r\n  so the interpolated expression already equals the first snapshot.\r\n\r\nTwo details worth knowing:\r\n\r\n- Reading `fts.times` at a traced index is a scalar read of a traced array when `times` is a\r\n  `Vector`, which Reactant only permits under `@allowscalar`. It lowers to a `dynamic_slice`,\r\n  with no host round trip; Reactant uses the same guard inside its own `searchsortedfirst`.\r\n- The fractional index is converted to the grid's eltype with `TracedRNumber{FT}(\u00f1)`, since\r\n  `times` are usually `Float64` while the data is typically `Float32`.\r\n\r\n### Scope\r\n\r\nOnly totally in-memory series (`InMemory()`) are supported. `InMemory(n)` and `OnDisk()` load\r\nsnapshots from disk inside `getindex`, which cannot happen while tracing; they fail as before.\r\n\r\n### Tests\r\n\r\nThe \"Reactant FieldTimeSeries tests\" testset now compiles a traced snapshot selection and a\r\ntraced-time interpolation once per configuration and compares against the CPU, over range and\r\n`Vector` times with `Clamp` and `Cyclical` indexing, including out-of-range query times.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABOf1NqQ",
+        "number": 5900,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5900"
+      }
+    ],
+    "createdAt": "2026-09-08T15:48:19Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-09-29T15:25:37Z",
+    "number": 5949,
+    "title": "Interpolation for `TotallyInMemoryFTS` under Reactant"
+  }
+]

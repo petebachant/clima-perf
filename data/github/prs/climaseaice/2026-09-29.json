@@ -1,0 +1,81 @@
+[
+  {
+    "additions": 1394,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR introduces volume-per-area conserving advection as it is done in SI3. In practice, the advection operator computes the divergence of ice per area volume volume (h * \\aleph) and the thickness is recovered by dividing the new volume by the new thickness. A small-concentration guard is added that zaps the ice volume to zero when the concentration is below the threshold (we loose mass, but a very tiny amount).\r\n\r\nI also have renamed `V` to `\ud835\udccb` to indicate that what we are dealing with is not a volume (extensive property) but the volume per area, an intensive density-like variable.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-17T17:42:08Z",
+    "deletions": 130,
+    "labels": [
+      {
+        "color": "8DA8DF",
+        "description": "",
+        "id": "LA_kwDOJN11r88AAAACA_cuQA",
+        "name": "\ud83e\uddee numerics"
+      }
+    ],
+    "mergedAt": "2026-09-29T08:22:04Z",
+    "number": 138,
+    "title": "Volume (per area)-conserving sea-ice advection"
+  },
+  {
+    "additions": 311,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The methods we have in Oceananigans for Coriolis includes a dz interpolation in the formulation. Sea-ice wants 2D coriolis, so the coriolis force is incorrect when we use zstar that modifies dz horizontally.\r\n\r\nThis PR introduces a 2D coriolis method specific to sea ice which does not include the dz.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T11:04:35Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2026-09-29T17:08:22Z",
+    "number": 178,
+    "title": "Use a grid-invariant Coriolis"
+  },
+  {
+    "additions": 115,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Sea ice thickness is supposed to have a distributed within a cell, this distribution changes the denominator of the conditive flux as $$1 / < h > \\neq <1 / h>$$.\r\nThis is solved in multi-category models by evolving a distributed rather that just a mean thickness.\r\nThis PR allows to introduce a discrete prescribed sea ice distribution to be able to control, also in the one-category model, the response of thin vs thick sea ice.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T11:07:12Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-09-29T17:08:34Z",
+    "number": 179,
+    "title": "Include a prescribed distribution for sea ice thickness"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "To capture the latest PRs (sea ice is now conservative)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T17:09:17Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-29T17:09:27Z",
+    "number": 181,
+    "title": "(0.5.11) Bump version from 0.5.10 to 0.5.11"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nWeekly dependency update ahead of the weekly AMIP run. This week ClimaAtmos and RRTMGP are updated (not ClimaLand).\n\n## Content\n\nBoth `experiments/AMIP/Manifest-v1.11.toml` and `experiments/CMIP/Manifest-v1.11.toml` now use the same versions of the updated packages. Every other package is held fixed.\n\n| Package | AMIP | CMIP | Why |\n|---|---|---|---|\n| ClimaAtmos | 0.42.11 \u2192 **0.42.12** | 0.42.10 \u2192 **0.42.12** | new release (CliMA/ClimaAtmos.jl#4855) |\n| ClimaParams | 1.1.11 \u2192 **1.1.15** | 1.1.9 \u2192 **1.1.15** | latest; ClimaAtmos 0.42.12 requires `ClimaParams \u2265 1.1.13` |\n| CloudMicrophysics | 0.40.0 \u2192 0.41.0 | 0.39.0 \u2192 0.41.0 | required by ClimaAtmos 0.42.12 (`CloudMicrophysics = \"0.41\"`) |\n| RRTMGP | 1.0.0 \u2192 **1.0.1** | 1.0.0 \u2192 **1.0.1** | new release ([notes](https://github.com/CliMA/RRTMGP.jl/releases/tag/v1.0.1): binary search in `loc_lower`) |\n| OpenLibm_jll | 0.8.1+2 \u2192 0.8.5+0 | 0.8.1+2 \u2192 0.8.5+0 | Julia 1.11.9 stdlib |\n\nThe CMIP manifest's `julia_version` also moves from 1.11.3 to 1.11.9. ClimaLand stays at 1.12.2.\n\nClimaAtmos 0.42.12 is the registered release (JuliaRegistries/General#169520), not a branch.\n\nClimaParams 1.1.15 only adds two parameters for limiting microphysics heating rates (CliMA/ClimaParams.jl#325).\n\nNote: ClimaParams 1.1.14 changes the default `EDMF_interface_entr_efficiency` from 0.4 to 0.0, which affects runs using prognostic EDMF.\n\n## Not included\n\n`experiments/AMIP/Manifest.toml` and `experiments/CMIP/Manifest.toml` (Julia 1.10) are not updated. On `main` they no longer resolve against the current projects: for example, the manifests have ClimaCalibrate 0.4.0 and 0.2.2, but #2130 set the compat to `ClimaCalibrate = \"0.6\"`. Fixing them needs a broad update, which is out of scope here.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-25T20:05:31Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-26T00:00:41Z",
+    "number": 2133,
+    "title": "Update dependencies for weekly run"
+  }
+]

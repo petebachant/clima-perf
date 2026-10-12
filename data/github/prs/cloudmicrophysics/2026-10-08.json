@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 739,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds a gamma-consistent limiter on vapor and an optional latent heating limiter to the microphysics solver. This work started from investigating flakines in AMIP that partially was stemming from exaggerated heating rates from microphysics processes. \r\n\r\nI tried to write the docs in a consistent way, and Claude made sure that the code reflects what the docs say and uses the same notation. \r\n\r\n## Changes\r\n- Two solves per substep. The first solve gives the mass transfer and heating without the limiters. The output of it is used to compute the limiters. The limiters are applied in the second solve.\r\n- The vapor limiter includes gamma term.\r\n- A user defined maximum allowed heating rate for phase changes \r\n- Additional scaling after the second solve\r\n\r\n## Cost\r\nCPU tests of the limiters alone show a +8% slowdown from it. I did not test the limiters separately on GPU for performance. But the run with both the joint-exponential solver and the limiters was about 13% slower.\r\n\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T18:22:59Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-08T17:40:16Z",
+    "number": 811,
+    "title": "Limiters on top of PR 808"
+  }
+]

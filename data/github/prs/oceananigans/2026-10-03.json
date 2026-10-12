@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 616,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "With ParallelTestRunner, prints to screen are accumulated and printed only at the end of the tests, which means that\r\n\r\n* lots of `@info \"Testing ...\"` banner which were originally meant to show progress of the tests are now purposeless\r\n* logs are unnecessarily exceedingly long, and you need to scroll a lot to go and find the interesting stuff.\r\n\r\nThe general ideas of this PR are\r\n\r\n* remove unnecessary `Testing ...` banners and instead fold them inside testset messages\r\n* actually test the format of pretty printing functionalities, instead of just printing random stuff to screen which no one would read anyway\r\n* make a few `Simulation`s silent\r\n* capture and actually test a few logging messages (for example for the output writers), instead of printing stuff to screen no one would read\r\n\r\nThis is far from being comprehensive, I've done the cleanup only for some of the test files which bothered me the most, there are still thousands of them to go.  This PR is easier to review by [ignoring whitespace changes](https://github.com/CliMA/Oceananigans.jl/pull/6133/changes?w=1)",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T12:26:02Z",
+    "deletions": 592,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-03T09:26:15Z",
+    "number": 6133,
+    "title": "Silence many more tests"
+  },
+  {
+    "additions": 81,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "that tests the \"default\" config with partitions (1, 4), (4, 1) and (2, 2). The pipeline follows the same exact rules as the serial pipeline, i.e. comments on the PR when the label \"benchamark performance\" is added; runs on main at merge and pushes the results to the OceananigansBenchmarks repository where they will be rendered in one new \"Default Distributed\" plot.\r\nThis PR depends on #5591 ",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-27T15:11:05Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-03T14:13:58Z",
+    "number": 5735,
+    "title": "Add distributed benchmark pipeline"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I had missed this test in #6115.  [I ***really*** don't think](https://github.com/CliMA/Oceananigans.jl/pull/6057#discussion_r4148020315) we should test someone's code.  If you want to keep track of this, open an issue, don't make other people's PR fail (this test is failing #5799, among many other things)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-03T21:21:20Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-10-03T21:23:06Z",
+    "number": 6143,
+    "title": "Remove tests on Metal's code"
+  }
+]

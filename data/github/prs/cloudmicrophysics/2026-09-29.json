@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 760,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\r\nMake the documentation build faster and drop Plots.jl from the docs, so that all figures use CairoMakie.\r\n\r\n## Content\r\nA few different things:\r\n- A few figure scripts took a long time because they rebuilt parameter structs within loops (e.g., ~L35 in `docs/src/plots/MarshallPalmer_distribution.jl`). Now, we build parameters once.\r\n- Including the `Parcel` model as a script caused fresh compilation for every example that used it. I moved the code into a new \"package\" so the code only needs to compile once.\r\n    - note: tests and paper scripts still `include(parcel/src/Parcel.jl)` because `[sources]` (in `Project.toml`) requires Julia 1.11 or later.\r\n- removed `Plots.jl` in favor of `CairoMakie.jl`. One fewer plotting package to precompile. This also removed `GR`, `Measures`, and `StatsPlots`.\r\n- Rasterize large SVG images.\r\n- Fixed an issue with the terminal velocity docs page that persisted since #779.\r\n\r\nAs a result, docs only takes about 1m20s in a fresh session and <30s rebuilding a 2nd time from REPL.\r\nLatest main took 12 mins to build and deploy ([link](https://github.com/CliMA/CloudMicrophysics.jl/actions/runs/36175582848/job/108205255161)). This PR takes 4 mins for the same.\r\n\r\nOther figure fixes:\r\n- Three scripts set a global Makie theme, which affects unrelated plots (Makie themes are \"global\"). They now scope the theme with `with_theme`.\r\n- The below-freezing snow-rain accretion figure plotted three flat lines, because its loop variable was unused. It now varies the snow specific content.\r\n- A trailing comma turned one P3 panel title into a tuple.\r\n- The Alpert and Knopf box figures and the 2M terminal velocity figure use a fixed random seed, so they no longer change between builds.\r\n- The Alpert and Knopf backward script zero-initializes its freezing-event counts; the last element was uninitialized memory, which failed the docs build on some runs.\r\n- Plotting calls pass their axis explicitly, and `Figure` uses `size` instead of the deprecated `resolution`.\r\n\r\nThe test environment no longer bounds LoweredCodeUtils. The bound held JET at 0.11.4, because JET 0.11.6 and later require LoweredCodeUtils 3.7.2 or newer. With JET 0.12.2, the JET checks in `performance_tests.jl` pass.\r\n\r\n---\r\n\r\nThanks to Claude for doing all the hard work here.",
+    "changedFiles": 52,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-26T06:08:57Z",
+    "deletions": 939,
+    "labels": [
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T00:51:09Z",
+    "number": 796,
+    "title": "Faster documentation build with CairoMakie figures and a Parcel package"
+  }
+]

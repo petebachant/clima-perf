@@ -1,0 +1,51 @@
+[
+  {
+    "additions": 516,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds an example that estimates turbulence closure parameters and surface fluxes by differentiating through a single column simulation, using Enzyme compiled by Reactant.\n\nThe example is a twin experiment. A \"nature run\" of a column that's mixed by wind and cooled at the surface generates observations. Starting from a distant initial guess, BFGS from [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) then recovers four parameters from the observations:\n- the k-\u03f5 stability function constants `Cu\u2080` (eddy viscosity) and `Cc\u2080` (eddy diffusivity)\n- the surface wind stress `\u03c4\u02e3`\n- the surface buoyancy flux `J\u1d47`\n\nThe parameters are assigned to the model inside the differentiated cost function: the closure is rebuilt from traced numbers and assigned with `model.closure = ...`, and the fluxes are written into `Field` boundary conditions. As a result, Enzyme also differentiates through the closure constructors, for example the dependence of `\ud835\udd4au\u2080` on `Cu\u2080`. The example animates the parameters, the cost, and the velocity and buoyancy profiles over the iterations.\n\n### Fixes to support the example\n\n- **Reactant AB2 time stepping skipped `step_closure_prognostics!`**, so TKE-based closures (`TKEDissipationVerticalDiffusivity`, `CATKEVerticalDiffusivity`) never evolved their prognostic TKE (and \u03f5) under Reactant. A regression test is added in `test/reactant/single_column.jl`.\n- **`reset!` errored on single column models**, because it called `fill!` on the `ZeroField` vertical velocity. `reset!` also now resets closure state through a new `reset!(closure_fields, closure)`, which zeros the diffusivities and saved velocities of `CATKEVerticalDiffusivity` and `TKEDissipationVerticalDiffusivity`, so a reused model restarts from a clean state. Tests are added in `test/hydrostatic_free_surface/models.jl`.\n- **Adapt rules** for `TKEDissipationVerticalDiffusivity`, `TKEDissipationEquations`, `VariableStabilityFunctions`, `ConstantStabilityFunctions` and `StratifiedDisplacementScale`, so that closure parameters can be traced (and differentiated) by Reactant.\n\n### Notes for users of Reactant + Enzyme with Oceananigans\n\nThese all came up while writing the example:\n\n- Numbers in boundary conditions are converted to `Float64` when the model is built, so Reactant bakes them into the compiled code as constants. To vary a flux between calls of a compiled function, the example uses a `Field` as the flux.\n- `@trace checkpointing=true` made the gradient compile extremely slowly for this model (more than 40 minutes). The example doesn't use checkpointing: a single column's state is small, so storing every time step is cheap.\n- The k-\u03f5 cost function becomes jagged with `\u0394t = 10minutes`, so the example uses `\u0394t = 1minute`.\n\nThe example adds Optim.jl to `docs/Project.toml`. It takes a while to run: compiling the gradient takes several minutes on a CPU.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-12-04T03:28:52Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "ff0000",
+        "description": "Because danger is the spice of life",
+        "id": "LA_kwDOCRy_aM7rBhJG",
+        "name": "experimental feature \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-25T04:50:13Z",
+    "number": 5013,
+    "title": "Add a single column parameter estimation example with Reactant and Enzyme"
+  },
+  {
+    "additions": 88,
+    "author": {
+      "id": "MDQ6VXNlcjc0ODAwMTIz",
+      "is_bot": false,
+      "login": "kaiyuan-cheng",
+      "name": ""
+    },
+    "body": "# Refresh tracked particle fields after advection\r\n\r\nParticle output could pair updated positions with tracked field values sampled at the previous positions. This PR refreshes `tracked_fields` after advection and boundary handling so that properties recorded after a particle step correspond to the final positions.\r\n\r\n## Issue\r\n\r\nPreviously, each particle substep sampled tracked fields, called custom `dynamics`, and then advected particles. The output writer subsequently read the particle properties without resampling them. As a result, positions and tracked measurements referred to different locations whenever a particle moved through a spatially varying field.\r\n\r\nFor example, with a tracked concentration field `c(x, y, z) = x`, a particle moving from `x = 300` to `x = 310` would be recorded with `x = 310` but `c = 300`. This produces a spatial sampling error in diagnostics such as temperature, concentration, or velocity measured along a trajectory. Periodic wrapping and wall reflection also change the final position, so the final sample must use the position after boundary handling.\r\n\r\n## Fix\r\n\r\nThe particle substep now performs these operations:\r\n\r\n1. Sample tracked fields at the starting particle positions.\r\n2. Call custom `dynamics` with those samples.\r\n3. Advect particles and apply boundary handling.\r\n4. Resample tracked fields at the final particle positions.\r\n\r\nKeeping the first sampling pass preserves the values available to custom dynamics, including when the Eulerian fields have changed since the previous step. The added sampling pass corrects the values subsequently returned by `fetch_output`; in the example above, the recorded concentration becomes `c = 310`.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-08T19:46:04Z",
+    "deletions": 20,
+    "labels": [],
+    "mergedAt": "2026-09-25T21:23:26Z",
+    "number": 5950,
+    "title": "(0.113.3) Corrects particle stepping order"
+  }
+]

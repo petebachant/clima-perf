@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 491,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "### Summary\r\n\r\nAdds `FlooredDeardorffGustinessSpec(u_min)`: the larger of a minimum wind speed `u_min` and the Deardorff (1970) convective gustiness `\u03b2 w*`, with the convective part evaluated in closed form inside the stability solve rather than from the current friction velocity.\r\n\r\n### Motivation\r\n\r\nWith `DeardorffGustinessSpec`, the gustiness during the solve is computed from the buoyancy flux implied by the current `\u03b6` and `u*`, `B = -u*\u00b3/(\u03ba L)`. At fixed `\u03b6` this makes `\u03b2 w*` proportional to `u*`, so the fixed point `U = max(|\u0394u|, \u03b2 w*)` couples `u*` to itself through the wind speed. That fixed point exists only up to the free-convection limit; beyond it (`|\u0394u| \u2192 0` over a warm surface) the inner `u*` solve has no consistent solution and the bulk-Richardson residual becomes ill-conditioned. This is exactly the regime where gustiness matters most, and the one land surfaces hit on calm sunny days, when the skin temperature responds quickly to the fluxes.\r\n\r\n### Closed form\r\n\r\nAt a stability parameter `\u03b6`, the bulk relations `u* = \u03ba U / F_m(\u03b6)` and `\u03b8v* = \u03ba \u0394\u03b8v / F_h(\u03b6)` make the buoyancy flux `B = (g/\u03b8v) u* \u03b8v*` linear in the effective wind speed `U`. With `w*\u00b3 = B z_i` and `U = \u03b2 w*`,\r\n\r\n```\r\nU\u00b2 = \u03b2\u00b3 \u03ba\u00b2 (g/\u03b8v) z_i \u0394\u03b8v / (F_m(\u03b6) F_h(\u03b6))\r\n```\r\n\r\n(`free_convection_wind_speed`). The effective wind speed is then the fixed point of `U = max(|\u0394u|, u_min, \u03b2 w*(U))`, which depends only on `\u03b6` and the surface and atmospheric state. Consequently:\r\n\r\n- `depends_on_ustar` is `false` for the new spec, so `u*` follows from `\u03b6` directly and the inner Brent solve in `compute_ustar_and_roughness` is skipped (when the roughness model does not need it either).\r\n- The free-convection limit is well posed at every `\u03b6`.\r\n- Once the outer solve has converged, the result coincides with the Deardorff value computed from the converged fluxes (the 3-argument `gustiness_value` form, used for post-solve diagnostics).\r\n- `FlooredDeardorffGustinessSpec(0)` is the pure convective gustiness in this form; in stable conditions the convective part vanishes and the floor applies.\r\n\r\n### Changes\r\n\r\n- `src/types.jl`: `FlooredDeardorffGustinessSpec{FT}(u_min)` with the derivation and references (Deardorff 1970; Beljaars 1995) in the docstring.\r\n- `src/wind_and_gustiness.jl`: 3- and 5-argument `gustiness_value` methods and `free_convection_wind_speed`. The profile integrals use the `PointValueScheme`, the roughness-sublayer model and stability cap of the inputs, and the roughness lengths at the current `u*`.\r\n- `src/bulk_fluxes.jl`: new helper `virtual_pottemps` returning the surface and interior virtual potential temperatures; used by both `state_bulk_richardson_number` and the closed form so that `\u0394\u03b8v` is evaluated identically.\r\n- `src/roughness_lengths.jl`: `depends_on_ustar(::FlooredDeardorffGustinessSpec) = false`.\r\n- `src/SurfaceFluxes.jl`: export the new type.\r\n- `docs/src/API.md`, `docs/src/ExchangeFluxes.md`: API entry and a section describing the model and the reason for the closed form.\r\n- `NEWS.md`: entry under `[main]`.\r\n\r\n### Tests\r\n\r\n`test/test_floored_deardorff_gustiness.jl` (included in `runtests.jl`):\r\n\r\n- Limits: stable \u2192 floor; `u_min = 0` \u2192 pure Deardorff; calm warm surface \u2192 finite fluxes.\r\n- The closed form is an exact fixed point of the bulk relations at fixed `\u03b6`.\r\n- Full solve: the converged `u*` matches the post-solve Deardorff gustiness; stable conditions reduce to `ConstantGustinessSpec`; convergence over a sweep of wind speeds and surface temperature excesses.\r\n- Float32 and ForwardDiff dual type stability.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T20:57:00Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-07T04:08:28Z",
+    "number": 269,
+    "title": "Add FlooredDeardorffGustinessSpec: closed-form convective gustiness"
+  }
+]

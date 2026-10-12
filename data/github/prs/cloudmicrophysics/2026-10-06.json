@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 773,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Summary\n\nThis PR adds structure to the 1-moment processes that combines the rate of each process with the tendencies it contributes to.\n\nThree kinds of processes are introduced:\n- a `Transfer` of mass at the rate $S \\ge 0$ from a donor species $q_\\text{donor}$ to a receiving species $q_\\text{receiver}$, which contributes to the tendency of both species,\n\n  $$\\frac{dq_\\text{donor}}{dt} = -S, \\quad \\frac{dq_\\text{receiver}}{dt} = S,$$\n\n- a `VaporExchange` of mass at the rate $S$ between the vapor and a condensate species $q_\\text{cond}$, in either direction, which contributes to the tendency of the condensate, $dq_\\text{cond}/dt = S$,\n- a `VaporRelaxation`, an exchange with the vapor that also stores its relaxation timescale $\\tau$, with $S = (q^\\star - q_\\text{cond})/\\tau$ toward the equilibrium $q^\\star$. Examples include: cond/evap of cloud liquid, dep/sub of cloud ice.\n\n`_microphysics_source_terms` returns each process as a term of its kind. The instantaneous tendencies, the donor-based linearized tendency of `LinearizedAverage` and the rate of each process over a substep are derived from these terms. This structure removes some code duplication, hopefully making it easier to change or add new processes.\n\nThe condensate state and the linearized system is also implemented in a way that enables indexing by name.\n\n## Changes\n\n- `src/bulk_process_terms.jl` defines the three term types and `species_tendency`, which sums the terms into the tendency of each species.\n- `src/bulk_donor_step.jl` defines `LinearizedTendency`, the matrix `M` and the source vector `e` of the linearized tendency `M q + e`, indexed by species name, and the donor-based linearization of each term (`donor_coefficients`, `donor_linearization`, `donor_rates`). `backward_euler_solve` solves the step by 2\u00d72 blocks of the cloud and the precipitation species, which it selects by name.\n- `Condensates1M` holds the four 1-moment condensate species. All four 1-moment modes convert their result to the public output in one function, `_output_1m`. Each instantaneous mode shares one method with its verbose mode, and so does each averaged mode.\n- The new mode `LinearizedAverageVerbose` returns the tendencies of `LinearizedAverage` and the average rate of each process over the step, with the names of `InstantaneousVerbose`.\n- The tendency modes and the microphysics schemes broadcast as scalars.\n- `docs/src/BulkTendencies.md` outlines the substep first, then describes the donor-based linearization by kind of process, and lists the term types and the steps to add a process. The page writes the species at the start and the end of a substep as $q^n$ and $q^{n+1}$, the saturation specific contents as $q_\\mathrm{sat}$, and keeps $q^\\star$ for the equilibrium of a relaxation; on main, $q^\\star$ denoted all three.\n\n## Changes in results and interface\n\n- `Instantaneous` gives the same results as main.\n- `LinearizedAverage` changes by rounding, since terms are added in a different order.\n- `InstantaneousVerbose` no longer returns `\u03c4_phase_change_vap_lcl` and `\u03c4_phase_change_vap_icl`. They entered its output with #787, as inputs of the linearized solver, and ClimaAtmos does not read them. It's considered an interface bug that they were returned in the first place.\n- The averaged modes require `nsub \u2265 1`.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T21:56:44Z",
+    "deletions": 554,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-06T21:20:57Z",
+    "number": 808,
+    "title": "refactor(BMT): define each 1M process as a term with its direction"
+  }
+]

@@ -1,0 +1,126 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`find_\u03bb_range` uses `floor(\u03bb / 360)` in place of the hand-built floor division `ifelse((\u03bb < 0) & (mod(\u03bb, 360) != 0), \u03bb \u00f7 360 - 1, \u03bb \u00f7 360)`, so `interpolate!` compiles on Metal for Float32 `LatitudeLongitudeGrid`s.\n\nOn Julia \u2265 1.12, `\u00f7` and `fld` on Float32 go through Float64 (JuliaGPU/Metal.jl#972), which Metal can't compile. The upstream fix, JuliaGPU/Metal.jl#975, needs Metal \u2265 1.10.1, which needs GPUCompiler 2, and Enzyme and Reactant cap it at 1.x. `floor(\u03bb / 360)` matches `fld(\u03bb, 360)` for every Float32 with 2.5e-43 < |\u03bb| < 1.9e8 on the CPU.\n\n- Adds a Metal test that interpolates between Float32 `LatitudeLongitudeGrid`s with longitudes (-180, 180) and (0, 360).\n- A TODO at `find_\u03bb_range` to switch to `fld` once Oceananigans can use a Metal release with the fix.\n\nCloses #6056\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABSlMNMw",
+        "number": 6056,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6056"
+      }
+    ],
+    "createdAt": "2026-09-22T16:00:28Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-01T04:31:36Z",
+    "number": 6057,
+    "title": "Fix interpolate! on Metal for Float32 LatitudeLongitudeGrid"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Metal CI takes one `time_step!(model, 1.0)` for each of these combinations, which catches Float64 scalars leaking into kernels (see #5939, #6066):\n\n- `HydrostaticFreeSurfaceModel`: `QuasiAdamsBashforth2`/`SplitRungeKutta3` \u00d7 explicit/implicit (FFT)/split-explicit free surface \u00d7 vertically implicit diffusion/CATKE\n- `NonhydrostaticModel`: `QuasiAdamsBashforth2`/`RungeKutta3` with vertically implicit diffusion\n\nMost of these configurations fail on main until #5940 is merged.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-24T17:23:48Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-01T04:32:15Z",
+    "number": 6073,
+    "title": "Time step more model configuration in Metal CI"
+  },
+  {
+    "additions": 45,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "~Intentionally not including the pipeline file itself, to see whether this works as intended.  Will need to include that before merge~",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T18:42:25Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-01T07:17:27Z",
+    "number": 6123,
+    "title": "[buildkite] Only run test and docs build jobs when necessary"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Apparently the `fill_halo_regions!` on distributed grids was boxing arguments leading to a large memory allocation. This PR fixes it by removing the splatting that was causing the boxing",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-25T15:49:02Z",
+    "deletions": 42,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-01T07:48:17Z",
+    "number": 6081,
+    "title": "Reduce distributed memory allocation"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "As mentioned in #6125, some benchmarks were silently failing, and this was due to wrong interpolation of variables in Buildkite which requires double `$` to interpolate shell variables (as opposed to buildkite variables).\r\n\r\n> Buildkite interpolates `$VAR` when it uploads the pipeline, so the single-`$` references to `GPU2_PID` and `GPU2_STATUS`, which are shell variables that only exist at run time, were replaced by empty strings. The script that actually ran was\r\n> \r\n>     wait\r\n>     GPU2_STATUS=$?\r\n>     if [  -ne 0 ]; then\r\n> \r\n> A bare `wait` returns 0 once all children have exited, and [the test errors out with `[: -ne: unary operator expected`](https://buildkite.com/clima/oceananigans-benchmarks-1/builds/10902#01a0dea1-4347-4ef6-bd3a-38263de439a2/L1276), so the warning could never fire and a crash in the background GPU 2 group went unreported. Build 10902 is an example: the Grid Type Sweep hit a `DomainError` in a CUDA kernel, the GPU 2 subshell stopped there (skipping the remaining Grid Type Sweep and the Tracer Count Sweep), and the step still passed.\r\n> \r\n> Escape the references with `$$`, as already done for `$$!` and `$$?`. The step runs under `bash -e`, so a failing `wait $GPU2_PID` would abort the script before the status check and the merge of partial GPU 2 results. Capture the status with `wait ... || GPU2_STATUS=$?` instead, which keeps the intended behaviour: print the warning, merge whatever GPU 2 produced, and continue.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T08:30:52Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-01T22:21:58Z",
+    "number": 6129,
+    "title": "Report the exit status of the GPU 2 benchmarks in the Buildkite pipeline"
+  }
+]

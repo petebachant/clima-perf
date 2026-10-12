@@ -1,0 +1,56 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Technically not needed for #5799 (just because no tests hit this), but a similar pattern had to be fixed for `KernelFunctionOperation` in that PR.  We saw before that splatting generators is bad for inference, `map` is more robust.\r\n\r\n> The adapt rule of `SumOfArrays` splatted a generator over its arrays, which isn't inferable: the adapted type was `SumOfArrays{N, <:Tuple}` with abstract elements even for plain arrays. Where the rule runs inside a kernel, as KernelAbstractions does for `@Const` arguments, that doesn't compile. Mapping over the arrays tuple is inferable; `Base.Fix1` keeps the adaptor's type when it is a type, e.g. `Array`, which a closure would capture as a `DataType`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-10T22:51:01Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-11T07:02:22Z",
+    "number": 6227,
+    "title": "Adapt `SumOfArrays` by mapping over its arrays"
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Guess what?  Yes, this is also taken out of #5799\n\n> GPUArrays 12 reduces through AcceleratedKernels, which takes a linear\n> view of the source array (`@view src[begin:end]`), reshapes it, and\n> adapts the result for the kernel. Reductions without a condition passed\n> the `Field` itself, and a `Field` doesn't support any of this:\n> `lastindex` is the last index of its halo'd data, a one-index `view` is\n> an x-slice, and adapting it returns its data with halos, so the\n> reshaped array no longer fits. Reductions now get the field's interior,\n> a 1-based array of the field's own size, as the index reductions\n> already do.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-11T07:46:18Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-10-11T10:47:13Z",
+    "number": 6228,
+    "title": "Reduce over the interior of fields"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Once again taken out of #5799.  This is in the same vein as #6227: generators are complicated for inference, instead `map` is more robust\n\n> With GPUArrays 12, reductions over GPU arrays run AcceleratedKernels' kernels, which mark their source `@Const`. KernelAbstractions adapts `@Const` arguments inside the kernel, so the adapt rule of a `KernelFunctionOperation` being reduced runs in device code. The rule built the adapted arguments with `Tuple` of a generator, which collects into an `Array` and isn't inferable, and compiling the kernel failed with an `InvalidIRError`. Mapping over the arguments tuple is inferable and allocation-free.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-11T07:49:30Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-11T14:40:53Z",
+    "number": 6229,
+    "title": "Adapt `KernelFunctionOperation` arguments with `map`"
+  }
+]

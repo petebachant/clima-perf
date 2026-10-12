@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 2104,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Land-model support, released as v1.5.0:\n\n- `screen_level_values`: 2 m temperature and humidity and 10 m wind from the MOST profiles of a solve; new field `SurfaceFluxConditions.\u03b6_eff`.\n- The surface state applies at the displacement height: the surface geopotential is `\u03a6_sfc + g d`, the dry static energy difference driving the sensible heat flux is `cp (T_int \u2212 T_sfc) + g (\u0394z \u2212 d)`, and the surface density is extrapolated over `\u0394z \u2212 d`. Results change for `d \u2260 0` (by `g d/cp` in the temperature difference, 0.15 K at `d = 15` m); raising `d` and the reference level together now leaves the exchange unchanged. `surface_geopotential(inputs)` is deprecated in favor of `surface_geopotential(param_set, inputs)`.\n- Reference level conventions: `SurfaceFluxConfig` gains `reference_level`, `ReferenceAboveSurface()` by default or `ReferenceAboveApparentSink()` (`\u0394z` measured from `d + z0m`, as in CLM), converted before the solve by `reference_above_surface`.\n- Raupach canopy roughness: `displacement_height`, an optional frontal-area-index floor `\u03bb_min` (zero by default), and the former hard-coded constants as fields; notation and equation numbers follow Raupach (1994). `frontal_area_ratio` enters the drag partition (Eq. 7) only; the displacement height (Eq. 8) is a fit in the plant area index.\n- Fix: the Raupach displacement height (Eq. 8) now uses the canopy area index `\u039b` (the plant area index) instead of the frontal area index `\u03bb = \u039b/2`, matching Fig. 1b of the paper. `d/h` increases (0.66 vs. 0.56 at `\u039b = 1`) and `z0m/h` decreases.\n- `surface_fluxes` returns `NaN` with `converged = false` when `\u0394z - d <= max(z0m, z0h)`; `check_reference_height` validates on the host.\n- Gustiness floor accessors `minimum_wind_speed(spec, param_set)` and `without_floor(spec)`.\n\nSee `NEWS.md` for details.",
+    "changedFiles": 46,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T23:04:32Z",
+    "deletions": 494,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-10T22:35:54Z",
+    "number": 270,
+    "title": "Add screen-level recovery, canopy displacement height, and reference-height checks"
+  }
+]

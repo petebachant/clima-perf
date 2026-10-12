@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "In #6074 I noticed that some benchmarks were [(silently) failing](https://buildkite.com/clima/oceananigans-benchmarks-1/builds/10902#01a0dea1-4347-4ef6-bd3a-38263de439a2/L1153), I had the bot looking into it, it turns out that the benchmark is running an unphysical and unstable simulation, blowing up into NaNs.  Simone confirmed that he noticed the same independently.  This PR is changing the temperature initial condition to get a more stable simulation.\r\n\r\nHaven't checked yet, it's possible this affects benchmarks figures, but not just propagating NaNs everywhere is arguably a more representative workloads anyway.\r\n\r\n> The `earth_ocean` initial condition had a 30 \u00b0C meridional temperature contrast that was uniform over the full 5000 m depth. The resulting bottom pressure gradients drive a barotropic adjustment towards a steric sea-level difference of \u03b1 \u0394T H \u2248 2e-4 \u00d7 30 \u00d7 5000 \u2248 30 m. Within the first ~250 time steps the free surface drops by 10-50 m, and the shallow shelf columns allowed by the benchmark bathymetry (10 m minimum depth) drain completely. Oceananigans has no wetting and drying, so this is outside what the model can represent:\r\n> \r\n> - with a static vertical coordinate the columns go on with negative thickness (the minimum of (H + \u03b7) / H reaches -1.9 in the default tripolar benchmark),\r\n> - with `ZStarCoordinate` the model blows up: `tripolar` at step ~235 and `immersed_lat_lon` at step ~270 on a 1\u00b0 grid, well within the 505 steps of a benchmark. The benchmark then silently times a NaN state.\r\n> \r\n> Make the meridional contrast decay with depth with an e-folding scale of 500 m, a typical thermocline scale. Over 505 steps of 60 s on the 1\u00b0 grid (minimum of (H + \u03b7) / H, extrema of \u03b7, maximum horizontal speed):\r\n> \r\n>     grid                        before                       after\r\n>     immersed_lat_lon, z-star    NaN at step 270              0.69, (-6.2, 3.6) m, 2.6 m/s\r\n>     tripolar, z-star            NaN at step 235              0.63, (-5.6, 3.7) m, 2.5 m/s\r\n>     lat_lon, z-star             1.00, (-16, 12) m, 3.0 m/s   1.00, (-2.0, 1.6) m, 0.8 m/s\r\n>     tripolar, static            -1.92, (-40, 28) m, 12 m/s   0.62, (-5.5, 3.8) m, 2.3 m/s",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T08:22:54Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-02T00:34:20Z",
+    "number": 6125,
+    "title": "Confine the benchmark temperature front to a thermocline"
+  },
+  {
+    "additions": 16,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Closures were built with inconsistent float types, in particular in the float type sweep, running a Float32 model with Float64 CATKE parameters.  This may explain the [big jumps up and down](https://numericalearth.github.io/OceananigansBenchmarks/#section-float-type-sweep)\r\n\r\n> `make_closure` built `CATKEVerticalDiffusivity`, `HorizontalScalarBiharmonicDiffusivity` and `IsopycnalSkewSymmetricDiffusivity` without a float type, and `earth_ocean` did the same for the default `closure`, `momentum_advection` and `tracer_advection`. They then take their parameter type from `Oceananigans.defaults.FloatType` at the time they are built, but `earth_ocean` only sets that global afterwards, in its body. The precision of the closure parameters therefore depended on what ran before:\r\n> \r\n> - the first benchmark in a process (e.g. the whole Float Type Sweep) ran a `Float32` model with `Float64` closure parameters,\r\n> - in a sweep over `--float_type=\"Float32, Float64\"`, every model after the first `Float32` one, including the `Float64` ones, ran with `Float32` closure parameters,\r\n> \r\n> and two benchmarks with the same configuration and seed gave different results depending on their position in the sweep.\r\n> \r\n> Pass the float type explicitly, as `make_closure` already did for `SmagorinskyLilly`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T17:12:22Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-02T07:13:37Z",
+    "number": 6131,
+    "title": "Build the benchmark closures and advection schemes in the benchmark's float type"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "## Problem\r\n\r\nThe Oceananigans benchmark suite (`benchmarking/`) measures GPU memory only when\r\n`arch isa GPU`. For distributed runs the architecture is `Distributed{GPU}`, which is not\r\na `GPU`, so every multi-GPU benchmark records zero memory usage, and skips the\r\n`CUDA.reclaim()` that follows each benchmark.\r\n\r\nWe found this while benchmarking on Nibi: the 1-GPU run reported 45.95 GiB, and every\r\ndistributed run reported nothing.\r\n\r\n## Fix\r\n\r\nCheck the child architecture instead:\r\n\r\n```julia\r\nOceananigans.Architectures.child_architecture(arch) isa GPU\r\n```\r\n\r\n`child_architecture` returns the architecture itself for `CPU()` and `GPU()`, and the\r\nunderlying `GPU` for `Distributed{GPU}`. The change affects the three places in\r\n`benchmarking/src/utils.jl` where memory is measured and the three `CUDA.reclaim()` calls.\r\n\r\n## Testing\r\n\r\nRun on the Nibi cluster (Digital Research Alliance of Canada; 8 \u00d7 H100 80 GB per node) with\r\nthe `earth_ocean` case, lat-lon grids from 1440 \u00d7 720 \u00d7 200 to 5760 \u00d7 2880 \u00d7 200, on 1 to\r\n32 GPUs across up to 4 nodes. Memory per rank is now reported for every distributed run,\r\nfor example at 1440 \u00d7 720 \u00d7 200:\r\n\r\n| GPUs | Memory per GPU (GiB) |\r\n| --- | --- |\r\n| 1 | 45.95 |\r\n| 2 | 24.05 |\r\n| 4 | 12.67 |\r\n| 8 | 6.98 |\r\n| 16 | 4.14 |\r\n| 32 | 2.71 |\r\n\r\nFull results: [nibi_scaling.md](https://github.com/francispoulin/Oceananigans-DRAC/blob/main/results/nibi_scaling.md)\r\n\r\n---\r\n\r\n*Prepared by Francis Poulin with Claude (Anthropic's AI assistant); tested on Nibi.*\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T17:53:06Z",
+    "deletions": 9,
+    "labels": [],
+    "mergedAt": "2026-10-02T18:46:29Z",
+    "number": 6136,
+    "title": "Benchmarks: record GPU memory for distributed GPU runs"
+  },
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjg3NDQwODk5",
+      "is_bot": false,
+      "login": "RanaPriyansh",
+      "name": ""
+    },
+    "body": "Fixes #5908.\n\nAn all-explicit closure tuple filters to `()`. The implicit step then treats it as a closure and indexes the empty tuple, causing a `BoundsError` when adaptive implicit advection needs the solver.\n\nNormalize the empty filtered closure and its fields to `nothing`. Keep the existing solver guard, so adaptive implicit advection and implicit boundary fluxes still run.\n\nThe regression covers the reported closure tuple, explicit singleton and mixed tuples, nonzero adaptive advection, and an implicit top flux. The flux-only case checks the backward-Euler top-cell value.\n\nThe issue reproducer failed on the unchanged base and completed after the fix. With Julia 1.12.7, focused CPU `Pkg.test` runs for `unit/adaptive_implicit_vertical_advection` and `unit/implicit_boundary_fluxes` passed 424/424 checks. The full suite and GPU tests were not run locally.\n\nCodex used.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABOt_8Tg",
+        "number": 5908,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5908"
+      }
+    ],
+    "createdAt": "2026-09-25T14:27:37Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-02T19:22:34Z",
+    "number": 6080,
+    "title": "fix: handle empty implicit closure tuples"
+  }
+]

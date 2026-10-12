@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 281,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\nReplace generic episilon presence conditionals that depend on the floating point type with fixed physical scales.\n\nImprove robustness of some special functions.\n\n## Content\nMake `gamma_inc`, `gamma_inc_inv` AD-compatible, and reduce the `Float32` iteration count from 20 to 14 (tested that this is safe).\n\nAdd `guarded_quotient`, `nearest_admissible_b` and `clamp_to_nonneg` as the shared\nprimitives for presence tests and the rime density cone.\n\nRemove `sgs_weight_function` (its functionality is replaced by `guarded_quotient`)\n\nMake `DistributionTools` functions return `NaN` on invalid arguments rather than throwing a `DomainError` (which is not GPU-friendly). Impacts: `generalized_gamma_quantile`, `generalized_gamma_cdf`, `generalized_gamma_Mn`, `exponential_cdf`, and `exponential_quantile`.\n\nAdded docs to describe some of the changes in this PR.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-14T23:21:44Z",
+    "deletions": 134,
+    "labels": [
+      {
+        "color": "44F958",
+        "description": "Relevant to GPU performance",
+        "id": "LA_kwDOFzm_uM8AAAABXOclPA",
+        "name": "GPU"
+      },
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-25T18:46:44Z",
+    "number": 789,
+    "title": "Physics-scaled presence tests + AD-safe incomplete gamma"
+  }
+]

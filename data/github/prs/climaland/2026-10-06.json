@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 635,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nMakes it possible to run the default ClimaLand model at any FLUXNET2015 site, with the same pattern as the fluxnet and ERA5 tutorials:\n\n```julia\nsite_ID_val = FluxnetSimulations.replace_hyphen(site_ID)\n(; time_offset, lat, long) = FluxnetSimulations.get_location(FT, Val(site_ID_val))\n(; atmos_h) = FluxnetSimulations.get_fluxtower_height(FT, Val(site_ID_val))\ndomain = Column(; zlim, nelements, dz_tuple, longlat = (long, lat))\nforcing = FluxnetSimulations.prescribed_forcing_fluxnet(site_ID, lat, long, time_offset, atmos_h, start_date, toml_dict, FT)\nLAI = ClimaLand.Canopy.prescribed_climatological_lai_modis(domain.space.surface)\nland = LandModel{FT}(forcing, LAI, toml_dict, domain, \u0394t)\n```\n\n## Content\n\n- `get_location` and `get_fluxtower_height` now work at any FLUXNET2015 site. US-MOz, US-NR1, US-Ha1 and US-Var keep their hardcoded values; every other site falls back to the FLUXNET2015 metadata table (tower height = highest atmospheric sensor).\n- New `fluxnet2015` artifact entry and `Artifacts.fluxnet2015_data_path()`. The artifact is too large to be downloadable; see the `fluxnet2015` entry in ClimaArtifacts for how to obtain it. `experiment_fluxnet_data_path` resolves any other site to its FULLSET half-hourly (or hourly) CSV. The four sites of the downloadable `fluxnet_sites` artifact do not need it.\n- Metadata helpers: `get_site_info`, `get_canopy_height`, `get_site_igbp`.\n- Robustness for arbitrary sites:\n  - `get_data_dates(...; required_columns)` trims leading and trailing rows where any forcing column is missing. Gaps inside the record are linearly interpolated by the forcing TimeVaryingInputs (now documented).\n  - Initial conditions fall back cleanly when a column is entirely missing, and `get_data_at_start_date` gives an informative error instead of failing inside `argmin` on an empty column.\n  - Fractional UTC offsets (e.g. 9.5 for sites in central Australia) are supported.\n- `er` (from `RECO_NT_VUT_REF`) is added to the fluxnet comparison data.\n- `experiments/integrated/generic_site/`: `run_generic_site.jl` (runs the default `LandModel` at a site and plots it against observations), `list_fluxnet_sites.jl` and a README.\n- Buildkite: a `generic_site BE-Vie run` step, which exercises the `fluxnet2015` metadata and data paths.\n- Unit tests for the metadata helpers (against a small CSV fixture) and `get_data_dates(...; required_columns)`.\n\nExisting site runs (`run_fluxnet.jl`, `ozark_pft.jl`, ...) are unchanged. They still use their curated CSVs and MODIS LAI for the actual years.\n\n## Testing\n\nSites outside `fluxnet_sites` can only be run where the `fluxnet2015` artifact is available; the BE-Vie buildkite step covers that path. `run_generic_site.jl US-MOz` was run locally.\n\n- [ ] I have read and checked the items on the review checklist.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T19:09:55Z",
+    "deletions": 41,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-06T19:09:33Z",
+    "number": 1896,
+    "title": "Run a single-column simulation at any FLUXNET2015 site"
+  }
+]

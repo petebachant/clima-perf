@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Cuts Github Actions runtime by removing duplicated work. The time for the tests to pass falls from about 70 minutes to about 50 for ci.yml, and from about 140 to 23 for downgrade.yml. downstream.yml is unchanged at about 80 minutes.\r\n\r\nChanges\r\n- ci.yml: on 1.10, only run test group `infrastructure` \r\n- ci.yml: move the coverage on/off switch into one `COVERAGE` env var (no behavior change)\r\n- runtests.jl: remove `restart.jl` and `unit_reproducibility_infra.jl` from the `restarts` group, since Buildkite already runs both\r\n- downgrade.yml: run only `infrastructure` on 1.10, with coverage off (was about 140 min)\r\n- downstream.yml: run the ClimaCoupler tests only on 1.11\r\n- Update AGENTS.md and docs/clima_atmos_specific.md to match\r\n\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T18:31:56Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-30T00:36:02Z",
+    "number": 4858,
+    "title": "Speed up Github CI"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjMyNjQxNTc3",
+      "is_bot": false,
+      "login": "Mikolaj-A-Kowalski",
+      "name": "Mikolaj Adam Kowalski"
+    },
+    "body": "## Purpose \r\n\r\nApply the `foreach_point` construct to evaluate the `set_cloud_fraction!` kernel. \r\n\r\nChange the way it is evaluated to hold more  data in the registers\r\n\r\n## To-do\r\n\r\n- [ ] Investigate evaluating `\u1d9cT\u2032T\u2032 and  \u1d9cq\u2032q\u2032` inside the kernel\r\n- [x] Pass the `Field`s to the contruct (following https://github.com/CliMA/ClimaCore.jl/pull/2571)\r\n\r\n## Content\r\n\r\n\r\nThe `set_cloud_fraction__NVTX` kernel\r\n\r\n| State | Register Usage  |   Mean Time           |\r\n|-------|-----------------|-----------------------|\r\n| New   |        121      |      628.586 \u03bcs       |\r\n| Old   |        48       |      937.293 \u03bcs       |\r\n\r\nJust by applying the construct we see good ~30% speedup in the execution time of the kernel. As expected, the register usage increases.  This was measured on the [current `main`](https://github.com/CliMA/ClimaCore.jl/commit/a84e74d5529ca9c0d297cc8309c113257b96ec91) of ClimaCore. \r\n\r\nCurrently still DataLayouts are passed in since the lazy broadcasted expression  (\u1d9cq_lcl and \u1d9cq_icl) fails (in dispatch chain, the `each_slice_index` wants to take `size` of it which does not work correctly)  \r\n\r\n\r\n----\r\n- [x]  I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-14T14:14:34Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-30T14:09:42Z",
+    "number": 4769,
+    "title": "feat: use foreach_point in `set_cloud_fraction!`"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "Causes a compile time error in nightly 1M AMIP.\r\n\r\nThis reverts commit 9ea67b34bf75a56acb0babc09592bd8a7f755251.\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T05:26:32Z",
+    "deletions": 49,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-30T15:33:51Z",
+    "number": 4863,
+    "title": "Revert \"feat: use foreach_point in `set_sgs_moments_and_cloud_fraction!`\""
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "This reverts commit fded3708092fa34e4fcde7c9b1f151c06fb364f7.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T20:10:54Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-30T21:18:17Z",
+    "number": 4864,
+    "title": "Revert \"feat: use foreach_point in `set_cloud_fraction!` (#4769)\""
+  }
+]

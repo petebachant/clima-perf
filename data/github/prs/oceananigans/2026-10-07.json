@@ -1,0 +1,169 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "The only downside is losing the `\"#$(pkg_info.git_revision)\"` when checking out a dev version of Oceananigans, but, frankly, in my opinion this is far outsized by the benefit of not going through the massive bookkeeping that Pkg does every time you call `Pkg.dependencies()`.\r\n\r\nRef: https://github.com/CliMA/Oceananigans.jl/pull/6169#issuecomment-6032126613",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T06:15:17Z",
+    "deletions": 28,
+    "labels": [],
+    "mergedAt": "2026-10-07T07:11:48Z",
+    "number": 6172,
+    "title": "Use Base's `pkgversion` to get Oceananigans version"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`VolumeInverseNorm` computes `\u2016V\u207b\u00b9r\u2016` with one reduction over a `KernelFunctionOperation`. Before, it scaled `r` by `V\u207b\u00b9` in place, took `norm(r)`, and scaled `r` back. That cost two extra read\u2013write passes over the residual per CG iteration and perturbed `r` by rounding. `r` is now left bit-identical.\n\nThe distributed `norm` and `dot!` now accept any `DistributedAbstractField`, so they reduce operations across ranks. Closes #6170.\n\nImmersed 320\u00d7320\u00d72560 stretched grid per GPU, no preconditioner, 100 CG iterations per solve, H100s on one node:\n\n| | `residual_norm` | CG iteration | time step |\n|---|---|---|---|\n| 1 GPU, `main` | 6.80 ms | 35.0 ms | 11.99 s |\n| 1 GPU, this PR | 2.75 ms | 31.0 ms | 10.63 s |\n| 8 GPUs, `main` | 7.30 ms | 37.4 ms | 12.67 s |\n| 8 GPUs, this PR | 3.44 ms | 33.4 ms | 11.43 s |\n\nOn 1 and 2 CPU ranks, CG iteration counts and solutions match `main`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABVhMstw",
+        "number": 6170,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6170"
+      }
+    ],
+    "createdAt": "2026-10-06T16:41:12Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2026-10-07T13:28:07Z",
+    "number": 6166,
+    "title": "Compute the volume-inverse residual norm without rescaling the residual"
+  },
+  {
+    "additions": 175,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T15:32:49Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-10-07T13:56:05Z",
+    "number": 6158,
+    "title": "Add support for AD checkpointing inside of a `Simulation`"
+  },
+  {
+    "additions": 469,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "During my profiling running Oceananigans on distributed GPU setups (specifically CUDA) I noticed that there were a number of instances where the host and device are synchronised (using `sync_device'). This is needed to ensure that the MPI communications (filling and sending of buffers) occurs _after_ the field has been updated. However these synchronisations prevent extra work from being sent to the GPU to mask communications, and also cause gaps in GPU utilisations when small kernels are run.\r\n\r\nSince in this case most of the work is being done on the GPU, we have extra CPU resources that could be used. On top of this, CUDA.jl has an API for creating events in the stream which can be used to check when kernels have finished running. This PR will attempt to use these events with asynchronous threads to handle the buffer filling and mpi comms in the background, allowing the main thread to keep adding work to the GPU until it needs the MPI comms to be completed.",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-26T10:02:54Z",
+    "deletions": 287,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-07T15:21:41Z",
+    "number": 5897,
+    "title": "Use Julia asynchronous functionality for distributed GPU communications"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Ref https://github.com/JuliaTesting/ParallelTestRunner.jl/pull/210.  Sorry, I'll speed merge this after quick testing because all CI is currently broken, will do a proper later.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T15:59:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-07T16:04:08Z",
+    "number": 6177,
+    "title": "Cap ParallelTestRunner"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "Currently the benchmark pipeline script keeps only the rank 0 results. This causes issues when comparing to #5888 where the partitions are not equal in size, causing the throughput to look worse when it is actually improved.\r\n\r\nBy combining the results we can instead compare the total throughput across all the ranks, which is what we care about for scaling anyway.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T12:01:01Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-07T18:19:40Z",
+    "number": 6173,
+    "title": "Combine distributed results to give total throughput"
+  }
+]

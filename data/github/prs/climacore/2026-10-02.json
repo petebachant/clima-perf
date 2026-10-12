@@ -1,0 +1,141 @@
+[
+  {
+    "additions": 405,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nMakes the CUDA kernel-name cache lookup inference-friendly and drives the Aqua method-ambiguity count to zero. \r\n\r\nBoth problems were found on Julia 1.11.9 with a local A100 in the CI test environment (`CLIMACOMMS_DEVICE=CUDA`, `TEST_EXCLUDE_TIER=conv,inference,allocs,gpu,smoke`): the `fields` subsystem showed ten JET `@test_opt` failures in `test/Fields/unit_fusion.jl`, and `quality` counted 30 ambiguities against a limit of 27. Neither appears in CI, which runs the GPU matrix on Julia 1.10.8 (P100): on `main`, `unit_fusion.jl` passes 136/136 there and the Aqua test passes under the old limit. The cache lookup no longer calls into the compiler at run time, and a limit of zero replaces one that had drifted 23 \u2192 27 as ambiguities accumulated.\r\n\r\n1. **Kernel-name cache inference (`ext/cuda/cuda_utils.jl`):**\r\n   - `kernel_names` was keyed on `objectid(GPUCompiler.methodinstance(typeof(f!), typeof(args)))`, which calls into the compiler at run time and cannot be folded away because the lookup is guarded by a `Ref`. It is now keyed on `(F!, typeof(args))`, a compile-time constant, and the `Dict` has a concrete type. JET failures in `test/Fields/unit_fusion.jl`: 10 \u2192 0.\r\n\r\n2. **Aqua method ambiguities: 30 \u2192 0 (`test/aqua.jl`, limit 27 \u2192 0):**\r\n   - With `ClimaCoreCUDAExt` loaded on the 1.11.9 manifest, `ClimaCoreCUDAExt` contributes five of the 30. Instead of raising the limit again, every ambiguity is resolved: in `Fields` (`fieldvector.jl`), `Geometry` (`tensors.jl`), `DataLayouts` (`loops.jl`), `Operators` (`finitedifference.jl`), `Utilities` (`PlusHalf`), `to_device.jl`, and the CUDA extension (`copyto!` against GPUArrays, `rand` against CUDA's RNG, `tensor_product!`). Details are in the first commit message.\r\n   - `to_device(::CPUMultiThreaded, x)` keeps erroring (it did before, via a method that was ambiguous for movable `x`), but the error now says why: the destination is derived from its array type, and `Adapt.adapt(Array, device)` is `CPUSingleThreaded()` for every device, so the generic method would return a single-threaded result without saying so.\r\n   - The Aqua test excludes StatsBase. When the whole suite runs in one process (the GitHub Actions jobs), the Operators benchmark utilities load StatsBase first, and `StatsBase.TestStat(v)` is then ambiguous with `(::Type{<:Number})(::AutoBroadcaster)`. ClimaCore's constructor disambiguators are generated at precompile time and cannot cover packages that are not dependencies. The Buildkite `quality` shards run in a fresh process and see 0 either way.\r\n   - **Behaviour change:** `ldiv!(::LU, ::FieldVector)` now dispatches on the factor type, covering `LU{<:Any, <:Matrix}` and `LU{T, Tridiagonal{T, V}}`. The single catch-all method was ambiguous with LinearAlgebra's `Tridiagonal` method and eleven ArrayLayouts methods, none of which constrain their second argument. Factors of any other type no longer go through ClimaCore's convert-through-`Vector` method. There are no two-argument `ldiv!` call sites in ClimaAtmos, ClimaTimeSteppers, ClimaLand, or ClimaCoupler.\r\n\r\n3. **Tests for `ldiv!` on `FieldVector`s (`test/Fields/unit_field.jl`):**\r\n   - Tests across `Matrix`, `Tridiagonal`, `view`, `Symmetric`, and `Adjoint`, plus the `QRCompactWY` methods, none of which were exercised before.\r\n\r\n4. **`InvalidIRError` when slicing a `DataF` inside a nested `foreach_slab` (`src/DataLayouts/indexing.jl`):**\r\n   - A field on a `PointSpace` stores its value in a zero-dimensional `DataF` with a 1D parent array. Slicing it with `slab`, `column`, or `level` reached `view_struct` with a four-dimensional Cartesian index, which wrapped the 1D parent in a reshaped `SubArray`; when a spectral operator and a `PointSpace` field met inside `foreach_slab`, the inner broadcast sliced that view again and hit a reshape error whose message is built from a string, which does not compile on GPUs. Seen on Julia 1.11 only (CI's GPU jobs run 1.10.8).\r\n   - `array_and_index_args` and `Base.view` now have `DataF` methods: any in-bounds index selects the single value with no index passed on, and slicing a `DataF` returns it unchanged. A generic-path case that only `DataF` could reach is removed. New CPU tests cover slicing and bounds.\r\n   \r\n   Produced with Gemini\r\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T12:24:18Z",
+    "deletions": 112,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-02T05:44:26Z",
+    "number": 2654,
+    "title": "Make the kernel-name cache inference-friendly and remove all Aqua method ambiguities"
+  },
+  {
+    "additions": 271,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "Followup to #2650 that generalizes the earlier fixes to broadcasts over any number of fields.\r\n\r\nPreviously, the space of a broadcast was found by combining its inputs pairwise, so expressions like `@. tuple(column_field, point_field_1, point_field_2)` threw unnecessary errors when `point_field_1` and `point_field_2` were defined at different coordinates (see [build 313](https://buildkite.com/clima/climaatmos-downstream/builds/313) of the downstream ClimaAtmos tests). Broadcasts now traverse the expression tree to find the largest shared space, then check every input against it.\r\n\r\n### Behavior changes\r\n\r\n- **In-place broadcasts** (e.g., `a .= b`) only require the destination's size to be consistent with the inputs. Values can now be moved between different spaces through broadcasting, without constructing a new `Field`:\r\n  ```julia\r\n  Fields.Field(Fields.field_values(dest), axes(src)) .= src  # before this PR\r\n  dest .= src                                                # after this PR\r\n  ```\r\n  The destination is not checked with `issubspace` against the inputs, so it can be any space with a compatible size. Incompatible sizes are reported by the same `DimensionMismatch` error as `Base` throws for arrays.\r\n- **Non-in-place broadcasts** (e.g., `a .+ b`) require every input to be a subspace of the shared space, as defined by `Spaces.issubspace` and `Grids.issubgrid`. Inputs that are not compatible throw a `DimensionMismatch` error, instead of the previous `ErrorException(\"Broadcasted spaces are not the same.\")`.\r\n- **Non-pointwise broadcasts** (e.g., `@. \u1d9cdiv(\u1da0grad(a)) + b`) are checked through the result space of each operator, since their arguments are defined on different spaces from their results. Argument spaces are effectively checked by the type constraints of `result_space`, but there is no corresponding `DimensionMismatch` error.\r\n- `DebugOnly.allow_mismatched_spaces_unsafe` has been removed. Fields on distinct but compatible spaces are now supported by ordinary in-place broadcasts, so the intended use case for this hook no longer exists. Also, fields on incompatible spaces are now always flagged as `DimensionMismatch` errors, whereas the hook would have allowed such errors to go undetected until the `copyto!` kernel was launched.\r\n- `Spaces.has_horizontal` and `Spaces.has_vertical` are now derived from the underlying grid, so `has_horizontal` is `true` for a `MultiColumnFiniteDifferenceSpace`. This previously returned `false` due to a missing method definition.\r\n\r\n### Examples\r\n\r\n```julia\r\nhorizontal_field .= level(field, 1)                 # copy a level into a horizontal field\r\nlevel(field, 1) .= level(field, 2)                  # copy a level into a different level\r\n\r\nlevel(field, 1) .- level(field, 2)                  # DimensionMismatch error: no shared space\r\nzero.(field) .+ level(field, 1) .- level(field, 2)  # avoid error by extruding over all levels\r\nfield .= level(field, 1) .- level(field, 2)         # avoid error with similar in-place broadcast\r\n\r\nfield .= horizontal_field                           # extrude horizontal field over all levels\r\nfield .= vertical_field                             # extrude vertical field over all columns\r\nfield .= horizontal_field .* vertical_field         # take outer product of two orthogonal fields\r\nhorizontal_field .* vertical_field                  # DimensionMismatch error: no shared space\r\n```\r\n\r\n---\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n\r\n",
+    "changedFiles": 24,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T22:05:16Z",
+    "deletions": 319,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-02T09:04:08Z",
+    "number": 2660,
+    "title": "Fix broadcasting over three or more fields"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Specifically improves for fused broadcasts\r\n\r\nThis was previously done through recursion. This caused\r\nthe `foreach_point` microphysics cache changes to fail\r\nto compile in atmos. I think there is some recursion limit\r\nbeing hit because the recusion bounces between\r\n`DataScope(arg)` and `DataScope(arg1, arg2, args..)`\r\n\r\nAlso adds a test reproducer that failed before the fix. The test was made by claude.\r\n\r\nThe affected ClimaAtmos changes were reverted while this was being fixed:\r\n- CliMA/ClimaAtmos.jl#4863 (e6be254a2) reverts #4785, `foreach_point` in `set_sgs_moments_and_cloud_fraction!`\r\n- CliMA/ClimaAtmos.jl#4864 (6d888d03f) reverts #4769, `foreach_point` in `set_cloud_fraction!`\r\n\r\nOnce this is released, those reverts can themselves be reverted.\r\n\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T21:11:16Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-02T15:17:18Z",
+    "number": 2668,
+    "title": "Improve inferability of `DataScope(::Broadcasted)`"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "<!-- Provide a clear description of the content -->\r\n\r\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [ ] Unit tests are included OR N/A.\r\n- [ ] Code is exercised in an integration test OR N/A.\r\n- [ ] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T16:17:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-02T17:39:12Z",
+    "number": 2671,
+    "title": "Patch release v1.0.3"
+  },
+  {
+    "additions": 102,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaCore.jl/issues/2659 - This PR adds `Remapping.LinearInterpolation` and `Remapping.LogLinearInterpolation`  as options for pressure interpolation. The former already exists on the main branch. The latter does a log transformation on the pressure coordinates before interpolating.\r\n\r\nI asked a LLM to write the code.\r\n\r\n- [X] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [X] Unit tests are included OR N/A.\r\n- [X] Code is exercised in an integration test OR N/A.\r\n- [X] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms8AAAABT-sZ-Q",
+        "number": 2659,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2659"
+      }
+    ],
+    "createdAt": "2026-09-30T20:26:28Z",
+    "deletions": 38,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-02T18:59:44Z",
+    "number": 2663,
+    "title": "Add LogLinearInterpolation for pressure interpolation"
+  }
+]

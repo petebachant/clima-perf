@@ -1,0 +1,98 @@
+[
+  {
+    "additions": 387,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\r\n\r\nAdds a docs tutorial that runs the full `LandModel` (snow, soil, canopy) in a single column forced by ERA5, the ERA5 counterpart of the FLUXNET snowy land tutorial. It is listed under a new \"Running ERA5-forced single column simulations\" section in the docs menu.\r\n\r\n## Content\r\n\r\n- **Site:** Brazilian Cerrado near Bras\u00edlia (-47.9, -15.8), 2008. The 2008 ERA5 forcing has almost no rain from May to September and stays at 22\u201328 \u00b0C, so the dry-season drawdown is driven by water, not temperature.\r\n- **Forcing:** low-resolution ERA5 (`use_lowres_forcing = true`, 8\u00b0 \u00d7 8\u00b0 hourly, 2008). This is the only ERA5 artifact that can be downloaded during the docs build; the tutorial points to `use_lowres_forcing = false` for the 1\u00b0 cluster data. LAI is prescribed from MODIS.\r\n- **Experiment:** the default model is compared to an otherwise identical model with `NoMoistureStressModel` (\u03b2 = 1). This separates the soil-water effect from seasonal LAI and sunlight changes, and from P-model acclimation.\r\n- **Plots:**\r\n  - Time series of precipitation, SWC at 10 cm and 1 m, \u03b2, stomatal conductance, transpiration, and GPP. As the soil dries, \u03b2 drops to about 0.5 and gs, transpiration, and GPP fall to about 50\u201370 % of the unstressed values.\r\n  - Scatter of the stressed/unstressed ratio against SWC at 1 m. The end-of-year points show the roughly 36-day acclimation lag after rewetting.\r\n- The first two months are excluded from the plots as spin-up for the acclimated P-model capacities.\r\n\r\nThe tutorial runs in about 6\u20137 min on one CPU, mostly compilation (two 1-year simulations at \u0394t = 900 s).\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-22T18:21:18Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-28T18:28:18Z",
+    "number": 1885,
+    "title": "Add an ERA5-forced single column tutorial"
+  },
+  {
+    "additions": 1350,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "closes #1830\r\ncloses #1856 \r\ncloses #1841 \r\n\r\nFollow-up to #1797.\r\n\r\nThe optimal-LAI model read four inputs from frozen maps in an artifact: the transpiration fraction `f0`, the growing-season VPD `vpd_gs`, the growing-season length `GSL`, and the C3 fraction. All four are now derived from the simulated climate:\r\n\r\n- **`f0`** from the aridity index `AI = PET_annual / precip_annual`, through Zhou et al.'s `f0 = f0_max exp(-0.604 ln\u00b2(AI/1.9))`. `PET` is the FAO-56 Penman-Monteith reference evapotranspiration, the definition the `f0(AI)` relation was fitted with. `optimal_lai_f0` is renamed `optimal_lai_f0_max`, since it now sets the peak of a curve.\r\n- **`vpd_gs`** as the A0-weighted mean VPD, `VPDA0_annual / A0_annual`. Zhou et al. use a plain growing-season mean. `vpd_gs` only enters the water-limited term `f0\u00b7P/A0 \u00b7 ca(1\u2212\u03c7)/(1.6\u00b7D)`, and because transpiration and assimilation are both annual integrals, the single `D` that makes annual `A/E` exact is the assimilation-weighted mean. A growing-season mask is a 0/1 version of that weighting; A0-weighting is the continuous one and needs no season window.\r\n- **`GSL`** as a trailing-year count of days with air temperature above freezing.\r\n- **`fractional_c3`** from the C3/C4 competition of Lavergne et al. (2022), as in pyrealm: the C4 advantage in per-pathway potential GPP goes through a logistic, then C4 is reduced by the C3 tree cover estimated from the annual realized C3 GPP.\r\n\r\nThe potential GPP `A0` no longer carries soil-moisture stress, so water limitation enters once, through `f0\u00b7P/A0`.\r\n\r\n## New prognostic state\r\n\r\nSix more time-integrated variables, `PET_annual`, `VPDA0_annual`, `growing_days`, `A0c3_annual`, `A0c4_annual` and `GPPc3_annual`, each a `RunningSum(365 days, tau_long_term)` of the instantaneous rate, registered in the implicit Jacobian's explicit list. `growing_days` accumulates `1/day` while air T > 0 \u00b0C, so its total is a day count. `GPPc3_annual` is the C3 potential GPP times the realized fAPAR, i.e. the annual realized C3 GPP the Lavergne tree-cover relation was fitted on.\r\n\r\n`set_ic!` seeds `PET_annual`, `VPDA0_annual` and `growing_days` so that `f0`, `vpd_gs` and `GSL` start at the artifact values they replace, then relax to the simulated climate over `tau_long_term`. `f0(AI)` peaks at `f0_max`, so the seed uses the arid branch of the inverse, and a cell whose artifact `f0` exceeds the peak seeds to the peak. `A0c3_annual` starts at `a0_annual`. `GPPc3_annual` is seeded as `A0c3_annual` times the fAPAR of the MODIS annual-maximum LAI (the `modis_max_lai` artifact already used for SAI), not of `lai_init`, which is a single-date snapshot: potential GPP is concentrated in the leafy season, so the peak fAPAR is the closer estimate of the GPP-weighted annual value. There is no per-pathway climatology, so `A0c4_annual` is seeded by inverting the competition (`c4_advantage_for_c3_fraction`): given the tree share of the `GPPc3_annual` seed, it is the C4 potential GPP at which the competition returns the static CLM C3 map. Where the map asks for more C4 than the open canopy `1 \u2212 tree` allows, it saturates; where it is pure C3, `A0c4_annual` seeds to 0, which leaves a small (~3 %) C4 share of the open canopy.\r\n\r\n`GSL`, `vpd_gs`, `f0` and the canopy composition are cache variables of the biomass model, derived from `Y` in `update_biomass!`.\r\n\r\nTwo implementation notes:\r\n\r\n- `compute_A0_and_\u03c7` already computed the C3 and C4 light-use efficiencies before blending, so it now also returns `A0_c3` and `A0_c4`.\r\n- The biomass model owns the C3 fraction. Everything that blends C3 and C4 (the P-model, SIF, the `Vcmax25` accessors, the optimal-LAI `A0`) reads it through `get_fractional_c3(p, canopy)`, which dispatches on the biomass model: with `ZhouOptimalLAIModel` it is `1 \u2212 c4_grass` of the composition; otherwise it is the photosynthesis model's static map. There is no copy in the photosynthesis cache. `get_Vcmax25_leaf` and `get_Vcmax25_canopy` take the canopy model as a fourth argument for this.\r\n- `ZhouOptimalLAIModel` needs the P-model (it reads its parameters and constants for `A0`); `CanopyModel` now asserts this. It never worked with the Farquhar model.\r\n\r\n## Canopy composition: tree, C3 grass, C4 grass\r\n\r\nThe competition computes a C3 tree share as an intermediate (the Lavergne tree cover at the realized C3 GPP, relative to the cover at canopy closure `tc_gpp_ref`), and uses it to shade out C4. That partition is now stored as `p.canopy.biomass.composition` with fields `tree`, `c3_grass` and `c4_grass`, shares of productivity summing to one, with `fractional_c3 = tree + c3_grass`. It is computed by `canopy_composition_from_competition`; `c3_fraction_from_competition` is a wrapper returning `1 \u2212 c4_grass`. The prognostic biomass model can then allocate wood on the tree share rather than on the C3 fraction, which conflates C3 grassland with forest.\r\n\r\nThe tree cover was first estimated from the annual potential C3 GPP times the *instantaneous* fAPAR, an annual total scaled by today's leaf area, so it followed the seasonal cycle of LAI: about 0.1 at Ozark in January. With `GPPc3_annual` it is an annual-scale quantity, as tree cover is (0.90 at Ozark in January, moving by under 0.5 % while LAI rises 12 % over two days). This also removes the LAI-driven seasonal wobble from `fractional_c3`, so GPP at mixed C3/C4 cells shifts slightly toward C3 in winter and spring; the recalibrated defaults below predate this change.\r\n\r\n## Breaking: `ZhouOptimalLAIModel` constructor\r\n\r\nThe model no longer carries the static maps:\r\n\r\n```julia\r\n# before\r\nZhouOptimalLAIModel{FT}(parameters, optimal_lai_inputs; SAI, RAI, rooting_depth, height)\r\nZhouOptimalLAIModel{FT}(domain, toml_dict; optimal_lai_inputs = ..., SAI, ...)\r\n\r\n# after\r\nZhouOptimalLAIModel{FT}(parameters; SAI, RAI, rooting_depth, height)\r\nZhouOptimalLAIModel{FT}(domain, toml_dict; SAI, ...)\r\n```\r\n\r\nThe artifact is only read by `set_ic!`, to seed the accumulators. Its reader is renamed from `Canopy.optimal_lai_static_inputs` back to `optimal_lai_initial_conditions`, matching the artifact accessor it wraps, and moved to `src/simulations/initial_conditions.jl` (`ClimaLand.Simulations.optimal_lai_initial_conditions`); `set_canopy_component_initial_conditions!` calls it instead of re-reading the same variables.\r\n\r\n## Default parameter changes\r\n\r\n| parameter | before | after |\r\n|---|---|---|\r\n| `optimal_lai_z` | 21.4 | 29.2 |\r\n| `optimal_lai_sigma` | 0.939 | 1.01 |\r\n| `optimal_lai_alpha` | 0.0701 | 0.202 |\r\n| `optimal_lai_f0` \u2192 `optimal_lai_f0_max` | 0.65 | 0.65 |\r\n| `optimal_lai_c3c4_k`, `_q` | \u2014 | 6.63, 0.16 |\r\n| `optimal_lai_tc_a`, `_b`, `_c`, `_gpp_ref` | \u2014 | 15.60, 1.41, \u22127.72, 2.8 |\r\n\r\nThe C3/C4 coefficients are the Lavergne et al. (2022) values used by pyrealm.\r\n\r\nThe P-model, moisture-stress and canopy-flux defaults are also updated, from a separate calibration:\r\n\r\n| parameter | before | after |\r\n|---|---|---|\r\n| `pmodel_cstar` | 0.43 | 0.366 |\r\n| `pmodel_\u03b2_c3` | 91.1 | 24.9 |\r\n| `pmodel_\u03b2_c4` | 5.36 | 8.89 |\r\n| `pmodel_\u03b1` | 0.028 | 0.0251 |\r\n| `moisture_stress_c` | 0.59 | 0.591 |\r\n| `canopy_K_lw` | 0.919 | 1.16 |\r\n| `canopy_z_0m_coeff` | 0.349 | 0.0823 |\r\n| `canopy_z_0b_coeff` | 0.0444 | 0.073 |\r\n| `canopy_d_coeff` | 0.0573 | 0.0416 |\r\n| `leaf_Cd` | 0.0726 | 0.07 |\r\n\r\n`z`, `sigma` and `alpha` were recalibrated against MODIS LAI with the online inputs; the previous values were tuned against the frozen maps. That tuning ran with `optimal_lai_tau_long_term` = 1 year and an `f0` multiplier that is not in this PR, so the defaults should be re-tuned before being relied on. It also predates the `GPPc3_annual` tree cover and the `A0c4_annual` seed.\r\n\r\n## Diagnostics\r\n\r\n`a0c3`, `a0c4` and `fc3`, so the C3/C4 competition can be checked against observed pathway distributions, and `ftr`, `fc3g`, `fc4g` for the canopy composition (`ftr` compares with MODIS VCF tree cover below canopy closure). `ftr`, `fc3g` and `fc4g` are named as shares of canopy productivity (\"Tree Share of Canopy Productivity\", \u2026), not area cover. All six are registered only for models whose biomass is a `ZhouOptimalLAIModel`, like `a0d`/`a0a`/`pra`.\r\n\r\n## Supported combinations\r\n\r\nLAI and C3/C4 are either both prescribed or both predicted:\r\n\r\n| photosynthesis | biomass | C3 fraction |\r\n|---|---|---|\r\n| P-model | `PrescribedBiomassModel` | static CLM map |\r\n| P-model | `ZhouOptimalLAIModel` | predicted, with tree / C3 grass / C4 grass shares |\r\n| Farquhar | `PrescribedBiomassModel` | static CLM map (binarized, as before) |\r\n| Farquhar | `ZhouOptimalLAIModel` | not supported (asserts at construction) |\r\n\r\n## Restart test and missing initial-condition data\r\n\r\n`test/integrated/restart.jl`, the global land restart test from #1840, now runs with both prescribed MODIS LAI and `ZhouOptimalLAIModel`. The restarted run must match the uninterrupted one exactly, including the ten time-integrated biomass variables.\r\n\r\nWriting it exposed NaN columns. The initial-condition file has no `f0` south of 60\u00b0S and no data over ocean, which a coastal cell can pick up with the nearest-value regridding. `PET_annual` was seeded NaN there, and through the composition and the C3 fraction the whole column (canopy, snow, soil) went NaN. Before this PR the NaN stayed in the LAI state, which the 0.05 clip turns into 0, so the `lai` diagnostic showed 0 over Antarctica. Missing inputs now seed a bare canopy with no climate history (`LAI` and the annual totals at 0, `f0` at `f0_max`), and LAI there is predicted from the simulated climate.\r\n\r\n## Testing\r\n\r\n`test_optimal_lai.jl`, `test_pmodel.jl`, `canopy_model.jl`, `test/diagnostics/compute_methods.jl` and `test/integrated/restart.jl` pass on Julia 1.12; JuliaFormatter 2.10.1 clean. A 2-day Ozark run of `experiments/integrated/fluxnet/ozark_pmodel.jl` with the composition, `fc3`, `vcmax25` and `sif` diagnostics completes with finite output. The shares sum to 1, and the C3 fraction starts at 0.997 against the pure-C3 static map (0.974 before the `A0c4_annual` seed).\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\nhttps://claude.ai/code/session_016opW9XRGxpBgHmZBYupc9S\r\n\r\n\r\n\r\n\r\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABKhEwuQ",
+        "number": 1830,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1830"
+      },
+      {
+        "id": "I_kwDOGiZe4s8AAAABLlu_BA",
+        "number": 1841,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1841"
+      },
+      {
+        "id": "I_kwDOGiZe4s8AAAABMf_Yag",
+        "number": 1856,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1856"
+      }
+    ],
+    "createdAt": "2026-07-28T16:58:01Z",
+    "deletions": 307,
+    "labels": [
+      {
+        "color": "0e8a16",
+        "description": "Run the snowy_land_pmodel long run with prognostic (optimal) LAI",
+        "id": "LA_kwDOGiZe4s8AAAACqaSp9g",
+        "name": "long run opt lai"
+      },
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-28T20:25:11Z",
+    "number": 1831,
+    "title": "Climate-responsive optimal-LAI inputs: online f0, VPD_gs, GSL and C3/C4"
+  }
+]

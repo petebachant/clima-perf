@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 572,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR replaces the `PlaceholderSpace` infrastructure with a new `PlaceholderGrid` type and an associated `toggle_placeholder_grid` function.\r\n\r\nRelevant kernels now use `toggle_placeholder_grid` to remove duplicate grid pointers before they are launched, and immediately reintroduce the grids when the kernel starts executing. Operator broadcast expressions no longer use placeholders on CPUs or in device-side scopes like `ThisBlock`. The finite difference operator functions no longer pass around a `space` argument, as `bc` contains all necessary spatial information. This is a prerequisite for #2634, which will enable column fusion by materializing slices of `bc` into shared memory arrays.\r\n\r\nTwo new types of functionality are enabled by these changes: lazily slicing the results of finite difference operators like `FCTZalesak` on high-resolution spaces, and applying spectral element operators to mixed-space expressions like `field .* level(field, 1)`.\r\n\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T10:33:46Z",
+    "deletions": 806,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-07T06:25:49Z",
+    "number": 2678,
+    "title": "Simplify placeholder space infrastructure"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 171,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR fixes two bugs in `Field`/`DataLayout` broadcasting:\r\n- As mentioned [here](https://github.com/CliMA/ClimaLand.jl/pull/1882#discussion_r4041855083), the `foreach_slice` axis check was flagging `data .= slice_of_data` as a `DimensionMismatch`. This PR combines the left-hand side and right-hand side of a broadcast expression into one `Broadcasted` object before they are passed to `foreach_slice`, so there is no longer any ambiguity from mismatched axes.\r\n- As seen [here](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1517) and [here](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1519), the `issubspace` check was returning `false` when comparing a horizontal space to a single level from an extruded space. This PR reimplements `issubspace` in terms of a lower-level `issubgrid` function, which recurses through grid wrappers like `LevelGrid` and `ColumnGrid`. To avoid inference failures for spaces without grids, `issubspace` now also has methods for `PointSpace` and `SpectralElementSpaceSlab`.\r\n\r\nBoth bugs were introduced during the recent ClimaCore refactoring. Unit tests have been added to prevent similar regressions in the future, covering all possible combinations of fields and field slices.\r\n\r\nThis PR was tested against nightly AMIP [here](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1520), using the latest main branches of all other CliMA packages.\r\n\r\n<!-- Provide a clear description of the content -->\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-18T22:31:29Z",
+    "deletions": 138,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-09-29T15:18:11Z",
+    "number": 2650,
+    "title": "Avoid unnecessary errors in broadcast axes checks"
+  }
+]

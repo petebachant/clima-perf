@@ -1,0 +1,206 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Move NORi to the model development papers in the README and documentation.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T12:13:27Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-10-08T03:33:49Z",
+    "number": 6174,
+    "title": "Move NORi paper"
+  },
+  {
+    "additions": 493,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Adds `examples/global_wind_driven_gyres.jl`: a four-layer global ocean on a 1\u00b0 `TripolarGrid` with grid-fitted ETOPO1 bathymetry, a z-star vertical coordinate and a `SplitExplicitFreeSurface`, forced by zonal wind belts and a surface temperature restoring. It runs six years with f = 2\u03a9 sin \u03c6, f = \u03a9 sin \u03c6 and f = 2\u03a9 sin 30\u00b0 (`FPlane`): halving \u03a9 roughly doubles the Gulf Stream and Kuroshio transports, as Sverdrup theory predicts, and without \u03b2 the gyres are not western-intensified.\n\n- Everything runs in `Float32` on Metal, CUDA or the CPU.\n- The wind stress is four Gaussian belts, the trades and westerlies of each hemisphere, following the observed annual- and zonal-mean ocean wind stress from the NCEP/NCAR reanalysis.\n- ETOPO1 is read from NCEI over OPeNDAP at three points per cell and averaged in 3 \u00d7 3 blocks; `GridFittedBottom` uses `InterfaceImmersedCondition` so that shelf seas and straits stay open. `resolution` is a top-level parameter.\n- One animation stacks the surface speed and T \u2212 T* (departure from the restoring profile) of the three runs; the barotropic streamfunction is computed with `CumulativeIntegral`.\n- The Coriolis force uses `DualGridScheme`, which removes the grid-scale noise of the C-grid Coriolis term at 1\u00b0.\n- Exports `interpolate!`, which regrids the elevation onto the tripolar grid.\n\nEach run costs about 4 minutes per simulated year on an RTX 3050 Ti laptop GPU (one-hour `SplitRungeKutta3` steps, 79 barotropic substeps), so the three six-year runs take just under two hours.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T01:31:27Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "2370ed",
+        "description": "Sometimes addictive, sometimes allergenic",
+        "id": "MDU6TGFiZWwxMjI4OTY4NzA0",
+        "name": "science \ud83c\udf0a"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-08T16:11:54Z",
+    "number": 5996,
+    "title": "Add a global wind-driven gyres example on a tripolar grid"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Patch release so the stable docs include the global wind-driven gyres example (#5996). To be merged after #5996.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T03:29:16Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-08T16:14:13Z",
+    "number": 6178,
+    "title": "Bump version from 0.113.5 to 0.113.6"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "On a distributed grid stretched in one direction, `ConjugateGradientPoissonSolver` with the FFT preconditioner (`DistributedFourierTridiagonalPoissonSolver`) diverges to a `NaN` residual or stalls, while the same setup on one rank converges in ~10 iterations. Two differences from the serial `FourierTridiagonalPoissonSolver`:\n\n- `compute_preconditioner_rhs!` multiplied the residual by `V\u207b\u00b9` only. The tridiagonal system discretizes `\u0394\u03be\u1d9c \u2207\u00b2`, so the right-hand side also needs `\u0394\u03be\u1d9c` (as the pressure source term and the serial `set_source_term!` apply); without it the preconditioner is not symmetric on a stretched grid.\n- `solve!` returned the solution with an arbitrary constant in the singular Neumann mode (#6163); the serial solver removes the mean, and the distributed one now does too.\n\nPerformance: the mean removal is one global reduction and one broadcast per solve, the same `mean` the serial solver already pays. On 2 A100s with a 256\u00d7256\u00d72048 stretched immersed grid (ranks bound to 16 cores each), it is 3 ms against a 167 ms preconditioner application and a 103 ms CG iteration, about 3% of the iteration or 50 ms of a 16-iteration, 1.65 s pressure solve. Zeroing the mode in spectral space instead would save the `Allreduce` but needs separate index bookkeeping for each transposed layout.\n\n`test/mpi/conjugate_gradient_solver.jl` gains a z-stretched case; the FFT-preconditioner cases there were all uniform grids.\n\nChecked with 2 ranks: on a 32\u00d732\u00d764 stretched CPU grid the distributed preconditioner now agrees with the serial one to 7e-16 and CG converges in 1 iteration (before: `NaN` at the iteration cap); on 2 GPUs, a 256\u00d7256\u00d72048 stretched immersed-boundary Rayleigh\u2013B\u00e9nard step takes 33/30 CG iterations, identical to 1 GPU (before: `NaN`). The staircase convection case from `validation/immersed_boundaries`, run with a deterministic grid on 1 and 2 ranks (CPU and GPU, uniform and stretched z), gives fields that agree to ~1e-15 relative with identical per-step CG iteration counts:\n\n![staircase convection, 1 vs 2 GPUs](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/xk/pr6161-figures/staircase_comparison.png)\n\nPer-grid detail (b, w, p slices and differences, CG iterations, divergence, buoyancy conservation): [isotropic](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/xk/pr6161-figures/gpu_isotropic.png), [anisotropic](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/xk/pr6161-figures/gpu_anisotropic.png), [stretched](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/xk/pr6161-figures/gpu_stretched.png).\n\nCloses #6163.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABVNyPAQ",
+        "number": 6163,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6163"
+      }
+    ],
+    "createdAt": "2026-10-05T19:37:23Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2026-10-08T16:28:44Z",
+    "number": 6161,
+    "title": "Fix the distributed Fourier-tridiagonal Poisson solver as a CG preconditioner"
+  },
+  {
+    "additions": 337,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR allows models with BGC to compute the BGC tendency in a different kernel by returning the tracers to compute the separate tendencies for from `separate_transition_tracers(bgc)`.\r\n\r\nThis is kind of a hack because I found on ORCA1 with realistic forcing/closures/etc. that BGC with 6 tracers was causing around a 10x slow down relative to physics only, and the tendency kernels were around 10x slower than expected. I think the problem was from register pressure and with this solution I get speedup back to the expected cost (~8% per tracer + a tiny bit from the BGC work).\r\n\r\nI don't know if this is just hiding the register pressure problem, or just getting around a true limitation.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T13:25:09Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-10-08T17:06:51Z",
+    "number": 6130,
+    "title": "Optionally compute bgc transitions in a separate kernel"
+  },
+  {
+    "additions": 209,
+    "author": {
+      "id": "MDQ6VXNlcjI2NjU3ODI4",
+      "is_bot": false,
+      "login": "jagoosw",
+      "name": "Jago Strong-Wright"
+    },
+    "body": "This PR adds no-op methods for scalar and biharmonic diffusivity and viscosity when the scalar is zero. Previously the stencil was computed and then multiplied by zero, for biharmonic this change results in around ~30% time saving per tracer kernel when I tested the diffusivity methods on a H100 with CATKE+GM+biharm+scalar.\r\n\r\nCurrently to use you have to pass \u03ba=nothing, we could make this the default?",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T12:53:39Z",
+    "deletions": 62,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-08T21:38:19Z",
+    "number": 6135,
+    "title": "Adds no-op methods for zero diffusivity/viscosity"
+  },
+  {
+    "additions": 119,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T19:39:01Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-10-08T22:44:17Z",
+    "number": 6192,
+    "title": "Support field-based longitude\u2013latitude maps in Makie ext"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Base computes `cosd(::Float32)` in Float64, and Metal.jl overrides `cos(::Float32)` but not `cosd`, so the discrete-form temperature restoring in `global_wind_driven_gyres.jl` fails to compile on Metal. This puts back `cos(deg2rad(\u03c6))` from b445501e22c420624f8cf82a69b1b7549852f4af, which da97b5d8cca1e73b65403a43e03b524cc495fa9a (a batched review suggestion in #5996) reverted to `cosd`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T20:01:08Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-08T23:00:42Z",
+    "number": 6195,
+    "title": "Avoid cosd in the gyres example's temperature restoring kernel"
+  }
+]

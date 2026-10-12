@@ -1,0 +1,231 @@
+[
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "I'm curious to see if this has any impact.  I'm looking in particular at\r\n```\r\n                                                                 \u2502   Test   \u2502   Init   \u2502 Compile \u2502 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 CPU \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 \u2502\r\nTest                                                    (Worker) \u2502 time (s) \u2502 time (s) \u2502   (%)   \u2502 GC (s) \u2502 GC % \u2502 Alloc (MB) \u2502 RSS (MB) \u2502\r\n[...]\r\nsimulation/netcdf_writer                                     (1) \u2502  1823.35 \u2502     1.44 \u2502   44.92 \u2502 100.20 \u2502  5.5 \u2502  267313.12 \u2502  4898.71 \u2502\r\n```\r\nThis is unlikely to achieve ideal parallelism, but already a 2x saving in GC time would be welcome",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T23:30:10Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-28T07:24:38Z",
+    "number": 6069,
+    "title": "Use multi-threaded GC in Buildkite tests"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Add Li et al. (2026), which uses Oceananigans for river-confluence simulations, and update three preprints to their published journal versions.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T08:21:24Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-09-28T08:28:04Z",
+    "number": 6094,
+    "title": "Update papers using Oceananigans"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Same spirit as #6087, to make tests less noisy\r\n\r\n> `GPUArraysCore.allowscalar(true)` warns that allowing scalar indexing globally is discouraged.  The test setup is included by every test file, so with ParallelTestRunner the same two-line warning appeared once per file in the CI log.  The global setting is intentional there, so discard the warning.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-26T12:31:03Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-28T08:29:30Z",
+    "number": 6088,
+    "title": "Silence the `allowscalar` warning in the test setup"
+  },
+  {
+    "additions": 159,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Same spirit as #6087, to make tests less noisy",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-26T12:34:37Z",
+    "deletions": 159,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-28T08:34:05Z",
+    "number": 6089,
+    "title": "Silence the simulations in many tests"
+  },
+  {
+    "additions": 205,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I have recently discovered that the eORCA0.25 and the eORCA0.083 grids (1/4 and 1/12 degree resolution) have a T-Pivot rather than a U-Pivot, i.e. they pivot on tracer points rather than u-velocity points.\r\n\r\nSupporting a TPivot is actually extremely easy because it reuses all the machinery we already have for the u-pivot (also for distributed!). Therefore, this PR separates the \"topology\" from the \"pivot\", so that RightCenterFolded that is true both for a U and a T pivot can support both.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-23T12:57:12Z",
+    "deletions": 198,
+    "labels": [],
+    "mergedAt": "2026-09-28T08:56:52Z",
+    "number": 6064,
+    "title": "Introducing a TPivot for the tripolar grid"
+  },
+  {
+    "additions": 97,
+    "author": {
+      "id": "MDQ6VXNlcjg3NDQwODk5",
+      "is_bot": false,
+      "login": "RanaPriyansh",
+      "name": ""
+    },
+    "body": "Fixes #6071.\n\nThe velocity predictor can leave a nonzero value on an immersed face. The vertically implicit solve then uses that value as a boundary value, even though the immersed velocity must be zero.\n\nMask each velocity after its predictor step and before the implicit solve. The shared step handles both AB2 and RK3. The existing pressure-correction mask stays in place.\n\nThe new regression compares the implicit `w` solve with an independent tridiagonal backward-Euler calculation. It covers vertical forcing and tilted-axis Coriolis at two diffusion factors. A one-step test also checks that forcing inside the immersed region cannot change wet velocities for AB2 or RK3.\n\nOn the unchanged base, the first active face differs from the discrete reference: 0.03849084 versus 0.00999438 with forcing, and 0.01714211 versus 0.00706709 with Coriolis. With this change, the focused CPU test passes all 22 checks:\n\nThe test ran with Julia 1.12.7 in a local package environment using `Pkg.test(\"Oceananigans\"; test_args=[\"time_stepping/immersed_vertical_implicit_velocity\", \"--jobs=1\"], coverage=false)`. The full suite, GPU execution, and performance were not tested locally.\n\nCodex used.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABS8rojA",
+        "number": 6071,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6071"
+      }
+    ],
+    "createdAt": "2026-09-25T13:49:35Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-09-28T10:53:01Z",
+    "number": 6078,
+    "title": "fix: mask immersed velocities before implicit solve"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Make tests less chatty and actually test more things.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-26T10:41:17Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-09-28T11:30:25Z",
+    "number": 6087,
+    "title": "Capture and check the logs of `Simulation` tests with `@test_logs`"
+  },
+  {
+    "additions": 65,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Our default scheme for `WENOVectorInvariant` is dissipative in the vorticity flux. This PR introduces an energy-conserving version of the same flux, which dissipates enstrophy.\r\nIt is much more expensive since we need to compute two reconstructions per vorticity flux (one in the x and one in the y direction). Some results on a 2D decaying turbulent simulation with a 64x64 grid\r\n\r\n\r\nhttps://github.com/user-attachments/assets/d8025a5a-bda8-4705-aa89-46a3e5a62e23\r\n\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T10:33:50Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-09-28T14:26:12Z",
+    "number": 6096,
+    "title": "Energy-neutral vorticity flux in the vector invariant scheme"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "To capture #6063 that is required for ORCA grids in NumericalEarth",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T17:06:11Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-09-28T17:06:24Z",
+    "number": 6103,
+    "title": "(0.113.4) Bump oceananigans"
+  },
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Reverts CliMA/Oceananigans.jl#6078",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-28T14:39:16Z",
+    "deletions": 97,
+    "labels": [],
+    "mergedAt": "2026-09-28T20:08:59Z",
+    "number": 6101,
+    "title": "Revert \"fix: mask immersed velocities before implicit solve\""
+  }
+]

@@ -1,0 +1,100 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`FFTBasedPoissonSolver` divided by the eigenvalues in a broadcast and then zeroed the undetermined mode with `@allowscalar \u03d5c[1, 1, 1] = 0`, a scalar write from the host on every solve. The division and the zeroing now happen in one kernel, `_solve_poisson_in_spectral_space!`, which sets every mode whose denominator `\u03bbx + \u03bby + \u03bbz - m` vanishes to zero. The distributed FFT solver, which already had this kernel without the zeroing and set the mode from the host on rank 0, uses the same kernel and loses its scalar write too.\n\n- Solutions are bitwise identical to `main` for all topologies tested (`PPP`, `PPB`, `PBP`, `BBB`, `PFB`), with `m = 0` and with the screened equation. The regular-grid and conjugate-gradient Poisson tests pass on CPU and on an H100 (208 and 406).\n\nOne H100 with the 64\u00b3 `Nonhydrostatic_FFT` and `Nonhydrostatic_ConjugateGradient` benchmark models (the latter uses the FFT solver as preconditioner, 7 iterations per step), two runs of five 100-step windows each:\n\n| | `main` | this PR |\n|---|---|---|\n| FFT: time per step | 1.150\u20131.156 ms | 1.124\u20131.141 ms |\n| FFT: CUDA API calls per step | 1267 | 1161 |\n| FFT: host\u2192device copies per step | 10 | 7 |\n| CG: time per step | 8.71\u20138.82 ms | 8.51\u20138.59 ms |\n| CG: CUDA API calls per step | 22005 | 21299 |\n| CG: host\u2192device copies per step | 64 | 43 |\n\nOn 4 CPU ranks the `distributed_solvers` MPI group passes except for the two cases of #6196, which fail on `main` as well.\n\nAddresses point 2 of the write-up in https://github.com/CliMA/Oceananigans.jl/pull/6166#issuecomment-6041901724.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T19:41:27Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2026-10-09T07:40:51Z",
+    "number": 6193,
+    "title": "Solve the FFT Poisson equation in spectral space with one kernel"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "A distributed y-partitioned `TripolarGrid` is a `LeftConnectedOnly` topology at the top row, meaning that the row is completely local. In main, this topology was treated as a connected topology when it came to computation, meaning that all the computation we do after communication is ended (in asynchronous distributed architectures) was repeated for the interior cells adjacent to the north fold.\r\n\r\nThis PR fixes it by treating any `LeftConnected*` topology as an actually left connected, i.e. with a local right direction.\r\nWill help with #5888 ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T11:45:05Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-09T13:16:27Z",
+    "number": 6208,
+    "title": "Avoid duplicating the work at the north fold for a distributed y-partitioned `TripolarGrid`"
+  },
+  {
+    "additions": 314,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "In https://github.com/CliMA/ClimaSeaIce.jl/pull/184 we are facing an issue: we would like the momentum kernels to use active cells maps, but we also do not want to have to fill halos every substep which would launch MPI communication at extremely high latency. \r\n\r\nAt the moment, this is not possible because the active cells map span only the interior of the domain and do not include halos.\r\nNote that this is also an issue for #5888 because certain oceananigans kernels (for example the diffusivity computations, the continuity and the hydrostatic pressure kernels) need to run including the halos so they cannot use active cells map, throwing off the load balancing that relies on each rank using only the active cells everywhere.\r\n\r\nThis PR changes this! The main purpose of this PR is, instead of having separate maps, having one general immersed map of which all the separate maps are just views and can be used independently. As such, all the particular functions which used to retrieve particular kernel configurations, now have their active map equivalent:\r\n\r\nThese methods are:\r\n```julia\r\nvolume_kernel_parameters # -Hx+2:Nx+Hx-1, -Hy+2:Ny+Hy-1, -Hz+2:Nz+Hz-1\r\nsurface_kernel_parameters # -Hx+2:Nx+Hx-1, -Hy+2:Ny+Hy-1\r\nextended_interior_kernel_parameters # 0:Nx+1, 0:Ny+1, 1:Nz (renamed from diffusivity_kernel_parameters)\r\ninterior_tendency_kernel_parameters # 1:Nx, 1:Ny, 1:Nz for serial, Hx:Nx-Hx, Hy:Ny-Hy, 1:Nz for distributed\r\n```\r\n\r\nIn practice this PR gives us more flexibility and, by using views, does not require substantially more memory saved.\r\nI hope it boosts also a little bit the performance by using active cells where previously we were computing also inactive cells (like in CATKE for example).\r\n\r\n@jagoosw, after this PR, in sea ice we just have to call the momentum kernels with `surface_kernel_parameters(grid)`\r\n\r\ncc @jackdfranklin \r\n\r\nEdit: on further inspection, I think it is also possible to simplify the `launch!` that now has two path for a workspec, we pass either the parameters in the `parameters` slot, or the `active_cells_map` as a kwarg. This is not necessary and I think this distinction is here just for historical reasons (the active cells map was a experimental feature for a while, hence the bespoke treatment). Now the active cells map approach is well and validated so we can generalize it in the code as well. In this PR we switch to passing the active cella map as a `parameters` itself, completely removing the need for a kwarg and simplifying quite nicely the code.\r\n\r\nThis last change makes this PR a substantial breaking change",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T07:30:01Z",
+    "deletions": 401,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-09T16:37:25Z",
+    "number": 6180,
+    "title": "(0.114) Rework active cells map"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The five skills in `.claude/skills/` (`/run-tests`, `/build-docs`, `/add-feature`, `/new-simulation`, `/babysit-ci`) were never loaded: Claude Code only discovers skills at `.claude/skills/<name>/SKILL.md`. This moves them into that layout and drops the unrecognized `user_invocable` key.\n\nVerified with headless `claude -p --output-format stream-json` (Claude Code 2.1.296): the session's skill list contains none of the five on `main` and all five on this branch.\n\nAlso:\n- Module tree in `AGENTS.md` lists every `src/` module (was missing `AbstractOperations`, `ImmersedBoundaries`, `MultiRegion`, `OutputReaders`, and others)\n- `CubedSphereGrid` \u2192 `ConformalCubedSphereGrid`\n- List `style-rules.md` and `julia-repl-rules.md` alongside the other auto-loading rules\n- Replace the removed `KernelComputedField` in the `new-simulation` skill\n\nDocs-only; no source changes.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T21:06:43Z",
+    "deletions": 22,
+    "labels": [],
+    "mergedAt": "2026-10-09T21:19:15Z",
+    "number": 6215,
+    "title": "Fix agent docs: load skills and update stale references"
+  }
+]

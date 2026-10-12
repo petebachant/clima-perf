@@ -1,0 +1,198 @@
+[
+  {
+    "additions": 422,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Continuing the series of making the tests quieter.  Opening on top of #6133 because that PR is already large enough.  As usual, this PR is easier to review by [ignoring whitespace changes](https://github.com/CliMA/Oceananigans.jl/pull/6139/changes?w=1).  Opening as draft, while I wait for a review of #6133.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T19:49:19Z",
+    "deletions": 602,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-06T00:07:38Z",
+    "number": 6139,
+    "title": "Silence other tests"
+  },
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjY3NDY5ODA=",
+      "is_bot": false,
+      "login": "matt-graham",
+      "name": "Matt Graham"
+    },
+    "body": "Resolves #5505 \r\n\r\nUpdates indexing logic in `getindex` method for `OnDiskFTS` to check if time in file `timeseries/t` group at specified index `n` matches time at index `n` in `times` attribute and if not try to find matching index / iteration key corresponding to this time. If an exact match for the time cannot be found an error is raised. Also adds tests to check indexing of `FieldTimeSeries` with different backends and specified `times` works as expected.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7-gY0I",
+        "number": 5505,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5505"
+      }
+    ],
+    "createdAt": "2026-04-17T09:10:34Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-10-06T00:09:12Z",
+    "number": 5515,
+    "title": "Fix indexing of `FieldTimeSeries` with `OnDisk` backend and specified `times`"
+  },
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Fix a test failure observed in #5799: the test is implicitly relying on the tests running with one thread, which (1) isn't necessarily true in general, and (2) is always false even in CI with KernelAbstractions.jl v0.10.\r\n\r\n> The cubed sphere simulation test compares a model using a split-explicit free surface with extended halos against one without, and expects the same result. It gave both models the same noisy initial conditions by calling `Random.seed!(1234)` before setting each of them with functions calling `rand()`. That relies on how `set!` evaluates functions: in which task, and in which order. It only holds when `set!` evaluates in the calling task in a fixed order, and breaks as soon as the function is evaluated in spawned tasks, whose random number streams also depend on the tasks spawned before (e.g. by GPU synchronization).\r\n> \r\n> Draw the noisy initial conditions once into fields and set both models from them, so that they start from the same state by construction.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-04T12:54:56Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-06T03:48:18Z",
+    "number": 6148,
+    "title": "Set both cubed sphere test models from the same initial fields"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This resolves [warnings](https://buildkite.com/clima/oceananigans/builds/34193#01a0f66f-949a-4861-9f96-dfe4201b7f78/L2665) like\r\n```\r\n\u2502 [2026/10/01 08:03:54.354] WARN  Failed to save and serialize [:coriolis, :buoyancy, :closure] in /tmp/jl_2NFedi/split_ckpt_part4.jld2 because ArgumentError: ArgumentError: a group or dataset named coriolis is already present within this group -@-> /var/lib/buildkite-agent/builds/nautilus-8/clima/oceananigans/src/OutputWriters/jld2_writer.jl:242\r\n\u2502 [2026/10/01 08:03:54.359] WARN  error ArgumentError(\"a group or dataset named grid is already present within this group\") thrown when trying to serialize the grid at serialized/grid -@-> /var/lib/buildkite-agent/builds/nautilus-8/clima/oceananigans/src/OutputWriters/jld2_writer.jl:259\r\n```\r\n\r\n> `initialize_jld2_file!` could try to write the same datasets twice, which JLD2 refuses, so each attempt was caught and turned into a warning:\r\n> \r\n> * With `including = [:grid]` and outputs on a single grid, `:grid` was serialized to `serialized/grid` together with the other properties, and then the grid of the outputs was serialized to the same address.  Now the grid of the outputs is the only one serialized there, as that is what readers use.\r\n> * When a writer with `overwrite_files = false` appends to an existing file, for example the latest part after picking up from a checkpoint, the user `init`, the included properties and the grids were all written again into a file that already had them.  Now the metadata is only written when the file is created, as `NetCDFWriter` does.\r\n> \r\n> The tests that hit these cases now check that no warnings are emitted.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T18:35:15Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-10-06T06:56:52Z",
+    "number": 6138,
+    "title": "Don't write JLD2 metadata twice when initializing an output file"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Update the Sjur, NORi, and Allende paper entries.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T09:57:03Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-06T11:34:03Z",
+    "number": 6165,
+    "title": "Update papers"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "#4031 set `C\u1d47 = 0.28` with the stated intent of yielding a von K\u00e1rm\u00e1n constant of 0.4 in near-bottom similarity layers. The intent was right but the arithmetic was not: the similarity relation was evaluated with `C\u02e1\u1d52u` to the first power instead of cubed. This PR sets `C\u1d47 = 0.967`, which actually gives \u03ba = 0.4.\r\n\r\n## The relation\r\n\r\nEquation (35) of [Wagner et al. (2025)](https://doi.org/10.1029/2024MS004522), section 3.1.3, for a neutrally-stratified similarity layer a distance `d` from a boundary with mixing length `\u2113 = C d`:\r\n\r\n```\r\n\u03ba = C (C\u02e1\u1d52u\u00b3 / C\u02e1\u1d52D)^(1/4)\r\n```\r\n\r\nWith the calibrated `C\u02e2 = 1.131`, `C\u02e1\u1d52u = 0.361` and `C\u02e1\u1d52D = 1.604` this gives \u03ba = 0.468, which is the \u03ba \u2248 0.47 reported in section 5.1.2 (eq. 53) and table 3. The surface value exceeds the rigid-wall 0.4 because the LES used for calibration include surface wave effects.\r\n\r\nThe bottom is the same calculation with `C\u1d47` in place of `C\u02e2`. Inverting for \u03ba = 0.4:\r\n\r\n```\r\nC\u1d47 = 0.4 (C\u02e1\u1d52D / C\u02e1\u1d52u\u00b3)^(1/4) = 0.967\r\n```\r\n\r\n## What went wrong in #4031\r\n\r\nThe formula used in #4015 was `C\u1d47 = \u03ba (C\u02e1\u1d52D / C\u02e1\u1d52u)^(1/4)`, with `C\u02e1\u1d52u` uncubed. \r\n\r\ncc @simone-silvestri this could affect OMIP simulations / overflows...\r\ncc @enri66 this should increase the impact of bottom drag ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-17T21:52:25Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-10-06T21:21:20Z",
+    "number": 6024,
+    "title": "Fix CATKE's bottom mixing length coefficient C\u1d47"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Only track coverage of Oceananigans, not of all the other packages, which is useless and wasteful.  Close #6027, close #6031.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABR22zgw",
+        "number": 6027,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6027"
+      }
+    ],
+    "createdAt": "2026-10-06T21:21:26Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-06T22:42:25Z",
+    "number": 6167,
+    "title": "[CI] Reduce cost of code coverage"
+  }
+]
