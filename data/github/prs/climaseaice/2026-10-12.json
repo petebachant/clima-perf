@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The slab sea ice model is a zero-layer model so it cannot store heat at a specific temperature. Therefore, using temperature dependent latent heat from the top and the bottom generates an energy leak in the system, specifically \r\n\r\n```math\r\nL = Q_{ii} (1 / Eu - 1 / Eb)\r\n```\r\n\r\nThe energy conservation tests do not complain because we test in freshwater where the bottom freezing temperature is always zero and equal to the top melting temperature. It is when we have salinity that the leak appears (or in PRs like #183 where, given the free-board depth of the ice and the z-dependency of the liquidus, the freezing temperature changes also at  zero salinity, making the tests fail).\r\n\r\nThis is something I actually found some time ago and patched in a brutal way in https://github.com/NumericalEarth/NumericalEarth.jl/blob/e58c31dad6328f8c174823cd36d5d7f8126fd412/test/test_conservation.jl#L22-L25 reminding myself to correct it as soon as possible, but then I completely forgot. PR #183 resurfaced this flaw of the zero-layer model",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T06:55:31Z",
+    "deletions": 56,
+    "labels": [],
+    "mergedAt": "2026-10-12T15:05:03Z",
+    "number": 186,
+    "title": "Conserving slab sea ice model"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "the `SeaIceModel` depends on a bunch of external fields that provide the boundaries for the (semi-implicit) momentum solve.\r\n\r\nThis PR fixes an issue first found in https://github.com/NumericalEarth/NumericalEarth.jl/pull/730 where the external fields that are `ComputedFields` need to be recomputed outside the sea ice model.\r\n\r\nThis PR adds a `compute!` before ingesting any external variable so that we allow using computed fields as external sources while simultaneously making sure the boundaries are updated before consumption (and we avoid the need of bespoke out-of-place updates like the ones we were forced to use in the above-mentioned PR)\r\n\r\ncc @aklocker42",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T08:52:17Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-10-12T15:05:51Z",
+    "number": 185,
+    "title": "Compute external fields before usage"
+  }
+]
