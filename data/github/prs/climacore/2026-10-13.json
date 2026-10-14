@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 205,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Reduces compilation time for the flagship AMIP coupled run, originally written by an LLM and cleaned up by me.\r\n\r\nEvery `FieldName` is a singleton, so a `FieldNameSet` and its `FieldNameTree` are fully determined by their types. The set operations were written as unrolled closures specialized on each individual name value, so a key set with N values compiled on the order of N^2 method instances. The atmosphere's Jacobian uses a 324-pair key set, which made this the single most expensive phase of model setup.\r\n\r\nFor current Atmos main, Jacobian construction drops from ~340 s to ~40 s.\r\n\r\n### Changes\r\nThe new code compares chains directly, because two names of the same depth share a chain type while two different names never share a FieldName type. Most operations are a map or a filter and stay as ordinary UnrolledUtilities code.\r\n\r\n`NameChain` and `NamePairChain` are the chain types, and `name_chain` and `field_name` convert between them. The per-name functions have chain versions that replace them: `is_child_chain`, `is_overlapping_chain`, `is_valid_chain` and `chain_in`. A `FieldNameTree` is flattened once by `tree_chain_vector`.\r\n\r\nThere are four generated functions that need to compare every value against every other and always scale O(N^2). These back the non-generated functions:\r\n- `check_values`: function the constructor calls to reject names that are duplicated, that overlap one another, or that are not in the FieldNameTree\r\n- `is_value_in_set`: backs `in`, `issubset`, `intersect` and `setdiff`\r\n- `unique_and_non_overlapping_values`: backs `matrix_inferred_diagonal_keys` and `summand_names_for_matrix_product`\r\n- `union_values`:  backs `union`, which `intersect` and `setdiff` also use to enumerate candidates\r\n\r\nIn my attempts to do this without generated functions I got a max of 30% speedup in the Jacobian construction.\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-02T19:40:23Z",
+    "deletions": 145,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T16:26:55Z",
+    "number": 2672,
+    "title": "Compute FieldNameSet operations once per type"
+  }
+]

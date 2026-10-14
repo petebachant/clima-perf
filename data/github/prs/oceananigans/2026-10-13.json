@@ -1,0 +1,201 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Closes #6237.\n\nSince #6228, `size(f::AbstractField)` passes `indices(f)` to the grid. Fields adapted for a kernel drop their indices (`indices(f) === nothing`), so the size of an adapted operation errored inside GPU kernels, e.g. `argmin` in `global_wind_driven_gyres.jl`. This uses `axes_indices`, as `axes` already does, and adds a regression test.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABWxcpWQ",
+        "number": 6237,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6237"
+      }
+    ],
+    "createdAt": "2026-10-13T02:01:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-13T03:22:39Z",
+    "number": 6238,
+    "title": "Fix size of adapted fields"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Relaxes the CUDA compat in `docs/Project.toml` from `6.0 - 6.1` (#5681) to `6`, matching the package.\n\nWith the 6.1 cap, Reactant (which only supports CUDA 5.11.3 or 6.2 and later) forces the docs onto CUDA 5.11.3. This PR's docs build will show whether the CUDA 6.2.0 problems that motivated #5681 (#5678) are gone.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T02:24:48Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-13T07:09:46Z",
+    "number": 6239,
+    "title": "Relax CUDA compat in docs"
+  },
+  {
+    "additions": 297,
+    "author": {
+      "id": "U_kgDOCJvhHQ",
+      "is_bot": false,
+      "login": "jackdfranklin",
+      "name": ""
+    },
+    "body": "This PR adds new functionality to generate a balanced partition given an instance of an immersed boundary.\r\n\r\nThe internal functions are more general, and can take any \"weight map\" (which is a field on the underlying grid). For the moment, I have just implemented the weight map as being the total count of active cells per x-y column. This can obviously be improved in the future.\r\n\r\nCurrently I have only implemented two partitioning algorithms, both of which generate a \"Generalised Block Distribution\". This is essentially a Cartesian topology of the partition but with different sizes. The first algorithm is an approximation that partitions the x and y directions independently, and the second uses an iterative algorithm from this paper: [Manne, F., S\u00f8revik, T. (1996). Partitioning an array onto a mesh of processors](https://doi.org/10.1007/3-540-62095-8_50)\r\n\r\nI am looking into other, more generalised, partitioning algorithms but they will need some generalisation/abstracting of the current way distributed grids work. This PR gets the initial API in which can then be built on top of.\r\n\r\nThings to do:\r\n- [ ] Documentation\r\n- [x] Tests",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABLZVxJA",
+        "number": 5845,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5845"
+      }
+    ],
+    "createdAt": "2026-08-21T16:17:03Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T13:31:14Z",
+    "number": 5888,
+    "title": "Simple load balancing"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "With `extend_halos = true` and open boundaries, the split-explicit substeps use\n`LocalHaloFilling` and the barotropic kernel steps U, V, \u03b7 into the Connected halo\nregion. The open-boundary halo fills, however, cover only `1:N` in the tangential\ndirection, so those halo rows are left unfilled and the distributed solution diverges\nfrom the serial one.\n\nThis rebuilds the substep fill kernels for distributed `LocalHaloFilling` so the\ntangential extent of west/east and south/north fills matches the barotropic kernel\nrange in Connected dimensions.\n\nThe distributed-vs-serial comparisons in `test/mpi/split_explicit_boundaries.jl` that\nwere marked `@test_broken` for this case are now strict and pass (4 CPU ranks).\nIndependent of #6156.\n\n## Halo filling: main vs this PR\n\nTop panels \u2192 main, bottom panels \u2192 this PR.\n\n### (Face, Center, Center) fields\n\n<img width=\"3181\" height=\"1369\" alt=\"substep_fills_U\" src=\"https://github.com/user-attachments/assets/5ff88f66-25ac-4e77-89d5-92a230e79127\" />\n\n### (Center, Face, Center) fields\n\n<img width=\"3181\" height=\"1369\" alt=\"substep_fills_V\" src=\"https://github.com/user-attachments/assets/9aaaf940-fb8a-43e1-93a1-0ad7d3ed9996\" />\n\n### (Center, Center, Center) fields\n\n<img width=\"3181\" height=\"1369\" alt=\"substep_fills_\u03b7\" src=\"https://github.com/user-attachments/assets/7a5d3667-67d4-4c9e-b1fb-97c5a19f6599\" />\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T13:27:51Z",
+    "deletions": 48,
+    "labels": [],
+    "mergedAt": "2026-10-13T14:19:31Z",
+    "number": 6157,
+    "title": "Fill open boundaries in Connected halos for LocalHaloFilling split-explicit substeps"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Once again, taken out of #5799.\r\n\r\n> A `Field` adapted for a kernel drops its indices, which become\r\n> `nothing`. The axes of a field already read that as `(:, :, :)`, but\r\n> the index intersection of operations indexed into it, so computing the\r\n> indices, axes, or size of an operation on adapted fields threw a\r\n> `MethodError`. GPUArrays 12 reductions run into this both inside the\r\n> kernel, where the reduction indexes through the operation's axes, and\r\n> on the host, where Adapt.jl rebuilds the reshaped operation from its\r\n> size. ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-11T08:01:20Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-10-13T16:04:53Z",
+    "number": 6230,
+    "title": "Treat the dropped indices of adapted fields as the full range"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "The centered momentum fluxes multiply a cell-center area by an interpolated velocity. Where face areas differ between neighboring faces, as next to `PartialCellBottom` partial cells, the resulting mass fluxes do not satisfy continuity on momentum cells, so centered advection does not conserve kinetic energy. An inviscid `NonhydrostaticModel` with the default `Centered()` over a partial-cell staircase reaches `NaN` within 100 time steps. The fluxes now interpolate the face transports, as the upwind-biased fluxes already do.\n\n- The kinetic energy conservation test now also runs on `PartialCellBottom`, with volume-weighted energy; it fails before this change.\n\nStacked on #6187.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T20:26:12Z",
+    "deletions": 16,
+    "labels": [],
+    "mergedAt": "2026-10-13T18:30:51Z",
+    "number": 6213,
+    "title": "Interpolate transports in centered momentum fluxes"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Yes, also taken out of #5799, I'm done for this morning \ud83e\udd72 \r\n\r\n> A `ConditionalOperation` that applies a function took the element type\r\n> of its operand, so `any(isnan, field)` claimed floating-point elements\r\n> while producing `Bool`s. GPUArrays 12 reductions derive their\r\n> accumulator from the element type and rejected `any` and `all`, since\r\n> `|` and `&` of floats always throw. The element type now follows the\r\n> function, and the mask a reduction substitutes where a condition\r\n> doesn't hold, e.g. in immersed cells, is converted to the type of the\r\n> function's values rather than of the field's. Infinite masks, the\r\n> neutral elements of `maximum` and `minimum`, become the extreme values\r\n> of integer and `Bool` types instead of failing to convert.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-11T08:04:33Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2026-10-13T20:58:52Z",
+    "number": 6232,
+    "title": "Give conditional operations the type of their function's values"
+  }
+]

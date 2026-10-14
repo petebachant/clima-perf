@@ -1,0 +1,145 @@
+[
+  {
+    "additions": 380,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThe resolved-gradient variance block is the variance from a Gaussian subgrid parcel displacement with covariance c_g diag(\u2113_h\u00b2, \u2113_h\u00b2, \u2113_v\u00b2), split into the part along the local \u03b8_li surface and the part across it.\r\n\r\nAlong the surface the displacement is conditioned on \u03b4\u00b7\u2207\u03b8_li = 0, which gives q\u2032q\u2032 = g\u1d40Dg \u2212 (g\u1d40Dn)\u00b2/(n\u1d40Dn) with 3D gradients g = \u2207q_tot, n = \u2207\u03b8_li. This contains the previous horizontal term exactly for parallel horizontal gradients (|\u2207_h q \u2212 r \u2207_h \u03b8|\u00b2 times the cell cap 1/(1 + (s\u0394x/\u0394z)\u00b2)), is bounded by Cauchy\u2013Schwarz for any stratification, and caps only displacements in the tilt direction.\r\n\r\nAcross the surface the vertical uniform-box block keeps \u03b8\u2032\u03b8\u2032 and uses the q gradient across the surface for q\u2032q\u2032 and \u03b8\u2032q\u2032, so the two parts are orthogonal and nothing is counted twice. Results are unchanged for a flat \u03b8_li surface. \r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-12T05:37:11Z",
+    "deletions": 304,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T00:46:39Z",
+    "number": 4887,
+    "title": "Geometric SGS variance: conditional displacement on the \u03b8_li surface"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This prevents artifacts from needing to be downloaded every build.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T15:26:57Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T18:20:10Z",
+    "number": 4892,
+    "title": "Cache test downloads across Buildkite jobs"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Fix depot corruption caused by build https://buildkite.com/clima/atmos-depot/builds/158. Working build [here](https://buildkite.com/clima/atmos-depot/builds/159#01a13607-9d3a-4d15-a41a-2bf4e89b9f57)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T16:38:36Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-10-13T18:39:34Z",
+    "number": 4893,
+    "title": "Fix depot build failure"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "The checkbounds job does not need to run on buildkite, it can easily run in the github actions unit tests which already run with --check-bounds. This PR moves the test out of buildkite and into the unit tests and removes extra check-bounds related overhead. We still test that a sphere simulation is not silently accessing out of bounds memory.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T16:50:35Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T19:41:56Z",
+    "number": 4894,
+    "title": "Move Checkbounds job into unit tests"
+  },
+  {
+    "additions": 161,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \nMake SGS variance fidelity \u03b1 a local function depending on the ratio of mixing to microphysics time-scales\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- I have read and checked the items on the review checklist.\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-11T05:20:07Z",
+    "deletions": 97,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T20:12:35Z",
+    "number": 4885,
+    "title": "Variable non-eq SGS variance fidelity"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Shorten two slow CI tests\n- box_density_current_test_implicit: grid shrinks from 45x45x45 to 10x10x20 elements\n- baroclinic_wave_hughes2023: t_end from 4 days to 2 days.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T20:02:16Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-13T22:20:54Z",
+    "number": 4895,
+    "title": "CI: Shrink long-running tests"
+  }
+]
