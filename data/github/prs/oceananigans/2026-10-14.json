@@ -1,0 +1,145 @@
+[
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "- `global_wind_driven_gyres.jl` read ETOPO1 from NOAA's OPeNDAP servers, which fail intermittently and broke the docs build on 1cec629d3. It now downloads ETOPO1 sampled every 10 arc-minutes (4.5 MB) from OceananigansArtifacts.jl (glwagner/OceananigansArtifacts.jl#9) and averages it in blocks of `6resolution` samples, which also covers the \u00bd\u00b0 and 2\u00b0 runs. An alternative is `DataDeps`, as the tests and validation scripts use, at the cost of adding a dependency to the docs environment.\n- `@nolebase/vitepress-plugin-enhanced-readabilities` and `@nolebase/ui` 2.21.0 (published 2026-10-13) require VitePress 2, so `npm install` fails with `ERESOLVE` against our `vitepress@^1.6.3` and every docs build fails at the render step. Both are pinned to `~2.18.2`, whose peer range includes VitePress 1.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T18:17:19Z",
+    "deletions": 15,
+    "labels": [],
+    "mergedAt": "2026-10-14T02:17:22Z",
+    "number": 6243,
+    "title": "Fix the docs build: download ETOPO1 from OceananigansArtifacts and pin @nolebase"
+  },
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Update papers using Oceananigans. Added few undergrad/masters theses so I changed the section title.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T00:29:20Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-14T04:43:05Z",
+    "number": 6235,
+    "title": "Update papers"
+  },
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "SplitRungeKutta always restart from cached fields at the beginning of the time-step. However, when applying the deferred free surface for the implicit drag trick, we were using the stage free surface instead of the beginning-of-step-surface.\r\nThis lowers the order of the implicit drag and it makes it less effective. This PR fixes the implementation.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T08:04:45Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-10-14T14:37:11Z",
+    "number": 6152,
+    "title": "Correct implicit drag for split-RK"
+  },
+  {
+    "additions": 72,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Motivation for this was to make work some tests that were only commented out (added in #2881), spotted by @tomchor at https://github.com/CliMA/Oceananigans.jl/pull/6133#discussion_r4172462533.\r\n\r\n> `regrid_in_x!` and `regrid_in_y!` weighted each source cell by its full\r\n> horizontal area and divided by the area of the target cell.  This is only\r\n> correct when source and target cells have the same extent in the other\r\n> horizontal direction.  Regridding a field reduced over `y` and `z`, which\r\n> lives on the full 3D grid, onto a 1D grid that is `Flat` in `y` scaled the\r\n> contributions of partially overlapping source cells by the `\u0394y` of the\r\n> source grid, giving wrong values in the target cells that straddle two\r\n> source cells.\r\n> \r\n> On `RectilinearGrid` and `LatitudeLongitudeGrid` the horizontal cell area\r\n> factorizes into a factor depending only on `x` (`\u0394x` or `\u0394\u03bb`) and one\r\n> depending only on `y` (`\u0394y` or `\u0394sin\u03c6`), so weight cells by their measure\r\n> in the regridded direction only, as `regrid_in_z!` already does with `\u0394z`.\r\n> This is exact for both grids and removes the need for\r\n> `fractional_horizontal_area` and for the face counts passed to the kernels.\r\n> \r\n> Re-enable the commented-out test that regrids a reduced field, which was\r\n> disabled because of this problem and now passes in `x`, `y` and `z`.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-03T10:37:30Z",
+    "deletions": 76,
+    "labels": [],
+    "mergedAt": "2026-10-14T15:23:12Z",
+    "number": 6142,
+    "title": "Weight horizontal regridding by the length in the regridded direction"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #6200. `compute_implicit_free_surface_right_hand_side!` launches its kernel on `rhs.grid`, the regional grid, instead of the conjugate-gradient solver's `MultiRegionGrid`.\n\nThe multi-region solid-body-rotation test also runs with a PCG implicit free surface and compares \u03b7 on `XPartition(2)` and `YPartition(2)` with the single grid (`rtol = 1e-14`).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABWBvEqQ",
+        "number": 6200,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6200"
+      }
+    ],
+    "createdAt": "2026-10-09T05:40:54Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-10-14T18:49:52Z",
+    "number": 6202,
+    "title": "Fix the PCG implicit free surface on MultiRegionGrids"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "The search-direction kernel reads \u03c1 and \u03c1\u2071\u207b\u00b9 and writes p = z + \u03b2p over the interior, and the update kernel computes \u03b1 = \u03c1 / p\u1d40q itself and stores \u03c1 for the next iteration, so the three one-element broadcasts per iteration (\u03b2, \u03b1, \u03c1\u2071\u207b\u00b9) and their host allocations are gone. Based on #6171.\n\n64\u00b3 nonhydrostatic box, FFT-preconditioned CG with 7 iterations per solve, one H100, per step: 7.13\u20137.29 \u2192 6.90\u20137.26 ms, launches 912 \u2192 852, CUDA API calls 15.9k \u2192 14.3k, host enqueue 7.8 \u2192 7.5\u20137.7 ms. At 320\u00d7320\u00d72560 with the Fourier-tridiagonal preconditioner the iteration is unchanged (155.0 \u2192 154.8 ms). Matches the generic iteration to 1e-15 with identical iteration counts for no, FFT and diagonally dominant preconditioners.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T07:36:19Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-14T18:59:38Z",
+    "number": 6206,
+    "title": "Compute \u03b1 and \u03b2 inside the fused conjugate-gradient kernels"
+  }
+]

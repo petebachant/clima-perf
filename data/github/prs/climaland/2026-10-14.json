@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR fixes the Box links for the `twostr_test` and `water_conservation_test` artifacts.\r\n\r\nAlso, see https://github.com/CliMA/ClimaArtifacts/pull/188. closes https://github.com/CliMA/ClimaLand.jl/issues/1915",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABWsx9Pg",
+        "number": 1915,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1915"
+      }
+    ],
+    "createdAt": "2026-10-12T23:44:11Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-14T00:20:32Z",
+    "number": 1916,
+    "title": "Fix Box links for artifacts"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nSwitch ClimaLand to the 0.25\u00b0 MODIS LAI artifacts of CliMA/ClimaArtifacts#186, which hold the LAI of the *land part* of each cell, aggregated from the 0.05\u00b0 MODIS data over land only. The current 1\u00b0 artifacts count water as LAI = 0, so the LAI of coastal and lake-side cells is too low by their land fraction: for example 1.2 instead of 4.0 m\u00b2 m\u207b\u00b2 (2000\u20132020 mean) in the 1\u00b0 cell of the GF-Guy FLUXNET site, which is 14% land. ClimaArtifacts#186 describes the method and its validation.\n\n## Changes\n\n- `Artifacts.toml`: replace `modis_lai`, `modis_lai_climatology` and `modis_max_lai` with `modis_lai_0.25deg`, `modis_lai_climatology_0.25deg` and `modis_max_lai_0.25deg`.\n- `src/Artifacts.jl`: the MODIS path helpers point to the new artifacts and file names (`Yuan_et_al_YYYY_0.25x0.25.nc`, `modis_lai_climatology_0.25x0.25.nc`, `modis_max_lai_0.25x0.25.nc`). Their names and signatures are unchanged, so `prescribed_lai_modis`, `prescribed_climatological_lai_modis`, `modis_max_lai`, `get_maxLAI_at_site` and `get_modis_lai_obs_var` read the new data without other changes.\n- `experiments/calibration/observation_map.jl`: `process_member_data!` passes its `short_names` to `get_calibration_obs_var_dict`, which it calls only to check the names, so it no longer loads the 21 years of MODIS LAI for every ensemble member when `lai` is not a calibration target.\n- NEWS entry.\n\nThe variable (`lai`) and the time axis (12 values 30 days apart from January 1) are the same as before. LAI is stored as `Int16` with `scale_factor = 0.001`, which NCDatasets, ClimaUtilities and ClimaAnalysis unpack to `Float32`. Ocean cells are now filled from the nearest land cells instead of being NaN; the leaderboard (`_land_intersection_mask`) and the calibration (`make_ocean_mask`) mask with the simulation's land, so this does not change which cells are compared.\n\n## Checks\n\nRun locally with the `.buildkite` environment, downloading the artifacts from Box:\n\n- `prescribed_lai_modis` (2008\u20132009, including the year boundary), `prescribed_climatological_lai_modis` (including 2050, outside the data) and `modis_max_lai` on a 101 \u00d7 101 global box: on land, LAI between 0 and 6.7, no NaN. `modis_max_lai` on land ranges from 0 to 6.70, against 0 to 6.62 with the previous artifact.\n- `get_maxLAI_at_site` in 2010: 4.45 at GF-Guy, 3.87 at US-MOz.\n- `get_modis_lai_obs_var()`: 1440 \u00d7 720 \u00d7 250 months, 2000-01 to 2020-10, longitudes \u2212179.875 to 179.875, latitudes \u221289.875 to 89.875, no NaN, maximum 6.83.\n- `test/standalone/Vegetation/spatial_parameters.jl` and `test_optimal_lai.jl` pass.\n\n## Cost of the LAI observations\n\nAt 0.25\u00b0 the data has 16 times more cells. `get_modis_lai_obs_var()` takes 30 s, allocates 17 GB and peaks at 8.4 GB of memory. The leaderboard loads it once per run. A calibration with `lai` as a target still loads it once per ensemble member and iteration in `process_member_data!`, only to check the names; loading it once per iteration would be a follow-up.\n\n## Before merging\n\n- [ ] Copy the three artifacts to the central cluster and update `Overrides.toml`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-14T18:29:40Z",
+    "deletions": 30,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-14T21:04:39Z",
+    "number": 1918,
+    "title": "Use the 0.25\u00b0 MODIS LAI of the land part of each cell"
+  }
+]
