@@ -156,8 +156,8 @@ pipeline:
         snapshot the citation graph as four normalized JSONL tables
         (clima-pubs, citing-pubs, citations, authors) under data/openalex/.
         No-ops once the marker records the current UTC day. Internal-vs-
-        external classification and package grouping happen in the analyze
-        notebook.
+        external classification and package grouping happen in
+        analyze-engagement.
       kind: python-script
       script_path: scripts/fetch-citations.py
       environment: clima-data
@@ -175,9 +175,6 @@ pipeline:
       inputs:
         - runs/amip
         - buildkite
-        - data/github
-        - data/openalex
-        - data/julia-registry
       outputs:
         - path: results/amip.csv
           storage: git
@@ -185,6 +182,21 @@ pipeline:
           storage: git
         - path: figures/amip-speedup.json
           storage: git
+    analyze-engagement:
+      description: >
+        Count external engagement with CliMA's products per quarter: paper
+        citations, GitHub stars, forks, issues, and merged PRs, and new
+        Julia-registry dependents, excluding CliMA's own people and bots.
+        Writes one event table per stream and
+        figures/external-engagement.json.
+      kind: python-script
+      script_path: scripts/analyze-engagement.py
+      environment: analyze
+      inputs:
+        - data/github
+        - data/openalex
+        - data/julia-registry
+      outputs:
         - path: figures/external-engagement.json
           storage: git
         - path: results/external-citations.csv
@@ -341,7 +353,7 @@ figures:
   - path: figures/external-engagement.json
     title: External engagement
     description: External engagement with CliMA's products on a quarterly basis.
-    stage: analyze
+    stage: analyze-engagement
   - path: figures/weekly-benchmarks.json
     title: Weekly benchmarks
     stage: analyze-weekly
@@ -415,19 +427,19 @@ datasets:
       cited CliMA paper's DOI + software package (if any) and the citing work's
       quarter. Internal self-citations (any author shared with any scraped CliMA
       paper) are excluded.
-    stage: analyze
+    stage: analyze-engagement
   - path: results/github-engagement.csv
     title: GitHub engagement events
     description: One row per external star / fork / opened issue / merged PR
       (login is non-CliMA-org, non-bot), with repo, event type, login,
       timestamp, and quarter.
-    stage: analyze
+    stage: analyze-engagement
   - path: results/new-registry-dependents.csv
     title: New external Julia-registry dependents
     description: One row per (CliMA package, external dependent) pair, with the
       dependent's repo URL and the quarter when it first appeared in the Julia
       General registry as a dependent.
-    stage: analyze
+    stage: analyze-engagement
   - path: buildkite
     title: Buildkite flagship AMIP jobs
     description: Job info and raw logs from Buildkite for the flagship AMIP

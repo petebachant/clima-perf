@@ -1,6 +1,6 @@
 """Summarize the rate of change of external engagement.
 
-Combines the three event streams the analyze notebook writes:
+Combines the three event streams analyze-engagement writes:
 
 - ``results/external-citations.csv`` -- external citing works per quarter
 - ``results/github-engagement.csv`` -- external stars/forks/issues/PRs

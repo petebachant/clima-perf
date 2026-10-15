@@ -399,28 +399,13 @@ stages:
       nfiles: 2
     - path: .calkit/notebooks/cleaned/notebooks/analyze.ipynb
       hash: md5
-      md5: caf94777c2e13c76e249927300eac16e
-      size: 40398
+      md5: 82ac35db9a75e2ad95ec6f947dc45c30
+      size: 16864
     - path: buildkite
       hash: md5
       md5: 299512a77a9ae8f4557271e84f64a501.dir
       size: 13130805
       nfiles: 203
-    - path: data/github
-      hash: md5
-      md5: 6b050cbfb428f426522ce37c77cdd279.dir
-      size: 23192111
-      nfiles: 10208
-    - path: data/julia-registry
-      hash: md5
-      md5: 06d52adeabbf3839a82b30a87bdcfd01.dir
-      size: 35703
-      nfiles: 2
-    - path: data/openalex
-      hash: md5
-      md5: 24fcd68dc1a8378380f0c6b30f2803a1.dir
-      size: 3233984
-      nfiles: 6
     - path: runs/amip
       hash: md5
       md5: 998b815aed50d219859e75d8aec489cd.dir
@@ -429,20 +414,16 @@ stages:
     outs:
     - path: .calkit/notebooks/executed/notebooks/analyze.ipynb
       hash: md5
-      md5: 37deaa6b310e7b0675be25e5c217adc3
-      size: 183130
+      md5: 7c8f6dba083dea329f8e2f9d97aa8141
+      size: 62464
     - path: .calkit/notebooks/html/notebooks/analyze.html
       hash: md5
-      md5: f9f215bec2bd7b75c1d3c7485fcc9a7b
-      size: 418286
+      md5: 87cadb934ab1023272c90ead07b61f87
+      size: 330657
     - path: figures/amip-speedup.json
       hash: md5
       md5: e5825a630d00d0ba8bac7332961ced94
       size: 18628
-    - path: figures/external-engagement.json
-      hash: md5
-      md5: 1827a286aae20a8fa174f53b80039e38
-      size: 37578
     - path: results/amip-repo-diff-links.md
       hash: md5
       md5: f294bc0173abc26b18ab4723f7fd6c99
@@ -451,18 +432,6 @@ stages:
       hash: md5
       md5: f8360c1e6910dc6dcd9f4f94d8b17420
       size: 133970
-    - path: results/external-citations.csv
-      hash: md5
-      md5: 7e1d545cdeb09131006056fdff1b891f
-      size: 202699
-    - path: results/github-engagement.csv
-      hash: md5
-      md5: ed450f4c627afe20a3525a640188fe73
-      size: 252021
-    - path: results/new-registry-dependents.csv
-      hash: md5
-      md5: 69606b8a9bc85d7aff1e91adb9d8bd69
-      size: 2992
   benchmark-amip@2026-01-14:
     cmd: calkit slurm batch --name benchmark-amip@2026-01-14 --environment clima
       --log-path 'runs/amip/2026-01-14/output.log' --dep scripts/run.py --dep 
@@ -1088,8 +1057,8 @@ stages:
       size: 2992
     - path: scripts/summarize-engagement.py
       hash: md5
-      md5: 5a255546000cda1cba7aae44ce9a4999
-      size: 3371
+      md5: 1db179308aab358b8dd2d7043066d74e
+      size: 3369
     outs:
     - path: results/engagement-summary.json
       hash: md5
@@ -1117,3 +1086,48 @@ stages:
       hash: md5
       md5: 02e384a974f2d49ec95b8292b7fd0d19
       size: 716
+  analyze-engagement:
+    cmd: calkit xenv -n analyze --no-check -- python 
+      scripts/analyze-engagement.py
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: bd4ac862a0f5408617ddc484d346527e.dir
+      size: 2229
+      nfiles: 2
+    - path: data/github
+      hash: md5
+      md5: 6b050cbfb428f426522ce37c77cdd279.dir
+      size: 23192111
+      nfiles: 10208
+    - path: data/julia-registry
+      hash: md5
+      md5: 06d52adeabbf3839a82b30a87bdcfd01.dir
+      size: 35703
+      nfiles: 2
+    - path: data/openalex
+      hash: md5
+      md5: 24fcd68dc1a8378380f0c6b30f2803a1.dir
+      size: 3233984
+      nfiles: 6
+    - path: scripts/analyze-engagement.py
+      hash: md5
+      md5: 2eea4c38e91ecd5d6e622806453df21e
+      size: 18246
+    outs:
+    - path: figures/external-engagement.json
+      hash: md5
+      md5: 23f6387c0d2d19f5402845ec241b8d1d
+      size: 37578
+    - path: results/external-citations.csv
+      hash: md5
+      md5: 7e1d545cdeb09131006056fdff1b891f
+      size: 202699
+    - path: results/github-engagement.csv
+      hash: md5
+      md5: ed450f4c627afe20a3525a640188fe73
+      size: 252021
+    - path: results/new-registry-dependents.csv
+      hash: md5
+      md5: 69606b8a9bc85d7aff1e91adb9d8bd69
+      size: 2992
