@@ -115,9 +115,6 @@ stages:
       - .calkit/notebooks/cleaned/notebooks/analyze.ipynb
       - runs/amip
       - buildkite
-      - data/github
-      - data/openalex
-      - data/julia-registry
       - .calkit/env-locks/analyze
     outs:
       - results/amip.csv:
@@ -129,6 +126,22 @@ stages:
       - figures/amip-speedup.json:
           cache: false
           persist: false
+      - .calkit/notebooks/executed/notebooks/analyze.ipynb:
+          cache: false
+      - .calkit/notebooks/html/notebooks/analyze.html:
+          cache: false
+    desc: Automatically generated from the 'analyze' stage in calkit.yaml.
+      Changes made here will be overwritten.
+  analyze-engagement:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/analyze-engagement.py
+    deps:
+      - scripts/analyze-engagement.py
+      - data/github
+      - data/openalex
+      - data/julia-registry
+      - .calkit/env-locks/analyze
+    outs:
       - figures/external-engagement.json:
           cache: false
           persist: false
@@ -141,12 +154,8 @@ stages:
       - results/new-registry-dependents.csv:
           cache: false
           persist: false
-      - .calkit/notebooks/executed/notebooks/analyze.ipynb:
-          cache: false
-      - .calkit/notebooks/html/notebooks/analyze.html:
-          cache: false
-    desc: Automatically generated from the 'analyze' stage in calkit.yaml.
-      Changes made here will be overwritten.
+    desc: Automatically generated from the 'analyze-engagement' stage in
+      calkit.yaml. Changes made here will be overwritten.
   analyze-dev-speed:
     cmd: calkit nb execute --environment analyze --no-check --to html
       "notebooks/analyze-dev-speed.ipynb"
