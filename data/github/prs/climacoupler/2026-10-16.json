@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "The ORCA grid is built with an F-pivot fold (`RightFaceFolded`). The 3-argument `Tripolar(n, f, s)` constructor fills in `RightCenterFolded` with `UPivot`; we need to use the 4-argument version to get the F-pivot.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-16T15:23:44Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwyNDgyNjUxMzIy",
+        "name": "bug"
+      },
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-16T17:46:13Z",
+    "number": 2162,
+    "title": "Use F-pivot fold for ORCA"
+  },
+  {
+    "additions": 52,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "I asked a LLM to investigate restart issues. Some issues it found was that\n\n1. Restarts potentially starting from older checkpoint files,\n2. SST schedules returning `true` at the wrong time steps,\n3. `checkpointer_tests` not being ran in the test suite.\n\nThis PR fixes these issues and adds tests. Related PR: https://github.com/CliMA/ClimaUtilities.jl/pull/262.\n\nI asked a LLM to make these changes.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T18:36:33Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-16T21:52:31Z",
+    "number": 2159,
+    "title": "Fixes for restart"
+  },
+  {
+    "additions": 246,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Adds a Buildkite pipeline that measures how long the flagship AMIP config takes to load packages, set up, and finish its first coupling step. Upstream repos can trigger it with their changes and compare against upstream main.\r\n\r\nChanges\r\n- `experiments/AMIP/time_to_first_step.jl` times package load, `CoupledSimulation` setup, and the first `step!`. It writes a markdown table and a CSV to `output/<job_id>/artifacts/`. \r\n- `.buildkite/time_to_first_step/pipeline.yml`:\r\n  - `ttfs_amip` measures with the packages listed in `UPSTREAM_PACKAGES` and posts the table as a build annotation.\r\n  - When `UPSTREAM_PACKAGES` is set, `ttfs_amip_baseline` runs at the same time with those packages at their main branches.\r\n  - A compare step replaces the annotation with the change per phase. It fails if the total grows by more than `TTFS_REGRESSION_THRESHOLD`, which defaults to 20%. We can add more granular timings to the comparison.\r\n- `.buildkite/time_to_first_step/measure.sh` gives each job its own copy of experiments/AMIP and its own Julia package directory, because jobs in a build share a checkout and depot.\r\n- `.buildkite/add_upstream_packages.jl` is a shared helper for `UPSTREAM_PACKAGES.` It accepts the usual syntax: Name, Name@version, Name#rev, and url#rev, plus a `--main` flag for the baseline. The nightly pipeline now uses it in place of its inline `Pkg.add` block.\r\n- `.buildkite/README.md` documents the pipeline and the step an upstream repo adds to trigger it.\r\n\r\nBuild annotations are fun!\r\n\r\nWorking [build](https://buildkite.com/clima/climacoupler-time-to-first-step/builds/12#annotation-ttfs_amip) consistently showing change in ttfs before/after my [ClimaCore PR](https://github.com/CliMA/ClimaCore.jl/pull/2672) which is meant to improve compilation time.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T21:42:30Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-16T23:44:33Z",
+    "number": 2153,
+    "title": "Add time-to-first-step pipeline for flagship AMIP"
+  }
+]

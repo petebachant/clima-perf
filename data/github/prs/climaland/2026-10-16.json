@@ -1,0 +1,70 @@
+[
+  {
+    "additions": 263,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose\n\nCoupled simulations heated the canopy without bound and became unstable. Two mechanisms combined:\n\n- **Vanishing gustiness below the canopy.** Under a canopy, `ground_gustiness` strips the floor from the forcing's gustiness model (the floor is folded into the attenuated sub-canopy wind). A `CoupledAtmosphere` supplied a `ConstantGustinessSpec`, which has nothing left once its floor is removed, so the ground beneath a dense canopy had zero gustiness and, with the attenuated wind near zero, decoupled from the canopy air.\n- **Negative P-model conductance at high canopy temperature.** Once the canopy was hot, the P-model's capped intercellular CO2 fell below the compensation point, so `mj`, `mc`, gross assimilation, and the stomatal conductance went negative; the negative stomatal resistance made the canopy surface humidity ill posed.\n\n## Content\n\n- `gustiness_spec(::CoupledAtmosphere)` returns a `FlooredDeardorffGustinessSpec`, as `PrescribedAtmosphere` does by default, so the convective (Deardorff) part survives the floor removal below the canopy. This couples a ground warmer than the canopy air; in stable conditions the ground below a dense canopy stays weakly coupled through the attenuated wind alone (about 0.03 m/s under PAI = 6 on a calm night, sensible heat flux below 1 W/m\u00b2), which bounds its skin temperature through soil conduction but is not a fix of stable sub-canopy exchange.\n- P-model: `c3_compute_mj` and `c3_compute_mc` are floored at zero where `ci < \u0393star`; `gs_co2_pmodel` gives zero conductance for a negative assimilation.\n- Canopy surface-humidity closures floor the stomatal conductance at zero (Medlyn's goes negative at night), form its series conductance with the leaf boundary layer by `series_conductance`, which is zero where both vanish (a leafless canopy at night), and keep `q_sfc` between the air and canopy values.\n- Where plants are absent (`plants_present`): momentum and buoyancy fluxes are zeroed like the heat fluxes, and the canopy temperature relaxes to the air temperature on a new `BigLeafEnergyParameters` field, `absent_canopy_relaxation_time` (3600 s), with the matching Jacobian entry. A canopy of near-zero heat capacity otherwise goes to radiative equilibrium, and a regrowing canopy now starts near the air temperature.\n- `update_biomass!` sets the stem area index to zero where plants are absent (`clip_absent_plant_area!`), as it clips the leaf area index below 0.05. Stems below the threshold absorbed radiation that the absent-canopy tendency discarded; an absent canopy now absorbs nothing and stores no heat, so the relaxation of its temperature conserves energy.\n- `surface_temperature_newton_update` (soil skin and snow) floors a Newton step at `T / 2` so that iterates stay positive.\n- Tests: `CoupledAtmosphere` gustiness spec; zeroed momentum and buoyancy fluxes without plants; absent-canopy tendency and Jacobian; clipping of stems where plants are absent; non-negative P-model capacities, GPP, and conductance at 355 K.\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-16T02:31:54Z",
+    "deletions": 53,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-16T16:40:57Z",
+    "number": 1923,
+    "title": "Removes instability from vanishing gustiness and P-model interaction"
+  },
+  {
+    "additions": 199,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\n\nThe P-model long run on `kd/try_spatially_varying_canopy_height` (#1907, build 5113) produced NaNs at two land cells: (14\u00b0N, 8\u00b0W) in the Sahel from Oct 2009, and (37\u00b0N, 87\u00b0E) at the edge of the Taklamakan in Feb 2010. Single columns forced by high-resolution ERA5 at the two points reproduce both failures at the same dates. They have two different causes. Since #1907 was rebased onto main, #1923 already fixes the first, and this PR fixes the second.\n\n### 1. Sparse desert canopy: radiative runaway (37\u00b0N, 87\u00b0E), fixed on main by #1923\n\n**Bug.** The branch sets SAI = 0.16 \u00d7 maxLAI. In deserts MODIS maxLAI is 0\u20130.02, so PAI = LAI + SAI is a few thousandths. That is below `MIN_CANOPY_AREA_INDEX` (0.05), so `zero_canopy_fluxes_without_plants!` zeroes the canopy's turbulent fluxes. The canopy still exchanged radiation, though:\n- At low sun the extinction coefficient `K = G/cos\u03b8` (capped at 1e6) makes even PAI = 0.003 absorb nearly all incoming shortwave.\n- Its emissivity and heat capacity, both \u221d PAI, vanish.\n- With no sensible heat flux to cool it, the canopy temperature ran away: 291 K with 266 K air, then 9,560 K in one step at 2010-02-27 12:15. Its longwave emission (~2\u201316 kW/m\u00b2 down onto the ground) drove the soil skin Newton update to a negative temperature, and `log` in the saturation vapor pressure returned NaN on the GPU (a DomainError on CPU).\n\nOn main, SAI = 0, so a bare pixel had PAI = 0 exactly and the problem never showed.\n\n**Fix (now from main).** This PR originally zeroed LAI and SAI below the `plants_present` threshold inside `update_radiative_transfer!`. #1923 does the same one level up: `clip_absent_plant_area!` zeroes the stem area where plants are absent in `update_biomass!`, so radiative transfer already sees a transparent canopy with zero emissivity. #1923 also relaxes an absent canopy's temperature to the air temperature, and floors the skin Newton step at half the current temperature. The radiation-side change is therefore dropped in favor of main's. This PR keeps its regression test, which now checks main's mechanism.\n\n### 2. Soil skin temperature solve: unclosed energy balance (14\u00b0N, 8\u00b0W)\n\n**Bug.** On 2009-10-17, rain at ~6 mm/h wets a hot (~313 K) soil below a 0.5 m canopy. The top 5 cm cell barely drains (K \u2248 1e-11 m/s), and the sub-canopy wind is only 0.13 m/s. A scan of the ground fluxes at fixed skin temperature shows a jump where the virtual temperatures of the surface and the canopy air cross:\n- **Stable side:** `MaxHeatFluxStabilityCap` holds \u03b6 at 0.444, giving u* \u2248 0.009 m/s and lhf \u2248 19 W/m\u00b2.\n- **Unstable side:** \u03b6 \u2248 \u22120.1, and lhf climbs 140 \u2192 2,500 W/m\u00b2 over a few K.\n\nThe Newton updates inside the Monin-Obukhov iterations neglect \u2202g_h/\u2202T. So they alternated between the two branches (301.8 \u2194 310.5 K) and ended on an iterate with lhf \u2248 14 kW/m\u00b2. That emptied the top cell in one step (\u03b8 \u2192 \u22120.005, T \u2192 1,239 K), and the NaN followed.\n\nMain's 1 m canopy and SAI = 0 leave more sub-canopy wind, so main did not hit this at that point. Reverting any one of the canopy height, SAI, or RAI also avoided it in a column. The forcing-height reference convention made no difference. Damping the Newton step was not enough: the flux slope at the jump is 10\u201320\u00d7 steeper than the Newton estimate.\n\n**Fix.** In `solve_soil_surface_temperature_at_a_point`, after the existing solve, the skin energy balance residual `R = r F(T_sfc) + T_sfc \u2212 T_top` is checked.\n- If the imbalance exceeds `SKIN_ENERGY_BALANCE_TOLERANCE` (5 W/m\u00b2) and the skin is not held at the freezing temperature, the skin temperature is refined by 12 bisection steps. Each step solves Monin-Obukhov at a fixed skin temperature.\n- Since `R` increases with `T_sfc`, `[T_sfc \u2212 R, T_sfc]` always brackets the root.\n- At a jump there is no exact root, so the solutions at the two ends of the final bracket are blended in the proportion that closes the balance. Physically, this treats the jump as a mix of stable and unstable patches.\n\nPoints where the existing solve already closes the balance are unchanged; there the refinement costs one residual evaluation.\n\n## Testing\n\n- ERA5 single columns (`use_lowres_forcing = false`), 15-layer soil, \u0394t = 900 s, run from the long-run start date, before the rebase (with this PR's original radiation-side fix):\n  - (37\u00b0N, 87\u00b0E), 2008-03-01 \u2192 2010-03-01: crashed at 2010-02-27 before the fix; completes after.\n  - (14\u00b0N, 8\u00b0W), 2008-03-01 \u2192 2009-11-01: crashed at 2009-10-17 before; completes after.\n  - Restarting from the dumped state at 2009-10-17 15:00, the failing step now gives lhf 1,665 \u2192 843 \u2192 534 W/m\u00b2 as the rain-soaked top cell cools (312.6 \u2192 304 K), instead of 14 kW/m\u00b2 and \u03b8 < 0.\n  - The columns were not re-run after the rebase. Main's clipping zeroes the same area indices before radiative transfer, so the radiation the sparse canopy sees is unchanged.\n- Regression tests:\n  - `test/standalone/Vegetation/canopy_model.jl`: a canopy with SAI = 0.01, LAI = 0 has zero emissivity, absorbances, and net radiation (now through #1923's `clip_absent_plant_area!`).\n  - `test/standalone/Soil/climate_drivers.jl`: the skin energy balance closes within 5 W/m\u00b2 at the Sahel conductance jump; it was off by 200 W/m\u00b2 before the fix.\n- Passing locally after the rebase: `standalone/Vegetation/canopy_model` (487 tests) and `standalone/Soil/climate_drivers` (185). Before the rebase: `standalone/Vegetation/{canopy_model, conservation, test_canopy_helpers, test_two_stream, test_spatially_varying_canopy_height}`, `standalone/Soil/climate_drivers`, `standalone/Snow/{parameterizations, snow}`, `integrated/{soil_snow, soil_canopy_lsm, full_land}`, `shared_utilities/{drivers, stability_cap}`, `diagnostics/diagnostics_tests`.\n- A global P-model long run on GPU (run manually on Derecho) will confirm the fix; it spans both failure dates (2008-03-01 \u2192 2010-03-01).\n\n## Notes for review\n\n- The canopy at the Sahel point has a leaf water potential pinned at its floor (\u2212510 m) and a negative canopy liquid water content throughout the run. This is also the case on main and was not the cause here, but it is worth a separate look.\n- The bisection makes up to 13 extra Monin-Obukhov solves at the rare points where it triggers. On GPU, a warp that contains such a point pays for them.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T22:47:37Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-16T17:28:59Z",
+    "number": 1922,
+    "title": "Fix NaNs in the P-model long run with spatially varying canopy height"
+  },
+  {
+    "additions": 1036,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n- Adds spatially varying canopy height as default to biomass model (Zhou and Prescribed)\r\n- For prescribed model, we now use (by default) the constructor which estimates SAI and RAI from maxLAI. For the Zhou model, we need to think more about how to do this.\r\n- Uses the `ReferenceAboveApparentSink` feature in new SF.jl. For runs using CRUJRA and ERA5 forcing, we use the apparent sink; for fluxnet runs, we use the `ReferenceAboveSurface`. All SF related functionality now needs the reference passed also.\r\n- Renamed `h_sfc` to `z_sfc`, `surface_height` -> `surface_elevation`.\r\n- In order to use spatially varying canopy height and not break plant hydraulics, we need to clip the `z` used there - both in the flux computation (divides by dz) and in the tendency (divides by dz). One thought was to move the \"dz\" into the prognostic variable, but I realized that doesnt solve it because we have another dz appearing in the Darcy flux.\r\n- removed unused `turbulent_fluxes!` functions for Soil (only used in tests)\r\n\r\n\r\n## To-do\r\n[ ]Global run (https://buildkite.com/clima/climaland-long-runs/builds/5111)\r\n[] re review everything again\r\n[] remove screen functionality which is not used (this PR or another?)\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 39,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T23:17:32Z",
+    "deletions": 455,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-16T21:51:22Z",
+    "number": 1907,
+    "title": "Spatially varying canopy height global run"
+  }
+]
