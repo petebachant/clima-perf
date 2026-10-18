@@ -1,0 +1,107 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`FourierTridiagonalPoissonSolver` set the mean of its solution to zero with `\u03d5 .= \u03d5 .- mean(\u03d5)` after the backward transforms, which copies the mean to the host (a device synchronization per solve) and streams the whole complex field twice. The column at zero wavenumber in both transformed directions holds the horizontal mean of the solution at every level, so the gauge is now applied to that column before the backward transforms, with a `sum(column, dims=1)` that stays on the device.\n\n- Results agree with `main` to 3e-16 relative for all three tridiagonal directions, bounded and periodic transformed directions, and a `Flat` direction. The stretched-grid Poisson tests now also check that the solution has zero mean.\n- One solve on an H100 with a stretched grid takes 0.106 ms instead of 0.133 ms at 64\u00b3, and 8.26 ms instead of 9.60 ms at 512\u00b2\u00d7256.\n\nAddresses point 1 of the write-up in https://github.com/CliMA/Oceananigans.jl/pull/6166#issuecomment-6041901724.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T18:44:33Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-10-17T00:15:04Z",
+    "number": 6189,
+    "title": "Remove the Fourier-tridiagonal solution's mean in spectral space"
+  },
+  {
+    "additions": 294,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "*Update: I've finalized the configuration for this PR and is now ready to review. Refer to this benchmark https://github.com/CliMA/Oceananigans.jl/pull/6171#issuecomment-6222283735 as the final version. We get about 75% improvement on the PCG algorithm!*\r\n\r\n---\r\n\r\nThe `ConjugateGradientPoissonSolver` iteration streams every field several times and runs five full-array reductions through the generic `mapreducedim!`. This PR accumulates the reductions in the Laplacian and update kernels and computes every scalar (\u03b1, \u03b2, the gauge means) on the device. The algorithm, gauge and convergence criterion are unchanged. Without a preconditioner, an iteration goes from 22 full-array passes and 5 full reductions to 11 passes and 2 short reductions, and a time step runs 1.8\u20136.1\u00d7 faster on an H100. It builds on #6086 and #6166.\r\n\r\n## How\r\n\r\nThe gauge needs the means of the updated `x` and `r`, and these are known before the fields are written:\r\n\r\n$$\r\n\\Sigma (x + \\alpha p) = \\Sigma x + \\alpha \\Sigma p, \\qquad \\Sigma (r - \\alpha q) = \\Sigma r - \\alpha \\Sigma q .\r\n$$\r\n\r\nBelow, every field under `reads` or `writes` is one full-array pass, $\\Sigma$ sums over the active cells, $\\chi$ is the active-cell mask, $N = \\Sigma \\chi$, and `M` stands for the preconditioner's passes.\r\n\r\n**`main`**, one iteration:\r\n\r\n```\r\n                                             reads    writes   passes   reductions\r\nz   = M r                     precondition!                         M\r\n\u03c1   = z \u22c5 r                   dot!           z, r                   2            1\r\np   = z + \u03b2 p                 broadcast      z, p     p             3\r\nq   = A p                     Laplacian      p        q             2\r\np\u1d40q = p \u22c5 q                   dot!           p, q                   2            1\r\n\u03b1   = \u03c1 / p\u1d40q\r\nx   = x + \u03b1 p                 broadcast      x, p     x             3\r\nr   = r - \u03b1 q                 broadcast      r, q     r             3\r\n\u03a3x  = \u03a3 x                     sum!           x                      1            1\r\n\u03a3r  = \u03a3 r                     sum!           r                      1            1\r\nx   = (x - \u03a3x/N) \u03c7            gauge kernel   x        x             2\r\nr   = (r - \u03a3r/N) \u03c7                           r        r             2\r\n\u2016V\u207b\u00b9r\u2016                        norm           r                      1            1\r\n                                                               22 + M            5\r\n```\r\n\r\n**This PR**, one iteration ($\\Sigma x$ and $\\Sigma r$ come from the previous update kernel):\r\n\r\n```\r\n                                             reads    writes   passes   reductions\r\nz   = M r                     precondition!                         M\r\n\u03c1   = z \u22c5 r                   column kernel  z, r                   2        short\r\np   = z + \u03b2 p                 search kernel  z, p     p             3\r\n      \u03b2 = \u03c1 / \u03c1\u2071\u207b\u00b9\r\nLaplacian kernel, per cell:\r\n    q    = A p                               p        q             2\r\n    p\u1d40q += p q,  \u03a3p += p,  \u03a3q += q                                           short\r\nupdate kernel:\r\n    \u03b1 = \u03c1 / p\u1d40q,  x\u0304 = (\u03a3x + \u03b1 \u03a3p) / N,  r\u0304 = (\u03a3r - \u03b1 \u03a3q) / N,  \u03c1\u2071\u207b\u00b9 = \u03c1\r\n    per cell:\r\n    x    = (x + \u03b1 p - x\u0304) \u03c7                   x, p     x             3\r\n    r    = (r - \u03b1 q - r\u0304) \u03c7                   r, q     r             3\r\n    \u03a3x += x,  \u03a3r += r,  r\u1d40r += r r,  \u2016V\u207b\u00b9r\u2016\u00b2 += (r/V)\u00b2                       short\r\n                                                               13 + M      3 short\r\n```\r\n\r\nWithout a preconditioner `z` is `r` and $\\rho$ is the `r\u1d40r` from the previous update kernel, which gives 11 passes and 2 short reductions per iteration against 22 and 5 on `main`.\r\n\r\nThe kernels launch in one dimension over column segments, sized so a launch has about $2^{20}$ threads. Each workgroup adds its threads' sums in local memory, and a single workgroup adds the workgroups' sums in a fixed order, so the reduction is deterministic and allocates nothing. On `Distributed` architectures, `reduce_partial_sums!` adds the ranks' sums with one `Allreduce`.\r\n\r\nThe fused path applies to what `ConjugateGradientPoissonSolver` builds by default (`compute_symmetric_laplacian!`, `ZeroMeanGaugeCondition`, `VolumeInverseNorm`) with any preconditioner. Everything else keeps the generic `iterate!`, which is unchanged. The update kernel writes the interior of `x` only, not its halos, which nothing reads. Once the residual is `NaN`, the fused `iterating` returns `false` and the solve stops, where the generic one iterates to `maxiter`.\r\n\r\n## Equivalence\r\n\r\nThe fused and unfused versions agree to summation-order roundoff with identical iteration counts, on 1 and 8 H100s and on 1 and 2 CPU ranks, with no preconditioner, the FFT preconditioner and `DiagonallyDominantPreconditioner`. `test/poisson_solvers/conjugate_gradient.jl` passes on CPU and H100, and the `distributed_solvers` MPI group passes on 4 ranks.\r\n\r\n## Performance\r\n\r\nTime step speedup over `main`, one H100:\r\n\r\n| case | no preconditioner | FFT preconditioner |\r\n|---|---|---|\r\n| 64\u00b3 (CI benchmark) | 6.1\u00d7 | 2.8\u00d7 |\r\n| rough Rayleigh\u2013B\u00e9nard, 320 \u00d7 320 \u00d7 2560 | 1.8\u00d7 | 1.07\u00d7 |\r\n| staircase convection, 192 \u00d7 192 \u00d7 1536 | 2.2\u00d7 | 1.13\u00d7 |\r\n| vortex sheet, 8000 \u00d7 4000 | 2.2\u00d7 | 1.13\u00d7 |\r\n\r\nWith the FFT preconditioner on large grids the FFT solve is 75\u201387% of an iteration, which this PR leaves alone. Computing \u03b1 and \u03b2 in the kernels removes a further 60 launches per time step at 64\u00b3.\r\n\r\n## Future improvements\r\n\r\n- Accumulate $\\rho = z \\cdot r$ in each preconditioner's final kernel, removing the column-dot pass on the preconditioned path.\r\n- Single-reduction CG (Chronopoulos and Gear 1989) or pipelined CG (Ghysels and Vanroose 2014) merge the two remaining synchronizations, at the cost of an extra field and some attainable accuracy.\r\n- Add each workgroup's sums with a tree. A few threads add all 256 values, which is the likely reason wide grids run behind one thread per column with a `sum!`: 14.0 vs 12.6 ms per unpreconditioned iteration on 1280 \u00d7 1280 \u00d7 160.\r\n- The $2^{20}$-thread target was measured on an H100. GPUs with more memory bandwidth need more threads in flight and may want a larger target.\r\n\r\nFusing the inner products into the vector updates is established for CG on GPUs (Aliaga et al. 2013, [slides](https://www.hpca.uji.es/wp-content/uploads/recent_talks/aliaga/ICPP_2013.pdf); Rupp et al. 2016, [doi](https://doi.org/10.1145/2907944)), and MITgcm's `cg2d` (Marshall et al. 1997, [doi](https://doi.org/10.1029/96JC02775)) does the same across ranks with one `GLOBAL_SUM`.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\n\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T04:39:12Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-17T04:41:24Z",
+    "number": 6171,
+    "title": "Fuse the Poisson conjugate-gradient iteration into two kernels"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Adds Parfenyev & Vergeles (2026), [Wave-driven geostrophic vortices in rotating turbulence](https://doi.org/10.48550/arXiv.2610.15863), to the list of publications.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-17T05:00:07Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-17T05:00:37Z",
+    "number": 6269,
+    "title": "Add paper"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #4975.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7Z-3pZ",
+        "number": 4975,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/4975"
+      }
+    ],
+    "createdAt": "2025-11-24T17:48:36Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-10-17T22:42:20Z",
+    "number": 4977,
+    "title": "Support `GaussianMask` in `Flat` topologies"
+  }
+]

@@ -1,0 +1,158 @@
+[
+  {
+    "additions": 289,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\r\nConstruct the P3 state consistently from the prognostic variables, and pass the size-distribution quadrature rule explicitly.\r\n\r\n## Content\r\n\r\n### Admissible P3 state\r\n`P3State` is now constructed from the prognostic state through a projection onto an admissible state.\r\n\r\nThe ratio of rime mass $q_{rim}$ and rime volume $b_{rim}$ is the bulk rime density $\\rho_{rim} = q_{rim} / b_{rim}$. I define the admissible states to be the cone in the $(q_{rim}, b_{rim})$ plane where this density lies between two bounds:\r\n\r\n```math\r\n\\rho_{rim}^{min} \\, b_{rim} \\le q_{rim} \\le \\rho_{rim}^{max} \\, b_{rim}, \\qquad q_{rim}, b_{rim} \\ge 0.\r\n```\r\n\r\nThe upper bound is the solid-ice density, $\\rho_{rim}^{max} = \\rho_i = 916.7$ kg/m\u00b3, which is the densest ice the model forms (e.g., immersion freezing, rain freezing, wet growth). The lower bound comes from the dry riming process. This local rime density follows Cober and List (1993), extended to solid ice (as in the P3 Fortran code):\r\n\r\n```math\r\n\\rho'_{rim}(R_i) =\r\n\\begin{cases}\r\na + b R_i + c R_i^2, & 1 \\le R_i \\le 8, \\\\\r\n\\text{linear from } \\rho'_{rim}(8) = 611 \\text{ to } \\rho_i, & 8 < R_i \\le 12,\r\n\\end{cases}\r\n\\qquad\r\nR_i = -\\frac{D_{liq} \\, |v_{liq} - v_{ice}|}{2 \\, T_{sfc}},\r\n```\r\n\r\nwith $a = 51$, $b = 114$ and $c = -5.5$ kg/m\u00b3, $D_{liq}$ in \u03bcm, $T_{sfc}$ in \u00b0C, and $R_i$ clamped to $[1, 12]$. This law increases with $R_i$, so the softest rime it can deposit is $\\rho_{rim}^{min} = \\rho'_{rim}(1) = 159.5$ kg/m\u00b3. \r\n\r\nThe code obtains $\\rho_{rim}^{min}$ and $\\rho_{rim}^{max}$ from `\u03c1_rim_local(1)` and `\u03c1_i`, respectively.\r\n\r\nSources and sinks are designed to deposit at some target density, so microphysics processes should never violate these bounds. Typically it'd be transport or round-off that causes issues. The projection keeps $q_{rim}$ and moves $b_{rim}$ to the nearest admissible value (`UT.nearest_admissible_b`).\r\n\r\n\r\nThe PR also corrects the sign of $R_i$. The code divided by the signed Celsius temperature without the minus sign, so $R_i < 0$ below freezing, the clamp set $R_i = 1$, and every riming event deposited rime at 159.5 kg/m\u00b3. With the sign corrected, the local rime density increases toward solid ice as the temperature approaches freezing, and it is solid ice at and above freezing. In some collision tests, this fix changes BCCOL by 6% and BRCOL by a factor of 5.7.\r\n\r\nCloses #792 \r\n\r\n### Slope power law\r\n\r\nThe default slope law is now `SmoothSlopePowerLaw`, which fixes an issue inherited from the MM15 P3 implementation that could make `log(L/N)` nonmonotonic in `\u03bb`, leading to multiple valid solutions of the shape solve. The docs are updated with an example of how this change impacts the resulting size distribution.\r\n\r\n### Quadrature rule\r\n\r\n`build_quadrature` is removed: it selected Gauss-Legendre only for orders 16, 32, 40 and 64 and Chebyshev-Gauss for any other order. It is replaced by an explicit `quad` kwarg to the P3 parameters, to make quadrature selection more flexible. The `integrate` methods now require a rule.\r\n\r\n## Breaking changes\r\n- `ParametersP3`, `P3IceParams` and `Microphysics2MParams` no longer accept `slope_law`. Pass the slope component to `ParametersP3` instead.\r\n- The default P3 slope law changes from `SlopePowerLaw` to `SmoothSlopePowerLaw`.\r\n- `build_quadrature` is removed, and the `integrate` methods require a quadrature rule.\r\n- `P3.Oblate`, `P3.NoAspectRatio` and `P3.AspectRatio` are removed; use the `CMP` types.\r\n\r\nI will make a breaking release once most or all the PRs are merged.\r\n",
+    "changedFiles": 16,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFzm_uM8AAAABSQq6hQ",
+        "number": 792,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzODk2NjA2MDA=",
+          "name": "CloudMicrophysics.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/CloudMicrophysics.jl/issues/792"
+      }
+    ],
+    "createdAt": "2026-09-26T06:35:54Z",
+    "deletions": 197,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-17T00:53:09Z",
+    "number": 797,
+    "title": "P3 state construction with a joint rime-pair projection"
+  },
+  {
+    "additions": 185,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\nMake the P3 shape solve well defined for every ice state, including states without ice mass or ice number.\n\n## Content\n\n### Degenerate states\n`get_distribution_log\u03bb` solves $\\log(L/N) = \\log \\overline m(\\lambda)$ for $\\lambda$, where $\\overline m$ is the mean particle mass of the size distribution. Before, it returned $\\log\\lambda = -\\infty$ whenever $L$ or $N$ fell below a fixed floor, $\\epsilon$. The floor on the mass was close to the physical range of $L$ in Float32 ($\\epsilon$ = 1.2e-7 kg/m\u00b3), so small but real ice masses were treated as absent.\n\nNow the floors are gone. The mean mass $\\overline m(\\lambda)$ decreases in $\\lambda$, so the states without mass or number take a bound of the search interval:\n```julia\nq_ice \u2265 floatmin(FT) || return log\u03bb_max  # no mass: smallest particles\nn_ice \u2265 floatmin(FT) || return log\u03bb_min  # mass without number: largest particles\ntarget = log(q_ice) - log(n_ice)\n```\nBy comparing with `floatmin` (instead of zero), any subnormal values (e.g., 1f-50) are treated as zero.\n\n### Search bounds\n\nThe solve's upper bound is $\\log\\lambda_{max}$ which is related to the smallest mean particle mass. I set this to the mass associated with the smallest nucleated spherical ice crystals, $D_{nuc}=2\\mathrm{\\mu m}$ (set by `P3_ice_nucleation_diameter` = 2 \u03bcm, by default). With this, $\\log\\lambda_{max} = 15.2$, in place of the earlier 17. \nSmall ice is spherical, so its mean mass is $(\\pi/6)\\rho_i \\Gamma(\\mu+4)/\\Gamma(\\mu+1)/\\lambda^3$, and the bound has the closed form $\\lambda_{max} D_{nuc} = \\sqrt[3]{(\\mu+1)(\\mu+2)(\\mu+3)}$ with $\\mu = \\mu(\\lambda_{max})$.\n\n### Iterations\nThe solve now uses 18 iterations in both precisions (up from 8 in `Float32` and 10 in `Float64`), which reaches the rounding floor of $\\log(L/N)$, also where $\\mu$ ramps up and $\\log(L/N)$ first flattens and then steepens. A new test sweeps that ramp. `FixedIterations` bounds the cost of a GPU warp by the budget, but Brent still returns early on an exact zero residual, and its docstring now says so.\n\n### Incomplete gamma floor\n\n`loggamma_inc_moment` floors the difference of the incomplete gamma ratios at `floatmin` instead of `eps`. The `eps` floor overstated segments whose true difference is below eps.\n\n## Breaking changes\n\n- `get_distribution_log\u03bb` no longer takes the search bounds as arguments.\n- `get_distribution_log\u03bb_all_solutions` is removed. The docs script for the slope-law figure has its own version.\n- A state without ice mass or ice number gives a bound of the search interval instead of $\\log\\lambda = -\\infty$.\n\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-26T07:51:30Z",
+    "deletions": 82,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-17T00:53:10Z",
+    "number": 799,
+    "title": "P3 size distribution: shape solve for every ice state"
+  },
+  {
+    "additions": 197,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\r\nMake the P3 mean fall speeds accurate at low quadrature order, and well defined for every ice state.\r\n\r\n## Content\r\n\r\n### Integration breakpoints\r\n`integral_bounds` now places a breakpoint at the decay scale of the size distribution, $D = 3/\\lambda$. This applies to every P3 size-distribution integral, including fall speeds. This roughly halves the integration error for collision shedding.\r\n\r\nThe velocity integrals also place the diameter where the terminal-velocity closure changes form on a subinterval boundary.\r\n\r\n### Mean fall speeds\r\n\r\nThe mass-weighted fall speed is zero whenever ice number is zero. Otherwise:\r\n```math\r\nV_m = \\frac{\\int m \\, v \\, N' \\, dD}{\\int m \\, N' \\, dD},\r\n```\r\nPreviously, $V_m$ simply divided by $L$. This could lead to $V_m \\ge \\max_D \\text{  } v(D)$ if, for example, $L/N < m_{nuc}$ so that the shape solve would clamp its solution to its upper bound, $\\lambda \\to \\lambda_\\text{max}$.\r\nFor physical values, this formulation is identical to the previous code, since, in those cases $L \\equiv \\int m N' dD$.\r\n\r\n## Breaking changes\r\n- `ice_terminal_velocity_number_weighted` and `ice_terminal_velocity_mass_weighted` require the `quad` keyword; the default `ChebyshevGauss(100)` is removed. The P3 parameters carry the rule as `quad`.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-29T21:52:31Z",
+    "deletions": 63,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-17T00:53:11Z",
+    "number": 801,
+    "title": "P3 mean fall speeds: integration breakpoints and bounded means"
+  },
+  {
+    "additions": 115,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\r\nFix the P3 ice melting rate, which was about 730 times too large.\r\n\r\n## Content\r\n\r\n### Melting rate\r\nA particle of diameter $D$ melts by heat conduction at\r\n\r\n```math\r\n\\frac{dm}{dt} = \\frac{2 \\pi D \\, K_{therm}}{L_f} (T - T_{freeze}) \\, F_v(D),\r\n```\r\n\r\nas in the 1-moment snow melt, so the bulk rate is\r\n\r\n```math\r\n\\frac{dL}{dt} = \\frac{2 \\pi K_{therm}}{L_f} (T - T_{freeze}) \\int D \\, F_v(D) \\, N'(D) \\, dD.\r\n```\r\n\r\nPreviously, the integrand was $\\frac{dm}{dD} F_v(D) N'(D) / D$, which includes an extra factor of density.\r\n\r\n### Mass and number rates\r\nMass and number melt at the same fractional rate, that of the size distribution:\r\n\r\n```math\r\nf = \\frac{\\int \\frac{dm}{dt} \\, N' \\, dD}{\\int m \\, N' \\, dD}, \\qquad\r\n\\frac{dL}{dt} = L f, \\qquad \\frac{dN}{dt} = N f.\r\n```\r\n\r\nWhen the shape solve finds a root, the distribution holds exactly the mass $L$, so $dL/dt$ is the integral above, and $dN/dt = (N/L) \\text{ } dL/dt$ as before. When the solve returns a bound of its search interval, the distribution holds a different mass than $L$, and both rates still follow from its fractional rate. Ice number without ice mass above freezing now melts, instead of persisting.\r\n\r\nThe melting figure in the docs now shows 0 to 2 K above freezing, with the mass and number rates in separate panels.\r\n\r\n## Breaking changes\r\n- `ice_melt` requires the `quad` keyword; the default `ChebyshevGauss(100)` is removed.\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-30T00:55:24Z",
+    "deletions": 151,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-17T00:53:12Z",
+    "number": 802,
+    "title": "P3 ice melting by heat conduction"
+  }
+]
