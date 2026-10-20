@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 22,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "`SeaIceMomentumEquation` defaults to `ocean_surface_height = ZeroField()`, which is an integer `ZeroField`. `extended_surface_height` passes it through unchanged, so the free-surface tilt in the momentum kernels is an `Int` while the other terms are floats, and the tendency becomes a `Union{Float64, Int64}` (in `conditional_\u03b4y_f` via `\u2202y\u1d9c\u1da0\u1d9c`). On Julia 1.13 / LLVM 20 this crashes the NVPTX backend while compiling the kernel (segfault in libnvptx `tryLDG`; `llc` reports `Cannot select: AtomicLoad`).\n\nThis PR:\n- converts an integer `ZeroField` to `ZeroField(eltype(grid))` in `extended_surface_height`;\n- adds a no-op `refresh_and_fill_external_field!(::ZeroField, ::ZeroField)`, since the converted `\u03b7` is no longer `===` the user's `\u03b7\u2080` and is refreshed every step;\n- tests that the default `\u03b7` has the grid's float type (Float32 and Float64) and that a time step with it leaves `u` at zero.\n\nTested with `TEST_GROUP=timestepping` on CPU. On a GH200, a sea-ice run that crashed at kernel compilation on Julia 1.13 runs with this change and matches the unfixed Julia 1.12 run in \u03a3h\u2135.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-14T19:35:40Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-19T14:22:36Z",
+    "number": 187,
+    "title": "Give the default ocean surface height the grid's float type"
+  }
+]

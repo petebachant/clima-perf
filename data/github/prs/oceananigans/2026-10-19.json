@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 61,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is the starting point of #6272. It fixes a couple of miscellaneous bugs for BCs and locations. It can be merged without following the roadmap\r\n\r\nthe diffusivity bug was found by @ifenty",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-18T17:37:53Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-10-19T05:37:36Z",
+    "number": 6273,
+    "title": "Fix miscellaneous bugs identified during #6272"
+  },
+  {
+    "additions": 94,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Purely subjective, but I think the code is now a lot more readable.  Side note, half of the PR is hand-written (I actually started it myself, then got some help for finding all the different uses that I couldn't simply grep) because the bot has a terrible taste (and got a few things wrong along the way, sigh).\n\n> `typeof(x).name.wrapper`, `typeof(x).name.name` and `Base.typename(T).wrapper` read undocumented fields of `Core.TypeName`. Replace them with public functions:\n> \n> - `nameof(typeof(x))` where only the bare type name is needed, e.g. in error messages, `show` methods, and test labels.\n> - `Utils.unparameterized_type(T) = getglobal(parentmodule(T), nameof(T))` where the type without its parameters is needed, either to construct a new object of the same kind or to compare two types up to their parameters. This is the same construction `ConstructionBase.constructorof` uses and it constant-folds like the field access it replaces.\n> - Dispatch in the few test assertions that inspected type parameters.\n> \n> Remove `Utils.getnamewrapper`, whose only remaining use was in `shortsummary`.",
+    "changedFiles": 46,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-18T20:18:52Z",
+    "deletions": 94,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-10-19T07:45:10Z",
+    "number": 6274,
+    "title": "Replace internal `DataType` field accesses with public API"
+  },
+  {
+    "additions": 104,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "`Relaxation`'s `mask` is evaluated by calling it, so a mask that is expensive to evaluate but constant in time is recomputed in every cell on every kernel call. Its `target`, by contrast, has had an `AbstractArray` method in `evaluate_target` all along, which reads the target at `i, j, k` instead. This gives `mask` the same option.\n\nA motivating case: the mask of a boundary relaxation zone on a conformal-conic grid in a regional atmosphere model. The mask itself is a cheap smoothstep ramp of the distance to the nearest domain wall, but the walls are lines of constant *projected* coordinate, so every evaluation first runs the forward map projection to turn the kernel's `(\u03bb, \u03c6)` node into `(x, y)` \u2014 a `tan`, a non-integer power, an `atan2`, a `sin` and a `cos` \u2014 before the ramp is applied. That costs ~2.5% of a time step on a T4 in Float32 at 5.2M cells (0.37% on CPU, where it inlines and vectorizes). The zone is fixed in time, so all of it is recomputed work.\n\nSince #4977 landed `evaluate_mask` with the `(i, j, k, grid, mask, \u2113)` signature, this reduces to two methods alongside the ones already there:\n\n```julia\n@inline evaluate_mask(i, j, k, grid, mask::AbstractArray, \u2113) = @inbounds mask[i, j, k]\n@inline evaluate_mask(i, j, k, grid, mask::FunctionField, \u2113) = mask(node(i, j, k, grid, \u2113...)...)\n```\n\n`GridFittedBoundary` already uses the same idiom for its own mask (`src/ImmersedBoundaries/grid_fitted_boundary.jl:13-18`).\n\nTwo things worth a reviewer's attention:\n\n**Why `FunctionField` needs a method of its own.** `FunctionField <: AbstractField <: AbstractArray`, so it is an `AbstractArray` for dispatch and the new array method would be the more specific one \u2014 it would be indexed rather than called. That changes where it is evaluated: `getindex` derives coordinates from the `FunctionField`'s own location (`node(i, j, k, f.grid, LX(), LY(), LZ())`, `function_field.jl:56`), while calling it evaluates at the forced field's node, which is what `\u2113` gives. The two agree when the mask is built at the same location as the field it masks, so for ordinary use this method only preserves today's behavior; they diverge for a mask at a different location, and there calling is the semantics you want, since the mask weights a tendency that lives at the forced field's node. It uses `node` rather than `_node` to match both the generic mask method and `FunctionField`'s own indexing. `getindex` also ends in `convert(eltype(f.grid), \u00b7)` where the call path does not, so indexing would quietly change the arithmetic's precision for a function returning a wider type than the grid.\n\n**`materialize_mask` validates a field mask, which is the one judgement call here.** Because it is read at `i, j, k`, a field mask must share the forced field's grid and either its location or a reduced one \u2014 the same conditions `materialize_target` enforces for a field target, except that a mismatch throws rather than being wrapped in `InterpolatedFieldTarget`, since interpolating a mask would defeat the point of precomputing it. Without the check, a `CenterField` masking `u` is read half a cell off and an undersized array reads out of bounds under `@inbounds`, both silently. A `FunctionField` is exempt, because it is called rather than read: neither its grid nor its location is consulted at kernel time, so a mismatch cannot misalign anything, and applying the check would reject the one case where the method above changes anything. Happy to drop the validation if you would rather this stay to the dispatch alone.\n\nA `Number` mask is still unsupported, and I left it that way: `evaluate_target` has a `Number` method, so the asymmetry is a little surprising, but a constant mask is exactly equivalent to scaling `rate`, unlike a `Number` target which cannot be folded in. Happy to add it if you would rather the two match.\n\nTests: a new `@testset` in `test/time_stepping/forcings.jl` covers a uniform field mask (half rate), a z-dependent one (per-`k` alignment), a reduced `Field{Nothing, Nothing, Center}`, a `FunctionField` at a location that differs from the forced field's (which fails if the method above is removed), and the two rejection cases. `forcings.jl` passes 1250/1250 on CPU and, before the rebase, 1246/1246 on a T4 with `TEST_ARCHITECTURE=GPU`.\n\nDocs: the `Relaxation` docstring and the `### Mask types` section of `docs/src/models/forcing_functions.md`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-14T17:52:21Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-10-19T18:51:36Z",
+    "number": 6252,
+    "title": "Accept a field or array as a `Relaxation` mask"
+  }
+]

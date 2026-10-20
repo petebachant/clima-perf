@@ -1,0 +1,90 @@
+[
+  {
+    "additions": 1606,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "WorkerBackend workers are now tracked in a registry. Each add_workers call creates a launch group with a desired worker count. Each worker has one row holding its scheduler job id, Distributed id, output file, and state. The states are `starting` (submitted, queued, or connected and loading code), `ready` (in the pool), `busy` (running a member), and `ended`.\r\n\r\nDuring a calibration the dispatch loop reconciles the registry with the scheduler and ends workers that are not ready within `startup_timeout` seconds of submission (12 hours by default), and launches replacements for any group below its desired count, up to that group's `max_relaunches`. The only other way to grow the pool mid-run is to call `add_workers` again. A worker that dies while running a member still counts as a failed member and its replacement picks up later members. A worker that fails to load its code is stopped, and its group launches no more workers, since a replacement would fail the same way. When the driver exits, an `atexit` hook cancels every job the session submitted.\r\n\r\nKey changes\r\n- New API: `worker_rows`, `worker_registry` and `set_registry_path!`\r\n- Worker registry (`worker_registry.jl`): Each worker has one `WorkerRecord`, keyed by registry row ID.\r\n- Each `add_workers` call now creates a `LaunchGroup` with desired number of workers and max relaunches (default 2*nworkers)\r\n- Registry is written to a TOML file by default, this is not really necessary since existing Distributed workers cannot easily join a new main session but could be useful for debugging.\r\n- Reconciliation (`worker_reconcile.jl`): reconciles the registry with the scheduler state via `qstat` or `squeue`.\r\n    - Ends workers whose process has disconnected or that weren't found within the startup timeout\r\n    - Queue replacement workers for launch groups below their desired count, up to the maximum\r\n    -  A worker that fails to load its code stops its group from relaunching, since a replacement would fail the same way\r\n- Added `Backend.Workers` module. Exported names are unchanged\r\n- All submitted jobs are cancelled on exit via `cancel_worker_jobs`\r\n- Queued jobs are awaited outside `addprocs`. Distributed's worker lock is held while `addprocs` is running, so we need to wait for workers outside of it.",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T18:18:21Z",
+    "deletions": 314,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      },
+      {
+        "color": "4b989c",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACw_Cc9A",
+        "name": "Launch Derecho"
+      }
+    ],
+    "mergedAt": "2026-10-19T18:55:50Z",
+    "number": 382,
+    "title": "Add worker registry with relaunch for WorkerBackend"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "The JuliaHub version badge returns a 502 and the badge does not render. The shields.io GitHub release badge shows the latest tag and links to the releases page.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T17:18:38Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-19T19:59:27Z",
+    "number": 383,
+    "title": "Point the README version badge at GitHub releases"
+  },
+  {
+    "additions": 1687,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaCalibrate.jl/issues/368, closes https://github.com/CliMA/ClimaCalibrate.jl/issues/368. This PR adds `AbstractTransform` which are lazy transformations applied to a `SampleCollection`. This is used by the `observation` method to get the original samples and pass the sample collection and transformations to the `covariance` methods. This implementation also does not require supplying the same keyword arguments for all the `covariance` methods and should make it simpler for users to create custom observation recipes.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOI0q0v88AAAABQjI7Pw",
+        "number": 368,
+        "repository": {
+          "id": "R_kgDOI0q0vw",
+          "name": "ClimaCalibrate.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCalibrate.jl/issues/368"
+      }
+    ],
+    "createdAt": "2026-09-29T17:53:51Z",
+    "deletions": 270,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-19T22:30:05Z",
+    "number": 381,
+    "title": "Add transforms for sample collection"
+  }
+]

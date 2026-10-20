@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "## Purpose\nMake the timing checks in `test/performance_tests.jl` measure the code instead of the coverage instrumentation. They fail on every Julia 1.12 job since #811, although the code runs well within its budgets.\n\n## Content\nThe `ci` jobs ran the tests with coverage. On Julia 1.12, coverage slows the 1M bulk tendencies about 20-fold, so the timing budgets failed:\n\n| `LinearizedAverage`, Float64 | Julia 1.10 | Julia 1.12 |\n|---|---|---|\n| without coverage | 0.43 \u03bcs | 0.41 \u03bcs |\n| with coverage | 3.1 \u03bcs | 8.9 \u03bcs (budget 5.5 \u03bcs) |\n| with coverage, 3 substeps | 9.3 \u03bcs | 26.4 \u03bcs (budget 18 \u03bcs) |\n\nMeasured locally on main (Apple M-series); the coverage numbers on 1.12 match those in the CI logs of #811, #797 and #801.\n\n- The `ci` jobs now run without coverage, so their benchmarks time the code itself. Coverage comes from the `CodeCov` workflow alone, which already runs the test suite with coverage on every pull request and uploads it.\n- `bench_press` skips the timing check when coverage is on and keeps the allocation checks. Without this, a timing failure in the `CodeCov` job would fail the job and skip its coverage upload.\n\nLocally on Julia 1.12, all 536 performance checks pass without coverage. With coverage, the 134 timing checks are reported as broken and the 402 others pass.\n\nCodecov now receives one upload per push, from Julia 1.11 on Ubuntu, instead of seven, so lines that run only on another Julia version or operating system no longer count as covered.\n\nThis supersedes #760.\n\n## Breaking changes\nNone.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-17T01:00:52Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-19T21:54:56Z",
+    "number": 816,
+    "title": "ci: check benchmark timings only without coverage"
+  }
+]

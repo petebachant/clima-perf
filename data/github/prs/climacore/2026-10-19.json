@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "The JuliaHub version badge returns a 502 and the badge does not render. The shields.io GitHub release badge shows the latest tag and links to the releases page.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T17:08:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-19T18:17:42Z",
+    "number": 2692,
+    "title": "Point the README version badge at GitHub releases"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "CI jobs segfaulted at random because they all share one Julia depot on NFS. When a job recompiles a package, Julia renames the new `.so` over the old one, and other jobs still running from that file crash. Recompiles happened mid-build from `test/precompile_workload.jl` and from newer caches left by other builds.\r\n\r\nThis got worse recently because `test/precompile_workload.jl` recompiles ClimaCore in every build. More builds running at the same time also means more recompiles triggered by other builds' caches.\r\n\r\nChanges\r\n- Add `.buildkite/hooks/pre-command`, which puts `$TMPDIR/depot` ahead of the shared depot for every step except init.\r\n- Only init writes to the shared depot now, later recompiles stay local to the job\u2019s node.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T19:18:40Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-19T23:15:34Z",
+    "number": 2688,
+    "title": "Compile into a node-local depot in every CI step after init"
+  }
+]
