@@ -1,0 +1,114 @@
+[
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "I found two bugs in `push_exchange_radiation_to_ice!`:\r\n1. `-(fs.sic > 0) * fs.P_snow` compiles under CUDA to `(fs.sic > 0) * fs.P_snow` (the negated Bool loses its sign). GPU runs have therefore been getting negative snowfall, which would either drain snow or draw freshwater out of the ocean! **Fix**: just move the minus onto the Float.\r\n2. The absorbed radiation was masked by `(sic > 0)` but not weighted by `sic`, so ice in partly covered cells absorbed `1 / sic` times the radiation it should. **Fix**: change `(sic > 0) *` to `sic *`.\r\n\r\nThis PR also adds a test to ensure these bugs are caught in the future (it checks the cell-mean heat flux and the snowfall for a simple setup). I don't know if it's really necessary or not; happy to remove it if we think it just adds bloat.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T18:03:04Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwyNDgyNjUxMzIy",
+        "name": "bug"
+      },
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-20T12:18:59Z",
+    "number": 2166,
+    "title": "Fix snowfall and radiation on sea ice"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Adds a new `ocean_3d_diagnostic_interval` config flag that just defaults to `ocean_diagnostic_interval` used by the (2D) surface output. Useful if you want to output the surface diagnostics at a high frequency without wasting tons of memory on the 3D fields.\n\nAlso gives each writer its own file-splitting `TimeInterval` (the two writers shared one stateful interval).",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T14:45:47Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwyNDgyNjUxMzM1",
+        "name": "enhancement"
+      },
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-20T14:20:48Z",
+    "number": 2165,
+    "title": "Seperate output interval for 3D ocean diags"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Unblocks buildkite instantiation issues; cc @szy21 @imreddyTeja \r\n(Avoids putting slabocean jobs on `clima` cpu resources)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T22:09:12Z",
+    "deletions": 54,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-20T16:33:23Z",
+    "number": 2168,
+    "title": "Remove slabocean buildkite jobs"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjQzNzEwMDQ1",
+      "is_bot": false,
+      "login": "akshaysridhar",
+      "name": "Akshay Sridhar"
+    },
+    "body": "Pins compat entries to fix plotting in coupler. This pin can be undone when https://github.com/MakieOrg/GeoMakie.jl/issues/398 is resolved.\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T16:59:57Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-20T18:38:23Z",
+    "number": 2169,
+    "title": "Pin Makie compat - fixes broken plots with Makie > 0.24.15 "
+  }
+]

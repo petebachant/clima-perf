@@ -1,0 +1,74 @@
+[
+  {
+    "additions": 64,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "On a distributed grid, the leftmost rank in a partitioned direction has topology\n`RightConnected`. Its west/south boundary face (index 1) is a physical boundary,\nbut `periphery_offset(::Face, ::RightConnected, N)` returned 0, so `exclude_periphery`\nlaunches stepped that face as if it were interior. This adds\n\n    periphery_offset(::Face, ::RightConnected, N::Int) = ifelse(N > 1, 1, 0)\n\nmatching the treatment of `Bounded`.\n\nAdds the MPI testset \"Distributed open boundary faces are not stepped\" to\n`test/mpi/split_explicit_boundaries.jl`, which fails on `main` and passes with this change\n(4 CPU ranks, x- and xy-partitions, QuasiAdamsBashforth2 and SplitRungeKutta3).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T13:27:32Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-20T06:58:02Z",
+    "number": 6156,
+    "title": "Exclude boundary face on RightConnected ranks from interior launches"
+  },
+  {
+    "additions": 39,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "`BulkDrag` returns \u03c4 = \u2212C\u1d30|U|u on every boundary. The domain-boundary `getbc` methods used the boundary side only to choose the index. Domain-boundary fluxes are positive in the +x, +y or +z direction, so `compute_z_top_bc!` (and the east/north versions) apply `G -= flux * A / V`. On those boundaries the drag therefore *added* C\u1d30|U|u\u00b7A/V to the tendency and sped the flow up. Bottom, west and south were correct. Immersed-boundary drag is unaffected, because immersed fluxes point into the fluid.\n\nOne forward-Euler step with `u = 1` (or `v = 1`), C\u1d30 = 1e-3 and \u0394z = \u0394x = 0.25, before this PR:\n\n```\nbottom  u  \u0394 = -0.0040000000000000036\ntop     u  \u0394 = 0.0040000000000000036\nwest    v  \u0394 = -0.0040000000000000036\neast    v  \u0394 = 0.0040000000000000036\n```\n\nThis PR adds `boundary_sign(::LeftBoundary) = 1` and `boundary_sign(::RightBoundary) = -1` and multiplies the drag by it in the six domain-boundary `getbc` methods. Until now the tests covered only the bottom boundary. A new testset checks \u0394u = \u2212C\u1d30 U\u2080\u00b2 \u0394t on all six boundaries. `test/time_stepping/bulk_drag.jl` passes on CPU and GPU.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T04:32:12Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-10-20T06:58:45Z",
+    "number": 6241,
+    "title": "Fix the sign of `BulkDrag` on top, east and north boundaries"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "Quick follow-up to #6252. `materialize_mask` compares the mask's grid to the forced field's with `===` only, which rejects a mask built on a separately constructed but equal grid. \r\n\r\n**A common case** rather than an outlier: Breeze's `SpecificForcing` materializes its inner `Relaxation` against the *specific* field \u2014 `u`, `v`, `\u03b8` out of its own field set \u2014 rather than the density-weighted prognostic it is keyed by, and that field's grid is `==` but not `===` to the grid a mask was built on. Measured on a nested child: `egal = false`, `equal = true`, locations matching. As it stands, every field-valued mask in that path throws at construction.\r\n\r\nThe tests in #6252 passed because they use a uniform `RectilinearGrid`, which is an immutable struct of isbits fields and therefore `===` to an identically constructed one. A grid that holds arrays is not, which is why the new case uses an array-backed grid.\r\n\r\nCompare the way `AbstractOperations` already does for exactly this reason, `===` first so `==` does not synchronize the device for an immersed grid:\r\n\r\n```julia\r\nmask.grid === field.grid || mask.grid == field.grid ||\r\n    throw(ArgumentError(\"a `Field` mask must share the forced field's grid\"))\r\n```\r\n\r\nThe existing rejection test uses a different-sized grid, so it still rejects.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T20:39:53Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-20T17:34:01Z",
+    "number": 6283,
+    "title": "Accept a `Relaxation` mask on an equal but distinct grid"
+  },
+  {
+    "additions": 64,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "The single-column parameter-estimation example manually traced its time-stepping loop and managed Enzyme derivative buffers. Use Reactant's `Simulation`/`run!` support and `Enzyme.gradient` instead, reset the model and clock before every evaluation, and give Optim a combined cost-and-gradient callback.\n\nKeep the four-parameter BFGS fit and animation while removing the optimizer comparison, timing code, and duplicate iteration log. Shorten the explanations, simplify observation copies, use `on_architecture` for plotting data, and correct the dependency-installation and IFRT preference instructions. The example shrinks from 380 to 299 lines.\n\nValidation on Julia 1.12.7 with Reactant 0.2.279, CPU/IFRT:\n\n- Checked repeatability, the forward-run clock and iteration count, and agreement of all four gradients with finite differences (within 0.1%).\n- Ran the 12-hour model and 10 BFGS iterations: cost fell from 0.108 to 0.000934; generated and inspected the plots and generated the animation.\n- After the final shortening, verified that the numerical functions and animation were unchanged, tested all three Optim callback request modes, and generated the Literate Markdown.\n- `git diff --check` passes.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T03:40:29Z",
+    "deletions": 145,
+    "labels": [],
+    "mergedAt": "2026-10-20T23:32:06Z",
+    "number": 6256,
+    "title": "Simplify the Reactant parameter estimation example"
+  }
+]
