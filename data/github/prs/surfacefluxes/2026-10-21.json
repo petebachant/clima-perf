@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 869,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "This PR fixes surface-callback oscillations under convective gustiness and speeds up the Monin-Obukhov solve by evaluating the profile integrals once per residual evaluation (released as v1.6.0):\r\n\r\n1. **Prevent surface-callback oscillations under convective gustiness** ([commit 1](https://github.com/CliMA/SurfaceFluxes.jl/pull/272/changes/b9fae19ed46499c054a8d142e51f1e267b0f105b)):\r\n   - At low wind with `FlooredDeardorffGustinessSpec(0)`, the convective gustiness drops to zero as the surface virtual potential temperature crosses the air value ($\\Delta\\theta_v = 0$). A single Newton callback step for the surface temperature can overshoot that threshold and bounce between the dry-adiabatic and convective branches, leaving the Monin-Obukhov residual discontinuous and preventing convergence.\r\n   - `evaluate_monin_obukhov_residual` now advances the surface callbacks in two stages per $\\zeta$ evaluation (`step_surface_callbacks`): when two callback steps jump across or stay on the convective branch, the fixed point of $T_{\\mathrm{sfc}}(g_h(T_{\\mathrm{sfc}}))$ along $g_h^2 \\propto \\max(\\Delta\\theta_v, 0)$ is solved by a quadratic equation (with a secant step in all other cases), and the state bulk Richardson number and wind speed are evaluated at the updated surface state.\r\n   - `solve_monin_obukhov` evaluates the surface callbacks one final time at the converged $\\zeta$ so the returned surface temperature, humidity, and fluxes are mutually consistent.\r\n   - `free_convection_wind_speed` returns zero for $\\zeta > 0$, where the boundary layer is stable regardless of the pre-callback surface state.\r\n\r\n2. **Evaluate the profiles and surface state once per residual evaluation to improve performance** ([commit 2](https://github.com/CliMA/SurfaceFluxes.jl/pull/272/changes/55fb9e4fad55b0e74c69a433321530afa25d9f73)):\r\n   - The momentum and heat profile coefficients $\\phi_m = \\kappa/\\widehat{F}_m(\\zeta_{\\mathrm{eff}})$ and $\\phi_h = \\kappa/\\widehat{F}_h(\\zeta_{\\mathrm{eff}})$ at the capped stability parameter are computed once per residual evaluation (`with_profile_coefficients`) and reused across `compute_ustar`, `free_convection_wind_speed`, `heat_conductance`, `exchange_coefficients`, and the profile bulk Richardson number $\\zeta \\phi_m^2 / (\\kappa \\phi_h)$.\r\n   - When the friction velocity is computed from the wind speed, `heat_conductance` returns $u_\\star \\phi_h$ directly inside the solve instead of dividing by the wind speed to form $C_h$ and multiplying back.\r\n   - `surface_state` evaluates the surface density, virtual potential temperatures, effective wind speed, and $u_\\star$ once per callback stage, and the interior virtual potential temperature is computed once per solve (`with_interior_virtual_pottemp`).\r\n   - Together these cut GPU execution time by ~33\u201345% across single-surface and land-skin solves while preserving identical results on existing test cases.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-21T03:56:54Z",
+    "deletions": 248,
+    "labels": [
+      {
+        "color": "68d411",
+        "description": "",
+        "id": "LA_kwDOFxodxc8AAAACsi6kAQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-21T21:33:49Z",
+    "number": 272,
+    "title": "Prevent surface-callback oscillations and hoist profile evaluations"
+  }
+]

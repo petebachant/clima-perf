@@ -1,0 +1,163 @@
+[
+  {
+    "additions": 75,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "Follow-up to #5982.\n\n## Problem\n\nSince #5982 the barotropic substeps carry their own clock, `clock.time + (substep - 1) * \u0394\u03c4\u1d2e`, which runs up to about `clock.time + 2\u0394t`. Open-boundary halo fills read `FieldTimeSeries` at those substep times. The in-memory window of a partly-in-memory `FieldTimeSeries` is only moved in `update_state!`, so it covers `clock.time` but not necessarily the later substep times.\n\nWhen a substep time crosses into a snapshot that isn't loaded yet, `memory_index(::PartlyInMemory, ::Union{Clamp, Linear})` returns a position past the end of the in-memory buffer. It clamps against the total number of snapshots, not against `time_indices_in_memory`. On GPU this is an illegal memory access.\n\nWe hit this in a regional run with daily boundary snapshots, `InMemory(3)` and \u0394t = 400 s. The window held days 0\u20132; the step starting at t = 1.995 d has substeps reaching 2.0046 d, and the run crashed with an illegal address.\n\n## Fix\n\n- `update_field_time_series!(fts, first_time::Time, last_time::Time)` loads the window from the first index needed at `first_time` up to the last index needed at `last_time`. If that span needs more snapshots than are held in memory, it throws an `ArgumentError` asking for a larger `time_indices_in_memory`, instead of reading out of bounds. It is a no-op for other time series.\n- `update_model_field_time_series!(model, first_time, last_time)` applies this to every `FieldTimeSeries` in the model.\n- `step_free_surface!` for `SplitExplicitFreeSurface` calls it for `[t, t + (Nsubsteps - 1) * \u0394\u03c4\u1d2e]` before the substeps. When the window already covers the span, nothing is reloaded.\n\n## Tests\n\n- New testset \"Partly-in-memory window covers a time span\" in `test/simulation/output_readers.jl`. It builds an on-disk series with 7 snapshots and `InMemory(3)`, then checks:\n  - the window loaded for t = 1.9 is (1, 2, 3)\n  - updating for the span 1.9 to 2.1 moves it to (2, 3, 4) with the correct data\n  - a span too long for the window throws an `ArgumentError`\n- A small split-explicit model on this branch, with hourly boundary snapshots, `InMemory(3)` and \u0394t = 30 min, moves the window ahead to cover the substeps (e.g. (2, 3, 4) at t = 2 h, where main still holds (1, 2, 3)). With `InMemory(2)` it throws the new `ArgumentError`, because the substep span needs 3 snapshots. On CPU, main does not crash in this setup, so the out-of-bounds read itself was only observed on GPU.\n- The same change on our fork ran a 4\u00d72-GPU regional simulation from scratch. It ran to iteration 1800 with no errors, passing the step that crashed before and three later window reloads.\n\n## Not covered\n\n**Behaviour change:** a setup whose substep span needs more snapshots than `time_indices_in_memory` (e.g. `InMemory(2)` with snapshots closer together than about 2\u0394t) now throws an `ArgumentError`. Before, it read past the window: silently on CPU, an illegal address on GPU.\n\n`memory_index` itself still has no bound against the in-memory length; this change makes sure the split-explicit substeps don't reach that case.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T07:35:14Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-21T12:22:22Z",
+    "number": 6151,
+    "title": "Load the FieldTimeSeries window for the whole barotropic substep span"
+  },
+  {
+    "additions": 212,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\n- `Relaxation` forcing now supports a flow-dependent rate via `FlowDependentRate{D}(rate_in, rate_out)` (`D` one of `:west`, `:east`, `:south`, `:north`): `rate_in` applies where the local horizontal normal velocity indicates inflow through boundary `D`, `rate_out` where it indicates outflow, following the ROMS/Marchesiello-et-al.-2001 nudging-layer convention.\n- Spatial shaping (how the nudging strength varies with distance from the boundary) is entirely `mask`'s job, exactly as for a constant-rate `Relaxation`. To sponge multiple edges, combine one `Relaxation` per edge (e.g. via `MultipleForcings`), each with its own `FlowDependentRate{D}` and a matching directional `mask`.\n- Fully backward compatible: `rate` still accepts a plain `Number` (or function), which reproduces the original constant-rate `Relaxation` behavior exactly. `FlowDependentRate` is just a new kind of value you can pass for `rate` \u2014 nothing changes for existing usage that doesn't opt in.\n- Motivation: in a regional simulation, a flow-rate-dependent sponge \u2014 nudging inflow much harder than outflow \u2014 produced noticeably better boundary behavior than a single constant rate.\n- `normal_velocities` now uses the active-weighted 2D interpolation operators near immersed boundaries, so a masked land neighbor no longer dilutes the interpolated transverse velocity toward zero.\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-14T09:55:55Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-10-21T12:47:03Z",
+    "number": 5879,
+    "title": "Add InflowOutflowRate sponge-layer relaxation forcing"
+  },
+  {
+    "additions": 42,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Near immersed boundaries, stencils of face values (e.g. `u` reconstructed in `x`) were checked through their face nodes with `inactive_node`. A one-cell-thick wall has no inactive faces, so these stencils reached across it. They are now checked through the cells between their faces, which also covers every case the face check caught. This applies to every face field reconstructed along its face direction (`u` in `x`, `v` in `y`, `w` in `z`, vorticity `\u03b6` in `x` and `y`); center fields are checked at their centers, as before.\n\n![stencil check](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/f91c05a23d3197dfd1e96a033b5de4a1c8a01376/masking_experiment/stencil_check.png)\n\nReconstructing in `x` at every point on one side of a one-cell wall, before and after changing only the other side: on `main` the face fields `u` and `\u03b6` (also as `WENOVectorInvariant()` reconstructs it) change, the tracer doesn't; here none do.\n\n![reconstruction leak](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/3374f8942d1d3f14d99c986deb30e447ed7876ed/masking_experiment/reconstruction_leak.png)\n\nWith the MWE from #6284, removing the flow on one side of a one-cell wall changes the other side by ~1e-2 on `main` and by ~1e-10 (pressure solver tolerance) here:\n\n![leak](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/f91c05a23d3197dfd1e96a033b5de4a1c8a01376/masking_experiment/thin_wall_leak.png)\n\n- Results change only next to immersed cells that have fluid on both sides along the stencil direction (one-cell-thick walls, single-column ridges in bathymetry); elsewhere they agree with `main` to round-off.\n- `inside_immersed_boundary` drops its unused `xside`/`yside`/`zside` keywords; the generated checks are unchanged by this.\n- New test: the momentum tendency next to a one-cell wall does not depend on the flow on its other side (`UpwindBiased(order=5)`, `WENO()`, `WENO(order=9)`).\n\nCloses #6284.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABYZlSNw",
+        "number": 6284,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6284"
+      }
+    ],
+    "createdAt": "2026-10-19T22:13:12Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-21T18:35:07Z",
+    "number": 6285,
+    "title": "Check the cells spanned by face stencils near immersed boundaries"
+  },
+  {
+    "additions": 3567,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds `YinYangGrid`, a multi-region grid which enables full-sphere simulations. The grid is composed of two latitude-longitude grids (technically `RotatedLatitudeLongitudeGrid`) that partially overlap --- the \"yin\" grid, and the \"yang\" grid. Therefore, this is an overset grid method which requires blending and reconstruction the solution in the overlap region. This has the downside of --- if off-the-shelf methods are used anyways -- requiring a \"conservation fixer\" to maintain perfect conservation. Conservation fixers are bad because they distributed a spurious perturbation globally which is caused by a local loss of conservation; ie it is unphyiscal.\n\nThe advantage of this method for covering the sphere is considerable, however. There are no coordinate singularities, so the numerics seem better (see below). It is more efficient than the cubed sphere grid especially for small problems, because it has just 2 panels. Also, it does not require intricate halo filling. I also think that compared to non-orthogonal methods (such as the equiangular cubed sphere used by FV3) is it a little bit cheaper because non-orthogonal grids require carrying around more metrics, and FV3 algorithm introduces a \"dual\" velocity field thereby requiring two more prognostic variables.\n\nA future PR may improve the conservation issue. Basically we have ideas to achieve perfect conservation without a fixer, but its not clear whether they will work yet or if they will give high quality numerics.\n\n### Public API\n\n```julia\nYinYangGrid(arch = CPU(), FT = Oceananigans.defaults.FloatType; size = (3N\u03c6, N\u03c6, Nz), z,\n            halo = (3, 3, 3), stencil_width = 4, overlap, radius)         # exported\n\nadd_conservation_fixer!(simulation)   # exported; simulation.callbacks[:conservation_fixer] on a YinYangGrid,\n                                      # replaced by a second call; nothing on grids that conserve\nYinYangConservationFixer(model)       # exported; the callback that add_conservation_fixer! adds\n\n# Oceananigans (not exported)\nTendencyCallsite(tendency = MomentumTendency())   # or TracerTendency()\nTracerTendencyCallsite()                          # alias of TendencyCallsite{TracerTendency}\n\n# Oceananigans.MultiRegion\nowned_weights(grid)                         # sum, mean, Integral, Average, maximum, ... count every point once\nlatitude_longitude_grid(grid; size, halo)   # immersed when grid has an immersed bottom\nremapped_field(source, destination_grid = latitude_longitude_grid(grid))  # source = c or (u, v)\nremap!(destination, source, remapping = yin_yang_remapping(destination, source))\n\nset!(model; u, v)                           # geographic components, rotated into each panel\nfill_halo_regions!((u, v))                  # horizontal vectors are filled as a pair\n# JLD2Writer, Checkpointer and WindowedTimeAverage write the data of each panel, as on a cubed sphere\n```\n\n### Changes outside Yin-Yang\n\n- The nonhydrostatic `SphericalCoriolis` computes `f \u1e91 \u00d7 U` with the horizontal stencil of its scheme, as `HydrostaticSphericalCoriolis` does, and adds the nontraditional terms on rotated grids. This changes `SphericalCoriolis()` results on every grid.\n- Z-star checkpoints of every `MultiRegionGrid`, `ConformalCubedSphereGrid` included, saved and restored only the first region. They now hold every region; older checkpoints raise an `ArgumentError`.\n- On multi-region grids: reductions across the partition are combined on the first region, `hasnan` reports a NaN in any region, and bounds-preserving WENO works.\n- On immersed multi-region grids, cubed spheres included: implicit vertical diffusion builds a solver per region, and `reconcile_state!` masks immersed velocities before it initializes the barotropic transport.\n- `GridFittedBottom` and `PartialCellBottom` fill the bottom-height halos before fitting them, which leaves grids with copied halos unchanged.\n- In Float32 on GPUs without Float64 support: `rotate_coordinates`, reduced-order advection and time-average weights keep the float type of the grid.\n- `ImplicitFreeSurface` restores its cached displacement with `set!`, so that it steps with `SplitRungeKutta3` on multi-region grids (before, the broadcast between the parents of two multi-region fields threw).\n- `TendencyCallsite` gets a type parameter and a field, the tendencies it acts on. `TendencyCallsite()` is `TendencyCallsite(MomentumTendency())` and still runs where it did. In `HydrostaticFreeSurfaceModel`, which computes its tracer tendencies later in each substep, `TracerTendencyCallsite()` callbacks run right after `compute_tracer_tendencies!`, on the whole model; before, no callback could change a tracer tendency there. `NonhydrostaticModel` and `ShallowWaterModel` run both kinds after all their tendencies, as before.\n- `CATKEVerticalDiffusivity` and `TKEDissipationVerticalDiffusivity` run on multi-region grids, cubed spheres included: they build their boundary conditions, split their closure fields and step their TKE region by region.\n\n\n",
+    "changedFiles": 58,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-18T02:17:04Z",
+    "deletions": 116,
+    "labels": [
+      {
+        "color": "FFA500",
+        "description": "Something new and shiny",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjYx",
+        "name": "feature \ud83c\udf1f"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-21T20:41:12Z",
+    "number": 6271,
+    "title": "Add YinYangGrid"
+  },
+  {
+    "additions": 71,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "`update_state!` starts the tracer halo exchange asynchronously. The bounds-preserving limiters, computed in `update_advection!`, use reconstructions that reach across the rank edges, and they ran before the exchange completed. Next to a rank edge they read the halos of the previous state, so a partitioned run differed from the serial one.\n\n`update_state!` now refreshes the adaptive advection timesteps before the momentum tendencies and the bounds-preserving limiters after them, once the tracer halo communication has completed in the momentum buffer step.\n\nThe new test advects a front of a tracer with `WENO(order = 5, bounds = (0, 1))` across the rank edges and compares partitions with the serial run. It fails without this change.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T13:39:24Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-10-21T20:43:50Z",
+    "number": 6292,
+    "title": "Update the bounds-preserving limiters after the tracer halos are synchronized"
+  },
+  {
+    "additions": 103,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR changes the description of the bottom height by saving the bottom index rather than the bottom height. \r\nIn `GridFittedBottom` we save the actual bottom, in `PartialCellBottom` we save the bottom index + % open cell above.\r\n\r\nIn both the `PartialCellBottom` and the `GridFittedBottom` the bottom height is completely inferable from the bottom index.\r\nHaving the index available instead of the bottom height simplifies all the `immersed_cell` checks and `bottom` checks, reducing register pressure and, (mildly) increasing performance.\r\nI have kept the `bottom_height` as a field for convenience (plotting / inspecting), it is, however, not used anywhere in the kernels. In the future, if we want to reduce the memory, we can remove this hanging field. I think it does not hurt to have it however, it is just 2D and adapt strips it away when moving to the GPU",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T13:38:57Z",
+    "deletions": 67,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-21T21:00:21Z",
+    "number": 6290,
+    "title": "Save bottom indices for immersed boundaries"
+  }
+]

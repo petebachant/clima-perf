@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 55,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From Claude: implements @dennisYatunin's idea from https://github.com/CliMA/ClimaCore.jl/issues/2676 \u2014 carry the microphysics and thermodynamics parameters into the hot kernels *in the type*, so their fields fold to literals instead of being read back out of a struct at every quadrature point.\n\n`_fold` wraps the parameters in a `Val` on the device only; `_unwrapped` undoes it at each use site and is the identity for bare parameters. The device gate matters: a struct type parameter is boxed on the host, so the host path would allocate per point, while the device compiler has no heap and folds it to a literal.\n\n## Measured\n\nRe-measured on a benchmark that mirrors `amip_coarse_progedmf_1m_land` (the nightly coupled configuration), with the fold as the only difference between the two arms.\n\nThe register effect is unambiguous:\n\n| | baseline | this branch |\n|---|---|---|\n| `set_microphysics_tendency_cache`, SGS quadrature | 255 regs, 4623 ms | **158 regs**, 2534 ms (-45.18%) |\n| `set_microphysics_tendency_cache`, grid-mean | 255 regs, 676 ms | 172 regs, 592 ms (-12.41%) |\n| total device kernel time | 24375 ms | **22190 ms (-8.96%)** |\n\nOccupancy on the hot kernel steps from 8 to 12 warps/SM. `ncu` separately reports register spill on that kernel falling from 32.9% to 12.8% of its memory traffic, with static registers 255 \u2192 128. Launch counts are identical in both arms (395,288), and the 18,917 ms of kernels the fold does not touch moved by 0.05%, so the change stays confined to the kernels it targets.\n\n## Wall clock: 8.24% SYPD\n\n| | baseline | this branch |\n|---|---|---|\n| SYPD | 1.3485 | **1.4697 (+8.24%)** |\n| wall clock, 2,878 timed steps | 701.2 s | 643.4 s |\n| walltime per coupling step | 243.6 ms | 223.5 ms |\n\nPer-step walltime falls with SYPD, which is the signature of a real speedup rather than a coarser timestep; `dt_cpl` is 120 s in both arms.\n\nAn earlier version of this PR measured 1.90% on a one-day benchmark and argued that figure was a floor diluted by fixed costs. That was right, but understated: the benchmark was spending most of its wall clock on work the saving cannot reach. Rebuilt to match the nightly coupled run, it reports 8.24%.\n\n**The per-step saving barely moved.** The typical ordinary step saved 17.27 ms on the old benchmark and saves 20.42 ms here \u2014 the same kernels run per step either way. What changed is how much of that survives into the headline: ordinary steps went from 51.9% of the wall clock to 71.3%.\n\n## Paired per-step measurement\n\nBoth arms run the same config, so step index *i* is the same work in both and the difference is taken per step rather than in aggregate. Over all 2,880 steps the fold is worth **9.29%** (65.9 s).\n\n**The device saving converts completely.** The typical ordinary step saves **20.42 ms** against the **18.13 ms** the profiled device time predicts \u2014 113%, over 2,784 steps. Holding every ordinary step at that median rate over the whole window gives 9.31%, against 9.29% measured: a shortfall of 0.019 points. There is essentially nothing lost between the kernel and the clock.\n\nWhere the wall clock goes, and where the saving comes from:\n\n| | steps | % of wall | % of saving |\n|---|---|---|---|\n| ordinary | 2,784 | 71.3% | 86.1% |\n| radiation | 92 | 16.7% | 3.4% |\n| diagnostics writes | 4 | 12.0% | 10.5% |\n\n**Deferred compilation is now a minor cost.** `Val` puts the parameter *values* in the type, so kernels specialize against them and pay first-call compilation when each path is first reached. 70 ordinary steps (2.5%) are slower on this branch, **6.3 s** in total, worst single step 212 ms. The last penalty above 200 ms is step 754, after which it stops \u2014 so it is compilation, not noise, which would be symmetric. On the old benchmark this cost 30.7 s over 190 steps.\n\nOver the final 2 diagnostics cycles (from step 1,440) the fold is worth **8.84%**, and 9.39% with the diagnostics steps excluded. The figure is flat in the cutoff \u2014 8.81% from step 720, 8.84% from 1440, 8.73% from 2400 \u2014 where on the old benchmark it still climbed from 5.28% to 6.61%, which is what a run that had not yet amortized its fixed costs looks like.\n\nTwo caveats for anyone reproducing this. The paired measurement instruments each step with CUDA events and a per-step synchronize, so its absolute totals run a little above the uninstrumented AMIP stage (709.3 s against 701.2 s) and its whole-window 9.29% is not the same quantity as the 8.24% SYPD figure; the two agree to within the \u00b12% SYPD noise floor this machine shows. And the nsys capture profiles a shorter window and reports 5.30%.\n\n## A separate finding about the default diagnostics cadence\n\nThe earlier benchmark spent 32.1% of its wall clock writing diagnostics, which turned out to be a defect in `AtmosSimulations` rather than a property of the configuration: the duration used to select the cadence was `t_end - dt`, so a run ending exactly on a bucket boundary fell through to the next finer cadence. That is fixed separately in #4900, which also makes every cadence bucket require three of its own averaging windows and lets daily output subsample instead of computing every timestep. It is unrelated to this PR except that it was diluting every speedup measured on a short run.\n\n## Withdrawn: the 12% in the original description\n\nThat figure does not hold, and the reason is worth stating plainly. It was measured when this branch also carried an RRTMGP radiation fusion, which has since merged upstream. With the fusion in the baseline where it belongs, the fold alone measures 8.24% on a nightly-representative run.\n\n## TODO\n\n- [x] Rerun after merging in main\n- [x] Re-baseline on a benchmark that mirrors the nightly coupled configuration\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01FYv7qDRgpuycyDQtmL96GH\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-08T23:20:32Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-21T17:14:28Z",
+    "number": 4879,
+    "title": "Put parameters in types to reduce register pressure"
+  },
+  {
+    "additions": 161,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR adds a moist baroclinic wave example to the Getting Started docs, a complete global run that new users can reproduce on a laptop in ~5 min. The example runs during the docs build, so the figure always matches the current code.\r\n\r\nChanges\r\n- Add `docs/src/moist_baroclinic_wave.md`: 10 days at ~550 km resolution with 0-moment microphysics and `dt = 1200s`, plotting near-surface pressure and specific humidity at day 10 with ClimaAnalysis\r\n- Add ClimaAnalysis to the docs environment and the Ullrich et al. (2014) citation\r\n- Link the page from `index.md`, `first_simulation.md`, and `global_simulations.md`\r\n- Raise the docs CI timeout from 30 to 45 min\r\n\r\n[PR docs page](https://clima.github.io/ClimaAtmos.jl/previews/PR4908/moist_baroclinic_wave/)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T21:51:42Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-21T18:44:36Z",
+    "number": 4908,
+    "title": "Add baroclinic wave example to docs"
+  },
+  {
+    "additions": 118,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR stops Julia depot caches from evicting each other. Each PR saved ~14 GB of caches that only that PR can read, which passes the 10 GB repository limit and evicts the `main` caches. Most jobs missed and recompiled ~300 packages.\r\n- Use them in `ci.yml`, `docs.yml`, `downstream.yml`, and `downgrade.yml`\r\n- Share one depot across CI test groups per Julia version\r\n- Drop the `actions: write` permission, which only `julia-actions/cache` needed\r\n- Let Dependabot update the new actions\r\n\r\nWith a cache hit, the docs \"Install dependencies\" step drops from ~12.5 min to 10 s!\r\n\r\nThe caches will only be saved from `main`, so this takes effect after merge. Currently the caches are being saved for this branch to test that it works. Working [test](https://github.com/CliMA/ClimaAtmos.jl/actions/runs/39511811017/job/119394965899?pr=4909) where dep install takes 10 seconds.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T22:22:07Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-21T19:52:33Z",
+    "number": 4909,
+    "title": "Cache Julia depots from main only"
+  },
+  {
+    "additions": 23,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR updates the coupler commit in the downstream perf pipeline and also enables it to run without strict parameters, preventing this [error](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/311#01a16006-a0c0-4e17-b5d0-1d81ac6394af):\r\n```\r\n\u250c Error: At least one override parameter set and not used in simulation\r\n\u2514 @ ClimaParams /scratch/clima/slurm-buildkite/climaatmos-end-to-end-performance/311/depot/packages/ClimaParams/TKt8S/src/ClimaParams.jl:487\r\nERROR: LoadError: Halting simulation due to unused parameters.\r\n Typically this is due to a typo in the parameter name.\r\n change `strict` flag to `false` to prevent this causing an exception\r\n```\r\n\r\nThis PR is also being used to fix changes to GHA cache usage in #4909, adding a CPU target to ensure we don't miss a saved cache.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-21T20:39:36Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-21T22:10:44Z",
+    "number": 4912,
+    "title": "Update coupler commit in downstream perf pipeline"
+  }
+]
