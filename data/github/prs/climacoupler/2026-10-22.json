@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose\r\n\r\nClimaLand's Downstream CI job runs ClimaCoupler's tests against ClimaLand `main` and PRs. Two checks in `experiments/test/component_model_tests/climaland_tests.jl` fail there (in CliMA/ClimaLand.jl#1928):\r\n\r\n1. `propertynames(atmos) == (:h, :gustiness)` fails because ClimaLand's `CoupledAtmosphere` now also stores the height `reference` convention, so the result is `(:h, :reference, :gustiness)`.\r\n2. The flux test errors with `type NamedTuple has no field vapor_flux_liq`. It calls `CL.turbulent_fluxes!` directly on `p.soil.turbulent_fluxes`, but the soil cache stores the vapor flux split into liquid and ice parts, and ClimaLand fills it from the soil skin temperature solve rather than from `turbulent_fluxes!`.\r\n\r\n## Changes\r\n\r\n- Check only that `:h` and `:gustiness` are among the properties of the coupled atmosphere.\r\n- Replace the three direct `CL.turbulent_fluxes!` calls (canopy, soil, snow) with the land model's own `CL.make_update_boundary_fluxes`, which computes each sub-component's fluxes the way the land model does during a run.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T05:28:37Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-22T16:27:57Z",
+    "number": 2175,
+    "title": "Update ClimaLand component tests for current ClimaLand"
+  }
+]

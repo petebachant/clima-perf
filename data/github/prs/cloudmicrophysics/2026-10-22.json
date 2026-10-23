@@ -1,0 +1,107 @@
+[
+  {
+    "additions": 185,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "### Content\r\n\r\nSimplified thresholds for \"absent\" mass and number for the 2M scheme to use `cbrt(floatmin(FT))`, as 1M does. The precise value we use here isn't really important, as long as it's above zero. What we've had, `eps(FT)`, is clearly too large: 2.2e-16 kg/kg in Float64 and 1.2e-7 kg/kg in Float32, which is similar scale to a physical `q_rai`.\r\n\r\nAlso fixed some other precision issues for computing `1 - \u03c4` in SB2006 autoconversion. \r\nPreviously, it rounded to zero for `q_lcl \u226a q_rai` and made the rate NaN. \r\nNow, autoconversion and accretion now compute \u03c4 and 1 - \u03c4 from their own ratios\r\n\r\nThe second commit limits the mean raindrop mass in `rain_breakup` to `xr_max`, as Eq. (94) of Seifert and Beheng (2006) does for the size distribution with limiters. With the unlimited distribution the mean mass q/N had no upper bound. \r\n\r\n### Breaking changes:\r\n- `Utilities.\u03f5_numerics_2M_M`, `Utilities.\u03f5_numerics_2M_N` and `Utilities.\u03f5_numerics_P3_B` are removed; use `Utilities.\u03f5_numerics`.\r\n\r\n### Result changes:\r\n- 2-moment rates in Float32 no longer vanish below 1.2e-7 kg/kg, and Float64 rates change only for contents between 2.8e-103 and 2.2e-16 kg/kg.\r\n- The breakup rate of the unlimited rain size distribution changes where q/N exceeds `xr_max`.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T22:27:10Z",
+    "deletions": 125,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-22T01:25:08Z",
+    "number": 823,
+    "title": "fix(2M): use the floatmin-derived threshold for 2-moment contents and limit the mean raindrop mass in breakup"
+  },
+  {
+    "additions": 1285,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "# Purpose\r\n\r\nThis PR splits the description of the P3 ice into the properties of a single particle, the size distribution, and the bulk state.\r\n\r\n# Content\r\n\r\n- `P3Particles` holds properties of a particle of size `D` (mass, area, size thresholds). Depends only on the intensive properties `F_rim`, `\u2374_rim`.\r\n- `P3Distribution` holds the size distribution parameters\r\n- `P3State(params, integration, \u03c1q_ice, \u03c1n_ice, \u03c1q_rim, \u03c1b_rim)` builds both once and holds them with the integration method and the prognostic moments.\r\n\r\nI'll be adding lookup tables later, which is, practically speaking, how the P3 scheme can be \"fast\". So most of the restructuring here is done with that in mind.\r\n\r\nSome docs reorganization to clarify what is \"public API\" (present in `API.md`) and what is considered \"internal API\" (present in `P3Internals.md`)\r\n\r\n## Breaking changes\r\n\r\n- removed: `state_from_prognostic` (use `P3State` instead), `ice_terminal_velocity_number_weighted` and `ice_terminal_velocity_mass_weighted` (use `ice_terminal_velocities` instead)\r\n- moved some functions from being considered \"public API\" to \"internal API\" (see above)\r\n- `quad` keyword renamed to `integration`\r\n- several functions take `P3Particles` instead of `P3State`\r\n- several functions have reordered arguments to: `parameters, particles or state, other species, air state`\r\n- `P3State` fields are updated\r\n- `bulk_microphysics_tendencies` no longer accepts `log\u03bb` (stored in `P3Distribution` within `P3State`)\r\n- `ParametersP3` has a new field `m_max`\r\n- The number tendencies of melting and self-collection scale with the prognostic number (instead of the \"bounded\" ice number)\r\n\r\nThe commit message lists every (breaking) change.\r\n\r\n## Dependencies and caveats:\r\n- Stacked on #823.\r\n- Needs a ClimaParams release with `P3_ice_largest_mean_particle_mass` (CliMA/ClimaParams.jl#336, version 1.3.4); CI fails until then, and the compat entry is unchanged.\r\n- The Downstream ClimaAtmos.jl check fails until ClimaAtmos moves to the new state API.\r\n",
+    "changedFiles": 42,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-21T21:48:05Z",
+    "deletions": 1838,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-22T19:21:38Z",
+    "number": 825,
+    "title": "refactor(P3)!: P3 state of particles, size distribution and integration method"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "U_kgDOCixB3A",
+      "is_bot": false,
+      "login": "jefftyoder",
+      "name": "Jeffrey Yoder"
+    },
+    "body": "## Summary\n\n#758 made `INP_concentration_mean` read the Frostenberg 2023 `a` and `b` coefficients as\n\n```\n\u03bc(T) = 9 log(-b \u00b7 T_c / 10) - log(a)\n```\n\nThe `-log(a)` term is redundant. By `log(xy) = log(x) + log(y)`,\n\n```\n\u03bc(T) = 9 log(-T_c / 10) + 9 log(b) - log(a)\n```\n\nso `9 log(b)` and `-log(a)` are both temperature-independent constant shifts of the mean log(INPC). They can be combined into a single constant (`-log(c)`, `c = a / b\u2079`), so `a` adds no degree of freedom that `b` does not already provide. In practice the two are not separately identifiable: in a UKI calibration against Larcform1 cloud profiles, the posterior correlation between `a` and `b` was 0.87.\n\n## Change\n\n```julia\nfunction INP_concentration_mean((; T_freeze, b)::CMP.Frostenberg2023, T)\n    T_celsius = min(T - T_freeze, 0)\n    return 9log(-b * T_celsius / 10)  # = log((-b * T_celsius / 10)^9)\nend\n```\n\n- Drop `- log_a` from `INP_concentration_mean`, and the derived `log_a` field from `Frostenberg2023`.\n- **Breaking:** remove the `a` field from `Frostenberg2023`, and stop reading `Frostenberg2023_a_coefficient` from ClimaParams. Code that passes `a = ...` to the keyword constructor, or uses the positional constructor `Frostenberg2023(\u03c3, a, b, T_freeze)`, must drop `a`. A temperature-independent shift of the mean is still available through `inpc_log_shift` in `immersion_limit_rate`.\n- `docs/src/IceNucleation.md`: the F23 equation now uses `ln(INPC)` and no longer lists `a`. The docstring no longer mentions `a`.\n- Companion: CliMA/ClimaParams.jl#338 removes `Frostenberg2023_a_coefficient`. It should merge after this PR; see that PR for release ordering.\n\n**Default behavior is unchanged** (`a = b = 1`).\n\n## Tests\n\nThe `Frostenberg a/b coefficients` testset is renamed `Frostenberg b coefficient`, and its `a`-shift assertion is removed. `test/heterogeneous_ice_nucleation_tests.jl` passes for Float64 and Float32 (77/77 each), as does `test/microphysics_noneq_tests.jl` (63/63). `Frostenberg2023` and `Microphysics2MParams` build from the default TOML.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T18:48:42Z",
+    "deletions": 28,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-22T21:42:51Z",
+    "number": 824,
+    "title": "Remove the redundant `a` coefficient from Frostenberg 2023 INP parameterization"
+  }
+]

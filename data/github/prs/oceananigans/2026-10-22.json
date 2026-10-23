@@ -1,0 +1,282 @@
+[
+  {
+    "additions": 0,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Fixes `multi_region/yin_yang_immersed`, which fails on main (CPU and GPU) since #6290.\n\n#6290 added a second `fill_halo_regions!(bottom_field)` after `compute_numerical_bottom_height!` in `GridFittedBottom` and `PartialCellBottom`. The fitting already runs over the halos, so the fill is redundant on single grids. On a Yin-Yang grid, though, filling halos interpolates them from the other panel, which overwrites the fitted bottom heights with unfitted ones (e.g. -4.065 where the grid has a face at -4). This PR removes the second fill; `compute_bottom_cell!` then reads fitted heights everywhere.\n\nTested locally: `multi_region/yin_yang_immersed`, `unit/immersed_boundary_grid`, `hydrostatic_free_surface/immersed_boundaries`, `hydrostatic_free_surface/immersed_implicit_solver`, `time_stepping/immersed_advection`, `multi_region/cubed_sphere_simulation_immersed`, `multi_region/yin_yang_models`, `multi_region/yin_yang_conservation_fixer` (29329 pass).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T02:09:41Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-22T03:42:57Z",
+    "number": 6301,
+    "title": "Keep the fitted bottom heights in the halos"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "`a \u2248 b` threw on multi-region fields, and `a == b` was `false` for equal fields:\n\n- `axes` destructured the `MultiRegionObject` of regional indices. It now takes region 1's window, as `size` does.\n- `norm` of a multi-region field or operation (such as `a - b`, which `isapprox` takes) is now `sqrt(sum(abs2, f))`. On a Yin-Yang grid this counts each point once, so `\u2248` ignores overlap cells the other panel owns. `ConjugateGradientSolver` checks convergence with this `norm`, so on Yin-Yang grids the overlap no longer counts twice there; other multi-region grids are unchanged.\n- `==` compares the regions instead of falling back to `===`.\n\nTests: `==`, `\u2248` and `isapprox(...; rtol)` on partitioned grids, and `\u2248` ignoring unowned points on a Yin-Yang grid.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T00:26:28Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2026-10-22T05:33:34Z",
+    "number": 6299,
+    "title": "Support axes, norm and == on multi-region fields"
+  },
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Follow-up to #6271. Apart from its docstring (in the library appendix) and the example, the `YinYangGrid` doesn't appear anywhere in the docs.\n\n- **`docs/src/grids.md`**: adds `YinYangGrid` as a fourth entry in \"Grid types\". A new section, \"Covering the whole sphere: `YinYangGrid`\", explains:\n  - why a `LatitudeLongitudeGrid` can't include the poles\n  - how the two rotated panels overlap and fill each other's halos\n  - the `(3N\u03c6, N\u03c6, Nz)` size requirement, with a `jldoctest`\n  - that `grid[1]` is Yin and `grid[2]` is Yang\n  - that `set!` takes geographic velocities\n  - that reductions count each point of the sphere once\n\n  The section ends with a link to the \"Barotropic jet and Double Drake\" example.\n- **`docs/src/models/models_overview.md`**: adds `YinYangGrid` to the list of global grids.\n\nThe doctest output matches what `YinYangGrid` prints on `main`, and is the same as the doctest in its docstring.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T00:19:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-22T05:53:01Z",
+    "number": 6298,
+    "title": "Document the YinYangGrid in the grids tutorial"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Flux-form momentum advection creates kinetic energy on immersed grids in two ways, so flow over immersed steps blows up (#6186) and the lee wave in #5693 overturns.\n\n**1. Masked fluxes at steps (#5402).** A momentum cell sits between two tracer columns, so at a step its bottom face is half wall and half fluid:\n\n```\n           column i-1    column i\n         \u250c\u2500\u2500\u2500\u2500\u2500\u2532\u2501\u2501\u2501\u2501\u2501\u252f\u2501\u2501\u2501\u2501\u2501\u2531\u2500\u2500\u2500\u2500\u2500\u2510     \u2503\u2501 : momentum cell of u\n         \u2502     \u2503     \u2502     \u2503     \u2502     c  : tracer cell centre\n  row k  \u2502     c     u     c     \u2502\n         \u2502\u2593\u2593\u2593\u2593\u2593\u2503\u2593\u2593\u2593\u2593\u2593\u2502     \u2503     \u2502  \u2190  floor of column i-1\n         \u251c\u2500\u2500\u2500\u2500\u2500\u253a\u2501\u2501\u2501\u2501\u2501\u253f\u2501\u2501\u2501\u2501\u2501\u2539\u2500\u2500\u2500\u2500\u2500\u2524  \u2190  bottom face of u's cell:\n         \u2502\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2502     \u2191 w   \u2502       left half on solid (w = 0)\nrow k-1  \u2502\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2502     c     \u2502       right half open (w \u2260 0)\n         \u2502\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2502\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2593\u2502  \u2190  floor of column i\n         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n#5402 zeroes the momentum flux on every face that touches the immersed boundary, including this one. Fluid still crosses the open half, but the momentum cell no longer sees its momentum enter or leave, which acts as a source proportional to `u`. This PR removes the masking. Fluxes still vanish on faces that are entirely wall, and reconstruction stencils already avoid inactive cells.\n\nFor a divergence-free flow over a staircase, the masked faces carry exactly the volume crossing their open half (top), and zeroing them leaves momentum cells that gain or lose volume (bottom). The residual left with `WENO()` comes from its fourth-order advecting transport (#6287).\n\n![continuity](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/f91c05a23d3197dfd1e96a033b5de4a1c8a01376/masking_experiment/pr6187_continuity.png)\n\n**2. Centered transport on partial cells (#6213).** `Centered` momentum fluxes multiplied an area by an interpolated velocity. Where neighboring face areas differ, as next to partial cells, those transports do not add up to zero around a momentum cell, even though the velocity is divergence-free, so the cell gains or loses volume and kinetic energy. They now interpolate the face transports, as upwind schemes already do. For example, with two faces of area 0.2 (next to a partial cell) and 1, both with `U = 1`:\n\n```\nbefore:  A_center \u00b7 \u00bd(U\u2081 + U\u2082)  =  1 \u00b7 \u00bd(1 + 1)        =  1\nafter:   \u00bd(A\u2081 U\u2081 + A\u2082 U\u2082)       =  \u00bd(0.2 \u00b7 1 + 1 \u00b7 1)  =  0.6   (the volume that actually crosses)\n```\n\n- Before #5009 the WENO buffer next to walls was first-order upwind, whose dissipation hid the masking error: the #6186 example runs on v0.102.1 and v0.105.4 and blows up from v0.105.5 (#5402).\n- `HydrostaticFreeSurfaceModel` changes with flux-form `WENO()`. Vector invariant momentum advection is unchanged: upwinded vertical advection (e.g. `WENOVectorInvariant()`) keeps the masking. Which treatment is better there is undecided (#6305); on the #5693 lee wave the two differ little and masked is slightly closer to a nonhydrostatic reference.\n- The #5402 test, which required zero flux on faces that carry transport, is removed. New tests check that centered advection conserves kinetic energy over full- and partial-cell staircases, and that convection over a partial-cell staircase stays bounded.\n- The #5693 lee wave matches v0.105.4 again. Against a nonhydrostatic 400\u00b2 run, flux-form `WENO()` on `main` grows a spurious jet along the bottom and blows up at 200\u00b2 (hydrostatic and nonhydrostatic), while this PR converges:\n\n  ![lee wave](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/eee653538f5ab64bbdf645307612f9be48505b4e/masking_experiment/lee_vs_nonhydrostatic.png)\n\nInviscid, unforced `Centered()` flow over a staircase, with no wall drag, should conserve kinetic energy (signed log axis). On `main` it gains 0.7% with full cells and blows up with partial cells. Here it only loses energy, at most 3 \u00d7 10\u207b\u2074, from RK3 time stepping: 8\u00d7 less when \u0394t is halved.\n\n![kinetic energy](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/678b1588a44ef6cf99de135137d8dd13cd972877/kinetic_energy.png)\n\nA cold blob sinking onto a staircase with `WENO()`, with no viscosity, diffusivity, forcing or wall drag; the only energy source is the blob's buoyancy. On `main` a spurious jet forms along the steps; it is strongest with partial cells, where the 3D case from #6186 blows up.\n\n![staircase convection](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/1febad82b658f5c4af45744c4494bce2ddebd5be/staircase_convection.png)\n\nStratified flow over a stepped sill (partial cells, `HydrostaticFreeSurfaceModel`), with and without the masking. The fields differ mainly in the lee of the top step; the vector invariant runs are nearly identical either way.\n\n![stepped sill fields](https://raw.githubusercontent.com/xkykai/Oceananigans.jl/02db679dc9b223b699f2264d933bea4128f7da85/masking_experiment/sill_side_by_side.png)\n\nScripts: [kinetic energy and convection](https://github.com/xkykai/Oceananigans.jl/tree/xk/pr6187-figures), [continuity and lee wave](https://github.com/xkykai/Oceananigans.jl/tree/xk/pr6187-masking-experiment/masking_experiment)\n\nCloses #6186. Closes #5693.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABFtPAkg",
+        "number": 5693,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5693"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABV51r0g",
+        "number": 6186,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6186"
+      }
+    ],
+    "createdAt": "2026-10-08T17:10:09Z",
+    "deletions": 152,
+    "labels": [],
+    "mergedAt": "2026-10-22T07:19:24Z",
+    "number": 6187,
+    "title": "Fix kinetic energy sources in immersed momentum advection over steps and partial cells"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/dependabot"
+    },
+    "body": "Updates the requirements on [DocStringExtensions](https://github.com/JuliaDocs/DocStringExtensions.jl) to permit the latest version.\nUpdates `DocStringExtensions` to 0.10.0\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/releases\">DocStringExtensions's releases</a>.</em></p>\n<blockquote>\n<h2>v0.10.0</h2>\n<h2>DocStringExtensions v0.10.0</h2>\n<p><a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/compare/v0.9.5...v0.10.0\">Diff since v0.9.5</a></p>\n<p>See <a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/blob/master/CHANGELOG.md\">https://github.com/JuliaDocs/DocStringExtensions.jl/blob/master/CHANGELOG.md</a> for a list of changes.</p>\n<p><strong>Merged pull requests:</strong></p>\n<ul>\n<li>Update for Documenter v1 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/163\">#163</a>) (<a href=\"https://github.com/hyrodium\"><code>@\u200bhyrodium</code></a>)</li>\n<li>Bump actions/checkout from 4 to 5 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/177\">#177</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Update CI (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/178\">#178</a>) (<a href=\"https://github.com/fingolfin\"><code>@\u200bfingolfin</code></a>)</li>\n<li>Allow for omitting return types for typed method signatures (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/179\">#179</a>) (<a href=\"https://github.com/ReubenJ\"><code>@\u200bReubenJ</code></a>)</li>\n<li>Switch to <code>ReferenceTests.jl</code> for testing output of <code>format</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/180\">#180</a>) (<a href=\"https://github.com/ReubenJ\"><code>@\u200bReubenJ</code></a>)</li>\n<li>Bump actions/checkout from 5 to 6 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/181\">#181</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump julia-actions/cache from 2 to 3 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/183\">#183</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump codecov/codecov-action from 5 to 6 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/184\">#184</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Use <code>invokelatest</code> for resolution (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/185\">#185</a>) (<a href=\"https://github.com/asinghvi17\"><code>@\u200basinghvi17</code></a>)</li>\n<li>Bump julia-actions/setup-julia from 2 to 3 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/186\">#186</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump codecov/codecov-action from 6 to 7 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/188\">#188</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump actions/checkout from 6 to 7 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/189\">#189</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>test: replace ReferenceTests and fix METHODLIST path redaction (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/191\">#191</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>test: check world-age formatting against references, add agent guides (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/192\">#192</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): unnamed args, varargs and 1.12 typesig unions (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/193\">#193</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>feat(signatures): optionally show default argument values (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/194\">#194</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>docs: add a changelog backfilled from the release history (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/196\">#196</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>feat(methodlist): add <code>TYPEDMETHODLIST</code> abbreviation (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/197\">#197</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): reject template strings without <code>DOCSTRING</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/198\">#198</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): skip return types of generated methods on abstract types (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/199\">#199</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>feat(exports): add <code>PUBLIC</code> abbreviation (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/200\">#200</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>feat(enums): add <code>INSTANCES</code> abbreviation (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/201\">#201</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): print destructured arguments as written (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/204\">#204</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): apply templates to docstrings with a define flag (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/207\">#207</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>ci: test on Julia 1.6 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/208\">#208</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): apply a template once to macro-marked definitions (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/209\">#209</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>refactor(templates): resolve templates as each docstring is registered (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/210\">#210</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): explain a missing template when copying one (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/212\">#212</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): drop the empty line before the closing fence (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/214\">#214</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>docs: split the manual into examples and reference pages (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/215\">#215</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(format): name the type in two error messages (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/216\">#216</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(methodlist): show source paths relative to the package root (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/217\">#217</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): take the return type of the documented method (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/218\">#218</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): skip inference when an overlapping method is generated (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/222\">#222</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): reject unknown template categories (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/223\">#223</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): type signatures whose typesig loses arity (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/225\">#225</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(templates): give parametric constructors the METHODS template (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/226\">#226</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>feat(types): add <code>SUBTYPES</code> abbreviation (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/227\">#227</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): print varargs as <code>xs::T...</code> before Julia 1.5 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/228\">#228</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): print fixed-count varargs as <code>Vararg{T, n}</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/229\">#229</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): name type parameters in a <code>where</code> clause (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/230\">#230</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n<li>fix(signatures): keep a parametric default-before-vararg group on 1.12 (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/231\">#231</a>) (<a href=\"https://github.com/MichaelHatherly\"><code>@\u200bMichaelHatherly</code></a>)</li>\n</ul>\n<!-- raw HTML omitted -->\n</blockquote>\n<p>... (truncated)</p>\n</details>\n<details>\n<summary>Changelog</summary>\n<p><em>Sourced from <a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/blob/master/CHANGELOG.md\">DocStringExtensions's changelog</a>.</em></p>\n<blockquote>\n<h2><a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/releases/tag/v0.10.0\">v0.10.0</a> - 2026-10-14</h2>\n<h3>Breaking</h3>\n<ul>\n<li><code>@template</code> rejects a category no docstring belongs to, such as a misspelled name, with an <code>ArgumentError</code>. It used to store a template that never applied, so a package with such a category now fails to precompile until the category is corrected or removed (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/223\">#223</a>)</li>\n<li><code>@template</code> throws an <code>ArgumentError</code> for a template string without <code>$(DOCSTRING)</code>, including a plain string literal, when the template is defined. Some of these templates used to load and fail with a <code>MethodError</code> only when Julia displayed a docstring. A package that defines one now fails to precompile (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/151\">#151</a>)</li>\n<li>More docstrings get a template, and some get a different one. A docstring now gets its template when it sits in the same <code>begin</code> block as the <code>@template</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/288\">#288</a>), documents a bare existing name such as <code>&quot;...&quot; f</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/291\">#291</a>), or documents a parametric type's constructor (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/226\">#226</a>). A method defined through a <code>const</code> alias gets <code>METHODS</code> where it got <code>CONSTANTS</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/289\">#289</a>). A function named like a macro, such as <code>var&quot;@f&quot;</code>, no longer gets <code>MACROS</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/263\">#263</a>). Bindings documented together each get their own category's template (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/210\">#210</a>). Where a docstring repeats by hand what its template prints, the text now appears twice</li>\n</ul>\n<h3>Added</h3>\n<ul>\n<li>Add <code>TYPEDMETHODLIST</code>, which lists methods like <code>METHODLIST</code> but with argument and return types. <code>TypedMethodList(returns = false)</code> leaves out the return types (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/150\">#150</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/197\">#197</a>)</li>\n<li>Add <code>TypedMethodSignatures(returns = false)</code>, which renders typed signatures without return types (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/159\">#159</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/179\">#179</a>)</li>\n<li>Add a <code>returns</code> option to <code>MethodSignatures</code> and <code>MethodList</code> that follows each signature with its inferred return type. <code>MethodSignatures</code> and <code>TypedMethodSignatures</code> also take a string, such as <code>returns = &quot;success::Bool&quot;</code>, which they print after <code>-&gt;</code> in place of the inferred type (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/206\">#206</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/246\">#246</a>)</li>\n<li>Add the <code>DOCSTRINGEXTENSIONS_RETURN_ARROW</code> and <code>DOCSTRINGEXTENSIONS_SIGNATURE_WIDTH</code> environment variables. A reader sets them to change the arrow before return types, such as to <code>\u2192</code>, and the width at which a signature wraps to one argument per line, 60 by default (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/252\">#252</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/267\">#267</a>)</li>\n<li>Add a <code>defaults = true</code> option to <code>MethodSignatures</code> and <code>TypedMethodSignatures</code> that prints default argument values, with the methods generated for positional defaults collapsed into one signature (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/19\">#19</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/107\">#107</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/194\">#194</a>)</li>\n<li>Add a <code>defaults = :brackets</code> option to <code>MethodSignatures</code> and <code>TypedMethodSignatures</code>. It prints the collapsed signature without default values. Each optional positional argument appears in brackets. Any other symbol passed as <code>defaults</code> throws an <code>ArgumentError</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/206\">#206</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/247\">#247</a>)</li>\n<li>Add <code>PUBLIC</code> to list a module's public names, both exported and declared <code>public</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/190\">#190</a>)</li>\n<li>Add <code>INSTANCES</code> to list the instances of an enum with their values. It supports <code>@enum</code> and EnumX.jl's <code>@enumx</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/171\">#171</a>)</li>\n<li>Add <code>SUBTYPES</code> to list the direct subtypes of a type as links. It lists only subtypes defined in the type's own module or a module inside it (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/47\">#47</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/154\">#154</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/227\">#227</a>)</li>\n<li>Add <code>BODY</code> to print the body of the documented method definition as a Julia code block (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/54\">#54</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/237\">#237</a>)</li>\n<li>Add <code>NOTEMPLATE</code>, which stops a module's <code>@template</code> applying to the docstring it appears in. <code>TemplateOverride(category)</code> applies the template for another category instead (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/158\">#158</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/240\">#240</a>)</li>\n<li>Add the <code>ABSTRACTTYPES</code> template category for abstract types. A module without one documents abstract types with its <code>TYPES</code> template, as before (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/147\">#147</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/241\">#241</a>)</li>\n<li><code>SIGNATURES</code> and <code>TYPEDSIGNATURES</code> in the docstring of a macro print it as its caller writes it, such as <code>@m a b</code>. The <code>__source__</code> and <code>__module__</code> arguments and the inferred return type are left out. They printed nothing before. <code>METHODLIST</code> and <code>TYPEDMETHODLIST</code> list a macro the same way. For a vararg macro they printed its hidden arguments, and for any other macro nothing (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/262\">#262</a>)</li>\n<li><code>SIGNATURES</code> and <code>TYPEDSIGNATURES</code> in the docstring of a struct list the constructors its definition creates. They printed nothing before (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/71\">#71</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/245\">#245</a>)</li>\n<li>Declare the interface for writing an abbreviation public on Julia 1.11 and later: <code>Abbreviation</code>, <code>format</code> and <code>interpolation</code>. A new guide covers it (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/86\">#86</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/303\">#303</a>)</li>\n<li>Declare the types that take abbreviation options public on Julia 1.11 and later, such as <code>MethodSignatures</code> and <code>TypeFields</code>. Each one appears on its topic's reference page (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/303\">#303</a>)</li>\n<li>Add <code>TypeFields(; types, defaults)</code>, whose keywords match the other option types (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/303\">#303</a>)</li>\n</ul>\n<h3>Changed</h3>\n<ul>\n<li>Signatures leave out a return type inferred as <code>Any</code>, as they already did for <code>Nothing</code>. <code>-&gt; Any</code> says only that inference could not work out the type (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/301\">#301</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/298\">#298</a>)</li>\n<li>The manual splits into Examples and Reference sections with one page per topic. Each example page prints its source above the rendered docstrings, and new pages cover <code>PUBLIC</code>, <code>INSTANCES</code>, and <code>@template</code> with <code>DOCSTRING</code>. The package docstring is rewritten. A Setup page covers adding the package, templates, and Documenter. The docstrings of the package, <code>@template</code> and every abbreviation except <code>README</code> and <code>LICENSE</code> carry examples as doctests, which the docs build checks against the real output. They replace hand-written samples that had drifted from it (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/122\">#122</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/215\">#215</a>)</li>\n<li><code>SIGNATURES</code> prints an unnamed argument with a declared type as <code>::T</code>, as <code>TYPEDSIGNATURES</code> does, so <code>foo(::Val{N})</code> no longer prints as <code>foo(_)</code>. An untyped unnamed argument still prints as <code>_</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/161\">#161</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/235\">#235</a>)</li>\n<li><code>TYPEDSIGNATURES</code> and <code>TYPEDMETHODLIST</code> print the declared type of each keyword argument, such as <code>f(x; n::Int64)</code>. An untyped keyword and a <code>kwargs...</code> keyword print without one (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/97\">#97</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/244\">#244</a>)</li>\n<li><code>FIELDS</code> and <code>TYPEDFIELDS</code> print each field's default value, such as <code>retries::Int64 = 3</code>, for structs defined with <code>Base.@kwdef</code> or a macro that uses the same syntax. <code>TypeFields(defaults = false)</code> hides them (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/182\">#182</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/245\">#245</a>)</li>\n<li><code>@template</code> applies a template when its docstring is defined, not when it is displayed, so a templated docstring no longer stores the documented expression in the package image. A docstring for a binding that does not exist yet keeps its template until display. Bindings documented together, such as <code>@doc &quot;...&quot; (f, T)</code>, each get the template for their own category, where they all used the last binding's (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/210\">#210</a>)</li>\n</ul>\n<h3>Deprecated</h3>\n<ul>\n<li><code>TypeFields(types::Bool)</code> is deprecated in favour of <code>TypeFields(types = ...)</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/303\">#303</a>)</li>\n</ul>\n<h3>Fixed</h3>\n<ul>\n<li>Fix inferred return types printing the names inference gives the type parameters it cannot work out, such as <code>-&gt; Pair{_A, Int} where _A</code>. They print as their bound, <code>-&gt; Pair{&lt;:Any, Int}</code>, on Julia 1.3 and later (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/300\">#300</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/297\">#297</a>)</li>\n<li>Fix <code>TYPEDSIGNATURES</code> leaving out the return type of a callable such as <code>(e::E)(x)</code> and of a constructor written <code>T{P}(...)</code>. Before Julia 1.6 they still print without one (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/279\">#279</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/296\">#296</a>)</li>\n<li>Fix a wrapped signature with only keyword arguments printing <code>;</code> alone on its own line. It prints <code>f(;</code> on the first line. A signature without arguments no longer wraps, so a long return type follows <code>f()</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/281\">#281</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/295\">#295</a>)</li>\n<li>Fix <code>METHODLIST</code> and <code>TYPEDMETHODLIST</code> in a parametric type's docstring leaving out the constructors written <code>T{P}(...)</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/280\">#280</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/294\">#294</a>)</li>\n<li>Fix signatures printing a <code>where</code> bound that names another type parameter with <code>Array{T, 1}</code> where the source writes <code>Vector{T}</code>, such as <code>S&lt;:Vector{T}</code> (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/278\">#278</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/293\">#293</a>)</li>\n<li>Fix a world-age warning on Julia 1.12 and later when <code>@template</code> and a docstring expand together from running code, such as in one <code>macroexpand</code> call. Under <code>--depwarn=error</code> the docstring lost its template (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/277\">#277</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/292\">#292</a>)</li>\n<li>Fix <code>@template</code> skipping a docstring on a bare existing name, such as <code>&quot;...&quot; f</code> after <code>function f end</code>. The dotted form <code>&quot;...&quot; M.f</code> already got its template (<a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/issues/276\">#276</a>, <a href=\"https://redirect.github.com/JuliaDocs/DocStringExtensions.jl/pull/291\">#291</a>)</li>\n</ul>\n<!-- raw HTML omitted -->\n</blockquote>\n<p>... (truncated)</p>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li>See full diff in <a href=\"https://github.com/JuliaDocs/DocStringExtensions.jl/commits/v0.10.0\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore <dependency name> major version` will close this group update PR and stop Dependabot creating any more for the specific dependency's major version (unless you unignore this specific dependency's major version or upgrade to it yourself)\n- `@dependabot ignore <dependency name> minor version` will close this group update PR and stop Dependabot creating any more for the specific dependency's minor version (unless you unignore this specific dependency's minor version or upgrade to it yourself)\n- `@dependabot ignore <dependency name>` will close this group update PR and stop Dependabot creating any more for the specific dependency (unless you unignore this specific dependency or upgrade to it yourself)\n- `@dependabot unignore <dependency name>` will remove all of the ignore conditions of the specified dependency\n- `@dependabot unignore <dependency name> <ignore condition>` will remove the ignore condition of the specified dependency and ignore conditions\n\n\n</details>",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T02:15:39Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      },
+      {
+        "color": "a270ba",
+        "description": "Pull requests that update julia code",
+        "id": "LA_kwDOCRy_aM8AAAACdijpGw",
+        "name": "julia"
+      }
+    ],
+    "mergedAt": "2026-10-22T07:38:18Z",
+    "number": 6302,
+    "title": "Bump DocStringExtensions in /"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "PR #6180 introduced new active cells map that extend within the halos.\nFor a distributed architecture and a split explicit free surface, we do need to compute the barotropic variables in the halos to avoid high-latency MPI passing within the substepping.\nWe can then employ the new maps to reduce the work performed per kernel during substepping.\nI am not sure this will lead to a massive gain, since the kernels themselves are rather small, but still works in the direction of load balancing (using immersed maps ensure that the load-balanced division we do is effective)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-12T07:53:15Z",
+    "deletions": 14,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-22T09:09:34Z",
+    "number": 6234,
+    "title": "Use new active maps for the SplitExplicitFreeSurface"
+  },
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Upwind (`UpwindBiased`, `WENO`) momentum fluxes interpolated the advecting transport with the scheme's centered stencil, which drops to the buffer scheme at different distances from a wall for transports at centers and at faces. The transports around a momentum cell then don't cancel for a divergence-free flow, and the cell gains a spurious `\u2212u \u2207\u00b7U` source. The transport is now a second-order average (`\u2111`) everywhere. It has no overshoots that could flip the upwind direction, and it never reads past a wall.\n\n- `advecting_velocity_scheme` of `WENO` and `UpwindBiased` is `Centered(order=2)`, which also sets the implicit vertical velocity of adaptive implicit vertical advection. The vector invariant cross scheme keeps the order of the upwind scheme it is built from (`Centered(order=4)` for the default `WENOVectorInvariant`); `OnlySelfUpwinding(cross_scheme=Centered())` selects second order.\n- The MWE in #6287: max tendency next to the wall 0.57 \u2192 2e-13 for `WENO()` and `WENO(order=9)`, the same as `Centered()`.\n- New tests: advecting a uniform momentum field by a divergence-free flow over a staircase gives zero tendency, and a uniform through-flow between normal-flow boundaries stays uniform (`Centered()`, `UpwindBiased()`, `WENO()`, `WENO(order=9)`).\n\nBuilds on #6187. Closes #6287.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABYdRLfA",
+        "number": 6287,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6287"
+      }
+    ],
+    "createdAt": "2026-10-19T22:24:13Z",
+    "deletions": 32,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-22T22:47:17Z",
+    "number": 6286,
+    "title": "Interpolate the advecting transport of upwind momentum fluxes at second order"
+  },
+  {
+    "additions": 359,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR is step number (1) of #6272. It splits the topology into two different `Sides` when appropriate and reworks the topologies into \n- `Connected` (MPI or multi-region)\n- `Closed`\n- `CenterFolded`\n- `FaceFolded`\n- `Periodic` (as before)\n- `Flat` (as before)\n\nWhere `Bounded == Sides{Closed, Closed}`. `Open` will come in the next PR.\n\nAll the composite topoologies are removed (i.e. `RightFaceFolded`, `LeftConnected`, `LeftConnectedRightFaceFolded`).\nThe new UI will be the same as in main, but, for example\n```julia\njulia> Bounded\nBounded (alias for Sides{Closed, Closed})\n\njulia> grid = RectilinearGrid(size = (10, 10), x = (0, 1), y = (0, 1), topology = (Bounded, Periodic, Flat))\n10\u00d710\u00d71 RectilinearGrid{Float64, Bounded, Periodic, Flat} on CPU with 3\u00d73\u00d70 halo\n\u251c\u2500\u2500 Bounded  x \u2208 [0.0, 1.0] regularly spaced with \u0394x=0.1\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0) regularly spaced with \u0394y=0.1\n\u2514\u2500\u2500 Flat z\n\njulia> grid = RectilinearGrid(size = (10, 10), x = (0, 1), y = (0, 1), topology = ((Closed, FaceFolded), Periodic, Flat))\n10\u00d710\u00d71 RectilinearGrid{Float64, Sides{Closed, FaceFolded}, Periodic, Flat} on CPU with 3\u00d73\u00d70 halo\n\u251c\u2500\u2500 Sides{Closed, FaceFolded} x \u2208 [0.0, 1.0] regularly spaced with \u0394x=0.1\n\u251c\u2500\u2500 Periodic y \u2208 [0.0, 1.0)                  regularly spaced with \u0394y=0.1\n\u2514\u2500\u2500 Flat z\n```\n\n",
+    "changedFiles": 67,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T05:56:22Z",
+    "deletions": 511,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-10-22T23:07:48Z",
+    "number": 6275,
+    "title": "(0.115.0) Split topology into different `Sides` when appropriate"
+  },
+  {
+    "additions": 391,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR cuts the host-side cost of filling halos, which dominates the time step for small and medium GPU models with many fields. It makes two independent changes, one per commit:\n\n1. **Pass the `fill_halo_regions!` trailing arguments only to fills whose boundary conditions read them.**\n2. **Fill the halos of a tuple of fields with one kernel launch per side** (the \"tupled\" fill we used to have) when the fields can share a kernel.\n\nResults are bitwise identical.\n\n## Why\n\nEach launch of a halo-fill kernel converts its arguments for the device. For `fill_halo_regions!(field, clock, model_fields)` that includes every model field. In Breeze ([NumericalEarth/Breeze.jl#1100](https://github.com/NumericalEarth/Breeze.jl/pull/1100)), `cudaconvert(boundary_condition_args(model))` costs about 0.155 ms and allocates about 500 KB on an H100. That is roughly 10\u00d7 the cost of a fill without the arguments, paid on every launch. Most of that time goes into adapting each `Field`, not into Adapt.jl's long-tuple path (Adapt.jl#129 made no difference). Periodic, flux and constant-valued conditions never read these arguments, yet they still paid for them.\n\n## Changes\n\n**Commit 1: argument-free fills** (`fill_halo_regions.jl`, `field.jl`)\n- `needs_halo_fill_args(bc)` decides from types alone whether a boundary condition reads the arguments.\n  - It returns `false` for `nothing`/`missing`, periodic, flux, and `Value`/`Gradient`/`NormalFlow`/`Mixed` conditions whose values are `Nothing`, `Number` or `DenseArray`.\n  - Everything else is assumed to read them, including functions, discrete forms, `Field`/`FieldTimeSeries` conditions (whose `getbc` may read the clock), open, polar, zipper, distributed and multi-region conditions.\n- `halo_fill_args(bcs, args)` returns `args` or `()`.\n  - It is applied in `fill_halo_event!`, so the choice is made per side.\n  - It is also applied in `fill_halo_regions!(::Field, ...)` before `convert_to_device`, which is where the cost is.\n\n**Commit 2: tupled fills** (`field_tuples.jl`, new `tupled_fill_halo_regions.jl`, `fill_halo_regions_periodic.jl`)\n- `fill_halo_regions!(::Tuple, ...)` splits the tuple into groups by type alone. All fields in a group:\n  - share a location and a grid type on a `CPU`/`GPU` architecture;\n  - span the full grid and have `OffsetArray` data;\n  - have halo-fill kernels of the same type and argument-free boundary conditions.\n- A cheap `===` check at run time confirms the fields share the same grid; if it fails, the group falls back to per-field fills.\n- Each side of a group is filled with one launch of the existing fill kernel, which receives tuples of data and boundary conditions. The work for each field is unrolled inside the kernel with `ntuple(Val(N))`, in the same side order as a single-field fill.\n- `fill_normal_flow_bcs=false` behaves as before.\n- The periodic kernel bodies move into `@inline` helpers so they can also take tuples.\n- These keep the old one-by-one path, run after the groups:\n  - groups of one field, reduced and windowed fields;\n  - fields whose boundary conditions read the arguments;\n  - distributed, multi-region and Reactant fields;\n  - nested tuples and non-`Field`s.\n- The cubed-sphere and Yin-Yang tuple methods still take precedence.\n- The stale docstring for the tuple fill is rewritten.\n\nNo exported API changes.\n\n## Performance\n\nThese are Breeze measurements: a DCMIP2016 supercell with P3 microphysics, 168\u00d7168\u00d740, Float32, anelastic, on Breeze `main`.\n\n| Oceananigans | launches / step | halo launches / step | H100 ms / step (t = 0) | H100 ms / step (t = 1.5 h) |\n|---|---|---|---|---|\n| `main` (dd51b65f1) | 565 | 420 | 28.1 | 28.3 |\n| this PR | 310 | 165 | 12.1 | 11.3 |\n\n- That is a 2.3\u20132.5\u00d7 faster step with no change in Breeze.\n- GPU time spent in halo kernels is unchanged (about 3.9 ms/step on a T4). The gain is all host-side launch and conversion overhead, so a GPU-bound T4 shows no difference.\n\n## Correctness and tests\n\n- **Breeze supercell:** after 5 steps from the 1.5 h state, all tendencies, diagnostics and prognostics are bitwise identical to Oceananigans `main`. This holds with Breeze `main` and with Breeze#1100.\n- **New `test/unit/halo_fill_arguments.jl`:** argument-free conditions get `()`, conditions that read the arguments still get them, and both checks pass `@inferred`.\n- **New `test/unit/tupled_halo_regions.jl`:**\n  - tupled and per-field fills are bitwise equal across four topologies, with mixed condition kinds, locations and eltypes, with and without `fill_normal_flow_bcs=false`;\n  - groups have the expected structure;\n  - grouping and the tupled CPU fill allocate 0 bytes.\n- **Suites run locally:**\n  - The new tests plus `halo_regions` and `boundary_conditions` pass on CPU and on GPU (T4).\n  - A wide CPU sweep covered unit, time_stepping, hydrostatic_free_surface, memory_allocation, multi_region, tripolar_grid, abstract_operations, turbulence_closures and simulation. The only failures were 7 that also fail on unmodified `main`: 6 in `multi_region/yin_yang_immersed` and Aqua's persistent-tasks check.\n  - The hydrostatic step allocates 64 B, the same as `main`.\n\n## Notes for review\n\n- **Kernel parameter size:** groups are not split. About 34 fields plus the grid comes to roughly 3 KB of kernel parameters, which is under CUDA's 4 KB limit. Limits on AMD, Metal and oneAPI are untested. Should we chunk groups?\n- **Fill order:** tupled groups are filled before the remaining fields. That only matters if fields in one tuple alias each other's memory, for example a field and a windowed view of it.\n- **New argument-free boundary conditions:** any future argument-free condition that needs `prepare_halo_fill!` must be excluded from tupled fills.\n- **Related open PR:** #6293 adds `update_boundary_time_series!` to the same two files. The overlap is textual only: `FieldTimeSeries` conditions keep their arguments and are never tupled.\n- **Enzyme/Reactant:** not tested. Reactant fields stay on the old path.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T03:03:56Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-22T23:44:17Z",
+    "number": 6304,
+    "title": "Cheaper halo fills: skip unused boundary-condition arguments and batch tuples of fields"
+  }
+]
