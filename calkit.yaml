@@ -18,6 +18,15 @@ requirements:
   - kind: env-var
     name: BUILDKITE_PAT
     description: Buildkite personal access token.
+  - kind: env-var
+    name: OPENALEX_API_KEY
+    description: >
+      OpenAlex API key for the fetch-citations stage. Without one, requests
+      share a small free daily budget per IP address, and OpenAlex rejects
+      paged requests (HTTP 401) once it runs out, which truncates citation
+      lists for heavily cited papers. Get a free key at
+      https://openalex.org/settings/api. In CI it comes from the
+      OPENALEX_API_KEY repository secret.
 
 environments:
   main:

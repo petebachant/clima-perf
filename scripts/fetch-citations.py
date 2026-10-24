@@ -52,6 +52,9 @@ PUBLICATIONS_URL = "https://clima.caltech.edu/publications/"
 OPENALEX_WORK_BY_DOI = "https://api.openalex.org/works/doi:"
 OPENALEX_WORKS = "https://api.openalex.org/works"
 MAILTO = os.environ.get("OPENALEX_MAILTO", "petebachant@gmail.com")
+# Without a key, OpenAlex gives each IP a small shared daily budget and
+# rejects requests with HTTP 401 once it is spent.
+API_KEY = os.environ.get("OPENALEX_API_KEY")
 PER_PAGE = 200
 
 # Slim OpenAlex select-lists keep payloads small for the citing-works graph,
@@ -79,6 +82,8 @@ MAX_RETRIES = 4
 
 def get_json(url: str, params: dict | None = None, *, timeout: int = 60) -> dict:
     p = {"mailto": MAILTO, **(params or {})}
+    if API_KEY:
+        p["api_key"] = API_KEY
     for attempt in range(MAX_RETRIES):
         resp = requests.get(url, params=p, timeout=timeout)
         if resp.status_code in RETRY_STATUS and attempt < MAX_RETRIES - 1:
@@ -225,6 +230,17 @@ def fetch_work_by_title(title: str, year: int) -> dict | None:
 
 
 # --- Citing-works enumeration ---------------------------------------------
+
+def edges_look_complete(n_edges: int, cited_by_count: int) -> bool:
+    """Whether a cached citing-works list is plausibly the full set.
+
+    OpenAlex's ``cited_by_count`` and its ``cites:`` results normally differ
+    by a citation or two, so allow some slack. A list well short of the count
+    was probably cut off by a failed page, so it should be refetched rather
+    than reused.
+    """
+    return n_edges >= cited_by_count - max(5, cited_by_count // 20)
+
 
 def fetch_citing_works(cited_work_id: str) -> Iterator[dict]:
     short = cited_work_id.rsplit("/", 1)[-1]
@@ -474,6 +490,9 @@ def main() -> int:
             cached_count is not None
             and cached_count == extras["cited_by_count"]
             and cid in cached_edges_by_cited
+            and edges_look_complete(
+                len(cached_edges_by_cited[cid]), extras["cited_by_count"]
+            )
         ):
             cache_hit.add(cid)
         else:
@@ -511,8 +530,24 @@ def main() -> int:
                 new_edges.append(
                     {"cited_openalex_id": cited_id, "citing_openalex_id": cw_id}
                 )
-        except requests.HTTPError as err:
-            print(f"  WARN: citing-works {cited_id}: {err}", file=sys.stderr)
+        except requests.RequestException as err:
+            # A failure partway through paging leaves only the first pages,
+            # which are the most-cited citers, so recent citations would
+            # silently go missing. Drop the partial list and keep last run's
+            # edges for this pub instead.
+            del new_edges[before:]
+            fallback = cached_edges_by_cited.get(cited_id)
+            if fallback:
+                cache_hit.add(cited_id)
+            print(
+                f"  WARN: citing-works {cited_id}: {err}; "
+                + (
+                    f"keeping {len(fallback)} cached edges"
+                    if fallback
+                    else "no cached edges to fall back on"
+                ),
+                file=sys.stderr,
+            )
             continue
         print(
             f"  {cited_id[-12:]}: "
