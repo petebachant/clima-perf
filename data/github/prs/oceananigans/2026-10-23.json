@@ -1,0 +1,362 @@
+[
+  {
+    "additions": 37,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "`update_bounds_preserving_limiter!` computes the limiter in the first horizontal halo layer too (#6271), so that its halos need no communication. There, the reconstructions at the outer face load `c[i-buffer:i+buffer-1]` from `i = 0` or `N+1`, one cell beyond a halo of `buffer`. With WENO5 and halo 3 the limiter read `c[-3]` and `c[N+4]`: out of bounds, caught by Breeze's CI with `--check-bounds=yes` and silent otherwise.\n\n- Bounds-preserving WENO now requires a horizontal halo of `buffer + 1` (4 for WENO5).\n- `required_halo_size_x/y/z` of a `NamedTuple` is the largest among its entries. Previously a per-tracer `tracer_advection = (; c = WENO(...))` fell back to 1, so `validate_model_halo` never checked per-tracer schemes.\n- `NonhydrostaticModel` now throws for a too-small halo, like `HydrostaticFreeSurfaceModel` and `ShallowWaterModel`, instead of silently rebuilding the grid with larger halos. This is breaking for scripts that relied on the inflation; in the test suite, examples and docs, only one test (plus the test of inflation itself) and two examples did, and they now pass `halo` explicitly.\n\nReproducer on main, with `--check-bounds=yes`:\n\n```julia\nusing Oceananigans\nusing Oceananigans.Advection: materialize_advection, update_bounds_preserving_limiter!\ngrid = RectilinearGrid(size=(8, 8, 4), extent=(1, 1, 1), halo=(3, 3, 3))\nscheme = materialize_advection(WENO(order=5, bounds=(0, 1)), grid)\nupdate_bounds_preserving_limiter!(scheme, grid, CenterField(grid)) # BoundsError\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T14:38:21Z",
+    "deletions": 64,
+    "labels": [],
+    "mergedAt": "2026-10-23T00:03:50Z",
+    "number": 6315,
+    "title": "Require a halo that covers the bounds-preserving limiter, and validate NonhydrostaticModel halos"
+  },
+  {
+    "additions": 786,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Every conformal conic projection of the sphere is a Lambert conformal conic, so \"Lambert\" adds length without adding meaning. The new name also parallels `ConformalCubedSpherePanelGrid`. The projection functions get names that state what they convert between, replacing the PROJ-style \"forward\" and \"inverse\".\n\n| Old | New |\n|---|---|\n| `LambertConformalConicGrid` | `ConformalConicGrid` |\n| `LambertConformalConic` | `ConformalConic` |\n| `lcc_forward(map, \u03bb, \u03c6)` | `geographic_to_conformal_conic(map, \u03bb, \u03c6)`, returns `(x, y)` in meters |\n| `lcc_inverse(map, x, y)` | `conformal_conic_to_geographic(map, x, y)`, returns `(\u03bb, \u03c6)` in degrees |\n| `lcc_scale_factor(map, \u03c6)` | `conformal_conic_scale_factor(map, \u03c6)` |\n\nOther changes:\n\n- Internal `lcc_` helpers use the `conformal_conic_` prefix. The typed-constant helpers for \u00bd, \u03c0/2 and \u03c0/4 are inlined.\n- Source, test, and validation files are renamed to match.\n- Docstrings and the grids docs page still name the \"Lambert conformal conic\" projection, so searches for it find this grid.\n\n### Breaking change\n\nThis is breaking. The old names are removed, with no aliases or deprecations, so there is only one way to write each call. Code using the old names must switch to the new ones.\n\nThe output serialization table still maps the two old type symbols, so output files written by earlier versions still reconstruct. This does not add a second name usable in scripts.\n\nA version bump is left for a separate PR.\n\n### Testing\n\nOn CPU, `unit/conformal_conic`, `unit/conformal_conic_interpolation`, and `unit/grid_reconstruction` pass with 1521 of 1521 tests. Doctests for `OrthogonalSphericalShellGrids` pass.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T21:28:04Z",
+    "deletions": 783,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-10-23T00:10:54Z",
+    "number": 6168,
+    "title": "(0.115.0) Rename LambertConformalConicGrid to ConformalConicGrid"
+  },
+  {
+    "additions": 444,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR makes `IMEXFluxTimeDiscretization` work with any flux boundary condition, adds an IMEX option to `BulkDrag`, and fixes the sign of `BulkDrag` on right boundaries.\n\ncc @simone-silvestri\n\n## Any flux can be integrated implicitly\n\n```julia\nIMEXFluxBoundaryCondition(J)          # J is a number, an array, a Field, or a function\nIMEXFluxBoundaryCondition(F\u2091, \u03bb)      # explicit split J = F\u2091 + \u03bb \u03c6\u1d66, as before\n```\n\nThe split `J \u2248 F\u2091 + \u03bb \u03c6\u1d66` at the boundary cell is decided by the condition through two extension points, `implicit_flux_coefficient(condition, boundary, i, j, k, grid, \u03d5, args...)` and `explicit_flux(...)`, where `boundary` is `Bottom()`, `Top()`, or `ImmersedFacet()`.\n\nThe fallback for a condition without a specialization is the Patankar rule: `\u03bb` is the dissipative part of `J / \u03c6\u1d66` and the remainder `J - \u03bb \u03c6\u1d66` is integrated explicitly. A flux proportional to `\u03c6\u1d66` (a drag, a sink) is therefore fully implicit and unconditionally stable, while a source (a wind stress) stays explicit. Because the rule only sees the value of the flux, it cannot recognize a relaxation toward a nonzero target; that case keeps the explicit split `IMEXFlux(F\u2091, \u03bb)`. The docstring also notes that the implicit step cannot change the sign of `\u03c6\u1d66` within a step.\n\nTo support the fallback, the tridiagonal solver and the bottom, top, and immersed flux kernels now receive the field being stepped. `total_boundary_flux` takes the boundary marker, and its three consumers (the CATKE friction velocity and the two buoyancy fluxes) are updated.\n\n## `BulkDrag` with IMEX\n\n```julia\nBulkDrag(coefficient=2e-3, time_discretization=IMEXFluxTimeDiscretization())\n```\n\nThe drag `\u03bb (u + U\u221e)` with `\u03bb = -C\u1d30|U|` is affine in the tangential velocity, so `BulkDragFunction` supplies the exact split, `\u03bb` and `F\u2091 = \u03bb U\u221e`, and avoids the division. For the quadratic formulation `|U|` is evaluated from the current velocities when the diagonal is built.\n\n## Sign fix\n\n`BulkDrag` returned `-C\u1d30|U|u` on every boundary, but fluxes on top, east, and north enter the tendency as `-J/\u0394`, so the drag on those boundaries accelerated the flow. Confirmed with a uniform initial velocity and no closure: bottom and west slowed it, top and east sped it up. The flux is now flipped on right boundaries. Immersed facets were already correct since they use the inward normal.\n\n## Also\n\n- `IMEXFlux` conditions are regularized, which continuous-form functions inside an implicit flux needed.\n- An implicit flux on a lateral immersed facet now errors rather than silently dropping its implicit part. This means `immersed=drag` with an IMEX drag errors on grids with lateral facets; use `ImmersedBoundaryCondition(bottom=drag)`.\n- Implicit flux boundary conditions print as `IMEXFluxBoundaryCondition`.\n- Numeric `BulkDrag` parameters are converted to the grid's float type during regularization.\n\n## Tests\n\nRun locally on CPU: `test_implicit_boundary_fluxes.jl` (25, of which 6 new for the Patankar fallback), `test_bulk_drag.jl` (72, with sign tests on all six boundaries and exact single-step IMEX checks), `test_split_explicit_boundary_stress.jl`, `test_boundary_conditions.jl`, `test_buoyancy.jl`. Not run: GPU tests and Documenter doctests.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-12T21:42:51Z",
+    "deletions": 278,
+    "labels": [],
+    "mergedAt": "2026-10-23T00:11:17Z",
+    "number": 5973,
+    "title": "Generalize implicit flux boundary conditions with a Patankar fallback and add IMEX BulkDrag"
+  },
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Fixes the hang in the distributed benchmark that has made every benchmark build time out since #6271 (see #6328).\n\n## Cause\n\n#6271 added an `on_architecture` method for immersed regions of multi-region grids. It skips `materialize_immersed_boundary` and dispatches on any `ImmersedBoundaryGrid` with a `FullyConnected`, `LeftConnected` or `RightConnected` horizontal topology. Distributed local grids use those topologies too, but only on some ranks:\n\n- On a 1x2 `TripolarGrid` partition, the south rank has `TY = RightConnected`, so it matched the regional method and **skipped** materializing the immersed boundary.\n- The north rank has a folded `TY`, so it fell through to the generic method and **materialized** it. That includes a halo exchange of the bottom height, which waited forever for the south rank.\n\n`set!(field, func)` on a GPU field moves the grid to the CPU with `on_architecture(cpu_architecture(arch), grid)`, so the benchmark's `set!(model; T, S)` deadlocked. On tartarus, one rank was in `MPI_Allreduce` and the other in `MPI_Waitall` under `materialize_immersed_boundary` ([build 12008](https://buildkite.com/clima/oceananigans-benchmarks-1/builds/12008#01a16032-78c6-4bd5-8d1d-abd604ee35c7)).\n\n## Fix\n\nRestrict the regional method to `AbstractSerialArchitecture`, so every rank of a distributed grid materializes its immersed boundary again.\n\n## Testing\n\n- Reproduced on CPU with 2 MPI ranks, using a load-balanced 1x2 tripolar grid with `PartialCellBottom` and the GPU branch of `set_to_function!` done by hand. It hangs at b7a504ce4 (#6271) and passes at 2d5c77d46 (one commit earlier) and with this PR.\n- Added a regression test in `test/distributed/tripolar.jl`: a 1x4 tripolar immersed grid, `GridFittedBottom` and `PartialCellBottom`, for all three fold topologies. It moves the grid to `cpu_architecture(arch)`, checks that field tags agree across ranks, and compares the bottom heights. It passes with the fix and hangs without it.\n- `multi_region/yin_yang_immersed`, `multi_region/yin_yang_models` and `multi_region/unit` pass on CPU (310/310).\n\nOnce this is merged, #6328 (skip the distributed benchmark) is no longer needed.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T22:35:00Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-23T00:32:50Z",
+    "number": 6332,
+    "title": "Fix distributed deadlock when moving immersed grids between architectures"
+  },
+  {
+    "additions": 14,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "`IntrinsicCoordinateGrid` matched an `ImmersedBoundaryGrid` only when its underlying-grid parameter was exactly the abstract type `OrthogonalSphericalShellGrid`, which no grid has, because type parameters are invariant. So `intrinsic_coordinate_grid(ImmersedBoundaryGrid(TripolarGrid(...)))` was `false`, and `set!(model, u=..., v=...)` copied geographic velocities onto an immersed tripolar or rotated grid without rotating them into the grid's directions (wrong in the tripolar grid's northern cap, for example). The fix is `<:OrthogonalSphericalShellGrid`.\n\nThe new test sets `u = 1, v = 0` on a `TripolarGrid` with and without an immersed bottom, and checks that both give the same, rotated, velocities. It fails on main.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T16:34:18Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-23T00:34:00Z",
+    "number": 6316,
+    "title": "Rotate extrinsic velocities on immersed OrthogonalSphericalShellGrids"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Adds the public docstrings of `OceananigansMakieExt` to the API library page, alongside `OceananigansNCDatasetsExt`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T07:13:04Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-10-23T00:47:27Z",
+    "number": 6306,
+    "title": "Add OceananigansMakieExt docstrings to the library page"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T08:40:17Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-10-23T05:20:22Z",
+    "number": 6309,
+    "title": "Use Julia v1.13.2 in CI"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "Closes #6317",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZKzhzw",
+        "number": 6317,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6317"
+      }
+    ],
+    "createdAt": "2026-10-22T18:04:46Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2026-10-23T14:44:17Z",
+    "number": 6320,
+    "title": "Rotate the horizontal pair the right way in the 3-component `extrinsic_vector`"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4MjY3MDU5",
+      "is_bot": false,
+      "login": "ewquon",
+      "name": "Eliot Quon"
+    },
+    "body": "## Summary\n- Adds validation in `interpolate!` that the source and destination grids have matching `Flat`-ness in every dimension. Interpolation across a `Flat` dimension (in either direction) is not supported.\n- When the topologies don't match, throws a clear `ArgumentError` instead of a cryptic `BoundsError` deep inside `FractionalIndices`.\n- The check inspects topology types only (no coordinate reads on the grid), so it is GPU-safe.\n\nIf you want to interpolate a 3D field onto a column (or slice), make the destination grid `Flat` in the same dimensions as the source \u2014 which requires the source to already be reduced to a column/slice (e.g. via `Field{Center, Center, Nothing}` or by sampling/interpolating to a chosen `(x, y)` first).\n\nCloses #5473\n\n## Test plan\n- [x] Verified mismatched-Flat `interpolate!` throws `ArgumentError` with a helpful message\n- [x] Verified Flat\u2192Flat and non-Flat\u2192non-Flat `interpolate!` are unaffected\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM76J1bC",
+        "number": 5473,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5473"
+      }
+    ],
+    "createdAt": "2026-04-03T17:00:03Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-10-23T17:01:58Z",
+    "number": 5474,
+    "title": "Validate Flat dimensions in interpolate!"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Noticed this while reviewing @tomchor's PR #6249 ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T20:45:21Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-10-23T17:44:41Z",
+    "number": 6261,
+    "title": "Simplify masked_multiply"
+  },
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Stacked on #6168 (the `ConformalConicGrid` rename); retarget to `main` once that merges.\n\nAdds `conformal_conic_rotation_angle(map, \u03bb)`, the conformal conic convergence angle `n (\u03bb - \u03bb\u2080)` in radians at a longitude `\u03bb` in degrees.\n\n`rotation_angle(i, j, grid)` gives this angle only at the cells of a `ConformalConicGrid`, from finite differences of the grid's latitudes. Code that needs to rotate east/north vectors into the projection's axes at points that are not cells of that grid (for example the cells of a parent grid that is being nested into a conformal conic child) has no way to get it from Oceananigans, and re-derives the formula locally. This exposes it next to `geographic_to_conformal_conic`, `conformal_conic_to_geographic`, and `conformal_conic_scale_factor`.\n\nThe new test checks that the central meridian gives zero, that the value agrees with `rotation_angle` at cell centers of a conformal conic grid, and that the return type is inferred for `Float32` and `Float64`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T18:29:06Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-10-23T17:46:26Z",
+    "number": 6321,
+    "title": "Add conformal_conic_rotation_angle for the convergence angle at a longitude"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Near `Bounded` boundaries, biased interpolations fall back on a cascade of lower-order schemes. Because this choice used `ifelse`, every interior point computed the whole cascade and discarded it.\nThis PR uses an `if` (high-order still evaluated first), so the cascade only runs near boundaries. The branch is warp-uniform in z, symmetric interpolations keep `ifelse`, and Float32/Float64 results are bitwise identical to main.\n\n**History.** Until mid-2022 the fallback was a single second-order interpolation, so evaluating it everywhere through `ifelse` was cheap. When the fallback became a recursive cascade of decreasing-order schemes (2022, #3091), the `ifelse` stayed, so the cost of the unused cascade grew with order. A 2022 commit made the `outside_buffer` conditions non-short-circuiting, which addressed branching in the condition but not the cost of the arguments. #3658 diagnosed the same pattern for the left/right bias (`ifelse(u > 0, R_left, R_right)` computed both WENO reconstructions) and fixed it by pushing the choice inside; the boundary cascade one level up was not changed. #4411 and #4434 aimed at this cost with a runtime `reduced_order` rework, but #4434 measured slower (more registers than it saved) and was closed. This PR instead keeps every order compile-time specialized and only skips the orders that are not used. #5932 rewrites the same three `ifelse` blocks (adding `bias`) without changing the evaluation; the two combine directly.\n\n**Speedup vs main** (A100, same job; scalar = bare WENO tendency, model = Breeze compressible tendency):\n\n| | WENO5 | WENO7 | WENO9 |\n|---|---|---|---|\n| Scalar Float32, Periodic\u00d7Periodic\u00d7Bounded | 1.10 | 1.21 | 1.28 |\n| Scalar BFloat16, Periodic\u00d7Periodic\u00d7Bounded | 1.16 | 1.27 | 2.06 |\n| Model Float32, Periodic\u00d7Periodic\u00d7Bounded | 1.06 | 1.14 | 1.23 |\n| Scalar Float32, Bounded\u00d7Bounded\u00d7Bounded | 1.20 | 1.54 | 1.78 |\n| Model Float32, Bounded\u00d7Bounded\u00d7Bounded | 1.20 | 1.44 | 1.58 |\n\nReactant `raise=false` gains similarly; `raise=true` is unchanged (XLA already avoids the unused work). Tests (GPU, all pass): weno_smoothness, weno_smoothness_reference, materialize_advection, bounds_preserving_advection, adaptive_implicit_vertical_advection, immersed_advection, regression/nonhydrostatic, regression/hydrostatic, enzyme. Expect a trivial conflict with #6210 (take this version of the loop). `immersed_advective_fluxes.jl` uses the same `ifelse` cascade and could get the same treatment in a follow-up.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T19:27:27Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-23T19:14:19Z",
+    "number": 6212,
+    "title": "Evaluate the reduced-order buffer schemes of biased interpolations only near boundaries"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Removed stop time and wall time limit resets in the reset! function.\r\n\r\nCloses #5520\r\n\r\ncc @bgroenks96 ",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM7_WN38",
+        "number": 5520,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5520"
+      }
+    ],
+    "createdAt": "2026-04-17T17:25:01Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-10-23T19:15:19Z",
+    "number": 5521,
+    "title": "Don't reset stop_time or stop_iteration in reset!"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Fixes a GPU compilation failure for BFloat16 WENO on CUDA in 0.116.0, and bumps to 0.116.1.\n\n#6212 changed `zweno_regularization` to return `oftype(\u03c4, \u03f5)` instead of the literal `\u03f5`. Before, a BFloat16 scheme's weight denominator was promoted to Float64 by `\u03f5`. Now it stays BFloat16, so the CUDA `@device_override` of `newton_div(::Type{BackendOptimizedDivision}, a, b) = a * fast_inv_cuda(b)` calls `fast_inv_cuda(::BFloat16)`. That function only has `Float32` and `Float64` methods, so kernel compilation fails:\n\n```\nInvalidIRError: compiling MethodInstance for gpu_compute_scalar_tendency!(...)\nReason: unsupported call to an unknown function (call to jl_f_throw_methoderror)\n  [1] newton_div  @ ext/OceananigansCUDAExt.jl:168\n  [2] zweno_alpha_loop  @ src/Advection/weno_interpolants.jl:379\n```\n\nThis showed up in Breeze's BF16 `ScalarTendency` benchmark (NumericalEarth/Breeze.jl#1116), which passed against `main` just before the 0.116.0 tag and fails on 0.116.0.\n\nThe fix adds a generic `fast_inv_cuda(a) = inv(a)` for number types without an approximate-reciprocal PTX instruction. Float32 and Float64 keep their fast paths.\n\nNot tested locally (no NVIDIA GPU here). The GPU CI should cover Float32/Float64. BFloat16 WENO on CUDA is exercised by Breeze's benchmark.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T20:02:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-23T20:10:15Z",
+    "number": 6344,
+    "title": "(0.116.1) Fall back to inv in fast_inv_cuda for BFloat16"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Let's see if https://github.com/JuliaTesting/ParallelTestRunner.jl/pull/214 helps with terminating workers when jobs are cancelled.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T19:29:53Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-23T21:43:11Z",
+    "number": 6324,
+    "title": "Use ParallelTestRunner branch to kill workers when jobs are cancelled"
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 348,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nRefines the subgrid-scale (SGS) variance and covariance closure in `src/parameterized_tendencies/microphysics/cloud_fraction.jl` and updates its reference scale parameters against 4-season $0.25^\\circ$ ERA5 + Germano isobaric subgrid cascade statistics across `1000\u2013150 hPa`:\r\n\r\n1. **Smooth harmonic buoyancy bound (`buoyancy_bounded_mixing_length`) with $\\kappa_b = c_b \\kappa_{\\mathrm{iso}} / (2 c_\\sigma)$**:\r\n   $$l_{\\mathrm{disp}} = \\frac{l_{\\mathrm{mix}}}{\\sqrt{1 + \\frac{2 c_\\sigma \\max(N_{\\mathrm{disp}}^2, 0)\\, l_{\\mathrm{mix}}^2}{c_b \\kappa_{\\mathrm{iso}}}}}$$\r\n   Replaces the hard `min` cap on the turbulent displacement length with a smooth harmonic transition using $\\kappa_b = c_b \\kappa_{\\mathrm{iso}} / (2 c_\\sigma)$ (matching the floor buoyancy scale $\\kappa_{\\min} = w_{\\min}^2 / (2 c_\\sigma c_b)$) and a `Float32`-safe continuity gate at $N_{\\mathrm{disp}}^2 = 0$:\r\n   - In neutral turbulent layers ($N_{\\mathrm{disp}}^2 \\le 0$), $l_{\\mathrm{disp}} = l_{\\mathrm{mix}}$ so the vertical displacement variance $\\ell_{v,0}^2 = 2 c_\\sigma l_d^2 = 2 c_\\sigma l_{\\mathrm{mix}}^2$ preserves the Sommeria\u2013Mellor production\u2013dissipation balance with `diagnostic_covariance_coeff` ($c_\\sigma$) active.\r\n   - In stably stratified layers and at sharp capping inversions ($2 c_\\sigma N_{\\mathrm{disp}}^2 l_{\\mathrm{mix}}^2 \\gg c_b \\kappa_{\\mathrm{iso}}$), $\\ell_{v,0}^2 = 2 c_\\sigma l_{\\mathrm{disp}}^2 \\to c_b \\kappa_{\\mathrm{iso}} / N_{\\mathrm{disp}}^2$, smoothly bounding the vertical displacement variance by the exact adiabatic parcel excursion (eliminating the $2 c_\\sigma \\approx 3.8\\times$ boundary-layer-top inversion spike on `main`), matching the floor variance $\\ell_{v,\\mathrm{floor}}^2 = w_{\\min}^2 / N_{\\mathrm{disp}}^2$ when $c_b \\kappa_{\\mathrm{iso}} = w_{\\min}^2$, and giving $\\tau_{\\mathrm{turb}} = l_{\\mathrm{disp}} / \\sqrt{c_b \\kappa_{\\mathrm{iso}} / (2 c_\\sigma)} \\to 1 / N_{\\mathrm{disp}}$.\r\n\r\n2. **4-season $0.25^\\circ$ ERA5 + Germano calibration (`1000\u2013150 hPa`)**:\r\n   | Parameter | Symbol | `main` | `ts/variance-updates` |\r\n   | :--- | :---: | :---: | :---: |\r\n   | `sgs_variance_horizontal_scale_factor` | $c_{\\Delta x}$ | `1.0` | `1.6` |\r\n   | `sgs_variance_vertical_velocity_floor` | $w_{\\mathrm{ref}}$ [m/s] | `1.6` | `1.3` |\r\n   | `sgs_variance_floor_time_scale` | $\\tau_0$ [s] | `300` | `180` |\r\n   | `sgs_variance_theta_horizontal_scale_ratio` | $r_{\\Delta x,\\theta}$ | `0.7` | `0.75` |\r\n   | `sgs_variance_theta_vertical_scale_ratio` | $r_{v,\\theta}$ | `0.36` | `0.42` |\r\n   | `sgs_variance_horizontal_cross_correlation` | $r_{h,\\theta q}$ | `0.5` | `0.65` |\r\n\r\n   *(In earlier 3.75 km MPAS free-troposphere snapshots, $1 / N_{\\mathrm{disp}} < 300\\text{ s}$ almost everywhere so those data only bounded $\\tau_0$ from below; the 4-season $0.25^\\circ$ ERA5 + Germano calibration across weakly stratified boundary layers (`1000\u2013850 hPa`) constrains $\\tau_0 = 180\\text{ s}$ while the Germano cascade across $0.25^\\circ \\to 2.0^\\circ$ accounts for the unresolved sub-$0.25^\\circ$ tail.)*\r\n\r\n## 4-Season $0.25^\\circ$ ERA5 + Germano Isobaric Evaluation (`1000\u2013150 hPa`)\r\n\r\n![4-Season ERA5 + Germano Pressure-Coordinate Profiles (1000\u2013150 hPa)](https://github.com/CliMA/ClimaAtmos.jl/blob/a11f4b6255c0d95d3e8ee0b3c7a713ec9484a3e3/variance_updates_era5_germano_pressure_profiles.png?raw=true)\r\n\r\nProfile means and vertical-profile RMSEs against the 4-season ERA5 + Germano benchmark (`BM`) across 25 isobaric levels from `1000` to `150 hPa` ($\\Delta_{\\mathrm{target}} = 100\\text{ km}$):\r\n\r\n| Region | Quantity | ERA5+Germano Mean | `main` Mean | Updated Mean | `main` RMSE | Updated RMSE |\r\n| :--- | :--- | :---: | :---: | :---: | :---: | :---: |\r\n| **NH Extratropics (`30\u00b0\u201390\u00b0N`)** | $\\sigma_{q_t}$ [g/kg] | `0.236` | `0.175` | `0.214` | `0.079` | **`0.038`** |\r\n| | $\\sigma_{\\theta_{li}}$ [K] | `0.688` | `0.464` | `0.661` | `0.228` | **`0.054`** |\r\n| | $\\text{Cov}(\\theta_{li}, q_t)$ [K\u00b7g/kg] | `+0.017` | `-0.014` | `+0.020` | `0.050` | **`0.018`** |\r\n| | $P(S > 0)$ [-] | `0.043` | `0.052` | `0.054` | `0.013` | `0.015` |\r\n| | $\\mathbb{E}[S^+]$ [g/kg] | `0.004` | `0.005` | `0.007` | `0.002` | `0.004` |\r\n| **Deep Tropics (`10\u00b0S\u201310\u00b0N`)** | $\\sigma_{q_t}$ [g/kg] | `0.384` | `0.381` | `0.390` | `0.077` | **`0.030`** |\r\n| | $\\sigma_{\\theta_{li}}$ [K] | `0.310` | `0.303` | `0.302` | `0.074` | **`0.047`** |\r\n| | $\\text{Cov}(\\theta_{li}, q_t)$ [K\u00b7g/kg] | `-0.088` | `-0.101` | `-0.074` | `0.033` | **`0.027`** |\r\n| | $P(S > 0)$ [-] | `0.036` | `0.046` | `0.041` | `0.014` | **`0.008`** |\r\n| | $\\mathbb{E}[S^+]$ [g/kg] | `0.003` | `0.006` | `0.004` | `0.007` | **`0.002`** |\r\n| **Subtropics (`10\u00b0\u201330\u00b0N/S`)** | $\\sigma_{q_t}$ [g/kg] | `0.401` | `0.334` | `0.372` | `0.097` | **`0.055`** |\r\n| | $\\sigma_{\\theta_{li}}$ [K] | `0.447` | `0.361` | `0.448` | `0.093` | **`0.028`** |\r\n| | $\\text{Cov}(\\theta_{li}, q_t)$ [K\u00b7g/kg] | `-0.089` | `-0.071` | `-0.045` | `0.042` | `0.066` |\r\n| | $P(S > 0)$ [-] | `0.022` | `0.025` | `0.024` | `0.006` | **`0.004`** |\r\n| | $\\mathbb{E}[S^+]$ [g/kg] | `0.003` | `0.003` | `0.003` | `0.003` | **`0.001`** |\r\n| **SH Extratropics (`30\u00b0\u201390\u00b0S`)** | $\\sigma_{q_t}$ [g/kg] | `0.218` | `0.171` | `0.207` | `0.063` | **`0.029`** |\r\n| | $\\sigma_{\\theta_{li}}$ [K] | `0.669` | `0.460` | `0.656` | `0.211` | **`0.041`** |\r\n| | $\\text{Cov}(\\theta_{li}, q_t)$ [K\u00b7g/kg] | `+0.016` | `-0.014` | `+0.018` | `0.051` | **`0.021`** |\r\n| | $P(S > 0)$ [-] | `0.046` | `0.059` | `0.061` | `0.020` | `0.021` |\r\n| | $\\mathbb{E}[S^+]$ [g/kg] | `0.004` | `0.006` | `0.008` | `0.004` | `0.005` |\r\n\r\n\r\n**MPAS Update (defaults recalibrated on the model grid).** The constants and ERA5+Germano tables are superseded. The defaults are fitted to 3.75 km MPAS (DYAMOND) within-cell moments mapped onto the model's cubed-sphere nodes, with every closure input computed by the model's own operators (spectral-element horizontal gradient, Van Leer \u2202z, N\u00b2_disp, model TKE, this PR's harmonic bound) on MPAS native levels. The earlier offline fits used smoother horizontal gradients than the model computes, so they overestimated c_\u0394x (c_\u0394x 2.1 gave ~2\u00d7 too much variance online).\r\n\r\n| | c_\u0394x | w_ref | \u03c4_0 | r_h\u03b8 | r_v\u03b8 | r_h\u03b8q |\r\n|---|---|---|---|---|---|---|\r\n| now | 1.24 | 1.08 | 300 | 0.88 | 0.38 | 0.74 |\r\n\r\nOne set fits ne16\u2013ne60 and the 130- and 63-level grids. \u03c4_0 isn't constrained by the data (\u2273 100 s fits equally well), so it stays at 300 s.\r\n\r\n**Online** (1M, 5-day forecast from 2020-01-01, ne30): the SGS spread matches MPAS to within ~10% (it was 1.4\u20131.6\u00d7). Headline-11 RMSE at days 3\u20135 is 10.9% lower than with the old parameters, and the harmonic bound contributes 2.4% of that (noise \u00b10.6%). Boundary-layer moisture improves most (q850 \u22126 to \u22127%). The cost is brighter clouds: reflected SW is ~4 W/m\u00b2 higher than without the bound.\r\n\r\nAlso: c_\u0394x's code default overrides ClimaParams' 1.0 and is no longer logged as 1.0, and there's a new test through `materialized_displacement_length!`.\r\n\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T03:29:56Z",
+    "deletions": 133,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T01:44:47Z",
+    "number": 4913,
+    "title": "SGS variance: harmonic buoyancy bound; recalibrate defaults on the model grid"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "When `era5_initial_condition_dir` is unset and the wxquest_initial_conditions artifact has no file for the start date, fall back to the ClimaInitialConditions ERA5 cache and download from CDS instead of returning a missing path.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T16:59:04Z",
+    "deletions": 42,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T17:57:31Z",
+    "number": 4917,
+    "title": "Fetch ERA5 IC when the artifact is missing the date"
+  },
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Main saved a cache only when a key's dependency files changed, which happens rarely, so new dependency releases accumulated without new caches being built. Keys now end in the run ID. Each main build saves a new cache and deletes the older main caches for the same job, and PRs restore the newest one. The CI, Downstream, and Downgrade workflows get `actions: write` back so they can delete caches.\r\n\r\nUnlike the default julia-actions/cache behavior, which saved a cache on every run on every branch, only main builds save caches here, so PRs restore the latest main cache without uploading their own.\r\n\r\nHopefully this will be the last cache-related PR.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T20:36:04Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T22:34:41Z",
+    "number": 4918,
+    "title": "Save a new Julia depot cache on every main build"
+  }
+]

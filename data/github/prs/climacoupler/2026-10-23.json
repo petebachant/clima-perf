@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "**Problem:** In CMIP, we were seeing `T_skin` on certain sea-ice cells tank to unreasonably cold levels within one coupling step. \r\n\r\n**Culprit:** The skin-temp solve evaluated the surface saturation humidity with the condensate of the lowest\r\natmospheric level. `Thermodynamics` splits saturation between liquid and ice by `q_liq / (q_liq + q_ice)`, so\r\ntiny condensate of opposite signs gave a liquid fraction far outside [0, 1] and a saturation humidity that grew\r\nas the surface cooled. The latent heat flux then pushed the Newton update to its 5 K limit on every\r\n`SurfaceFluxes` evaluation. \r\n\r\n**Fix:** Pass zero condensate, like the coupler's other surface saturation humidities, so the phase follows the surface temperature.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T16:36:00Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "MDU6TGFiZWwyNDgyNjUxMzIy",
+        "name": "bug"
+      },
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T17:29:09Z",
+    "number": 2177,
+    "title": "Pass zero condensate to sea-ice skin-temp solve"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "I also changed Makie 0.24.16 \u2192 0.24.15 and CairoMakie 0.15.16 \u2192 0.15.15 in the default CMIP Manifest, since #2169 seemed to miss this.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T13:43:54Z",
+    "deletions": 61,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T17:43:51Z",
+    "number": 2176,
+    "title": "Bump ConservativeRegridding compat to 0.2.18"
+  }
+]

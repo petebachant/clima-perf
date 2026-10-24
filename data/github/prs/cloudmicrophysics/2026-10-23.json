@@ -1,0 +1,39 @@
+[
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Docs jobs for different PRs, the deploy from `main`, and the preview cleanup all push to `gh-pages`. When another job moves `gh-pages` between the clone and the push, Documenter's `--force-with-lease` push is refused and the docs job fails, as on #827 and #831.\r\n\r\n`docs/make.jl` now retries `deploydocs` up to ten times with a random delay of 10 to 30 s (cloning `gh-pages`, amending, then force-pushing currently takes about 40s). This lets deployments recover from races.\r\n\r\n\r\nNearly half of the 40s it takes cloning `gh-pages` and pushing can be attributed to the `push` step. I _think_ the push is slow because each deploy creates a commit without a parent, so GitHub checks the whole tree of about 19,000 files instead of only the changed ones.\r\n\r\n`DocCleanup.yml` is intended to delete doc previews for closed PRs, but races and other issues have led to 29 of the 43 previews on `gh-pages` belonging to closed PRs. This job runs every time a PR is closed. Previously it would only (attempt to) clean up its own preview. Now it also checks if other previews can be pruned.\r\n\r\nTo further reduce the size of `gh-pages`, the doc-cleanup job also replaces patch releases that aren't the latest patch with a symlink to the latest (e.g., if I publish `v0.41.1`, `v0.41.0` will now point to the contents of `v0.41.1`).\r\n\r\nThe cleanup job edits a temporary index instead of checking out `gh-pages`, and pushes with `--force-with-lease` and the same retry; the previous cleanup pushed with `--force`, which could overwrite a concurrent deploy.\r\n\r\nA dry run against a copy of `gh-pages` took 3 s and reduced the checked-out tree from 4.6 GB to 1.7 GB, with no dangling symlinks. A local test with a concurrent push confirmed that the retry keeps the other commit.\r\n\r\n---\r\n\r\nBefore writing this PR, I checked if ClimaAtmos does anything smarter, but alas, no.\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T23:42:42Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "85ad9c",
+        "description": "All things that matter",
+        "id": "MDU6TGFiZWwzMjAxNzIwNTk5",
+        "name": "CI tests & docs"
+      },
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T19:47:09Z",
+    "number": 833,
+    "title": "fix(docs): retry gh-pages pushes and prune gh-pages on PR close"
+  }
+]

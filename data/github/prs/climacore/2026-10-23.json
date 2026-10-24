@@ -1,0 +1,84 @@
+[
+  {
+    "additions": 71,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "closes https://github.com/CliMA/ClimaCore.jl/issues/2665 - This PR adds a minimal checklist that is posted as a comment every time a new release of ClimaCore is made. \r\n\r\nI used a LLM to write this PR.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms8AAAABUPbJbw",
+        "number": 2665,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2665"
+      }
+    ],
+    "createdAt": "2026-10-14T17:47:51Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-23T19:04:51Z",
+    "number": 2689,
+    "title": "Add checklist before making a release"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose\n\nRaise the JET bounds in `test/Spaces/inference_spaces.jl` for UnrolledUtilities 0.1.12 (CliMA/UnrolledUtilities.jl#37, merged, awaiting registration), under which this test fails on `main`.\n\n## Content\n\nThe bounds rise to the counts measured with 0.1.12 on Julia 1.11 (the 1.10 counts are lower):\n\n| Check | Before | After |\n|---|---|---|\n| `SpectralElementSpace1D` | 131 | 236 |\n| `SpectralElementSpace2D` | 295 | 415 |\n| `SphereSpectralElementSpace` | 301 | 423 |\n| `CenterExtrudedFiniteDifferenceSpace` | 316 | 460 |\n| `FaceExtrudedFiniteDifferenceSpace` | 316 | 461 |\n| `_SpectralElementGrid2D` | 106 | 107 |\n\nThe column spaces stay at 110 (measured 92\u201398).\n\nUnrolledUtilities 0.1.12 replaces its generated functions with ordinary methods, so JET reports each dynamic call inside an unrolled operation on an uninferred `Tuple`, where 0.1.11 reported one opaque call. The reports come from the same sites as on `main`, after the untyped lookups in `Utilities.Cache.OBJECT_CACHE`; no function that infers under 0.1.11 stops inferring.\n\n## Testing\n\n`test/Spaces/inference_spaces.jl` passes locally on Julia 1.10.11 and 1.11.9 with UnrolledUtilities 0.1.12, with and without `--check-bounds=yes`, and the 1.11 counts match the UnrolledUtilities downstream job. `.buildkite/Manifest.toml` pins 0.1.11, so buildkite runs the tier against 0.1.11 until that manifest is updated after registration.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T17:31:35Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T19:06:11Z",
+    "number": 2700,
+    "title": "Raise the inference bounds of the space constructors for UnrolledUtilities 0.1.12"
+  },
+  {
+    "additions": 553,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Disclosure: I had claude do this for me\r\n\r\n## Purpose\r\n\r\nThe \"Perf: GPU FD operator stencil benchmarks\" job checks its timings against the reference tables which were measured on CPUs, so every column case therefore warns about a possible regression, since a single GPU launch costs about 16 \u03bcs against CPU references below 1 \u03bcs, and no sphere case can ever warn, since the CPU references are in milliseconds while the GPU runs in microseconds.\r\n\r\nThis PR adds A100 reference timings as well. It also changes the gpu benchmark to only measure device time. This makes the gpu benchmarks far more consistent.\r\n\r\n## Content\r\n\r\nGPU reference tables:\r\n\r\n- Each reference row now holds one operator with its measured minimum time on every device it has been run on, in \u03bcs: `[(op_GradientF2C!, :none), (P100 = 17.634, A100 = 15.32, CPU = 0.2531)]`. A row without a field for a device has no reference on that device (the nested cases below have no CPU entry).\r\n- `reference_times_column` and `reference_times_sphere` return the column for the current device; `gpu_model` maps the CUDA device name to `:P100` or `:A100`, and a GPU without a column warns and skips the checks. The CPU sphere times are stored once, under VIJFH, and apply to both layouts as before. CI pins the job to a P100 via `gres` so the P100 column applies.\r\n- The sphere tables are keyed by layout and float type. The A100 column was measured on an A100-SXM4-80GB with Julia 1.10.11 and the `.buildkite` environment.\r\n- The tables store the raw measurements; `check_regressions` applies the tolerance buffer. The GPU buffers are smaller than the CPU buffer of 2x: `GPU_BUFFER_COLUMN = 1.3` and `GPU_BUFFER_SPHERE = 1.25`. They were chosen from the run-to-run variability of the benchmark's min times on an A100 (5 runs of `main`'s code over two days and two Julia processes): the ratio of the largest to the smallest min time of a case was at most 1.06 for sphere cases (median 1.02) and at most 1.21 for the launch-latency-bound column cases (median 1.09).\r\n\r\nNested and fused expressions:\r\n\r\n- Adds eight cases to the benchmark that exercise deeper operator nesting and fused expressions, of the kind that appear in ClimaAtmos tendencies: 4- and 8-deep nested interpolations, an 8-deep nesting with an expensive pointwise function between the stencils, a biharmonic `div(grad(div(grad(x))))`, a sum of 8 interpolations, a diffusion tendency `div(interp(K) * grad(x))`, an advective tendency `div(interp(\u03c1) * u\u00b3 * interp(h))`, and a three-term tendency combining advection, third-order upwinding, and diffusion. Their boundary conditions are fixed inside each case.\r\n\r\nThis also makes the test fail on GPU regressions (it only warns on CPU).\r\n\r\n\r\n- [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n- [x] Unit tests are included OR N/A.\r\n- [x] Code is exercised in an integration test OR N/A.\r\n- [x] Documentation has been added/updated OR N/A.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T22:45:04Z",
+    "deletions": 105,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-23T23:41:25Z",
+    "number": 2685,
+    "title": "Add GPU reference timings for the FD stencil benchmarks"
+  }
+]
