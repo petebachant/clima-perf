@@ -1,0 +1,127 @@
+[
+  {
+    "additions": 3350,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Problem\n\n1. **Spurious diffusive heating in moist-adiabatic clouds.** Second-order diffusion closures and the viscous sponge scaled the tendencies of suspended cloud species in proportion to the net total-water diffusive tendency and weighted the water-enthalpy flux by a single phase-averaged enthalpy. In a saturated cloud layer that is well mixed in moist static energy and total water, temperature decreases with height while condensate increases with height. Because the net total-water gradient vanishes, proportional scaling produced zero condensate diffusion and omitted the upward latent-heat transport of condensate diffusing downward against vapor diffusing upward, leaving an uncompensated downward dry-static-energy flux that warmed cloud base and cooled cloud top.\n2. **Cross-subdomain leakage in PROPHET (`PrognosticEDMFX`) diffusion.** The turbulent diffusive fluxes were evaluated on grid-mean gradients and applied directly to the updrafts. Because the grid-mean gradient includes cross-terms proportional to updraft area-fraction gradients, diffusing along the grid-mean gradient leaked sharp environmental inversions into the updrafts and double-counted transport already carried by the coherent mass flux and detrainment.\n3. **Reference-temperature (`T_0`) dependence in updraft moist static energy.** Updraft moist-static-energy diffusion included the enthalpy of non-diffusing rain and snow in non-equilibrium microphysics, and updraft hyperdiffusion weighted the water-enthalpy flux by the extensive enthalpy `h_eff + \u03a6` rather than the intensive enthalpy difference `h_eff - h_d` of water replacing dry air at fixed updraft mass, breaking invariance under shifts of the thermodynamic reference temperature `T_0`.\n\n## Fixes\n\n- **Species-consistent water-enthalpy and cloud-condensate diffusion.** Across all second-order vertical, horizontal, and LES diffusion closures and the viscous sponge, each suspended cloud species (cloud liquid and ice mass and number) now diffuses down its own gradient while rain and snow do not diffuse. The diffusive enthalpy flux carries the specific enthalpy of each diffusing water phase (Yatunin et al., 2026), so latent phase-exchange fluxes cancel the dry-static-energy gradient in a moist-adiabatic cloud layer while preserving reference-temperature invariance. The implicit vertical diffusion Jacobian includes the corresponding cloud-species diagonals and enthalpy cross-terms.\n- **Subdomain-decomposed PROPHET diffusion.** In `PrognosticEDMFX`, the grid-mean diffusive flux is assembled as the sum of the environmental and updraft diffusive fluxes. When `edmfx_vertical_diffusion` or `edmfx_horizontal_diffusion` is active, each updraft scalar diffuses down its own subdomain gradient (using harmonic-mean face interpolation of the updraft area fraction in the vertical and an area-fraction floor in the horizontal so the relaxation rate stays bounded as updraft area vanishes). When updraft diffusion is disabled, the grid-mean flux reduces to the environmental diffusive flux alone.\n- **Reference-temperature-invariant updraft moist static energy.** Updraft moist-static-energy diffusion subtracts the enthalpy of non-diffusing precipitation in non-equilibrium microphysics, and updraft hyperdiffusion weights the water term by `h_eff - h_d`, making both grid-mean and updraft tendencies invariant under Kirchhoff-consistent shifts of `T_0`.\n",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T14:47:30Z",
+    "deletions": 1292,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-24T04:24:49Z",
+    "number": 4916,
+    "title": "Turbulent diffusion of water-species enthalpy, suspended cloud species, and subdomain-decomposed EDMFX diffusion"
+  },
+  {
+    "additions": 1269,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\nReplaces the 3\u00d73 Gauss\u2013Hermite quadrature of the 1M SGS microphysics with a node rule built from the closure's own edges. It is a behavioral change for every 1M run with `sgs_distribution: \"gaussian\"` (the default).\r\n\r\n### What changes\r\n- **Node rule.** Along the centred saturation excess S\u2032 ~ N(0, \u03c3_S\u00b2), with the temperature regressed on it, the actual cloud edge \u2212\u03bb/\u03b1, the equilibrium edge \u2212\u03bb_eq and the precipitation shaft edge partition S\u2032.\r\n  - On each interval both condensates are linear and the shaft flag is constant, so a node at the conditional mean integrates them\r\n    exactly for any cloud fraction.\r\n  - Cloudy intervals get the two-point Gauss rule of the truncated normal for the in-cloud spread.\r\n  - A node whose temperature spread straddles freezing is split there.\r\n  - At most 8 slots, plus the temperature points, against 9 GH points.\r\n- **Closures.** Continuous Lagrange multipliers (\u03bb_eq = \u03bc_S,cloud), no discrete fits. The shaft fraction comes from the node flags, so the precipitation placement conserves the cell mean for any a_p. `sgs_precip_fraction_floor` must be positive when the placement is on (it bounds the concentration on the shaft nodes).\r\n- **\u03c3_S** is the linearized width for the nodes, the multipliers, the cloud fraction and the SGS saturation adjustment, with no quadrature pass. The 0M microphysics keeps Gauss\u2013Hermite.\r\n- **Removed:** the GH 1M path (shaft weight/minimum, discrete fits, sampled \u03c3_S) and `LogNormalSGS` (`\"lognormal\"`, breaking).\r\n\r\n### Verification\r\n- **Offline:** 60k instantaneous cells of a coarse coupled AMIP run, against a 24\u00d724 GH reference. The rule beats the 3\u00d73 rule in 12/12 band \u00d7 layer cells at shaft areas 0.5 and 0.2, with 2\u20135\u00d7 smaller tendency errors. The 3\u00d73 rule's ice and liquid sinks are too weak (biases up to +65 % / +33 %).\r\n<img width=\"812\" height=\"106\" alt=\"Screenshot 2026-10-23 at 7 59 29\u202fPM\" src=\"https://github.com/user-attachments/assets/e04d4f9c-ef29-41f7-afa5-3bcf599d9ce8\" />\r\n\r\n- **Coupled (ne-12 AMIP, 20 days, rule vs GH):** stable; no band's RH/T bias vs ERA5 worse by > 2 pp / 0.3 K; \u0394net TOA \u22120.4 W m\u207b\u00b2; iwp \u22123\u2026\u22128 %, tropical lwp \u22128 %.\r\n- **Cost:** \u22122.5\u2026\u22122.7 % SYPD in concurrent 10-day runs on one node. The 1M tendency kernel uses 155 registers (GH: 159) with no spills on an A100 (`ptxas`: 0 spill stores/loads).\r\n- **Unit tests** for the rule (exactness, round trip, temperature points, vanishing variance, allocations, `Val`-folded parameters); GH-specific tests removed or adapted.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 23,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T20:47:37Z",
+    "deletions": 798,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-24T06:20:29Z",
+    "number": 4914,
+    "title": "Integrate the 1M microphysics with a conditional-moment node rule"
+  },
+  {
+    "additions": 274,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Consistency fix: the TKE shear production equals the resolved kinetic energy removed by the SGS stresses.\n\n- **Vertical production** drops the `(\u2202_z w)\u00b2` term: the vertical momentum flux acts on the horizontal wind only, so the shear norm is `|\u2202_z u\u2095|\u00b2/2` (`vertical_shear_norm_sqr`). The same norm enters `Ri`, `Pr_t`, and the mixing lengths, on the EDMF and the grid-mean (Smagorinsky\u2013Lilly) paths alike, via a shared `set_strain_rate_norm!`.\n- **Face-exact stencil**: the production is `\u03c1 \u1d9cinterp(2 \u1da0K_u \u2016\ud835\udd08\u2016\u00b2)` with the face strain rate of the momentum flux, as the buoyancy production already does with `\u1da0K_h \u1da0buoygrad`. A unit test checks that its column sum equals the kinetic energy the flux removes, to roundoff; the previous center form missed the column budget by ~9% on the test grid.\n- **Horizontal production** (`edmfx_sgs_horizontal_diffusive_flux`) is `2 K_u,h S : S\u2095`, the work of the full stress, which adds the sign-indefinite cross terms `K_u,h \u2202\u2093w \u2202_z u`. The total stays non-negative where `K_u,v \u2265 K_u,h/4`, which the mixing-length caps guarantee up to interpolation.\n- `symmetric_part` replaces the hand-written `(G + G\u1d40)/2` in the strain-rate utilities and AMD.\n\nRight now this has no substantial practical implications. Ref counter bumped.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T21:45:21Z",
+    "deletions": 127,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-24T14:29:45Z",
+    "number": 4919,
+    "title": "Make TKE shear production consistent with the SGS stresses"
+  },
+  {
+    "additions": 360,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \nAdd EDMFX implicit-stage Picard sub-iteration (default: 2 rounds) for improving dt sensitivity:\n\nWithin each IMEX stage, run a block Gauss-Seidel loop that alternates the analytic u\u2083 solve, the semi-implicit upwind sweep of the buoyancy-affecting draft scalars, a refresh of the draft thermodynamics, and the per-updraft microphysics tendency; the stage-initial Y.(f,c).sgs\u02b2s is snapshotted and restored each round so the iteration converges on the stage fixed point.\n\u1d9cmp_tendency\u02b2s is then frozen through the Newton solve to keep the Jacobian self-consistent. Also bumps the TRMM reproducibility dt to 180 s and adds a short-dt TRMM configuration for dt-sensitivity testing.\n\nThis is an alternative to #4911 and hopefully faster as it doesn't require multiple Newton iterations and full microphysics with quadrature updates.\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 15,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-24T01:41:11Z",
+    "deletions": 93,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-24T17:06:44Z",
+    "number": 4920,
+    "title": "EDMFX implicit-stage Picard sub-iteration"
+  },
+  {
+    "additions": 65,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\n#14 -- this will link to issue 14\nCloses #2 -- this will automatically close issue 2 on PR merge\n-->\n@costachris found this. @sajjadazimi @tapios could you take a look and see if it's correct?\nAlso we probably should use the environment here? This was using grid-mean because at some point, we were calculating cloud fraction just for grid-mean. We changed it back to weighted sum of updraft and environment, but didn't change this yet. It shouldn't matter much so I didn't change it, but I can leave a TODO if it's the case.\n\n## To-do\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \n- Proposed task\n-->\n\n\n## Content\n<!---  specific tasks that are currently complete \n- Solution implemented\n-->\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-24T18:42:21Z",
+    "deletions": 51,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-24T22:13:47Z",
+    "number": 4921,
+    "title": "use environment state in sgs variance fidelity"
+  }
+]
