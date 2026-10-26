@@ -1,0 +1,254 @@
+[
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "I guess this needs to wait for the distributed testing infrastructure to be back online before we can merge it.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-03-03T17:31:47Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-25T00:48:09Z",
+    "number": 4158,
+    "title": "Adding some distributed grid tests"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "this PR fixes a couple of bugs when writing down constant fields without grids.\r\nThe fields are materialized in the timeseries as just one numerical constant, but maybe we should add the information that this is a constant field on the model grid? \r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-01-19T16:41:09Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-10-25T02:17:18Z",
+    "number": 5177,
+    "title": "Support constant fields as `JLD2Writer` and `NetCDFWriter` outputs"
+  },
+  {
+    "additions": 34,
+    "author": {
+      "id": "MDQ6VXNlcjQ0ODY1Nzg=",
+      "is_bot": false,
+      "login": "briochemc",
+      "name": "Beno\u00eet Pasquier"
+    },
+    "body": "Fixes #5627.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABDYTahA",
+        "number": 5627,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5627"
+      }
+    ],
+    "createdAt": "2026-05-26T07:36:57Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-10-25T03:20:12Z",
+    "number": 5628,
+    "title": "Fix on_architecture for ImmersedBoundaryGrid on distributed grids"
+  },
+  {
+    "additions": 41,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-25T00:01:01Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-25T04:47:45Z",
+    "number": 6350,
+    "title": "Readme refresh"
+  },
+  {
+    "additions": 114,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Adds `at_maximum` / `at_minimum`, which return a coordinate (or another field, interpolated to the extremum's location) where a field is extreme. The search runs on the device; only the index and the requested values come back to the host.\n\n```julia\nT = model.tracers.T\nz_warmest = at_maximum(T, :z)\nx, y, z = at_minimum(T, (:x, :y, :z))\nw_at_peak = at_maximum(abs, T, model.velocities.w)   # w interpolated to T's location\nz_masked = at_maximum(T, :z; condition = (i, j, k, grid, T) -> k > 2)\n```\n\nAlso:\n- `findmax(f, c)` / `findmin(f, c)` now work on fields, like Base.\n- `locate_extremum` no longer relies on `operand === c`, which returns `false` for windowed fields on Julia 1.13 once the field crosses a function boundary, so the search read outside the window.\n  This looks like a Julia bug; we still need a minimal reproducer (without Oceananigans) to report upstream.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T18:34:20Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2026-10-25T04:50:50Z",
+    "number": 6323,
+    "title": "Add at_maximum and at_minimum to locate coordinates of extrema"
+  },
+  {
+    "additions": 138,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "at the moment, in main, we are limited to having `Nsteps < grid_size` when using extended halos (i.e. in distributed runs) because we compute the barotropic mode in the halos. \r\n\r\nThis PR relaxes this requirement by filling the halos only when we need if we have `Nsteps > grid_size` (i.e. take the example that `Nsteps = 1.8grid_size`, then during the substepping we will need to fill the halos once when we reach `substep_index = grid_size`.\r\n\r\nIt will help reducing the impact of #6294, given that that case requires 2 halos per substep instead of 1.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T12:47:47Z",
+    "deletions": 93,
+    "labels": [
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-10-25T08:01:51Z",
+    "number": 6312,
+    "title": "Allow any number of substeps even with `ExtendedHalos`"
+  },
+  {
+    "additions": 268,
+    "author": {
+      "id": "MDQ6VXNlcjEzMjA1MTYy",
+      "is_bot": false,
+      "login": "tomchor",
+      "name": "Tom\u00e1s Chor"
+    },
+    "body": "The open boundary condition schemes section of the numerical implementation page only described PerturbationAdvection. This PR adds an overview of the available schemes, describe how target_transport and the net transport correction act on the boundary velocities, and updates some terminology which was still based on the old `OpenBoundaryCondition`.\n\nCloses #6311\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZFNQ4g",
+        "number": 6311,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6311"
+      }
+    ],
+    "createdAt": "2026-10-22T23:17:40Z",
+    "deletions": 29,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-10-25T09:49:12Z",
+    "number": 6337,
+    "title": "Document all open boundary schemes in the numerical implementation docs"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Time-stepping a `HydrostaticFreeSurfaceModel` with a `SplitExplicitFreeSurface` and a `DateTime` (or `TimeDate`) clock throws\n\n```\nMethodError: no method matching +(::DateTime, ::Float64)\n```\n\nin `step_free_surface!`. #5982 (substep clock) and #6151 (FieldTimeSeries window spanning the substeps) add `n * \u0394\u03c4\u1d2e` to `clock.time` directly. This PR uses `add_time_interval` instead, as schedules and the checkpointer already do.\n\nThe existing DateTime forcing test only used the default free surface, which is `ImplicitFreeSurface` on its 1\u00d71\u00d71 regular grid. It now also runs with `SplitExplicitFreeSurface(substeps=4)`. Without the fix, those 16 new cases error; with it, all 135 pass.\n\nFound while moving NumericalEarth.jl to `DateTime` clocks: every realistic `ocean_simulation` uses a split-explicit free surface.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T04:25:17Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      }
+    ],
+    "mergedAt": "2026-10-25T20:12:58Z",
+    "number": 6341,
+    "title": "Fix SplitExplicitFreeSurface with DateTime clocks"
+  }
+]

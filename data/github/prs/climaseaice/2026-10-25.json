@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Updates the Oceananigans compat to `0.116` and bumps ClimaSeaIce to 0.6.1.\n\nOceananigans 0.115 ([CliMA/Oceananigans.jl#6275](https://github.com/CliMA/Oceananigans.jl/pull/6275)) builds topologies per side with `Sides{L, R}` and removes `LeftConnected`, `RightConnected`, `FullyConnected` and the `LeftConnectedRight*` names. The only place ClimaSeaIce used them is `ConnectedTopology` in the split-explicit momentum solver, which decides whether to extend the halos of a distributed grid. It becomes\n\n```julia\nconst ConnectedTopology = Union{Sides{Connected}, Sides{Closed, Connected}, RightCenterFolded, RightFaceFolded}\n```\n\nwhich contains exactly the nine topologies of the old union (checked on 0.116.1) and still excludes `Bounded`, `Periodic` and `Flat`. It keeps the folded topologies, unlike Oceananigans' own `ConnectedTopology` for the ocean's split-explicit free surface.\n\nSupport for Oceananigans 0.114 is dropped because the `Sides` names don't exist there. Nothing else in the 0.115 and 0.116 breaking changes touches ClimaSeaIce.\n\nThis unblocks NumericalEarth moving to Oceananigans 0.116.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-25T01:53:47Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "af7911",
+        "description": "",
+        "id": "LA_kwDOJN11r88AAAACGTN0pQ",
+        "name": "\ud83c\udf8f dependencies"
+      }
+    ],
+    "mergedAt": "2026-10-25T04:06:32Z",
+    "number": 190,
+    "title": "Support Oceananigans 0.116"
+  }
+]
