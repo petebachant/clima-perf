@@ -1,0 +1,153 @@
+[
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "> `indices` of binary, multiary and kernel function operations went through `construct_regionally(intersect_indices, loc, operands...)`. When an operand is itself an operation with more operands (for example `c * \u0394z`, where `\u0394z` is a `KernelFunctionOperation` with arguments `(Center(), Center(), Center())`), inference reaches the same `construct_regionally` call with a longer argument list while the outer one is still on the stack, and widens it to `Vararg{Any}` to guarantee termination. Because `dim` was a keyword argument, constant propagation could not recover the result either, so `indices` was inferred as `Tuple{Any, Any, Any}` and `axes` as `Union{OneTo, UnitRange}`, and `_mapreducedim!` dispatched `getindex` dynamically. This only happened when the inner operation's `indices` was not yet in the inference cache, so the first such expression compiled in a process stayed slow for the rest of the session (issue #6351: `compute!` of a nested lazy `Integral` took 11.3 ms with 156,555 allocations instead of 0.008 ms with 7 allocations).\n> \n> Two changes, each needed for a concrete result in all cases:\n> \n> * `intersect_indices` intersects all three dimensions at once with `map` over the index and location tuples, folding over the operands. Without a per-dimension `dim` index into heterogeneous tuples, the result type no longer depends on constant propagation. This alone also fixes expressions such as `s + s` with `s = Field(c; indices = (:, :, 2))`, which were inferred as a union of tuples even without any recursion.\n> * Single-region operations call `intersect_indices` directly. The tuple-wise rewrite alone still widened when a kernel function operation wraps an operation with more operands than the kernel has arguments (e.g. `K(c * d)` for a single-argument kernel). Operations on multi-region grids keep `construct_regionally` through new `indices` methods in `MultiRegion`, because their operands' indices are `MultiRegionObject`s.\n\nFix #6351.\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZzYRpQ",
+        "number": 6351,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6351"
+      }
+    ],
+    "createdAt": "2026-10-26T00:00:19Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "09aeea",
+        "description": "Whatever that means",
+        "id": "MDU6TGFiZWwxMjUxODU0NDkw",
+        "name": "abstractions \ud83c\udfa8"
+      }
+    ],
+    "mergedAt": "2026-10-26T08:32:30Z",
+    "number": 6354,
+    "title": "Make the inferred type of operation indices independent of the inference cache"
+  },
+  {
+    "additions": 810,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "We talked about this a lot of times, I think we never did it because (1) we did not have these amazing automatic benchmarks in place and (2) it is a tedious refactoring work. (1) was fixed some time ago and (2) is LLM-enabled :)\r\n\r\nThe idea is simple: divisions are expensive -> most divisions are divisions by grid metrics -> brutally just store the reciprocals of all the metrics in the grid so we never have to divide by grid quantities.\r\n\r\nDisclaimer: This will increase parameter space for old GPUs, however, after #6270 we can reduce significantly this parameter memory so there should be no issues.\r\n\r\n@glwagner @jackdfranklin ",
+    "changedFiles": 51,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T18:39:21Z",
+    "deletions": 311,
+    "labels": [
+      {
+        "color": "8B0000",
+        "description": "IN BIG BOLD RED CAPS WITH FLASHING SIRENS",
+        "id": "MDU6TGFiZWwxNDg3NjMzNDUz",
+        "name": "\ud83d\udea8 DO NOT MERGE \ud83d\udea8"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-10-26T13:05:41Z",
+    "number": 6281,
+    "title": "Test if stored reciprocals speed up the code"
+  },
+  {
+    "additions": 43,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6329.\n\n`run!(sim::ReactantSimulation)` traced the first time step before the loop for every timestepper. Only `QuasiAdamsBashforth2TimeStepper` needs that, for its forward-Euler first step; `euler` reaches no other stepper (`reactant_model_time_step!`), so for them the peeled step was the loop body exactly and the program carried the step body twice.\n\n`run!` now dispatches on the model's stepper: the general method runs all `N` steps in the loop, and a method for `Simulation{<:ReactantModel{<:QuasiAdamsBashforth2TimeStepper}}` keeps the peeled forward-Euler first step and `N - 1` loop steps. AB2 is unchanged; other steppers take every step in the loop. `remainder_step!` is untouched: its `euler = true` likewise reaches only AB2.\n\nOn a 32 \u00d7 32 \u00d7 8 `HydrostaticFreeSurfaceModel` with `:SplitRungeKutta3` over 50 steps (numbers in #6329), the traced module shrinks from 167 to 94 kernel calls, the optimized module from 3,186 to 1,986 lines, and warm compile time from 4.98 s to 3.21 s, with bitwise identical fields.\n\nThe new test in `test/reactant/simulations.jl` checks, for both AB2 and `SplitRungeKutta3`, that the compiled `run!` matches the eager CPU run.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZOs_Qw",
+        "number": 6329,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6329"
+      }
+    ],
+    "createdAt": "2026-10-22T22:04:36Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-10-26T16:58:48Z",
+    "number": 6330,
+    "title": "Reactant run!: peel the first step only for Adams-Bashforth"
+  },
+  {
+    "additions": 141,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Three changes that make `DateTime` (and `TimeDate`) clocks practical for forced simulations.\n\n### `Cyclical(Year(n))` for calendar `FieldTimeSeries`\n\n`Cyclical` with a fixed period (e.g. the inferred `Millisecond` one) drifts against the calendar by about a quarter day per year. A `Dates.Year` period instead folds the model date into the series by whole calendar years:\n\n```julia\nmonths = [DateTime(2018, m, 15) for m in 1:12]\nclimatology = FieldTimeSeries{Center, Center, Center}(grid, months; time_indexing=Cyclical(Year(1)))\nclimatology[1, 1, 1, Time(DateTime(1958, 3, 15))] # March\n```\n\n- Climatologies and repeat-year forcing (stamped in some nominal year) can be read at any model date, and `Cyclical(Year(61))` cycles a multi-year record.\n- The wrap from the last record to the first of the next period interpolates across the real calendar gap, e.g. 31 days from 15 December to 15 January.\n- Leap days follow Julia's year arithmetic: 29 February in a leap model year reads 28 February of a non-leap record.\n- It works in kernels (tested through a discrete forcing on CPU; I haven't run it on a GPU).\n\n### Numeric schedules on calendar clocks: `materialize_schedule(schedule, clock)`\n\nA duration given as a number means seconds, just as it does for `\u0394t`. Before this PR, `TimeInterval(3600)` on a `DateTime` clock threw `Cannot use Float64 TimeInterval times with DateTime clock. Use a Dates.Period instead.`\n\nThe obstacle was that a schedule takes the type of its stored start time from its interval at construction, before it has seen a clock. Now `materialize_schedule(schedule, clock)` gives the schedule the clock's time type at the place where it first meets the clock:\n- `JLD2Writer`, `NetCDFWriter`, `ZarrWriter` and `Checkpointer` constructors, which already called `materialize_schedule(schedule)`, except for `Checkpointer`;\n- callbacks, when the simulation initializes and before a checkpoint is restored. A callback is rebuilt only when its schedule's time type changes, so schedules whose type already matches are never copied, and references to them stay valid.\n\nThis covers `TimeInterval`, `TimeOffset`, `AveragedTimeInterval`, `ConsecutiveIterations`, `OrSchedule` and `AndSchedule`. It works in both directions: `TimeInterval(Hour(1))` now also runs on a numeric clock. `AveragedTimeInterval` now advances its window with `add_time_interval` rather than raw `+`/`-`.\n\n### `stop_time` on calendar clocks\n\n- A `Simulation` with a `DateTime` clock and no `stop_time` threw `isless(::Float64, ::DateTime)` in `run!`. The default `Inf` now becomes the \"never stop\" date that `reset!` already used.\n- A finite numeric `stop_time` on a calendar clock throws an `ArgumentError` at construction. `stop_time` is an instant, so it must be a date.\n\n### Tests\n\n`test/time_stepping/datetime_clock.jl` covers:\n- climatology, repeat-year and multi-year cycles, including leap days, the December/January wrap and in-kernel use;\n- numeric `TimeInterval`, `TimeOffset` and `AveragedTimeInterval` callbacks and writers on a `DateTime` clock, including checkpoint pickup;\n- a `Period` schedule on a numeric clock;\n- both `stop_time` cases.\n\nLocally, `datetime_clock` (124), `simulation`, `schedules`, `output_writers`, `jld2_writer`, `checkpointer`, `averaged_specified_times`, `netcdf_writer` and `zarr_writer` all pass on CPU.\n\nRelated: #6341 (split-explicit free surface with `DateTime` clocks).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T05:14:28Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "fef2c0",
+        "description": "",
+        "id": "MDU6TGFiZWwyNDc0NTk2NTM3",
+        "name": "user interface/experience \ud83d\udcbb"
+      }
+    ],
+    "mergedAt": "2026-10-26T18:33:31Z",
+    "number": 6342,
+    "title": "Calendar-year Cyclical, numeric schedules on DateTime clocks, and DateTime stop times"
+  },
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The single column `update_state!` for `HydrostaticFreeSurfaceModel` skipped several steps of the general `update_state!`. For example, a `FieldTimeSeries` forcing with an `InMemory(N)` backend never moved its in-memory window. This PR starts the single column `update_state!` with the same block as the general one: `mask_immersed_field!`, `update_model_field_time_series!`, `compute_forcing!` and `update_boundary_conditions!`.\n\nTests (both fail without this change):\n- `time_stepping/forcings`: a single column model forced by a `FieldTimeSeries` with `backend = InMemory(2)` advances the window.\n- `hydrostatic_free_surface/ensemble_models`: a single column model on an `ImmersedBoundaryGrid` matches the equivalent periodic model.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-03T14:47:00Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-26T19:27:40Z",
+    "number": 3756,
+    "title": "Single column grid `update_state!` is missing the `update_model_field_time_series!`"
+  }
+]

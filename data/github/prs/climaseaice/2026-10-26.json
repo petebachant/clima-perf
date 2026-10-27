@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Fixes the sea-ice `TriadScheme` Coriolis acceleration in x, which no longer matches Oceananigans.\n\n[CliMA/Oceananigans.jl#6096](https://github.com/CliMA/Oceananigans.jl/pull/6096) (released in Oceananigans 0.114.0) swapped the triads that multiply `v(i, j)` and `v(i, j+1)` in `x_f_cross_U` for the `TriadScheme`:\n\n```julia\n\ud835\udcaf\u207b\u207b(i, j, k, grid, coriolis) * masked_Ay_q\u1d9c\u1da0\u1d9c(i, j,   k, grid, U[2]) +\n\ud835\udcaf\u207b\u207a(i, j, k, grid, coriolis) * masked_Ay_q\u1d9c\u1da0\u1d9c(i, j+1, k, grid, U[2])\n```\n\nClimaSeaIce's `x_f_cross_U_2D` still had the old pairing (`\ud835\udcaf\u207b\u207a` with `v(i, j)` and `\ud835\udcaf\u207b\u207b` with `v(i, j+1)`). This PR swaps them to match. `y_f_cross_U_2D` already matched.\n\n`test/test_vertical_grid_invariance.jl` checks that the two-dimensional operators reproduce Oceananigans' on a grid with uniform \u0394z, and it has been failing on `main` (194 of 4000 checks, all TriadScheme x). CI didn't catch it because the `vertical_grid` test group had no CI job, so this PR also adds one. With the fix, the group passes locally on Oceananigans 0.114.1.\n\nThis is independent of #190 (Oceananigans 0.116) and merges cleanly with it in either order.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-25T02:17:48Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-26T19:33:50Z",
+    "number": 191,
+    "title": "Match Oceananigans' triad pairing in the sea-ice x Coriolis term"
+  }
+]

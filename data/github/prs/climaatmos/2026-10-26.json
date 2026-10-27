@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 482,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "The Picard tracer predictor in `initialize_implicit_stage_problem!` sweeps the updraft scalars with advection and microphysics only, while the final analytic `u\u2083` and `\u03c1a` solves evaluate buoyancy and `\u1d9cmp_tendency\u02b2s` at its iterate and hold them fixed through the Newton solve. Without entrainment dilution and surface injection, undiluted subcloud air inflates updraft moisture, condensate, and buoyancy in those solves. This PR adds lateral and turbulent entrainment toward the environment value and the first-cell surface mass-flux relaxation to the predictor. In the BOMEX and RICO single-column models (\u0394t = 120 s), the BOMEX LWP temporal standard deviation drops by 53 % (5.14 to 2.41 g m\u207b\u00b2; LES: 1.97 g m\u207b\u00b2), the BOMEX mean LWP bias by 38 %, and the RICO mean LWP bias by 34 %.\n\nThe second commit places the updraft microphysics source where it acts. The predictor transports every scalar first; the draft thermodynamics and `\u1d9cmp_tendency\u02b2s` are then evaluated at the transported state, and the condensate and precipitation tracers receive `dt\u03b3` times that source. Evaluating the source at the transported state keeps the vapor of each cell consistent with the condensate that arrives with it, so advected condensate is not condensed a second time, and the cached source is the rate that takes the transported condensate to the stage condensate, which the Newton solve keeps frozen. Evaluating the source within the round removes a one-round Picard lag in updraft condensation; with the source evaluated at the swept `(mse, q_tot)` this reduced LWP bias and cloud-base oscillations in DYCOMS RF01/RF02, BOMEX, and RICO, and the transported-state evaluation has so far been checked on a 2 h BOMEX column only.\n\nAlso included: the predictor's cell-1 advection factor is zeroed, since `set_velocity_at_surface!` leaves a nonzero covariant `u\u2083` at the surface over sloped terrain; the surface relaxation rate is a shared helper (`edmfx_sfc_relaxation_rate`) used by the tendency, its Jacobian diagonal, and the predictor; and a unit test checks the predictor against its documented recurrence. Reference counter bumped to 442.\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-25T23:14:37Z",
+    "deletions": 81,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-26T09:45:50Z",
+    "number": 4924,
+    "title": "Include entrainment and surface injection in the Picard updraft tracer predictor"
+  },
+  {
+    "additions": 1003,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Purpose\n\nMake the turbulent flux of cloud liquid and ice consistent with how parcels transport condensate. Down-gradient self-diffusion (#4916) gives a downward liquid flux inside a well-mixed stratocumulus layer, where adiabatic liquid increases with height. Parcels there equilibrate within seconds, so they carry the equilibrium condensate of their conserved variables.\n\n## Content\n\nWith the 1M microphysics, prognostic TKE, and the SGS saturation-excess moments, the vertical turbulent flux of each suspended cloud species is the blend\n\n$$\nF_{q_\\mu} = (1-\\lambda_\\mu)\\,(-\\rho K_h \\nabla q_\\mu) + \\lambda_\\mu\\,(c_{q_t} F_{q_t} + c_{s_l} F_{s_l}), \\qquad \\lambda_\\mu = \\frac{\\tau_e}{\\tau_e + \\tau_\\mu},\n$$\n\n- `F_qt` and `F_sl` are the fluxes of total water and liquid\u2013ice static energy. The energy flux is already built from them: `F_e = F_sl + (h_v + \u03a6) F_qt`.\n- `\u03c4_e = l_mix / (c_d \u221atke)` is the eddy turnover time, with the master mixing length and no floor (the Damk\u00f6hler factor of the SGS variance fidelity uses the same rate with the buoyancy-bounded length and a 1 m floor). `\u03c4_\u03bc` is the 1M phase-relaxation time.\n- The equilibrium part linearizes the SGS-mean equilibrium condensate that the microphysics relaxes toward:\n  - `c_qt = C \u03c7_\u03bc / (1 + C \u03b3)` and `c_sl = \u2212c_qt (\u2202q_sat/\u2202T)/c_p`.\n  - `C = \u03a6(\u03bb_eq/\u03c3_S)` is the cloudy fraction of the equilibrium condensate `max(0, \u03bb_eq + S\u2032)` of the 1M node rule, with the multiplier and width of `\u1d9csgs_moments`; `\u03c7_\u03bc` is the phase share and `\u03b3 = (L/c_p) \u2202q_sat/\u2202T`. With the truncated-Gaussian target, `\u03bb_eq = \u03bc_S` and `C` is the derivative of `E[max(0, S)]`; with a reshaped target (curvature, or the truncated displacement of #4922, whose `\u03bb_eq = \u2212Inf` in clear air gives `C = 0`) the flux follows the microphysics.\n  - `1/(1 + C\u03b3)` is the latent-heat feedback. With an SGS width, `C \u2192 0` makes the equilibrium part vanish in clear air; a width at the `\u03f5_numerics` floor (`GridMeanSGS`) switches `C` at saturation, as the microphysics target does.\n  - `\u2202q_sat/\u2202T` is taken at the cell density, as in the microphysics; at fixed pressure it is larger by `1/(1 \u2212 R_v T/L)`, 3\u20135%.\n- The energy flux is unchanged for every `\u03bb`, because parcels conserve `(s_l, q_t)` in transit. A layer well mixed in `(s_l, q_t)` therefore remains a fixed point of diffusion, and with `\u03bb = 1` its condensate flux vanishes as well. Rebuilding the energy flux from the blended species fluxes would reintroduce the `\u2212\u03c1K c_p(\u0393_d \u2212 \u0393_m)` flux that #4916 removed.\n- Under `PrognosticEDMFX`, the environment cloud species take the blended flux with the environment state and weight. Draft cloud species keep self-diffusion.\n- Other configurations (0M, 2M, 2MP3, no prognostic TKE) are unchanged. The scratch fields of the blend are allocated only with the 1M scheme (`cloud_species_diffusion_temporary_quantities`).\n- The implicit Jacobian keeps the unscaled self-diagonal. It bounds the blended diagonal `(1 \u2212 \u03bb) + \u03bb C \u03c7 \u03b3_\u03bc/(1 + C\u03b3) \u2264 1` from above, with `\u03b3_\u03bc` the feedback of the species' own latent heat. The autodiff Jacobian, whose precomputed subset has neither `\u1d9cl_mix` nor `\u1d9csgs_moments`, uses self-diffusion.\n- The blend flag and its face fluxes are bound once, outside the conditional branches, so the closures over the species capture them unboxed: `vertical_diffusion_boundary_layer_tendency!` allocates 20 KB per call on the unit-test setup (7 KB on main; 42 KB with the bindings inside the branches).\n\nTests:\n- New testset in `vertical_diffusion_tests.jl`:\n  - blend-weight limits;\n  - `\u03bb = 0` recovers self-diffusion;\n  - `\u03bb = 1` in clear air gives no species flux;\n  - `\u03bb = 1` in saturated air matches the closed-form coefficients for liquid and ice;\n  - `\u03bb = 1/2` is the average of the two limits;\n  - the energy and total-water tendencies are independent of `\u03bb`.\n  - The synthetic moments set `\u03bb_eq` to the mean saturation excess, as with the truncated-Gaussian target.\n- `edmfx_sgs_diffusive_flux_tests.jl`:\n  - expected environment cloud-species tendencies are assembled from the blended formula;\n  - the `\u03c1q_lcl` Jacobian check is a same-sign upper bound.\n\nDocs: `diffusion.md` and `prophet.md`; NEWS entry.\n\nReview: the sensitivities were checked against finite differences of the fixed point of the relaxation target at fixed enthalpy and total water (agreement to 1e-4 at fixed cell density; 1\u20135% at fixed pressure, the `1 \u2212 R_v T/L` factor above) and against the moist-adiabat fixed point. The latent-heat feedback factor `1/(1 + C\u03b3)` came out of that review.\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-24T22:38:41Z",
+    "deletions": 59,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-26T16:37:43Z",
+    "number": 4923,
+    "title": "Blend equilibrium-implied and down-gradient turbulent fluxes of cloud liquid and ice"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "Where the updraft widens downward (\u2202a/\u2202z < 0), sedimentation flux from the environment enters the updraft through the tilted boundary. The tendency is\r\n\r\n    a \u2202_z(\u03c1w\u03c7) + min(\u2202a/\u2202z, 0) (\u03c1\u00b9w\u00b9\u03c7\u00b9 \u2212 \u03c1\u2070w\u2070\u03c7\u2070) = \u2202_z(a\u03c1w\u03c7) \u2212 \u2202a/\u2202z \u03c1\u2070w\u2070\u03c7\u2070,\r\n\r\nas stated in the docstring and assumed by the Jacobian (update_sgs_advection_jacobian!). The code computed \u2202_z(a\u03c1w\u03c7) + \u2202a/\u2202z \u03c1\u2070w\u2070\u03c7\u2070, which removes |\u2202a/\u2202z| \u03c1\u2070w\u2070\u03c7\u2070 from the updraft (and, through the grid-mean residual, adds it to the environment) instead of adding it. The sign slipped in the rewrite of #4721 and has been active since the lateral coefficient defaulted to 1 (#4744) and was hard-coded (#4848).\r\n\r\nBump the reference counter to 444.\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T00:30:12Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-26T17:43:40Z",
+    "number": 4925,
+    "title": "Fix sign of the environment lateral term in updraft_sedimentation!"
+  },
+  {
+    "additions": 133,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nThis PR updates the idealized `RadiationDYCOMS` parameterization ([Stevens2005](https://doi.org/10.1175/MWR2930.1)) in three ways:\r\n\r\n1. **Inversion-height detection ($z_i$)**: On a coarse vertical grid, selecting the level with the smallest $|q_t - 8\\text{ g/kg}|$ can jump across the inversion to the first dry free-tropospheric cell whenever that cell happens to lie slightly closer to $8\\text{ g/kg}$ than the uppermost boundary-layer cell, placing the free-tropospheric cooling term inside the cloud top. The column reduction now selects the highest level with $q_t \\ge 8\\text{ g/kg}$, falling back to the level closest to $8\\text{ g/kg}$ only if the entire column is drier than $8\\text{ g/kg}$.\r\n2. **Grid-mean liquid water for optical depth**: Uses the precomputed grid-mean liquid specific humidity `\u1d9cq_liq` (`p.precomputed.\u1d9cq_liq`) across all microphysics and turbulence closures when integrating the upward and downward liquid water paths.\r\n3. **Updraft radiative heating (`PrognosticEDMFX`)**: Applies the grid-mean radiative flux convergence divided by updraft density to each prognostic updraft's moist static energy (`Y\u209c.c.sgs\u02b2s.:($j).mse`), matching the RRTMGP tendencies.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T05:08:10Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-26T18:55:40Z",
+    "number": 4928,
+    "title": "Improve DYCOMS radiation inversion-height detection and heat updraft MSE"
+  }
+]
