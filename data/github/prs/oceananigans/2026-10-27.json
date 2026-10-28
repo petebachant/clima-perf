@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 26,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Follow up to #5851. Changes the default of the `JLD2Writer` `compress` keyword from `true` (the `Deflate` filter) to `[JLD2.Shuffle(), JLD2.ZstdFilter(1)]`: byte shuffling followed by Zstandard compression at level 1. Both filters are lossless, so the data read back is bit-for-bit what was written.\n\n`compress = true`, `compress = false`, a single filter, or any vector of filters can still be passed, as before.\n\n## Why\n\nBenchmarks on Breeze.jl docs output comparing the current default with the new one. The `Deflate` numbers are from [the first sweep](https://github.com/CliMA/Oceananigans.jl/pull/5891#issuecomment-5385654336) and the `Shuffle` + Zstd numbers from [the sweep with `Shuffle`](https://github.com/CliMA/Oceananigans.jl/pull/5891#issuecomment-5394214322):\n\n| file | uncompressed | `Deflate` (current) size / write / read | `Shuffle` + Zstd(1) size / write / read |\n|---|---|---|---|\n| `mountain_waves.jld2` | 6.4 MB | 4.6 MB / 0.11 s / 0.019 s | 4.2 MB / 0.025 s / 0.005 s |\n| `cloudy_thermal_bubble.jld2` | 41.6 MB | 20.9 MB / 0.71 s / 0.10 s | 23.1 MB / 0.11 s / 0.028 s |\n| `baroclinic_wave_k16.jld2` | 138.7 MB | 106.1 MB / 3.3 s / 0.43 s | 88.5 MB / 0.26 s / 0.12 s |\n| `tc_rainband.jld2` | 955.6 MB | 653.6 MB / 25.8 s / 3.3 s | 514.3 MB / 2.3 s / 0.48 s |\n\nWrites are about 4.5\u201313\u00d7 faster and reads about 3.5\u20137\u00d7 faster. Files are smaller in all cases except `cloudy_thermal_bubble.jld2`, which is about 11% larger.\n\n- **Why `Shuffle`:** Zstd alone gave mixed results: faster, but some files were larger than with `Deflate` (e.g. `baroclinic_wave_k16.jld2`: 113 MB vs 106 MB). Shuffling the bytes of each value first makes the data much more compressible for both algorithms. Thanks to @nhz2 for the suggestion.\n- **Why level 1:** higher levels compress only slightly better but write much slower. On `tc_rainband.jld2` with `Shuffle`, level 1 gives 514 MB in 2.3 s, level 3 gives 517 MB in 3.8 s, and level 19 gives 500 MB in 60 s.\n\n## Compat\n\nJLD2 compat is raised to `0.6.7` in `Project.toml` and `test/Project.toml`:\n\n- JuliaIO/JLD2.jl#739 (v0.6.6) makes `ZstdFilter` respect the requested level; before that, level 1 was ignored.\n- JuliaIO/JLD2.jl#740 (v0.6.7) makes `Shuffle` over 10\u00d7 faster. Without it, writes with `Shuffle` are much slower.\n\n## Not in this PR\n\nLossy compression, such as bitrounding the mantissa as @milankl suggested, would shrink files far more. It's left for a separate discussion about whether a lossy default is desirable; this PR stays lossless.\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-22T19:03:35Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-10-27T05:26:28Z",
+    "number": 5891,
+    "title": "Switch default JLD2Writer compression to Shuffle + Zstd"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Recover the performance drop observed at https://github.com/NumericalEarth/Breeze.jl/pull/1097#pullrequestreview-5658505118.\n\n> #6212 converted the regularization \u03f5 to the type of the global smoothness indicator \u03c4, so the ZWENO weights of a BFloat16 scheme went from Float32 to BFloat16. BFloat16 has no approximate reciprocal instruction, so on CUDA the divisions in the weights fall back on inv (#6344) rather than the approximate Float32 reciprocal. The scalar tendency of a WENO5 BFloat16 scheme on a 256\u00d7256\u00d7128 grid on an RTX 5090 fell from 52.7e9 to 46.0e9 points/s, which the Breeze.jl benchmarks also caught.\n> \n> The regularization of Float32 and BFloat16 schemes is now Float32, which makes their weights Float32 as before #6212. Near a Bounded boundary the reconstruction falls back on lower-order buffer schemes whose last one is BFloat16, so the buffer result is converted to the type of the high-order one, which keeps the interpolation type-stable. BFloat16 WENO5, WENO7 and WENO9 scalar tendencies are now 41%, 36% and 40% faster, 23% faster than before #6212 for WENO5, and Float32 is unchanged.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T22:56:13Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2026-10-27T14:58:13Z",
+    "number": 6367,
+    "title": "Compute the WENO weights of BFloat16 schemes in Float32"
+  },
+  {
+    "additions": 459,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This is step number (2a) of the roadmap laid out in #6272. It introduces an `Open` topology which is conceptually different from a `Closed` topology. While the latter has a wall, therefore (following the roadmap) has no physical halos beyond the wall and no operators will look beyond the wall, an `Open` topology has physical halos and operators will be allowed to look at halos beyond `Open` directions as if they were part of the domain.\r\n\r\nA follow-up which moves the update of prognostic open BCs (`Radiation`, `PerturbationAdvection`, ....) once per stage rather than in the `fill_halo_regions!` will follow this PR.\r\n\r\nA summary of new behavior when specifying topologies is in https://github.com/CliMA/Oceananigans.jl/pull/6276#issuecomment-6364806652",
+    "changedFiles": 91,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-19T08:09:58Z",
+    "deletions": 305,
+    "labels": [
+      {
+        "color": "60DE30",
+        "description": "Concerning a change which breaks the API",
+        "id": "LA_kwDOCRy_aM8AAAACPdqjGw",
+        "name": "breaking change :broken_heart:"
+      }
+    ],
+    "mergedAt": "2026-10-27T17:16:01Z",
+    "number": 6276,
+    "title": "(0.117.0) Introduce an `Open` topology"
+  }
+]

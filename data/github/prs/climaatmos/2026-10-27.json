@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 896,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nPlane-parallel radiative transfer with grid-box mean in-cloud water paths overestimates cloud albedo and longwave emissivity because cloud optical depth is a concave function of condensate path (the plane-parallel albedo bias). When `PrognosticEDMFX` is active, this PR scales the liquid and ice mixing ratios passed to RRTMGP by the Barker et al. (1996) gamma-distribution effective condensate factor,\r\n\r\n$$\\chi(\\mathrm{CF}) = \\frac{\\exp(\\psi(\\nu))}{\\nu}, \\qquad \\nu(\\mathrm{CF}) = \\frac{m(z)^2}{v(z)},$$\r\n\r\nwhere $z = \\Phi^{-1}(1 - \\mathrm{CF})$ is the normalized saturation-excess threshold and $\\nu(\\mathrm{CF})$ is the inverse squared coefficient of variation of a Gaussian saturation excess truncated at $z$. Across $\\mathrm{CF} \\in (0, 1)$, $\\chi$ increases smoothly from $\\exp(-\\gamma_E) \\approx 0.5615$ as $\\mathrm{CF} \\to 0^+$ to $0.732$ at $\\mathrm{CF} = 0.5$ and $1$ as $\\mathrm{CF} \\to 1^-$.",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T05:04:41Z",
+    "deletions": 109,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T04:41:29Z",
+    "number": 4927,
+    "title": "Scale RRTMGP cloud condensate for PROPHET subgrid inhomogeneity"
+  },
+  {
+    "additions": 147,
+    "author": {
+      "id": "MDQ6VXNlcjUwOTk2OTI1",
+      "is_bot": false,
+      "login": "oalcabes",
+      "name": "Olivia Alcabes"
+    },
+    "body": "This PR adds the capability to add snow to radiation as per [this pull request](https://github.com/CliMA/RRTMGP.jl/pull/634) in RRTMGP. Rather than adding a new lookup table for snow, we (me & claude) simply take the largest value from the cloud ice lookup table and use that for snow. We note that this choice is likely not 100% physically correct as snow can be much larger than ice, and is likely 3-4x too small of an assumption. However, this is a starting point to test the effects of adding snow to radiation and has improved the snow profile in the ClimaAtmos RCE box.\r\n\r\nNote -- RRTMGP only applies radiation when cloud fraction is > 0, and as of now snow is not included in cloud fraction calculations. Therefore, adding snow to radiation is only occurring where cloud condensate is simultaneously present. This can be changed in the future.\r\n\r\nTLDR there are 2 important assumptions right now: (1) snow effective radius is always the maximum in the lookup table for cloud ice (so likely too small) and (2) right now snow is only radiated when other cloud condensate is present due to lack of snow in cloud fraction.",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-20T18:29:07Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "bfd4f2",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs70Lrqb",
+        "name": "radiation \u2600\ufe0f"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T18:51:53Z",
+    "number": 4907,
+    "title": "Add option to include snow in radiation"
+  }
+]

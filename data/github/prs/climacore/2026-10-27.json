@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "<!-- Provide a clear description of the content -->\n\n- [ ] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\n- [ ] Unit tests are included OR N/A.\n- [ ] Code is exercised in an integration test OR N/A.\n- [ ] Documentation has been added/updated OR N/A.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T21:51:32Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T01:27:40Z",
+    "number": 2707,
+    "title": "Perf: Update coupler commit in downstream pipeline"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "Continuation of https://github.com/CliMA/ClimaCore.jl/pull/2706. I only checked the ClimaCore CI and didn't realized that the climacore-end-to-end-performance pipeline also have the same bug.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T23:31:16Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T03:20:12Z",
+    "number": 2708,
+    "title": "Compile node-local depot for all init steps"
+  },
+  {
+    "additions": 2089,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "## Summary\n\nThe CUDA extension stores the buffers of operators in **dynamic shared memory**, sized per kernel launch, instead of static globals that could only share memory when their sizes were equal.\n\n- Every block/sub-block buffer is a view of the kernel's dynamic shared memory, one region per sub-block (`offset \u00d7 nregions + (rank \u2212 1) \u00d7 bytes`, 32 B aligned); every allocation synchronizes its scope, which retires the buffers it overlaps, so the barriers that allocations subsume are dropped from the operators. Launches size the memory by level, opt in above 48 KB, and the occupancy search accounts for it. Reductions and the DG tensor product pass their sizes explicitly.\n- Buffers alias by default. Buffers that are live at once are placed at offsets known from their types (`shared_buffer_bytes`): the cached arguments of an FD pass (`stencil_args`), `SplitDivergence`, `Interpolate`/`Restrict`, and `LumpedRestriction`. The separate-compilation machinery (`noinline_apply_operators`, `apply_separately`, `shares_buffers`), which only existed so that equally sized globals would share memory, is removed, so every statement of a `foreach_slice` body is inlined.\n- FD operators and lazy expressions read at neighbors whose buffers do not fit are recomputed where they are read: an operator read at neighbors stays lazy, and `neighbor_arg` decides at the pass's running offset whether to cache its result (applying it on its own first when it caches arguments, so only `max(inner, result)` is live) or to recompute it.\n- `foreach_slice` / `foreach_column` / `foreach_slab` / `foreach_level` take `shmem = Val(level)`, the shared memory per thread of each slice (`ThisSubBlock{N, B}`), read from the device:\n  - `:max`: the most a kernel can be launched with per thread of its smallest launchable block;\n  - `:medium`: the most that keeps shared memory from limiting occupancy, per sub-block size (66 B/thread for 64-thread columns on an A100);\n  - `Val(n)`: `n` bytes per thread; `:none`: one thread per slice;\n  - `:auto` (default): `:medium`, except that a broadcast whose operator buffers are known not to fit steps to `:max` and then one thread per slice, decided from the types of its slices before compiling.\n- A buffer that cannot be recomputed and does not fit (a loop-body temporary in registers read at neighbors, or a spectral element buffer) fails to compile through a named marker, which the launch reports as an `ArgumentError` naming the bytes it needs and the bytes of the loop's level.\n- `Restrict` can read register-resident arguments.\n\n## Commits\n\n1. `src/` only: co-live buffers at type-known offsets, recomputation, removal of separate compilation, the `shmem` keyword. Loads and passes CPU tests on its own.\n2. `ext/cuda/`: dynamic shared memory, levels, launch sizing, and the barriers that allocations subsume.\n3. Tests.\n4. Release note.\n\n## Benchmark\n\n`shmem_handoff/scripts/fused_column_fd.jl` (measured on an earlier revision of this branch; the kernels are unchanged since): the kernel times (CUPTI) of two fused `DataLayouts.foreach_column` bodies simplified from the ClimaAtmos column-fusion branch (`adv`: three advective divergences sharing `\u1da0\u03c1`; `u3`: the `u\u2083` tendency with pointwise temporaries), their unfused statement-by-statement versions, and one unfused FD statement, across column heights on both sides of the 32-face warp boundary. A100, Float64, HELEM = 16 (Nq = 4), \u00b5s per call, `main` (`96a1129cd`) / this PR:\n\n| Nv | single | adv_unfused | adv_fused | u3_unfused | u3_fused |\n|---|---|---|---|---|---|\n| 25 | 56.2 / 56.8 | 195.2 / 199.0 | 102.6 / 107.4 | 65.8 / 69.4 | 58.3 / 56.7 |\n| 31 | 64.7 / 66.6 | 229.5 / 233.1 | 111.9 / 115.0 | 74.2 / 75.0 | 62.4 / 61.4 |\n| 32 | 74.7 / 78.3 | 261.6 / 262.0 | **11960.0 / 364.6** | 94.9 / 94.8 | **6309.2 / 72.8** |\n| 63 | 128.7 / 128.0 | 445.9 / 442.0 | **18281.2 / 203.8** | 140.0 / 139.7 | **6442.4 / 112.5** |\n\nUnfused statements and sub-warp columns (whose cached values go through register shuffles) are unchanged within noise. Fused bodies on columns of more than 32 faces, whose buffers are in shared memory, are 33\u201390\u00d7 faster, and at 63 levels a fused body beats its unfused statements (204 vs 442 \u00b5s, 112 vs 140 \u00b5s). At 32 levels `adv_fused` is still slower than its unfused statements (365 vs 262 \u00b5s): its 33 faces put every statement in a 64-thread sub-block with shared buffers, while three of the unfused statements stay within a warp. Fused-vs-unfused values agree exactly at every size.\n\nEvery slice loop kernel now reserves its level's shared memory even when it allocates nothing, which shrinks the L1 carveout; ClimaAtmos horizontal kernels (16-thread slabs that cache in registers) have not been timed on this branch.\n\n## Tests\n\n- New `test/Operators/gpu_shared_memory_levels.jl` (levels, offsets, recompute, error messages, broadcast level choice, the >48 KB opt-in).\n- `gpu_rectilinear.jl`: the static-size testsets are replaced by value checks of every co-live buffer pair and of the chosen level; the kernel-recording helpers that both GPU tests use live in `TestUtilities`.\n- `unit_fusion.jl`: the 14-statement loop is no longer `@test_broken`; two large register temporaries and the deep SE chain pass `shmem = Val(:max)`.\n- `inference_spaces.jl`: the CUDA column bounds allow the 6 dispatches that JET reports when it reaches `scoped_static_array` with abstract types from `fd_geometry_data` (106 \u2192 112 on an A100; the extruded spaces move 402 \u2192 408 within their bound).\n- Passing on an A100 with `--check-bounds=yes` at the final tree: `gpu_shared_memory_levels.jl`, `gpu_cuda_threadblocks.jl`, `gpu_rectilinear.jl`; `gpu_edge_cases.jl` and `gpu_ops.jl` last passed on an earlier revision of the branch. CPU: `unit_loops.jl`, `unit_fusion.jl`, and the spectral element and multi-column unit tests. Not run: the full Buildkite suite, Julia 1.11/1.12, ClimaAtmos.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_016MAud9iqB6eoQwnQb7NGnD\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T03:22:35Z",
+    "deletions": 594,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T11:04:30Z",
+    "number": 2702,
+    "title": "Store operator buffers in dynamic shared memory with levels per slice loop"
+  },
+  {
+    "additions": 10,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR is the same as https://github.com/CliMA/ClimaCore.jl/pull/2703, but adds ClimaCoupler buildkite CI to the downstream tests.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T21:01:56Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-27T20:54:52Z",
+    "number": 2705,
+    "title": "Run coupler downgrade tests through buildkite"
+  }
+]
