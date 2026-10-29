@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 7,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "This fix was needed for high resolution runs on derecho (multi-GPU node runs). This was found and fixed by claude: Leaving the reader to a GC finalizer can deadlock MPI restarts: closing the file is collective, and a finalizer running on one rank only blocks the other ranks' next MPI exchange. \r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-27T17:35:14Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-28T00:42:51Z",
+    "number": 4933,
+    "title": "Close restart HDF5Reader in get_state_restart"
+  },
+  {
+    "additions": 22,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "The breaking changes come from the P3 scheme, which we don't use right now anyway. ",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-27T20:31:04Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-28T03:17:43Z",
+    "number": 4935,
+    "title": "Update to CloudMicrophysics v0.47"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "With implicit microphysics tendencies (`implicit_microphysics: true`, the default), `microphysics_tendency!` for the\n0-moment scheme sets the updraft sink `\u03c1a\u02b2 dq_tot_dt`, but `sgs_\u03c1a_implicit_tendency!` then assigns the tendency of the\nanalytic \u03c1a solve, which has no microphysics term. The updraft therefore kept the precipitated mass and the environment\nlost it instead, while `q_tot\u02b2` and `mse\u02b2` were changed as if the mass had left the updraft. The grid-mean mass, water\nand energy sinks were correct.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T02:36:51Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-28T04:59:04Z",
+    "number": 4936,
+    "title": "0M: remove precipitated mass from the updraft \u03c1a in the implicit 0M"
+  },
+  {
+    "additions": 1143,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Makes condensate sedimentation and 0M precipitation removal mass- and energy-consistent in `PrognosticEDMFX` updrafts. Changing updraft water at fixed `mse` and `\u03c1a\u02b2` acted as a spurious updraft heat source (for ice, the latent heat of fusion), which the environment residual absorbed with the opposite sign.\n\n- **Sedimentation mass source.** The updraft sedimentation convergence is a source of `\u03c1a\u02b2`, applied in the analytic implicit-stage solve as the rate `S/\u03c1a\u02b2`, so it matches the dilution the Newton solve applies. Every intensive updraft scalar receives its own source minus that dilution.\n- **Sedimentation energy.** `mse` receives the flux-form convergence of `q_\u03bc (h_\u03bc(T\u02b2) + \u03a6)`; laterally entrained environment condensate carries `h_\u03bc(T\u2070) + \u03a6`, and the residual environment flux is clamped at zero. The Jacobian adds the `(mse, q_\u03bc)` blocks; its lateral diagonal uses `h_\u03bc(T\u2070)` and vanishes where the clamp is active.\n- **0M removal.** The updraft `mse` tendency is `dq_tot_dt (e_tot_hlpr - mse)`, so the updraft loses the static energy the grid mean loses.\n- **2M and surface flux.** Environment number concentrations enter the 2M terminal velocities as `\u03c1\u2070 n\u2070`; terminal velocities refresh during the implicit solve for all non-equilibrium schemes; the surface precipitation energy flux `\u1d9cw\u2095h\u209c` includes hydrometeor kinetic energy.\n- **Cleanup.** Removes the unused cache field `\u1d9cw\u209cq\u209c`, which nothing has read since #4165.\n\nTests check the flux-form water, condensate, and static-energy budgets against the `\u03c1a` solve and the Jacobian weights, including the lateral branch and the clamp, and the 0M updraft losses against the grid-mean sinks.\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T04:59:42Z",
+    "deletions": 215,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-28T10:37:27Z",
+    "number": 4926,
+    "title": "Energy-consistent updraft mse for sedimentation and 0M precipitation removal"
+  }
+]

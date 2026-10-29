@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 141,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis adds the GRACE artifact to clima land, adds a diagnostic which computes the mean P+E+R during each diagnostic period, and then adds a preprocessing step which converts this to an accumulation over the month:\r\naccumulation = mean * length of month in seconds.\r\n\r\n## To-do\r\n- How to ensure that the diagnostic is monthly since we hard code multiplying by length of months in seconds\r\n- is the diagnostic naming OK? It is not strictly TWSA but rather P+ET+R (which is used to compute TWSA)\r\n- Alternatively, we could compute the total water content in each column and save that as the diagnostic, and then we would need to subtract the long running mean to get the anomaly. I am not sure how to do that in preprocessing though.\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T22:34:18Z",
+    "deletions": 8,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-28T18:34:38Z",
+    "number": 1930,
+    "title": "Add GRACE data "
+  },
+  {
+    "additions": 2364,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "DOCS preview: https://clima.github.io/ClimaLand.jl/previews/PR1901/standalone/pages/vegetation/canopy_structure/optimal_lai/\n\n## Summary\n\nRebased onto main 1f9fec7 and squashed into one commit.\n\nMakes the prognostic LAI of `ZhouOptimalLAIModel` follow Zhou et al. (2025) more closely, extends it where the LAI range was too compressed against MODIS (humid tropical and boreal forests too low, savannas and grasslands too high), and adds a leaderboard to evaluate it.\n\n- **One \u03b2 and c\\* for GPP and LAI.** The P-model unit cost ratios and cost of Jmax default to the pyrealm values (`pmodel_\u03b2_c3` = 146, `pmodel_\u03b2_c4` = 146/9, `pmodel_cstar` = 0.41) instead of the 112, 1.76 and 0.463 calibrated in #1926. Zhou et al. and the C3/C4 competition of Lavergne et al. (2022) were fitted with them; with the calibrated values the competition put C4 grasses in tropical forests, and the potential GPP was 12\u201320% lower. They set both GPP and the potential GPP, so a change of these parameters changes LAI too.\n- **PET and VPD of the water limit.** The aridity index behind `f0` uses the Priestley-Taylor PET of SPLASH v1.0, as Zhou et al. did, instead of FAO-56. The VPD of the water limit of LAI_max is the mean VPD of the moist growing season (above freezing, and the water input of the last 30 days at least half the PET) instead of an A0-weighted mean: in the seasonally dry tropics, the dry-season VPD made the water limit far too tight. The water input is the liquid water reaching the ground: in a land model with snow, the water input of the soil, which includes the melt of the snow model; without a snow model, the precipitation.\n- **Water limit per photosynthetic pathway.** The transpiration of the potential GPP blends those of pure C3 and pure C4 canopies, each with its own ci/ca ratio at the growing-season temperature and VPD, as the canopy blends their GPP and stomatal conductance (`potential_gpp_transpiration`); for a single pathway this is Equation 11 of Zhou et al. `compute_A0_and_\u03c7` is replaced by `compute_A0`.\n- **Leaf cost.** The unit cost of leaves `z` is the geometric mean of those of trees (`optimal_lai_z_tree` = 9.92) and grasses (`optimal_lai_z_grass` = 154), weighted by the tree share; `z` includes the below-ground allocation that supplies the leaves, much larger for grasses. Its maintenance share (`optimal_lai_maintenance_share` = 0.43) scales with the days and temperature above freezing (Q10 = 2), so leaves of short, cold seasons are cheaper.\n- **Climate tree share (the default).** `tree_share = ClimateTreeShare()` diagnoses the tree share from the simulated climate: a logistic of the LAI_max of a C3 tree canopy, the number of dry months of the growing season and the growing-season temperature. Nothing in it depends on the simulated LAI, so there is no feedback through `z`. It also sets the tree share of the C3/C4 competition. A prescribed tree share remains an option, e.g. that of the natural vegetation in the CLM5 surface data (`clm_tree_share`), passed to the prognostic-LAI `LandModel` through its new `biomass` keyword.\n- **Tree leaf retention.** Trees keep half of their LAI_max through the unfavourable season (`optimal_lai_tree_retention`), the evergreen and semi-evergreen part of their canopy.\n- **Calibration.** The leaf costs, the maintenance share, \u03c3, the tree retention and the tree-share logistic were calibrated jointly against MODIS LAI and the CLM tree share in an offline emulator of the model (226 natural-vegetation points of the 8\u00b0 grid; annual-mean LAI RMSE 0.73, bias \u22120.05). The emulator is not part of this PR (see below).\n- **Stem and root areas.** For prescribed and prognostic LAI alike, SAI and RAI are proportional to the maximum LAI with factors weighted between trees and grasses by the tree share (`AreaIndexFromMaxLAI`): `SAI_coeff_tree`/`_grass` = 0.26/0.05 and `RAI_coeff_tree`/`_grass` = 0.11/0.34 replace `SAI_coeff` and `RAI_coeff`, keeping their land means for prescribed LAI (MODIS maximum LAI and CLM tree share). `ZhouOptimalLAIModel` follows its own LAI_max and tree share, and takes the CLM canopy height instead of a constant 1 m. New `sai` diagnostic.\n- **Initial state from a spin-up.** The model starts from the monthly states of 2008 of a spin-up of the model, in the new `optimal_lai_state_and_clm_maps` artifact (CliMA/ClimaArtifacts#191, with the CLM5 tree share and crop fraction), read at the date of the initial time `t0` and interpolated between months; elsewhere it starts from the climatology of the `optimal_lai_inputs` artifact. `make_set_initial_state_from_file` takes an `optimal_lai_state_path` (`nothing` for the climatology alone).\n- **Vegetation leaderboard.** A `FlagshipVegetationMetrics` source compares LAI with MODIS, and the C3 fraction and tree share with the CLM5 surface data, over natural vegetation: cells where cropland covers more than half of the land are left out. The optimal-LAI long run plots it, runs for 3 years and compares the last; `make_leaderboard_plots` takes `spin_up_months`.\n- **Docs.** The optimal-LAI page follows the equations of the code, with tables of the prognostic and diagnostic variables and of the parameters.\n- **AGENTS.md.** Two local norms: no Markdown bullet or paragraph starting with inline math (Documenter renders it as a display equation), and merge only what the repo will maintain (artifact-only scripts go with the artifact's recipe or a side branch, research tools stay out).\n\n## Moved out of this PR\n\nFollowing the review, these are kept on the branch [`ar/lai_emulator`](https://github.com/CliMA/ClimaLand.jl/tree/ar/lai_emulator) (one commit on top of this PR), to come back as separate PRs if and when they are needed:\n\n- the offline emulator of the model (`experiments/calibration/optimal_lai_emulator`);\n- the LAI calibration setup (`configs/lai_and_trees.jl`, `CalibrateConfig.prognostic_lai`, the `ftr` target, and the observation-map changes), which has not been run yet;\n- the spin-up scripts that write the states of the artifact (`optimal_lai_spinup.jl`, `.toml`, `optimal_lai_state.jl`), which the README of the artifact points to;\n- the masked NaN check for fields with several components per point, which throws a `DimensionMismatch` on CPU on main.\n\n## Breaking changes\n\n- `SAI_coeff` and `RAI_coeff` are replaced by `SAI_coeff_tree`, `SAI_coeff_grass`, `RAI_coeff_tree` and `RAI_coeff_grass`, and `optimal_lai_z` by `optimal_lai_z_tree` and `optimal_lai_z_grass`.\n- `pmodel_\u03b2_c3`, `pmodel_\u03b2_c4` and `pmodel_cstar` default to the pyrealm values.\n- `compute_L_max` and `compute_L_steady_target` take the annual transpiration of the potential GPP in place of `ca_pa`, `chi` and `vpd_gs`; `compute_A0_and_\u03c7` is replaced by `compute_A0`.\n- The prognostic `VPDA0_annual` is renamed `VPDgs_annual`, and eight time-integrated variables are added.\n- `potential_evaporation` drops its humidity, wind and height arguments.\n- `ZhouOptimalLAIModel{FT}(parameters; ...)` requires a `tree_share`; the competition functions take the growing-season length.\n\n## Testing\n\n- `test/standalone/Vegetation/test_optimal_lai.jl` (816 tests): the new equations and parameters, the stem and root areas, the initial state read from the artifact and from monthly states at the date of `t0` (and the errors without it or without a calendar).\n- `test/integrated/restart.jl`, with prescribed and prognostic LAI, and the check that a `canopy` passed to the prognostic-LAI `LandModel` with a `biomass` uses it.\n- Optimal-LAI long run (build 5130, at the previous head; this push changes no equations): seasonal LAI RMSE 0.69\u20130.88 and bias \u22120.18 to \u22120.03 against MODIS over natural vegetation; C3 fraction RMSE 0.21; tree share RMSE 0.22.\n\nRelated: #1846, #1892.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 29,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-01T18:03:00Z",
+    "deletions": 535,
+    "labels": [
+      {
+        "color": "0e8a16",
+        "description": "Run the snowy_land_pmodel long run with prognostic (optimal) LAI",
+        "id": "LA_kwDOGiZe4s8AAAACqaSp9g",
+        "name": "long run opt lai"
+      },
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-28T21:10:20Z",
+    "number": 1901,
+    "title": "Optimal LAI following Zhou et al. (2025): pyrealm P-model \u03b2 and c*, Priestley-Taylor PET, moist-season VPD with snowmelt, per-pathway water limit, climate tree share, season-scaled leaf cost, tree retention, spin-up initial state; vegetation leaderboard"
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "additions": 26,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6364.\n\nTime interpolation of a `FieldTimeSeries` returned the sample `\u03c8\u2081` on an exact hit and `\u03c8\u0303 = \u03c8\u2082 * \u00f1 + \u03c8\u2081 * (1 - \u00f1)` otherwise; with `Float32` data and `Float64` times those differ in type, and the read inferred as `Union{Float32, Float64}`. Both sites (`time_interpolated_getindex` and the `FractionalIndices` method of `interpolate`) now return `oftype(\u03c8\u0303, \u03c8\u2081)` on an exact hit, so both branches have the interpolated value's type.\n\nValues are unchanged: the exact hit is converted exactly (`Float32` to `Float64`), and the interpolated branch is untouched. Reads of `Float32` data with `Float64` times are therefore `Float64`, as interpolated reads already were. The alternative is to convert the weight `\u00f1` to the data's type instead, which makes the reads `Float32` and avoids `Float64` arithmetic in kernels, at the cost of rounding the weight; happy to switch if that is preferred.\n\n**Test.** `test/simulation/output_readers.jl`: for a `Float32` grid with `Float64` times, `fts[i, j, k, Time(t)]` and `interpolate(node, Time(t), fts)` are inferred and correct at an exact hit (`t = 0`) and between snapshots (`t = 0.5`). Not run yet.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABaHildw",
+        "number": 6364,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6364"
+      }
+    ],
+    "createdAt": "2026-10-26T20:35:53Z",
+    "deletions": 5,
+    "labels": [],
+    "mergedAt": "2026-10-28T12:31:43Z",
+    "number": 6366,
+    "title": "FieldTimeSeries time interpolation: one return type for an exact hit and an interpolated read"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6345 and closes #6347. Draft.\r\n\r\nTwo fixes for using a `FieldTimeSeries` at a traced time inside a compiled function on `ReactantState`, both needed to refresh a dataset-backed prescribed atmosphere inside a compiled time step (NumericalEarth/NumericalEarth.jl#816):\r\n\r\n1. **`update_field_time_series!(fts::PartlyInMemoryFTS, ::Time)` returns early when the window holds every snapshot** (`start == 1` and `length(fts.backend) == length(fts.times)`), a host check that does not read the time. Such a window never moves, since every index is in it (or past `Nt` under `Clamp`/`Linear`), so nothing changes on any architecture; on `ReactantState` the update no longer fails with a `MethodError` on traced indices (#6345).\r\n2. **`Adapt.adapt_structure(to, ::TimeSeriesInterpolation)` adapts the clock time** with the series instead of storing `f.clock.time` as is. On `ReactantState` that time is traced inside a kernel launch and reached the kernel as a host value, so computing a `Field` of the interpolation (also when building it) failed with an `InvalidIRError` (#6347). `Adapt.adapt` of a plain number is the number, so GPUs are unaffected.\r\n\r\nChecked with the MWEs in #6345 and #6347, each with the method redefined: the update compiles with the window unchanged at `InMemory(1, 4)`, and the interpolated `Field` builds and its compiled refresh at `t = 5` gives `2.0`, as on the CPU. Downstream, NumericalEarth's `materialize_geopotential!` (a `Field(TimeSeriesInterpolation(\u2026))` geopotential) compiled on `ReactantState` matches the CPU exactly with fix 2.\r\n\r\nTests: `test/reactant/unit.jl`, a fully resident series updated under `@jit` at a traced time, and an interpolated `Field` on `Clock(grid)` refreshed under `@jit` at a traced time. Not yet run in the test suite.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZfbsiw",
+        "number": 6345,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6345"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABZf1A6A",
+        "number": 6347,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6347"
+      }
+    ],
+    "createdAt": "2026-10-23T21:23:21Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-10-28T16:59:44Z",
+    "number": 6346,
+    "title": "Use a FieldTimeSeries at a traced time: skip full-window updates, adapt the interpolation's clock time"
+  }
+]
