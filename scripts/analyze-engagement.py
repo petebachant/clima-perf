@@ -2,12 +2,14 @@
 
 Reads the OpenAlex citations, GitHub activity, and Julia-registry dependents
 the fetch stages write, keeps only external events, and writes one event
-table per stream plus the quarterly figure and a weekly GitHub figure:
+table per stream plus quarterly (all-time), monthly (last 24 months),
+and weekly GitHub (last 52 weeks) figures:
 
 - ``results/external-citations.csv``
 - ``results/github-engagement.csv``
 - ``results/new-registry-dependents.csv``
 - ``figures/external-engagement.json``
+- ``figures/external-engagement-monthly.json``
 - ``figures/github-engagement-weekly.json``
 """
 
@@ -98,6 +100,118 @@ PINNED_COLORS = {
 }
 
 
+MONTHS_SHOWN = 24
+
+
+def month_start(values: pd.Series) -> pd.Series:
+    """First day of the month for each date or ISO timestamp (NaT if bad)."""
+    ts = pd.to_datetime(values, errors="coerce", utc=True).dt.tz_localize(None)
+    return ts.dt.to_period("M").dt.to_timestamp()
+
+
+def stacked_pivot(
+    df: pd.DataFrame, period_col: str, group_col: str, periods
+) -> pd.DataFrame:
+    """Event counts per period (rows) and group (columns)."""
+    if df.empty:
+        return pd.DataFrame(index=periods)
+    return (
+        df.groupby([period_col, group_col])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(periods, fill_value=0)
+    )
+
+
+def make_engagement_figure(
+    cit_events_df: pd.DataFrame,
+    eng_events_df: pd.DataFrame,
+    deps_df: pd.DataFrame,
+    period_col: str,
+    periods,
+    unit: str,
+    color_for: dict[str, str],
+    title: str,
+) -> go.Figure:
+    """Four stacked-bar panels of external engagement, one bar per period.
+
+    Each event table needs a ``period_col`` column; events outside
+    ``periods`` are dropped.
+    """
+    all_by_period = (
+        cit_events_df.groupby(period_col).size().reindex(periods, fill_value=0)
+        if not cit_events_df.empty
+        else pd.Series(0, index=periods)
+    )
+    panels = [
+        (
+            2,
+            stacked_pivot(
+                cit_events_df[cit_events_df["cited_package"] != ""],
+                period_col,
+                "cited_package",
+                periods,
+            ),
+        ),
+        (3, stacked_pivot(eng_events_df, period_col, "repo", periods)),
+        (4, stacked_pivot(deps_df, period_col, "clima_package", periods)),
+    ]
+
+    fig = make_subplots(
+        rows=4,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.05,
+        subplot_titles=(
+            "All paper citations",
+            "Software paper citations",
+            "GitHub stars/forks/issues/PRs",
+            "New Julia registry dependents",
+        ),
+        row_heights=[0.24, 0.24, 0.24, 0.24],
+    )
+    fig.add_bar(
+        name="All papers",
+        x=periods,
+        y=all_by_period.tolist(),
+        marker_color="#888",
+        showlegend=False,
+        row=1,
+        col=1,
+    )
+    # Same name -> same legend entry across panels, so each package or repo
+    # shows once and toggles everywhere.
+    legend_shown: set[str] = set()
+    for row, pivot in panels:
+        totals = pivot.sum().sort_values(ascending=False, kind="stable")
+        for name in totals[totals > 0].index:
+            fig.add_bar(
+                name=name,
+                x=periods,
+                y=pivot[name].tolist(),
+                marker_color=color_for[name],
+                legendgroup=name,
+                showlegend=name not in legend_shown,
+                row=row,
+                col=1,
+            )
+            legend_shown.add(name)
+
+    fig.update_layout(
+        barmode="stack",
+        title=title,
+        height=900,
+        margin=dict(t=50, b=40, l=60, r=20),
+        legend=dict(tracegroupgap=0, itemsizing="constant", font=dict(size=11)),
+    )
+    fig.update_yaxes(title_text=f"Citations/{unit}", row=1, col=1)
+    fig.update_yaxes(title_text=f"Citations/{unit}", row=2, col=1)
+    fig.update_yaxes(title_text=f"Events/{unit}", row=3, col=1)
+    fig.update_yaxes(title_text=f"New deps/{unit}", row=4, col=1)
+    fig.update_xaxes(title_text=unit.capitalize(), row=4, col=1)
+    return fig
+
+
 WEEKS_SHOWN = 52
 
 
@@ -121,7 +235,7 @@ def make_weekly_github_figure(
         .unstack(fill_value=0)
         .reindex(weeks, fill_value=0)
     )
-    order = pivot.sum().sort_values(ascending=False)
+    order = pivot.sum().sort_values(ascending=False, kind="stable")
     fig = go.Figure()
     for repo in order[order > 0].index:
         fig.add_bar(
@@ -365,68 +479,24 @@ def main() -> None:
         deps_df = deps_df[
             deps_df["quarter"].notna() & (deps_df["quarter"] >= MIN_QUARTER)
         ]
-    deps_pivot = (
-        deps_df.groupby(["quarter", "clima_package"]).size().unstack(fill_value=0)
-        if not deps_df.empty
-        else pd.DataFrame()
-    )
 
-    # ----- Aggregations driving the figure --------------------------------
-    all_by_q = (
-        cit_events_df.groupby("quarter").size().to_dict()
-        if not cit_events_df.empty
-        else {}
-    )
-    sw_pivot = (
-        cit_events_df[cit_events_df["cited_package"] != ""]
-        .groupby(["quarter", "cited_package"])
-        .size()
-        .unstack(fill_value=0)
-        if not cit_events_df.empty
-        else pd.DataFrame()
-    )
-    eng_pivot = (
-        eng_events_df.groupby(["quarter", "repo"]).size().unstack(fill_value=0)
-        if not eng_events_df.empty
-        else pd.DataFrame()
-    )
-
-    all_quarters = sorted(
-        set(all_by_q)
-        | set(sw_pivot.index)
-        | set(eng_pivot.index)
-        | set(deps_pivot.index)
-    )
-    if not sw_pivot.empty:
-        sw_pivot = sw_pivot.reindex(all_quarters, fill_value=0)
-    if not eng_pivot.empty:
-        eng_pivot = eng_pivot.reindex(all_quarters, fill_value=0)
-    if not deps_pivot.empty:
-        deps_pivot = deps_pivot.reindex(all_quarters, fill_value=0)
-
-    sw_totals = sw_pivot.sum() if not sw_pivot.empty else pd.Series(dtype=float)
-    sw_order = [
-        p for p, v in sw_totals.sort_values(ascending=False).items() if v > 0
-    ]
-    eng_totals = eng_pivot.sum() if not eng_pivot.empty else pd.Series(dtype=float)
-    eng_order = [
-        r for r, v in eng_totals.sort_values(ascending=False).items() if v > 0
-    ]
-    deps_totals = (
-        deps_pivot.sum() if not deps_pivot.empty else pd.Series(dtype=float)
-    )
-    deps_order = [
-        p for p, v in deps_totals.sort_values(ascending=False).items() if v > 0
-    ]
-
-    # Unified color map: same package name gets the same color across the
-    # software-citations, GitHub-engagement, and registry-dependents panels.
+    # ----- Shared repo/package colors -----------------------------------
+    # Same package name gets the same color in every panel and figure,
+    # ranked by all-time external engagement.
     combined_totals: dict[str, float] = defaultdict(float)
-    for series in (sw_totals, eng_totals, deps_totals):
-        for name, v in series.items():
-            if v > 0:
-                combined_totals[name] += float(v)
-    unified_order = sorted(combined_totals, key=lambda k: -combined_totals[k])
+    for names in (
+        cit_events_df.loc[cit_events_df["cited_package"] != "", "cited_package"]
+        if not cit_events_df.empty
+        else [],
+        eng_events_df["repo"] if not eng_events_df.empty else [],
+        deps_df["clima_package"] if not deps_df.empty else [],
+    ):
+        for name in names:
+            combined_totals[name] += 1
+    # Ties break by name so colors don't shuffle between runs.
+    unified_order = sorted(
+        combined_totals, key=lambda k: (-combined_totals[k], k)
+    )
 
     palette = (
         list(pc.qualitative.Plotly)
@@ -448,83 +518,47 @@ def main() -> None:
             color_for[_name] = palette[_next % len(palette)]
             _next += 1
 
-    # ----- Figure ---------------------------------------------------------
-    fig = make_subplots(
-        rows=4,
-        cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.05,
-        subplot_titles=(
-            "All paper citations",
-            "Software paper citations",
-            "GitHub stars/forks/issues/PRs",
-            "New Julia registry dependents",
-        ),
-        row_heights=[0.24, 0.24, 0.24, 0.24],
+    # ----- Quarterly figure, all time -------------------------------------
+    all_quarters = sorted(
+        set(cit_events_df.get("quarter", []))
+        | set(eng_events_df.get("quarter", []))
+        | set(deps_df.get("quarter", []))
     )
-
-    fig.add_bar(
-        name="All papers",
-        x=all_quarters,
-        y=[all_by_q.get(q, 0) for q in all_quarters],
-        marker_color="#888",
-        showlegend=False,
-        row=1,
-        col=1,
-    )
-
-    legend_shown: set[str] = set()
-    for pkg in sw_order:
-        fig.add_bar(
-            name=pkg,
-            x=all_quarters,
-            y=sw_pivot[pkg].tolist(),
-            marker_color=color_for[pkg],
-            legendgroup=pkg,
-            showlegend=pkg not in legend_shown,
-            row=2,
-            col=1,
-        )
-        legend_shown.add(pkg)
-
-    for repo in eng_order:
-        fig.add_bar(
-            name=repo,
-            x=all_quarters,
-            y=eng_pivot[repo].tolist(),
-            marker_color=color_for[repo],
-            legendgroup=repo,
-            showlegend=repo not in legend_shown,
-            row=3,
-            col=1,
-        )
-        legend_shown.add(repo)
-
-    for pkg in deps_order:
-        fig.add_bar(
-            name=pkg,
-            x=all_quarters,
-            y=deps_pivot[pkg].tolist(),
-            marker_color=color_for[pkg],
-            legendgroup=pkg,
-            showlegend=pkg not in legend_shown,
-            row=4,
-            col=1,
-        )
-        legend_shown.add(pkg)
-
-    fig.update_layout(
-        barmode="stack",
+    fig = make_engagement_figure(
+        cit_events_df,
+        eng_events_df,
+        deps_df,
+        period_col="quarter",
+        periods=all_quarters,
+        unit="quarter",
+        color_for=color_for,
         title="External engagement",
-        height=900,
-        margin=dict(t=50, b=40, l=60, r=20),
-        legend=dict(tracegroupgap=0, itemsizing="constant", font=dict(size=11)),
     )
-    fig.update_yaxes(title_text="Citations/quarter", row=1, col=1)
-    fig.update_yaxes(title_text="Citations/quarter", row=2, col=1)
-    fig.update_yaxes(title_text="Events/quarter", row=3, col=1)
-    fig.update_yaxes(title_text="New deps/quarter", row=4, col=1)
-    fig.update_xaxes(title_text="Quarter", row=4, col=1)
+
+    # ----- Monthly figure, last 24 months ---------------------------------
+    # The window ends at the last complete month before the newest GitHub
+    # event (the GitHub data is refreshed daily), so a partial month doesn't
+    # read as a dip.
+    newest_month = month_start(eng_events_df["event_at"]).max()
+    months = pd.date_range(
+        end=newest_month - pd.DateOffset(months=1),
+        periods=MONTHS_SHOWN,
+        freq="MS",
+    )
+    monthly_fig = make_engagement_figure(
+        cit_events_df.assign(
+            month=month_start(cit_events_df.get("publication_date"))
+        ),
+        eng_events_df.assign(month=month_start(eng_events_df["event_at"])),
+        deps_df.assign(month=month_start(deps_df["first_seen_at"]))
+        if not deps_df.empty
+        else deps_df,
+        period_col="month",
+        periods=months,
+        unit="month",
+        color_for=color_for,
+        title=f"External engagement, last {MONTHS_SHOWN} months",
+    )
 
     # ----- Weekly GitHub engagement over the last year --------------------
     # Weeks start on Monday. The window ends at the last complete week
@@ -535,6 +569,7 @@ def main() -> None:
     os.makedirs(ROOT / "figures", exist_ok=True)
     os.makedirs(ROOT / "results", exist_ok=True)
     fig.write_json(ROOT / "figures/external-engagement.json")
+    monthly_fig.write_json(ROOT / "figures/external-engagement-monthly.json")
     weekly_fig.write_json(ROOT / "figures/github-engagement-weekly.json")
 
     cit_events_df.sort_values(

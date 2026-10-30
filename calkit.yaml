@@ -197,7 +197,8 @@ pipeline:
         citations, GitHub stars, forks, issues, and merged PRs, and new
         Julia-registry dependents, excluding CliMA's own people and bots.
         Writes one event table per stream and
-        figures/external-engagement.json.
+        figures/external-engagement.json (quarterly), plus monthly and weekly
+        variants.
       kind: python-script
       script_path: scripts/analyze-engagement.py
       environment: analyze
@@ -207,6 +208,8 @@ pipeline:
         - data/julia-registry
       outputs:
         - path: figures/external-engagement.json
+          storage: git
+        - path: figures/external-engagement-monthly.json
           storage: git
         - path: figures/github-engagement-weekly.json
           storage: git
@@ -364,6 +367,14 @@ figures:
   - path: figures/external-engagement.json
     title: External engagement
     description: External engagement with CliMA's products on a quarterly basis.
+    stage: analyze-engagement
+  - path: figures/external-engagement-monthly.json
+    title: Monthly external engagement
+    description: >
+      The external engagement figure binned by month over the last 24
+      complete months: paper citations, software paper citations, GitHub
+      stars/forks/issues/PRs, and new Julia registry dependents. Colors
+      match the quarterly figure.
     stage: analyze-engagement
   - path: figures/github-engagement-weekly.json
     title: Weekly GitHub engagement
