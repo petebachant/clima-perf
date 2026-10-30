@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 41,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "A `FieldTimeSeries` can be the condition of a boundary condition on the ice velocities, thickness or concentration, for example to prescribe the ice at an open boundary from a dataset. Two things keep it from working with a partly resident series (`InMemory(N)`):\n\n- `update_model_field_time_series!` collects series from `model.tracers`, `model.external_heat_fluxes`, `model.snowfall` and `model.dynamics`, but not from `model.velocities`, `model.ice_thickness` or `model.ice_concentration`. Their boundary series are never updated, so the window stays at the frames it was built with.\n- `update_state!` updates the series after `fill_halo_regions!`, so the halos would be filled from the window of the previous time.\n\nThis PR adds the three prognostic fields to the search (Oceananigans already finds series held by a field's boundary conditions) and moves the update to the start of `update_state!`.\n\n## Tests\n\nA new test in the `timestepping` group drives the east boundary of `h` with a series read from disk with `InMemory(2)` and checks the halo after each of four steps. On `main` it errors at the second step with a `BoundsError`, reading frame 3 of the two-frame window; with this change it passes. The `timestepping`, `lateral_boundary_conditions`, `advection` and `checkpointing` groups pass on CPU.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T08:53:22Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-10-29T15:32:52Z",
+    "number": 195,
+    "title": "Advance time series held by the prognostic fields' boundary conditions"
+  }
+]

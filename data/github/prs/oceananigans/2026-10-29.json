@@ -1,0 +1,151 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Since #5883, the test environment has pinned Reactant to `0.2.278 - 0.2.279`, because 0.2.280 broke tests at the time. This moves it to `0.2.297 - 0.2.299`.\n\n**Lower bound, 0.2.297.** Reverse-mode differentiation compiles with `raise = true`, which needs two features newer than 0.2.279:\n- complex buffers in raised kernels, from 0.2.292 (EnzymeAD/Reactant.jl#3438);\n- `ifelse` on complex numbers in a raised kernel, from 0.2.297 (EnzymeAD/Enzyme-JAX#3643, fixing EnzymeAD/Reactant.jl#3475).\n\nBoth are needed by any gradient through the FFT-based Poisson solver (`compute_source_term!`, `_spectral_poisson_solve!`, `copy_real_component!`), as in #6376.\n\n**Upper bound, 0.2.299.** Reactant 0.2.300 turns on Enzyme-JAX's new slice-sinking communication optimization by default (`dus_sink_slices_comm`, EnzymeAD/Enzyme-JAX#3695 and follow-ups). Compiling the sharded `LatitudeLongitudeGrid` test (`test/sharding/lat_lon.jl`) then exhausts memory inside `OptimizeCommunicationPass` (`DUSSinkSlicesComm` / `PadSinkSlicesComm`) until the runner kills it. That happened on both CI runs with 0.2.301 (this PR's first run, and #6007). 0.2.299 predates those patterns.\n\nOnly `test/Project.toml` changes:\n- The package compat (`Reactant = \"0.2.278\"`) already allows these versions.\n- The docs environment stays capped at 0.2.292 because of #6257 (the `single_column_parameter_estimation.jl` hang).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T15:44:15Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-10-29T02:54:14Z",
+    "number": 6379,
+    "title": "[test] Test against Reactant 0.2.297 - 0.2.299"
+  },
+  {
+    "additions": 66,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6381.\n\nWith a `SplitRungeKutta` time stepper, `HydrostaticFreeSurfaceModel` moves Lagrangian particles but never refreshes what they carry, so tracked properties keep their initial values for the whole run, with no error or warning. This PR adds the one missing call, `update_lagrangian_particle_state!(model)`, at the end of the split Runge-Kutta `time_step!`, and adds two tests that fail on `main` and pass here.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABatDo9A",
+        "number": 6381,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6381"
+      }
+    ],
+    "createdAt": "2026-10-28T21:44:20Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-10-29T03:10:18Z",
+    "number": 6383,
+    "title": "Update the Lagrangian particle state at the end of every `SplitRungeKutta` time step"
+  },
+  {
+    "additions": 890,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "First of four PRs split out of #6110. This one is geometry only. It adds `GridFittedVerticalBoundaries` and `PartialCellVerticalBoundaries`, which take an optional `top_height` as well as `bottom_height`, so a grid can be immersed from above (e.g. an ice-shelf draft). `GridFittedBottom` and `PartialCellBottom` become aliases for the case without a top. Model physics (hydrostatic pressure / free surface, top pressure load, nonhydrostatic) follow in separate PRs.\n\n```julia\nGridFittedVerticalBoundaries(bottom_height=bottom, top_height=draft)\nPartialCellVerticalBoundaries(bottom_height=bottom, top_height=draft, minimum_fractional_cell_height=0.2)\nGridFittedVerticalBoundaries(top_height=draft)  # no bathymetry: the bottom is the bottom of the domain\n\nGridFittedBottom(bottom)   # unchanged; same as GridFittedVerticalBoundaries(bottom_height=bottom)\nPartialCellBottom(bottom)  # unchanged\n```\n\n### Equations\n\nFor column $(i, j)$, let cell $k$ have faces $z_k^- < z_k^+$, center $z_k$ and height $\\Delta z_k$. Let $z^b$ and $z^t$ be the prescribed bottom and top, $\\hat z^b$ and $\\hat z^t$ the numerical bottom and top, and $\\epsilon$ the `minimum_fractional_cell_height`. Without a top, $\\hat z^t$ is the top of the domain.\n\n**`GridFittedVerticalBoundaries`.** Cell $k$ is immersed if\n\n$$z_k \\le \\hat z^b \\quad \\text{or} \\quad z_k \\ge z^t ,$$\n\nwhere $z_k$ is replaced by $z_k^-$ under `InterfaceImmersedCondition`. The numerical top snaps to the lowest face of the cells immersed by the top:\n\n$$\\hat z^t = \\min_{k \\,:\\, z_k \\ge z^t} z_k^- .$$\n\n**`PartialCellVerticalBoundaries`.** This mirrors the existing bottom rule, $\\hat z^b = \\min(z_k^+ - \\epsilon \\Delta z_k,\\ z^b)$. In the top cell, where $z_k^- < z^t \\le z_k^+$, the top is raised so that the cell is at least $\\epsilon \\Delta z_k$ thick:\n\n$$\\hat z^t = \\max(z_k^- + \\epsilon \\Delta z_k,\\ z^t) .$$\n\nA cell is immersed by the top if $z_k^- + \\epsilon \\Delta z_k > \\hat z^t$. The partial top cell and the face below it have\n\n$$\\Delta r^{ccc}_k = \\hat z^t - z_k^- , \\qquad \\Delta r^{ccf}_k = (z_k^- - z_{k-1}) + \\tfrac{1}{2} \\Delta r^{ccc}_k ,$$\n\nwhere $\\hat z^b$ replaces $z_k^-$ if the cell is also the bottom cell. The face spacings $\\Delta r^{fcc}$ and $\\Delta r^{cfc}$ follow from the existing $\\min$ of neighboring $\\Delta r^{ccc}$.\n\n**Closed columns.** A column is fully immersed, with $\\hat z^b = \\hat z^t$ set to the top of the domain (the bottom of the domain if there is no bottom), when\n\n$$\\hat z^t \\le \\hat z^b \\quad (\\text{grid-fitted}), \\qquad \\hat z^t \\le \\hat z^b \\ \\text{ or } \\ \\hat z^t - \\hat z^b < \\epsilon \\Delta z_{k_b} \\quad (\\text{partial cell}),$$\n\nwith $k_b$ the bottom cell.\n\n**Column depth.**\n\n$$H^{cc} = \\hat z^t - \\hat z^b ,$$\n\nand $H^{fc}$, $H^{cf}$, $H^{ff}$ are the $\\min$ of neighbors, as before.\n\n### What changes\n- New types `GridFittedVerticalBoundaries{H, T, I}` and `PartialCellVerticalBoundaries{H, T, E}`, with keyword constructors `(; bottom_height=nothing, top_height=nothing, ...)`. `nothing` means no boundary on that side, so a flat-bottomed domain with only a top draft needs no dummy bottom.\n- On materialization, a missing bottom or top becomes a `ConstantField` on the domain boundary, so both sides go through the same helpers and a single `_compute_numerical_heights!` kernel per boundary type.\n- `GridFittedBottom{H, I} = GridFittedVerticalBoundaries{H, <:Union{Nothing, ConstantField}, I}` and `PartialCellBottom{H, E} = PartialCellVerticalBoundaries{H, <:Union{Nothing, ConstantField}, E}` are aliases. Their constructors `GridFittedBottom(bottom; immersed_condition)` and `PartialCellBottom(bottom; minimum_fractional_cell_height)` are unchanged, and bottom-only boundaries still print as `GridFittedBottom`/`PartialCellBottom`.\n- Bottom-only boundaries match the aliases and keep their existing methods; top-specific methods dispatch on a stored (`OffsetArray`) top.\n- Grid-fitted: cells at or above `top_height` are immersed (lower face with `InterfaceImmersedCondition`).\n- Partial cell: the top cell is a partial cell, mirroring the existing bottom rounding. `\u0394r\u1d9c\u1d9c\u1d9c`/`\u0394r\u1d9c\u1d9c\u1da0` (and derived face spacings) account for it.\n- Columns with no fluid left (see *Closed columns* above) are fully immersed.\n- `static_column_depth\u1d9c\u1d9c\u1d43` = top \u2212 bottom.\n- New `topmost_active_node` and `top_height_field`.\n- `summary`/`show`/`==`/`on_architecture`/`Adapt`/`materialize_immersed_boundary`, z-reduced field masking, distributed reconstruct/scatter/resize and Reactant `deconcretize` carry the top.\n\n### Tests\nNew `test/unit/immersed_boundary_top_height.jl`. Existing immersed-boundary, grid-reconstruction, output-writer, Reactant and distributed (2\u00d72 MPI) tests pass on CPU; the immersed-boundary ones also pass on GPU. Bottom-only results are bit-identical to main on CPU.\n\nBenchmarks on GPU (bottom-only, median ms/step, main vs this branch) show no difference beyond run-to-run spread: tripolar 360\u00d7180\u00d750 `PartialCellBottom` 19.59/19.61 vs 19.56/19.59; NH CG 128\u00b3 `GridFittedBottom` 23.63/23.78 vs 23.77/23.59.\n\n### Not covered here\n- MultiRegion reconstruct and NetCDF/Zarr grid reconstruction are bottom-only; they do not carry the top yet.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T10:43:24Z",
+    "deletions": 235,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      },
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-29T03:34:37Z",
+    "number": 6153,
+    "title": "Add GridFittedVerticalBoundaries and PartialCellVerticalBoundaries"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": "Resolves #6380.\n\nBoth models now save `prognostic_state(model.biogeochemistry)` and restore it on pickup.\n\nWe also test that a toy `SedimentBiogeochemistry`, whose `sediment` field grows every time the model state is updated gets its sediment back after a pickup.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABas4fdg",
+        "number": 6380,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6380"
+      }
+    ],
+    "createdAt": "2026-10-28T21:41:56Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-10-29T13:15:48Z",
+    "number": 6382,
+    "title": "Checkpoint biogeochemistry"
+  },
+  {
+    "additions": 42,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Two gaps in `on_architecture` for host data, raised in review of NumericalEarth/NumericalEarth.jl#822, where NumericalEarth had worked around both with its own `architecture_ready`:\n\n**Reshaped host arrays.** `on_architecture` had methods for `SubArray` and `OffsetArray` but none for `Base.ReshapedArray`, so host data arriving reshaped (a 2D NetCDF variable reshaped to `(Nx, Ny, 1)`) fell through the identity fallback and reached GPU kernels as CPU memory. A reshaped host array now moves its parent and is reshaped again, on every serial architecture, and `Distributed` forwards it to its child architecture like the other host arrays. On `ReactantState` it is collected on the host first, so it arrives as a device array of its own shape rather than a `Base.ReshapedArray` around one, which kernels cannot take (EnzymeAD/Reactant.jl#3204).\n\n**Arrays with `missing` on `ReactantState`.** Reactant cannot hold `Union{Missing, T}` (EnzymeAD/Reactant.jl#3569), so a NetCDF read could not be moved there. Such an array (or a view of one) now moves to `ReactantState` as a float array with `missing` as NaN. CPU and CUDA arrays can hold `Union{Missing, T}` and are unchanged. The conversion is one-way: moving the array back to the CPU gives NaN, not `missing`.\n\nThe reshaped methods are for host parents (`Array`, or a `SubArray` of one) with real or `missing` elements, which keeps them from overlapping Reactant's methods for reshaped device and traced arrays: none of the new methods is ambiguous with another `on_architecture` method (`Base.isambiguous` over all of them with Reactant and CUDA loaded).\n\n**Tests.** `test/unit/utils.jl`: a reshaped view moves to the CPU unchanged. `test/reactant/unit.jl`: plain, viewed, reshaped, and reshaped-view arrays with `missing`, and a reshaped view of a `Float32` array, each reach `ReactantState` as a concrete `Float32` array of the same shape with NaN for `missing`. Both run locally (Reactant 0.2.297, CPU backend); the rest of the suite was not run.\n\nNumericalEarth/NumericalEarth.jl#822 then drops `architecture_ready` and its own methods and calls `on_architecture`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T19:23:50Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-29T14:32:10Z",
+    "number": 6360,
+    "title": "on_architecture for reshaped host arrays, and for arrays with missing values on ReactantState"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Not sure if this is annoying to other people, but I find rather annoying that a PR marked for benchmark execution pollutes the comment history by continuously firing comments at every commit. \nI would be ok with only the latest commit being commented so we have the state of the PR as is (all the other artifacts are still saved if we want to look back at the results of previous commits).\n\nSo this PR removes previous comments done by the GHA pipeline before firing the new one.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-29T12:50:19Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-10-29T15:57:35Z",
+    "number": 6384,
+    "title": "Make GHA delete previous benchmark comments"
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 1524,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "### Summary\r\n\r\nThis PR moves the mapping between `ClimaParams.jl` parameter names and `CloudMicrophysics.jl` parameter structs/options into one file. Thanks to this we can auto-generate parameter documentation. The PR also adds checks that all 1-moment and non-equilibrium process functions have correct parameters that match the chosen options.\r\n\r\n1. **Centralized `ClimaParams` Name Maps**:\r\n   - Defines [`name_map(T)`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L16-L26) for every parameter struct and 1-moment process option, and [`make_params(td, nm)`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L28-L39) to read and tag parameters from `ClimaParams.ParamDict` (automatically converting `Vector` entries to `Tuple`s for GPU compatibility).\r\n   - Generates `ParamDict` constructors directly from `name_map(T)` for all plain parameter structs ([`PLAIN_PARAMETER_TYPES`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L636-L690), now including `Chen2022VelTypeSmallIce`, `Chen2022VelTypeLargeIce`, and `Chen2022VelTypeRain`) and `NamedTuple`-backed 1-moment process options ([`NAMEDTUPLE_OPTION_TYPES`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L695-L710)).\r\n   - Tests in [test/parameter_name_maps_tests.jl](file:///Users/climanna/clones/CloudMicrophysics.jl/test/parameter_name_maps_tests.jl) verify that every `name_map` matches the exact set of `ClimaParams` parameters read by its constructor.\r\n\r\n2. **Compile-Time Option / Parameter Consistency Check**:\r\n   - Adds `CMP.process_params(mp, opt)`, which derives both the `mp.process_params` slot ([`process_field(opt)`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L714-L725)) and the expected parameter struct or `NamedTuple` field set ([`expected_process_params(typeof(opt))`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/name_maps.jl#L728-L746)) directly from `opt` and `name_map`.\r\n   - Replaces ad-hoc `_consistent_params` helpers in [src/Microphysics1M.jl](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Microphysics1M.jl) and guards all option-dispatched process functions in [src/Microphysics1M.jl](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Microphysics1M.jl) and [src/MicrophysicsNonEq.jl](file:///Users/climanna/clones/CloudMicrophysics.jl/src/MicrophysicsNonEq.jl). When `mp` and `opt` match, the check folds away at compile time; when mismatched, it throws a descriptive `ArgumentError`.\r\n\r\n3. **Parameters Documentation**:\r\n   - Adds documentation on Parameters Interface \r\n   - Auto-generates `docs/src/generated/ParametersReference.md` during the docs build from `parameter_groups()` and `name_map`, with tables of `ClimaParams` names, default values, units, and descriptions alongside collapsible struct docstrings",
+    "changedFiles": 37,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-04T22:38:07Z",
+    "deletions": 972,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-29T23:48:31Z",
+    "number": 784,
+    "title": "Check for parameter and options consistency, add parameters docs"
+  }
+]

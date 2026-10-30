@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nThe weekly two-year long-run build already runs `snowy_land_pmodel.jl` with both prescribed MODIS LAI and prognostic optimal LAI (`ZhouOptimalLAIModel`, #1794). The weekly 19-year build (`LONGER_RUN`, `ILAMB_RUN`) only runs prescribed LAI. This PR adds a prognostic-LAI step to the \"Longer runs of Global Land Models\" group of `.buildkite/longruns_gpu/pipeline.yml`.\n\n## Content\n\n- New step `:seedling: Snowy Land (Optimal LAI), 19 years`: the same script with `LONGER_RUN=\"\"` and `PROGNOSTIC_LAI=\"\"`, 1 GPU, 15 h limit. It uploads PNGs from `snowy_land_pmodel_opt_lai_longrun_gpu/`.\n- Runtime: in build 5123, the prescribed 19-year run took 7 h 08 min. The two-year optimal-LAI run takes 52\u201360 min against 51\u201353 min for prescribed (builds 5110 and 5126). That suggests about 8 h for the new step, well within the limit.\n- ILAMB is unchanged. The ILAMB group still depends only on `snowy_land_19yr_run` and reads the prescribed run's diagnostics. Its `wait` is scoped to the group, so the new step does not delay or block the leaderboard. The new run also writes `ILAMB_diagnostics` in its own output directory, but they are not uploaded to the dashboard.\n- Based on main after #1901, so this run also produces the vegetation leaderboard. MODIS LAI covers 2000\u20132020, so the 2000\u20132019 run is within range.\n\n## Validation\n\n- Not run yet: this needs a manual build of `climaland-long-runs` on this branch with `LONGER_RUN=\"\"`. That build also starts the prescribed 19-year and 20-year soil runs.\n- The pipeline YAML parses, and the new step has the expected env and agents.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T20:59:20Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-29T18:30:00Z",
+    "number": 1935,
+    "title": "Run the optimal-LAI model in the weekly 19-year long run"
+  }
+]
