@@ -2,12 +2,13 @@
 
 Reads the OpenAlex citations, GitHub activity, and Julia-registry dependents
 the fetch stages write, keeps only external events, and writes one event
-table per stream plus the quarterly figure:
+table per stream plus the quarterly figure and a weekly GitHub figure:
 
 - ``results/external-citations.csv``
 - ``results/github-engagement.csv``
 - ``results/new-registry-dependents.csv``
 - ``figures/external-engagement.json``
+- ``figures/github-engagement-weekly.json``
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.colors as pc
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 ROOT = Path.cwd()
@@ -94,6 +96,59 @@ PINNED_COLORS = {
     "ClimaCore": "#D62728",  # red
     "ClimaLand": "#2CA02C",  # green
 }
+
+
+WEEKS_SHOWN = 52
+
+
+def make_weekly_github_figure(
+    eng_events_df: pd.DataFrame, color_for: dict[str, str]
+) -> go.Figure:
+    """Stacked weekly external GitHub events by repo over the last year."""
+    ts = pd.to_datetime(eng_events_df["event_at"], utc=True).dt.tz_localize(
+        None
+    )
+    week = ts.dt.normalize() - pd.to_timedelta(ts.dt.weekday, unit="D")
+    end = week.max()  # Start of the newest (possibly partial) week
+    start = end - pd.Timedelta(weeks=WEEKS_SHOWN)
+    weeks = pd.date_range(start, end, freq="7D", inclusive="left")
+    in_window = (week >= start) & (week < end)
+    pivot = (
+        eng_events_df[in_window]
+        .assign(week=week[in_window])
+        .groupby(["week", "repo"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(weeks, fill_value=0)
+    )
+    order = pivot.sum().sort_values(ascending=False)
+    fig = go.Figure()
+    for repo in order[order > 0].index:
+        fig.add_bar(
+            name=repo,
+            x=weeks,
+            y=pivot[repo].tolist(),
+            marker_color=color_for[repo],
+            hovertemplate="Week of %{x|%b %d, %Y}<br>%{y} events<extra>"
+            + repo
+            + "</extra>",
+        )
+    fig.update_layout(
+        barmode="stack",
+        title="External GitHub stars/forks/issues/PRs, last 52 weeks",
+        height=600,
+        margin=dict(t=50, b=40, l=60, r=20),
+        # List the biggest repos first rather than in stack order.
+        legend=dict(
+            traceorder="normal",
+            tracegroupgap=0,
+            itemsizing="constant",
+            font=dict(size=11),
+        ),
+    )
+    fig.update_yaxes(title_text="Events/week")
+    fig.update_xaxes(title_text="Week starting")
+    return fig
 
 
 def main() -> None:
@@ -471,10 +526,16 @@ def main() -> None:
     fig.update_yaxes(title_text="New deps/quarter", row=4, col=1)
     fig.update_xaxes(title_text="Quarter", row=4, col=1)
 
+    # ----- Weekly GitHub engagement over the last year --------------------
+    # Weeks start on Monday. The window ends at the last complete week
+    # before the newest event, so a partial week doesn't read as a dip.
+    weekly_fig = make_weekly_github_figure(eng_events_df, color_for)
+
     # ----- Persist figure + event-level CSVs ------------------------------
     os.makedirs(ROOT / "figures", exist_ok=True)
     os.makedirs(ROOT / "results", exist_ok=True)
     fig.write_json(ROOT / "figures/external-engagement.json")
+    weekly_fig.write_json(ROOT / "figures/github-engagement-weekly.json")
 
     cit_events_df.sort_values(
         ["quarter", "cited_doi", "citing_openalex_id"]
