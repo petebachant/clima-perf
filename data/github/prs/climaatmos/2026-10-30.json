@@ -1,0 +1,153 @@
+[
+  {
+    "additions": 35,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "After https://github.com/CliMA/CloudMicrophysics.jl/pull/814 is merged, this is the code we need to be able to use KK2000 in Atmos.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T00:21:47Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-30T00:00:08Z",
+    "number": 4901,
+    "title": "1M microphysics KK2000 for autoconversion and accretion"
+  },
+  {
+    "additions": 1493,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \nTreat 1M cloud-liquid condensation implicitly in both subdomains\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- I have read and checked the items on the review checklist.\n",
+    "changedFiles": 38,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-27T05:11:42Z",
+    "deletions": 97,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-30T07:17:15Z",
+    "number": 4932,
+    "title": "Implicit condensation"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "TL;DR: This is a 5% bump in SYPD for flagship AMIP using the same approach as #4879.\r\n\r\n---\r\n\r\nFrom Claude: #4920 added `update_updraft_microphysics_tendency_cache!` for the implicit-stage Picard predictor, three days after #4879 put the microphysics and thermodynamics parameters into the type at the other `microphysics_tendencies_1m` call sites. The new call site passes `cmp, thp` as plain structs, so the fold stops at it.\r\n\r\nNothing is fused here and no kernel is added or removed. `microphysics_tendencies_1m` is one broadcast expression called from two places, and the two were passing different *types*, so Julia compiled two specializations of it \u2014 only one of which had the parameters as compile-time literals. Wrapping the implicit path's parameters makes the types match, so both call sites resolve to the same kernel, and the 480 launches per profiled window that used to run the unfolded copy now run the folded one.\r\n\r\n| | registers | warps/SM | launches | total |\r\n|---|---|---|---|---|\r\n| `update_updraft_\u2026`, baseline | 223 | 8 | 480 | 3047.3 ms |\r\n| `set_microphysics_tendency_cache` L1038, baseline | 118 | 16 | 120 | 354.3 ms |\r\n| the one kernel both now compile to | **118** | **16** | **600** | **2008.0 ms** |\r\n\r\nThe 600 launches on this branch are the same 480 + 120 as the baseline's two symbols, so the comparison is over identical work. Subtracting the explicit path's unchanged 120 launches leaves the implicit ones at **3.445 ms against 6.349 ms, \u221245.7%**.\r\n\r\n## Measured\r\n\r\nBenchmark mirroring `amip_coarse_progedmf_1m_land`, the nightly coupled configuration, with this commit as the only difference between the two arms. Base is main at f027a307e (#4924).\r\n\r\n| | baseline | this branch | |\r\n|---|---|---|---|\r\n| `microphysics_tendency_cache` kernels, 3,000 launches each arm | 6142.0 ms | 4751.6 ms | **\u221222.64%** |\r\n| total device kernel time | 22635.7 ms | 21221.5 ms | **\u22126.25%** |\r\n| SYPD | 1.4603 | **1.5429** | **+5.66% throughput** |\r\n| walltime per coupling step | 224.98 ms | 212.94 ms | \u22125.35% |\r\n\r\nPer-step walltime falls with SYPD, which is the signature of a real speedup rather than a coarser timestep; `dt_cpl` is 120 s in both arms.\r\n\r\nTwo controls. Device launch counts are identical at 411,848, so no kernel appeared or vanished. The 16,493.7 ms of kernels outside the microphysics cache moved by \u22120.14%, so the change stays where it is aimed.\r\n\r\nOne caveat on the wall clock, stated because it is the weaker half of the evidence: a null test on this machine \u2014 both arms on one commit \u2014 returns \u00b12 to 4 points of spread on a single pair of AMIP runs, and two of its three wall-clock measurements came back wrong-signed. The +5.66% above is one pair and clears that floor, but it is the device-side \u22126.25%, measured over identical launch counts, that I would rely on. A repeat pair is running.\r\n\r\nNo numerical change is intended: the same parameter values reach the kernel, in the type rather than as a runtime argument, which is what #4879 did for the other call sites.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\nhttps://claude.ai/code/session_01FYv7qDRgpuycyDQtmL96GH\r\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T19:51:55Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "2D2C5F",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFAo9",
+        "name": "Performance"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-30T15:45:01Z",
+    "number": 4930,
+    "title": "Fold microphysics parameters into the implicit updraft cache kernel"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From Claude: closes #4891.\n\nDefault diagnostics choose their averaging cadence from the run length, but the length handed to `frequency_averages` was `t_end - dt`, which is strictly less than `t_end`. A run ending exactly on a threshold (1 hour, 1 day, 30 days, 90 days) therefore got the next finer cadence. That matters beyond output volume, because `make_compute_schedule` keys off the output period: `Day(1)` is computed every step, while `Day(10)` and longer are sampled six-hourly. `longrun_{dry,moist}_baroclinic_wave_he60` (`t_end: \"30days\"`, `dt: \"30secs\"`) were selecting daily output and so computing every default diagnostic every step, 720x the intended sampling.\n\nThis is a regression. The thresholds were designed as inclusive (`>=`) when they were introduced in 01e256177 and #3337; the `- dt` arrived later with the `AtmosSimulation` constructor and #4571.\n\n## The change\n\n`sim_duration = t_end` at both call sites (default set and `debug_tendency_diagnostics`). `dt` is dropped from the internal `setup_diagnostics_and_writers` signature (single caller, not used by ClimaCoupler). The threshold logic in `frequency_averages` and `make_compute_schedule` is untouched.\n\nThe EDMF column CI plots looked up the averaging period from the first bundle and reused it for the `main` reference, which fails when the two differ (here `1d` vs `1h` for rico and dycoms). `post_processing/ci_plots.jl` now resolves it per bundle and per variable, since some variables (e.g. `husraup`) are averaged only through the column YAML `diagnostics` list at `1h`.\n\n## Behavior change vs `main`\n\nOnly configs whose `t_end` lands exactly on a threshold and that keep `output_default_diagnostics` on change:\n\n| config | `t_end` | `main` | this PR |\n|---|---|---|---|\n| `longrun_{dry,moist}_baroclinic_wave_he60` | `30days` | daily, every step | ten-daily, six-hourly sampling |\n| `held_suarez_equil`, `box_hydrostatic_balance`, `prognostic_edmfx_{rico,dycoms_rf02}_column` | `1days` / `24hours` | hourly | daily (one average) |\n| `prognostic_edmfx_adv_test_column` | `3600secs` | none | hourly (one average) |\n\nFor the rico and dycoms column cases, the CI vertical-profile plots slice the last averaging window, so they now show the whole-day mean rather than the last hour. Their time-height plots use the 10-minute instantaneous output from `diagnostics_column_progedmf_1M.yml` and are unaffected.\n\n## Why `t_end` and not `t_end - t_start`\n\n`t_end` and `t_start` are both measured from `start_date`, which is preserved across a restart, so `t_end` is already the length of the whole experiment. Bucketing by the remaining segment would make the cadence depend on where a run resumes, breaking the guarantee `validate_checkpoint_diagnostics_consistency` relies on (checkpoint frequency a multiple of every accumulation period). ClimaCoupler's AMIP runs, which checkpoint monthly and set `t_start` from the checkpoint, are exactly the runs that would hit this.\n\n## Tests\n\n`test/diagnostics/diagnostics_config.jl` asserts the cadence at each threshold and one timestep below it. Run locally with the `.buildkite` environment; all pass.\n\n---|---|---|---|\n| `longrun_{dry,moist}_baroclinic_wave_he60` | `30days` | daily, every step | ten-daily, six-hourly sampling |\n| `held_suarez_equil`, `box_hydrostatic_balance`, `prognostic_edmfx_{rico,dycoms_rf02}_column` | `1days` / `24hours` | hourly | daily (one average) |\n| `prognostic_edmfx_adv_test_column` | `3600secs` | none | hourly (one average) |\n\nFor the rico and dycoms column cases, the CI vertical-profile plots slice the last averaging window, so they now show the whole-day mean rather than the last hour. Their time-height plots use the 10-minute instantaneous output from `diagnostics_column_progedmf_1M.yml` and are unaffected.\n\n## Why `t_end` and not `t_end - t_start`\n\n`t_end` and `t_start` are both measured from `start_date`, which is preserved across a restart, so `t_end` is already the length of the whole experiment. Bucketing by the remaining segment would make the cadence depend on where a run resumes, breaking the guarantee `validate_checkpoint_diagnostics_consistency` relies on (checkpoint frequency a multiple of every accumulation period). ClimaCoupler's AMIP runs, which checkpoint monthly and set `t_start` from the checkpoint, are exactly the runs that would hit this.\n\n## Tests\n\n`test/diagnostics/diagnostics_config.jl` asserts the cadence at each threshold and just either side of it. Run locally with the `.buildkite` environment; all pass.\n\n---\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_0149jDQJFoe7QgJc2NTTeoJk\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFoZ0Vs8AAAABWyfFug",
+        "number": 4891,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNzc5MTAzNTg=",
+          "name": "ClimaAtmos.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaAtmos.jl/issues/4891"
+      }
+    ],
+    "createdAt": "2026-10-14T21:17:45Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-30T15:45:01Z",
+    "number": 4900,
+    "title": "Compute default diagnostics period with run length"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR updates ClimaAtmos to work with the future breaking release of ClimaDiagnostics (https://github.com/CliMA/ClimaDiagnostics.jl/pull/206). The main change are that the time dimension are saved as dates instead of floating point which means using `ds[\"time\"].var` over `ds[\"time\"]` and removing the `init_time` keyword argument.\r\n\r\nI asked a LLM to make these changes.\r\n\r\nTODO\r\n\r\n- [x] Release of ClimaDiagnostics v0.4\r\n- [x] Release of ClimaAnalysis v0.5.25",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T17:16:08Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-30T20:59:39Z",
+    "number": 4929,
+    "title": "Update to ClimaDiagnostics v0.4"
+  }
+]
