@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 857,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\r\n\r\nThis PR allows the arguments of `foreach_slice` to be containers of Fields and other arguments, and collects the bug fixes and speedups that came up while working on #2697 and #2698. It sits below #2697 in the stack, so that it can be merged before #2697 and #2698 are reviewed.\r\n\r\n## Disclosure\r\n\r\nThis PR and its description were mostly generated using Claude.\r\n\r\n## Content\r\n\r\n  - Allow containers in loops over slices\r\n      + Every argument of `DataLayouts.foreach_slice` and its variants can be a `Tuple` or `NamedTuple` of arguments, nested to any depth, whose slice is the same container of slices. Containers can be empty as long as some other argument is not, and their contents are scoped, masked, and checked like other arguments.\r\n      + `Grids.toggle_compact_args` passes containers to GPU kernels as `AutoBroadcaster`s, which now have an `Adapt.adapt_structure` method, so that GPU loops can have more than 31 arguments.\r\n      + The Fields of a GPU loop share the grid of their `Fields.shared_space`, which now takes containers, instead of the grid of the first argument, so that loops whose first Field is 2D also compact their 3D Fields.\r\n  - Fix bugs\r\n      + On GPUs, a reduction inside a loop over columns gives its full result to every thread of the column; when the number of levels was not a power of two, some threads got a partial result.\r\n      + In a GPU loop over columns, every thread stores a temporary with a single point, and operators and fused multi-broadcasts share the value they compute on one thread with the others (`DataLayouts.share_single_point!`). Levels of column temporaries in registers are read from the threads that own them. The other threads used to read uninitialized registers or their own levels.\r\n      + In a GPU loop over columns, statements that read a Field at neighboring levels or as a boundary value, or that read or write a single point outside of registers, are separated by barriers from the statements that write or overwrite those values.\r\n      + In a GPU loop over columns, a statement on fewer points than half of the threads of a column runs on all of the column's threads, instead of on a subset whose other threads skipped its barriers (which deadlocked or gave NaNs).\r\n      + `reduce` of a DataLayout with a `Tuple` or `NamedTuple` `init` has a concrete result type.\r\n      + Memoized objects (operator buffers, DG connectivity, and scratch Fields) share one cache whose keys have a concrete type, so that lookups never allocate, and `Utilities.Cache.clean_cache!(object)` also releases the objects cached for `object`.\r\n  - Reduce latency\r\n      + `Utilities.can_alloc_uninitialized` builds its error message in a generated function, so GPU kernels that reach it infer about 80% fewer frames and have no dynamic call.\r\n  - Improve performance\r\n      + On GPUs, masked loops with one thread per slice spread their active slices across all blocks.\r\n      + On GPUs, point views of DataLayouts have `Int` offsets, so the offsets of struct field views fold into the immediate offsets of memory accesses.\r\n      + On GPUs, fused loops whose shared buffers exceed the `:medium` level request exactly the shared memory they need.\r\n      + On GPUs, launch configurations for two-warp blocks use a multiple of four blocks per multiprocessor, which balances its schedulers.\r\n  - Fix CI\r\n      + The 2- and 4-process `ne = 32` DSS jobs set `UCX_TLS` to `^cuda_ipc`, since UCX's `cuda_ipc` transport drops large messages on L40S nodes.\r\n      + CPU thread-pool loops spawn tasks with an inlined `Threads.@spawn`, so that JET does not report a runtime dispatch.\r\n      + The ClimaCoupler downstream job is soft-fail until its fix, which depends on this PR, is merged.\r\n\r\n* * *\r\n\r\n  - [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\r\n  - [x] Unit tests are included OR N/A.\r\n  - [x] Code is exercised in an integration test OR N/A.\r\n  - [x] Documentation has been added/updated OR N/A.\r\n\r\n\r\n\r\n\r\n\n",
+    "changedFiles": 36,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T06:42:40Z",
+    "deletions": 203,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-31T05:25:29Z",
+    "number": 2710,
+    "title": "Allow containers to be used in foreach_slice"
+  },
+  {
+    "additions": 995,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Adds `Meshes.BoundaryLayerHyperbolicTangentStretching(dz_surface, dz_top, z_pbl)`, a two-scale hyperbolic tangent stretching that refines the boundary layer while matching element spacings at the surface and the domain top.\n\nAlso makes the stretched `IntervalMesh` constructors depend on the domain only through its height: `reverse_mode` mirrors about the domain midpoint for all rules, and `GeneralizedExponentialStretching` and `HyperbolicTangentStretching` solve against the domain height. This fixes pre-existing bugs for domains that do not start at zero. The tanh and generalized-exponential stretching functions are evaluated without cancellation, so `FT_solve = Float32` solves converge to their tolerances.\n\nFurther fixes:\n\n- Faces end exactly at the domain bounds when `FT_solve` is narrower than the domain's float type.\n- `truncate_mesh` fits its mesh to the parent faces between the bottom and top of the truncated domain, so it handles a raised bottom, and it accepts `reverse_mode` (land) parents.\n- `HyperbolicTangentStretching` throws an `ArgumentError` for `dz_surface \u2265 (z_max - z_min) / nelems`, and `IntervalMesh(domain, faces)` requires at least two faces.\n- The RootSolvers compat lower bound is 0.4.6. `BrentsMethod` first appears in 0.4.5, and 0.4.5's `NewtonsMethodAD` does not converge in `column_integral_indefinite!`.\n- `QuasiMonotoneLimiter` treats a slab whose clipping moves no tracer mass as converged. A slab with no tracer mass reported a relative error of `NaN` and counted as unconverged on every call, and `apply_limiter!` warned on every call. In ClimaAtmos's 1-moment microphysics runs, these warnings (~18 KB each) made up nearly all of the allocations in the `flame_default_1m` budget test; a limiter call now allocates 32 bytes, so that test's allocation limit will need lowering.\n\n### Behavioral change: relative default `tol` for `GeneralizedExponentialStretching`\n\nThe default `tol` of `IntervalMesh(domain, GeneralizedExponentialStretching(dz_bottom, dz_top); ...)` was an absolute `1e-3`, in the units of the domain, which is loose for thin layers. A 2 m soil column with 20 levels and target spacings (0.3 m, 5 cm) came out with a surface spacing of 4.94 cm, a 1.2% error. In a sweep of 253 soil-scale Float64 configurations (2 to 50 m deep, 7 to 30 levels, surface spacings from 1 mm to 10 cm), 34 had end-spacing errors above 0.1% and 2 above 1%.\n\nThe default is now `sqrt(eps(FT_solve)) * min(dz_bottom, dz_top)`. With it, the soil sweep has no errors above 0.1%. In a 12-configuration atmosphere and soil sweep, the worst end-spacing error is 8.8e-9 in Float64 and 2.1e-4 in Float32. Float32 cannot go much tighter: at `1e-5 * min(dz)`, the Float32 secant solves fail in 4 of the 12 configurations.\n\n### Impact on downstream packages\n\nClimaLand builds every stretched soil mesh with the default `tol` and `FT_solve = Float64` (`Column`, `ColumnEnsemble`, `HybridBox`, `SphericalShell` in `src/shared_utilities/Domains.jl`), and its API does not expose `tol`. Faces move by at most 0.4 mm, so results are not bitwise identical:\n\n| Configuration | Max face shift |\n|---|---|\n| `global_domain` default | 0.06 mm |\n| `global_box_domain` | 0.02 mm |\n| bucket | 0.4 mm |\n| US-Ha1 | 0.19 mm |\n| US-MOz | 0.14 mm |\n| US-NR1 | 0.03 mm |\n\nCheckpoints still load: `InputOutput` rebuilds a stretched mesh from its stored stretching parameters, so a restart builds the same faces as a new run. Passing `tol = 1e-3` reproduces the previous meshes.\n\nClimaAtmos uses `HyperbolicTangentStretching`. In Float32, its meshes are bitwise unchanged (checked for a 60 km domain with `dz_bottom = 30` and 25 and 63 levels, and for a 30 km domain with `dz_bottom = 500` and 10 levels). In Float64, the cancellation-free tanh formula changes the solved `\u03b3` in the 14th significant digit, which moves faces by up to 3.3e-10 m on the 60 km, 63-level domain. This breaks ClimaAtmos's bitwise reproducibility test for single column hydrostatic balance in Float64, where \u03c1 differs from the reference by a relative RMS of 1e-14. ClimaAtmos needs to regenerate its reproducibility references when it moves to a ClimaCore release that includes this PR.\n\n\n\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T06:37:49Z",
+    "deletions": 165,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-31T20:51:38Z",
+    "number": 2709,
+    "title": "Add BoundaryLayerHyperbolicTangentStretching; make stretched meshes domain-general"
+  }
+]

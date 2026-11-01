@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjgyMzkwNDE=",
+      "is_bot": false,
+      "login": "francispoulin",
+      "name": "Francis J. Poulin"
+    },
+    "body": "Hello everyone,\n\nI was updating my Oceananigans (v0.113.5 -> v0.116.1) and Julia (1.10.10 -> 1.13.2), still with CUDA.jl (v6.4.1), and did some test to make sure everything was working.  Everything runs accurately (after some debugging work), but there was a slow down.  \n\nThis PR is a simple fix that worked for me.  I have no idea if this is something that others might be experencing as well.\n\nBelow you wil find:\n- Test we ran\n- What trigger is\n- Minor proposed change in Oceananigans\n\nMaybe there is something that I'm missing and if so I'd be very happy to know how to resolve this without the PR.\n\nThanks in advance for reading this,\nFrancis (and Claude for the details)\n\n## Test we ran\n\n- Distributed Fourier-tridiagonal pressure solve, 1024\u00b3 Float32, 4 \u00d7 A100-SXM4-40GB (NVLink), MPI, slab decomposition in x:\n\n| Environment | Time per solve |\n| --- | --- |\n| Oceananigans 0.113.5, Julia 1.10.10 | 159.4 ms |\n| Oceananigans 0.116.1, Julia 1.10.10 | 163.5 ms (+4: the new mean subtraction, #6161) |\n| Oceananigans 0.116.1, Julia 1.13.2 | 190.7 ms |\n| Oceananigans 0.116.1, Julia 1.13.2, with the change below | **166.1 ms** (pelee, Oct 26: 1.007 \u00d7 the 0.116.1 / Julia 1.10.10 run beside it, 165.0 ms; `p_std` identical to all digits) |\n\n- Nsight Systems, every rank: the whole difference is one kernel, `solve_batched_tridiagonal_system_kernel!` (z), **10 \u2192 36 ms**, on all four ranks; transposes, FFTs and other kernels unchanged; nothing else runs on the GPU during it.\n\n## What triggers it\n\n- Julia 1.13.2, CUDA.jl 6.4.1 and 6.4.2 (same with both), KernelAbstractions 0.9.45, A100, 1024\u00d7256\u00d71024 (one GPU's share).\n- Only **Complex{Float32} elements of an OffsetArray** (the distributed solver passes the solution as a `Field` without halos, i.e. an `OffsetArray` with zero offsets). Real Float32, Complex{Float64} and plain `CuArray`s are not (or barely) affected. Checksums identical in every case.\n- The line responsible, in the forward sweep (`src/Solvers/batched_tridiagonal_solver.jl`, z direction):\n\n  ```julia\n  \u03d5[i, j, k] = ifelse(definitely_diagonally_dominant, \u03d5\u2605, \u03d5[i, j, k])\n  ```\n\n- Reproducer timings (plain KernelAbstractions, no Oceananigans; `benchmarks/mwe_offsetarray_complexf32.jl` on oceananigans-hpc #37), ms per solve:\n\n| | Julia 1.10.10 | Julia 1.13.2 |\n| --- | --- | --- |\n| ComplexF32, OffsetArray, Oceananigans' loop | 9.89 | **36.35** |\n| \u2026 without `masked_multiply` | 9.87 | 35.90 |\n| \u2026 without the dominance check | 9.86 | 9.86 |\n| \u2026 check as a conditional store (proposed) | 10.25 | **10.23** |\n| ComplexF32, CuArray, Oceananigans' loop | 9.86 | 11.60 |\n| ComplexF64, Oceananigans' loop | 18.9 | 18.9 |\n| ComplexF64, conditional store | 16.2 | 16.2\u201316.5 |\n| Float32, Oceananigans' loop / conditional store | 8.1\u20138.7 / 8.6\u20139.4 | 8.1\u20138.7 / 8.6\u20139.4 |\n\n## Minor proposed change in Oceananigans\n\n```julia\n# was: \u03d5[i, j, k] = ifelse(definitely_diagonally_dominant, \u03d5\u2605, \u03d5[i, j, k])\ndefinitely_diagonally_dominant && (\u03d5[i, j, k] = \u03d5\u2605)\n```\n\n- Same result: where the check fails, the old value stays where it is; it is no longer read and written back.\n- Gains: ComplexF32/OffsetArray on Julia 1.13 3.6\u00d7 (the distributed pressure solver's case); ComplexF64 14% on both Julia versions.\n- Costs: 0.4\u20130.8 ms (5\u201310%) for real Float32 and for ComplexF32 on Julia 1.10. Worth saying plainly.\n- The same pattern appears in the x and y sweeps (no masking there); not measured.\n\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T19:32:51Z",
+    "deletions": 6,
+    "labels": [],
+    "mergedAt": "2026-10-31T14:55:57Z",
+    "number": 6361,
+    "title": "Improve performance of tridiagonal solve for an OffsetArray of ComplexF32"
+  }
+]

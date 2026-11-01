@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 1956,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Minor release **v1.14.0** (1.13.0 \u2192 1.14.0). Per repo convention the minor slot is bumped because `NEWS.md` lists a `\ud83d\udca5breaking` change: the optimal-LAI API changes of #1901 (tree/grass leaf costs and area-index coefficients, the required `tree_share` of `ZhouOptimalLAIModel`, and the renamed or re-signed `compute_A0`, `compute_L_max`, `compute_L_steady_target` and `potential_evaporation`).\n\n## Contents\n- **`Project.toml`**: `version` 1.13.0 \u2192 1.14.0.\n- **`NEWS.md`**: froze the `main` section as `v1.14.0` and opened a fresh empty `main`.\n- **Manifests**: `Pkg.update()` of the four tracked Manifests (`.buildkite` and `docs`, Julia 1.10 and 1.12).\n\n## NEWS entries added\nThree changes merged since v1.13.0 had no `NEWS.md` entry:\n- \u2728 GRACE artifact, calibration target, and `twsa` diagnostic (#1930)\n- \ud83d\ude80 mutable model structs, compile time to the first step 307 s \u2192 162 s (#1906)\n- \ud83d\udd25 removal of the unbounded canopy heating of coupled simulations: `CoupledAtmosphere` gustiness, P-model floors, absent-canopy relaxation with the new `absent_canopy_relaxation_time` parameter (#1923)\n\nThe two entries of #1932 (ClimaDiagnostics v0.4, diagnostics reproducible on restart) are in the `v1.14.0` section with their PR links.\n\nAlso added the missing PR links to the entries of #1926, #1928 and #1918, and corrected \"Requires SurfaceFluxes 1.5\" to 1.6, the current compat. #1935 (long-run CI only) needs no entry.\n\n## Notable dependency updates\n- **ClimaDiagnostics 0.4** (from #1932, already on `main`): v1.14.0 requires it.\n- **CUDA 5.11.3 \u2192 6.4.1** and **GPUCompiler 1.17.1 \u2192 2.10.0** in `.buildkite`. ClimaCore 1.0.6, ClimaComms, ClimaTimeSteppers and ClimaUtilities all declare CUDA 6 compat and ClimaLand does not bound CUDA, so users of v1.14.0 resolve to CUDA 6; the GPU jobs of this PR test that. If they fail, the fallback is to hold CUDA at 5.x in `.buildkite` and move to CUDA 6 in a separate PR.\n- ClimaCore 1.0.3 \u2192 1.0.6, ClimaParams 1.3.1 \u2192 1.3.4, ClimaAnalysis 0.5.24 \u2192 0.5.25, MPI 0.20.27 \u2192 0.20.29, TimerOutputs 0.5.29 \u2192 1.2.2 (`.buildkite`).\n- HDF5_jll, NetCDF_jll and (Julia 1.12) MPICH_jll move down in `.buildkite` to the versions the `docs` Manifests already used.\n\n## After merge\nComment `@JuliaRegistrator register` on the merge commit; TagBot creates the `v1.14.0` tag and GitHub release.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T16:16:00Z",
+    "deletions": 1129,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-31T00:06:31Z",
+    "number": 1939,
+    "title": "Release v1.14.0"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "With the `climaland-downstream` buildkite pipeline, the concurrency limit can stop ClimaCore land downstream test and vice versa. This is due to the `concurrency_group` being the same for both pipelines. This PR updates `concurrency_group` to `depot/${BUILDKITE_PIPELINE_SLUG}`. For the ClimaLand CI, this is `depot/climaland-ci` and for the land downstream tests, this is `depot/climaland-downstream`.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T23:11:36Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-10-31T05:46:23Z",
+    "number": 1940,
+    "title": "Update concurrency group to use pipeline slug"
+  }
+]
