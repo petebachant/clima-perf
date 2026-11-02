@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 154,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThis PR fixes three bugs that came up in CliMA/ClimaAtmos.jl#4934 and #2697, and it bumps the patch version to 1.0.8 so the fixes are available in ClimaAtmos.\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Content\n\n - Temporaries in loops over slices stay on the stack on CPUs, instead of being allocated on the heap in every slice. A temporary is an `MArray` on CPUs, which goes on the heap when a function that is not inlined returns it or receives it (GPU kernels inline every function). So the functions that allocate temporaries (`similar` and `copy` of broadcasts, and `materialize` of lazy operator matrices), the operator applications that write them, and the broadcasts that pass them on (the geometry functions that add local geometry arguments, like `project` and `cross`, matrix products, lazy operator matrices, and size checks in a thread's own scope) are inlined, and operator statements copy the temporaries they read, including views like their levels, into `SArray`s on CPUs, as they already did on GPUs. GPU kernels are unchanged. A new allocation test of pointwise, operator, operator-matrix, vector, and level temporaries fails without these changes.\n - Whether a temporary is stored in the registers of its GPU scope is decided with `unrolled_in`, which is always constant-folded. GPU compilation of a loop over columns could leave `in` to run time, splitting a single-point temporary into a union whose registers were allocated on the heap, so the kernel failed to compile. This was observed in CI through [the GPU fields job of #2697](https://buildkite.com/clima/climacore-ci/builds/8215).\n - The unnamed row of a `Covector` is indexed like the first row of a `Tensor{2}`, so that the scalar blocks of a `FieldMatrix` with covector entries (e.g., the derivatives of scalar tendencies with respect to `u\u2083`) are writable views. They used to be read-only copies, which ClimaAtmos's sparse automatic differentiation Jacobian left uninitialized, so that its job failed at random with a `DomainError`. A name of all of the components of a `Tensor` entry (`@name(components.data)`) refers to the entry itself; it used to throw an error.\n\n* * *\n\n  - [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\n  - [x] Unit tests are included OR N/A.\n  - [x] Code is exercised in an integration test OR N/A.\n  - [x] Documentation has been added/updated OR N/A.\n\n\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T12:59:35Z",
+    "deletions": 36,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-01T06:21:29Z",
+    "number": 2713,
+    "title": "Fix loop temporaries and covector matrix blocks"
+  }
+]

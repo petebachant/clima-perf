@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 90,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nAddresses this [comment](https://lnkd.in/p/gDT-8ffi) on LinkedIn:\r\n\r\n`get_horizontal_tendencies` in `src/config/era5_observations_to_forcing_file.jl` divided its centered differences by an absolute grid spacing while treating `index + 1` as north and east. Raw CDS ERA5 latitude descends from 90 to -90, so the meridional advection of temperature and humidity (`tntha`, `tnhusha`) in forcing files for ERA-driven SCMs generated from raw ERA5 had the wrong sign. Zonal advection was unaffected because CDS longitude ascends.\r\n\r\nThe differences are now divided by the signed distance between the two neighboring grid points, `R cos(\u03c6) \u0394\u03bb` and `R \u0394\u03c6`, which holds for either coordinate order and for non-uniform spacing. The absolute spacing is used only for the zero-spacing assert and the coarser-than-2\u00b0 warning. A local `centered_diff` helper replaces the four repeated difference expressions.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T20:45:14Z",
+    "deletions": 31,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-01T03:44:37Z",
+    "number": 4948,
+    "title": "Fix sign of ERA5 horizontal advective tendencies for descending coordinates"
+  }
+]
