@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 74,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nLet soil water stress tighten the stomata of the P-model, not only slow its photosynthesis. Until now the moisture stress \u03b2m scaled the assimilation rates, and the stomatal conductance with them, but left the ratio ci/ca at its well-watered optimum. So a plant on drying soil, under the dry air of a savanna's dry season, kept the water use per unit of carbon of a well-watered one, and the savannas evaporated too much.\n\nStacked on #1942 (the ERA5 forcing on time), on which it was tested.\n\n## Content\n\n- **\u03be \u03b2m^p.** In the P-model, ci/ca depends on dryness through \u03be = \u221a(\u03b2 (K + \u0393*) / (1.6 \u03b7*)), with \u03b2 the ratio of the unit costs of carboxylation and transpiration. Drier soil makes water dearer: Lavergne et al. (2020, New Phytologist) find \u03b2 falling with soil moisture from carbon isotopes. With \u03b2 proportional to \u03b2m, \u03be becomes \u03be \u221a\u03b2m: the new parameter `pmodel_xi_moisture_exponent` is p = 0.5 (0 recovers the old behaviour). The acclimated \u03be stays the well-watered one; the stress acts at once, as \u03b2m on the assimilation rates.\n- **The bare-soil scalar roughness is 0.005 m** (`soil_scalar_roughness_length`, was 0.00302 from the calibration of #1926; ClimaParams has 0.007). The scalar roughness length sets the bare soil's transfer coefficient for heat and water vapour, so how warm its surface must get to pass a given heat flux to the air. Alone, the stress cuts the savannas' transpiration and their surface warms, the upwelling longwave radiation 1.4% worse with prescribed LAI; at 0.005 m the soil passes that heat to the air at a lower surface temperature (0.01 m cools it too much: LWU +3.6%).\n\n## Results\n\nGlobal 1\u00b0 runs, December 2017 \u2013 November 2019, RMSE of the annual means against ERA5 (energy fluxes) and the leaderboard's carbon and LAI references; before is #1942, after is this PR:\n\n| | prescribed LAI: before | after | prognostic LAI: before | after |\n|---|---|---|---|---|\n| LHF | 11.43 | **11.33** | 11.49 | **11.14** |\n| SHF | 11.08 | 11.07 | 11.22 | **11.01** |\n| SWU without the Tibetan Plateau | 7.81 | 7.80 | 8.12 | 8.11 |\n| LWU | 3.81 | **3.76** | 4.26 | **4.07** |\n| GPP | 1.231 | **1.214** | 1.400 | 1.392 |\n| ER | 1.322 | 1.312 | 1.191 | 1.184 |\n| NEE | 1.027 | 1.025 | 0.786 | 0.783 |\n| LAI (seasonal) | | | 0.765 | 0.765 |\n\nThe latent heat flux falls where it was too high, in the dry season of the savannas: with prognostic LAI, the LHF bias against ERA5 goes from +9.6 to +6.7 W m\u207b\u00b2 in the Sudan\u2013Guinea zone and from +2.3 to \u22120.2 in the Cerrado, and the global bias from +2.3 to +1.5. On top of #1943 (the snow albedo), the gains are the same: prescribed LHF \u22120.9%, LWU \u22121.1%; prognostic LHF \u22123.0%, SHF \u22122.0%, LWU \u22124.2%.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T07:22:41Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-02T18:50:13Z",
+    "number": 1944,
+    "title": "Let soil water stress tighten the stomata of the P-model"
+  }
+]

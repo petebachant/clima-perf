@@ -1,0 +1,374 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "The \"Distributed open boundary faces are not stepped\" testset in `test/mpi/split_explicit_boundaries.jl` builds its grid with `Bounded` in x but attaches `NormalFlowBoundaryCondition`s to the west and east sides. Since #6277 this is rejected (`open boundary schemes need an `Open` side`), and the error aborts the file, so the testsets after it do not run.\n\nThe grid now uses `Open` in x. The file passes on 4 ranks.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T04:30:49Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-02T09:28:50Z",
+    "number": 6399,
+    "title": "Use an Open topology in the distributed open-boundary face test"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`inactive_cell` treated only `Sides{Closed, Connected}` as closed on the left, so on a `TripolarGrid` (`Sides{Closed, CenterFolded}` / `Sides{Closed, FaceFolded}`, and the distributed `*FoldConnected` versions) cells at `j < 1` were active and the southern wall was not peripheral.\n\nThis PR adds `LeftClosedTopology = Sides{Closed, <:Union{CommunicatingSide, CenterFolded, FaceFolded}}` and uses it in `inactive_node.jl`. It also adds a test that fails on main.\n\nThe PR's original advection change is no longer needed: since #6275, main already treats folded topologies as left-bounded in advection.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-05-05T08:27:17Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-11-02T11:34:52Z",
+    "number": 5564,
+    "title": "Mark cells beyond the southern wall of `TripolarGrid`s as inactive"
+  },
+  {
+    "additions": 48,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Resolves https://github.com/NumericalEarth/Breeze.jl/pull/1097#issuecomment-6421304575.\n\n> `regular_faces` and `regular_centers` read the reference, step and offset of `range(c\u2081, c\u2082, length = N + 1)`. Neither the return type of range nor these fields are public: `range` happens to return a `StepRangeLen` for `Float16`, `Float32` and `Float64`, and a `LinRange`, which has none of these fields, for other number types such as `BigFloat` and `BFloat16`, so building any regular grid of those types failed with a `FieldError`.\n> \n> `regular_nodes` now builds faces and centers with the public `StepRangeLen` constructor, from a reference and a step computed in `BigFloat` and rounded to `Float64`, or to the number type when it is wider. The reference is the node nearest zero, so that a node at zero is exact, and both stay independent of the halo, as the offset alone depends on it. With a `Float64` reference and step, the ends of `Float16`, `BFloat16` and `Float32` coordinates are exact. No public type is wider than `Float64`, so `Float64` nodes still take the extended-precision reference and step of range, now behind an explicit check that range returned a `StepRangeLen`, and are unchanged. `BigFloat` ends are exact to an ulp.\n> \n> `Float32` nodes now round the coordinate between the `Float32` ends of the interval, rather than the decimal ends that range recovers from them, so some differ by an ulp from before.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T18:40:15Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      },
+      {
+        "color": "76b900",
+        "description": "Where Oceananigans gets its powers from",
+        "id": "MDU6TGFiZWwxMjQ3MDYzMDcz",
+        "name": "GPU \ud83d\udc7e"
+      }
+    ],
+    "mergedAt": "2026-11-02T15:37:23Z",
+    "number": 6359,
+    "title": "Build regular coordinates without assuming the type that range returns"
+  },
+  {
+    "additions": 11,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `OutputWriters` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nThe `import Oceananigans.Grids: new_data as allocate_grid_data` alias stays as it is.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:27:04Z",
+    "deletions": 13,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:31:20Z",
+    "number": 6414,
+    "title": "Extend methods explicitly: OutputWriters"
+  },
+  {
+    "additions": 246,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `ImmersedBoundaries` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nOne `import` inside an `@eval` loop (interpolated names) stays as it is.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:37Z",
+    "deletions": 278,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:33:37Z",
+    "number": 6411,
+    "title": "Extend methods explicitly: ImmersedBoundaries"
+  },
+  {
+    "additions": 108,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `OrthogonalSphericalShellGrids` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:55Z",
+    "deletions": 135,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:34:23Z",
+    "number": 6413,
+    "title": "Extend methods explicitly: OrthogonalSphericalShellGrids"
+  },
+  {
+    "additions": 132,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `ext/OceananigansReactantExt` with qualified names (`using Module: Module` then `Module.f(x::T) = ...`) instead of `import Module: f`. This also drops unused imports and trims a stale comment. No behaviour change intended.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T09:27:16Z",
+    "deletions": 186,
+    "labels": [
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:34:57Z",
+    "number": 6403,
+    "title": "Extend methods with qualified names in OceananigansReactantExt"
+  },
+  {
+    "additions": 73,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `AbstractOperations` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nThe `import Base: +, -, *, /, ==` imports stay: the `@binary`/`@unary` machinery extends those operators through `@eval` loops over symbols.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:25:52Z",
+    "deletions": 80,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:35:37Z",
+    "number": 6406,
+    "title": "Extend methods explicitly: AbstractOperations"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `Biogeochemistry` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:01Z",
+    "deletions": 5,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:36:02Z",
+    "number": 6407,
+    "title": "Extend methods explicitly: Biogeochemistry"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `Fields` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:29Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:37:28Z",
+    "number": 6410,
+    "title": "Extend methods explicitly: Fields"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `Diagnostics` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:11Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-02T18:38:08Z",
+    "number": 6408,
+    "title": "Extend methods explicitly: Diagnostics"
+  },
+  {
+    "additions": 174,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR removes all method ambiguities and makes the quality-assurance tests cover the whole package instead of hand-maintained module lists. It also includes the fix from #6373, generalised to `Field`s.\n\nSupersedes #6373, which should be closed when this PR merges.\n\n## Ambiguities (9 \u2192 0)\n\n- **`*` vs LinearAlgebra (6):** the location-free multiary operator now requires its first argument to be a 3D or 4D field. The ambiguities only arose for a 2D `AbstractField` (e.g. `ConstantField{T, 2}`) multiplied with matrices/vectors.\n- **`copyto!` vs `SparseArrays.CHOLMOD.Dense` (2):** added disambiguating methods. `SparseArrays` is already a dependency.\n- **`getbc` for fields reduced in x and z (1):** a condition located at `(Nothing, LY, Nothing)` gets `(j, k)` on west/east boundaries but `(i, j)` on bottom/top ones, so `getbc` cannot tell which argument is the `y` index.\n\n## Boundary conditions reduced in x and z (supersedes #6373)\n\n#6373 fixed this for `FieldTimeSeries` with an `XZReducedBoundarySeries{D}` wrapper. Here the wrapper is generic, `BoundaryConditions.XZReducedCondition{D}`, and covers both `Field`s and `FieldTimeSeries`:\n\n- Regularizing a boundary condition wraps an x-z reduced `Field` or `FieldTimeSeries` used on dimension `D = 1` or `D = 3`, so `getbc` reads the first boundary index on west/east and the second on bottom/top.\n- Each wrapped type extends `xz_reduced_getbc(condition, j, grid, args...)`.\n- The wrapper adapts to the GPU, moves between architectures, splits across regions on multi-region grids, and is still found by `extract_field_time_series`. Boundary conditions display exactly as before.\n- Used directly with `getbc` without regularization, an x-z reduced `Field` follows the existing `FieldTimeSeries` behaviour, which picks the slot from `Nz`. Before, it was a method ambiguity.\n\n## Explicit imports\n\nReplaced bare `using X` statements (181 implicitly imported names) in `Oceananigans`, `DistributedComputations`, `Models`, `NonhydrostaticModels`, `ShallowWaterModels`, `LagrangianParticleTracking` and `VarianceDissipationComputations`. The unused `using .VarianceDissipationComputations` in `Models` is dropped.\n\n## Tests\n\n- `test/unit/quality_assurance.jl` now runs `detect_ambiguities` and `check_no_implicit_imports` once on `Oceananigans` (both already recurse into every submodule), replacing the per-module lists and their commented-out entries.\n- `test/time_stepping/boundary_conditions.jl` gets #6373's `FieldTimeSeries` test and a matching one for `Field`s. Each sets an x-z reduced condition on the east and top boundaries for `Nz = 1` and `Nz = 5`, then checks the halos.\n\nOn CPU, `time_stepping/boundary_conditions` and `unit/quality_assurance` pass (614/614). A smoke script also ran `NonhydrostaticModel` (with particles, Stokes drift, Coriolis, buoyancy and `VarianceDissipation`), `ShallowWaterModel` and `HydrostaticFreeSurfaceModel`. Distributed code is only checked by loading the package; it was not run under MPI. Nothing was run on GPU.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 37,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T09:43:01Z",
+    "deletions": 164,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-11-02T22:37:06Z",
+    "number": 6404,
+    "title": "Resolve method ambiguities and check explicit imports in all modules"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Re-align continuation lines that shifted when `f(...) = ...` became `Module.f(...) = ...` in the already-merged PRs of #6405 (AbstractOperations, ImmersedBoundaries, OrthogonalSphericalShellGrids). Whitespace only.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T22:52:04Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-11-02T22:57:32Z",
+    "number": 6424,
+    "title": "Re-align continuation lines after qualifying method extensions"
+  }
+]

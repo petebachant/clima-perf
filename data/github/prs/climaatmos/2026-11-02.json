@@ -1,0 +1,108 @@
+[
+  {
+    "additions": 4436,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "## Purpose\r\n\r\nFuse the GPU-heavy parts of the AMIP prognostic EDMF + 1M step into per-column loops (`DataLayouts.foreach_column`), so pointwise derivatives, face densities, and band products become loop temporaries instead of separate broadcasts and scratch fields. This needs ClimaCore 1.0.8.\r\n\r\n## Content\r\n\r\n- `perf/benchmark_components.jl`: a component-level GPU timing and equivalence harness for the `numerics_sphere_he16ze63.yml` + `amip_target.yml` configuration, plus helpers shared by the fused loops.\r\n- Fused column loops for:\r\n  - the implicit vertical transport: water sedimentation, the SGS mass flux, SGS vertical advection and sedimentation, and the grid-mean vertical advection;\r\n  - the precomputed quantities and caches: 1M precipitation velocities, the EDMFX environment, draft, and explicit closures, the SGS covariance cache, cloud and precipitation fractions, and the eddy-diffusion closures. 1M microphysics skips dry cells;\r\n  - the explicit tendencies: hyperdiffusion, surface flux, sponge, TKE, explicit vertical advection, RRTMGP radiation, and the SGS diffusive flux;\r\n  - the manual sparse Jacobian: advection, sedimentation, diffusion, SGS advection, entrainment/detrainment, and the SGS mass flux.\r\n- The updraft sedimentation of #4926 (mass, enthalpy, and dilution terms, and their Jacobian blocks) runs in these loops with the operation order of main's broadcasts. The SGS advection Jacobian uses one column loop per sedimenting species, since a single loop would pass more arguments than Julia unrolls in a splat (a dynamic call on GPU).\r\n- Fixes:\r\n  - `horizontal_tracer_advection_tendency!` advected draft 1's tracers once per draft and the other drafts' tracers not at all. It now advects each draft's own tracers.\r\n  - Four fused bodies now group floating-point operations in the same order as the unfused code.\r\n  - Functions the fusions left unused are removed.\r\n- Bumps ClimaCore to 1.0.8 and the reference counter.\r\n\r\n## Component benchmark\r\n\r\n`perf/benchmark_components.jl Float32` on one A100, timing GPU \u00b5s over 15 samples after 3 warmups. Compared: main `78abddd6d` vs. this PR at `dc65d98a7`. Both sides use this branch's manifest (ClimaCore 1.0.6, CloudMicrophysics 0.47), so the speedups come from the ClimaAtmos changes alone. The two runs were made one after the other on a node shared with other users; absolute times on that node varied by up to 1.7x between runs, so treat individual ratios as approximate.\r\n\r\n| Function | main min / med (\u00b5s) | PR min / med (\u00b5s) | Speedup (min / med) |\r\n|---|---|---|---|\r\n| **implicit_tendency! (total)** | 23885.8 / 24251.4 | 10228.7 / 10712.1 | 2.34x / 2.26x |\r\n| \u00b7 implicit_vertical_advection_tendency! | 4722.7 / 4933.6 | 2452.5 / 2474.0 | 1.93x / 1.99x |\r\n| \u00b7 \u00b7 vertical_advection_of_water_tendency! | 3578.9 / 3607.6 | 1989.6 / 2004.0 | 1.80x / 1.80x |\r\n| \u00b7 microphysics_tendency! | 517.1 / 523.3 | 259.1 / 263.2 | 2.00x / 1.99x |\r\n| \u00b7 edmfx_sgs_vertical_advection_tendency! | 5679.1 / 5714.9 | 1474.6 / 1566.7 | 3.85x / 3.65x |\r\n| \u00b7 edmfx_sgs_diffusive_flux_tendency! | 7753.7 / 7820.3 | 7013.4 / 7034.9 | 1.11x / 1.11x |\r\n| \u00b7 edmfx_entr_detr_tendency! | 903.2 / 912.4 | 847.9 / 862.2 | 1.07x / 1.06x |\r\n| \u00b7 edmfx_sgs_mass_flux_tendency! | 3223.6 / 3245.1 | 942.1 / 954.4 | 3.42x / 3.40x |\r\n| \u00b7 edmfx_boundary_condition_tendency! | 145.4 / 147.5 | 146.4 / 148.5 | 0.99x / 0.99x |\r\n| \u00b7 sgs_u\u2083 + sgs_\u03c1a implicit_tendency! | 61.4 / 62.5 | 61.4 / 62.5 | 1.00x / 1.00x |\r\n| **set_implicit_precomputed_quantities! (total)** | 2558.0 / 2573.3 | 1047.6 / 1060.9 | 2.44x / 2.43x |\r\n| \u00b7 set_prognostic_edmf_precomputed_quantities_draft! | 568.3 / 576.5 | 318.5 / 322.6 | 1.78x / 1.79x |\r\n| \u00b7 set_prognostic_edmf_precomputed_quantities_environment! | 798.7 / 809.0 | 456.7 / 458.8 | 1.75x / 1.76x |\r\n| \u00b7 set_precipitation_velocities! | 3562.5 / 3591.2 | 813.1 / 820.2 | 4.38x / 4.38x |\r\n| \u00b7 set_precipitation_surface_fluxes! | 338.9 / 341.0 | 229.4 / 231.4 | 1.48x / 1.47x |\r\n| **set_explicit_precomputed_quantities! (total)** | 29675.5 / 30202.9 | 8700.9 / 8838.1 | 3.41x / 3.42x |\r\n| \u00b7 set_prognostic_edmf_precomputed_quantities_explicit_closures! | 1143.8 / 1152.0 | 733.2 / 742.4 | 1.56x / 1.55x |\r\n| \u00b7 set_covariance_cache_and_cloud_fraction! | 12962.8 / 13440.0 | 5368.8 / 5507.1 | 2.41x / 2.44x |\r\n| \u00b7 \u00b7 set_buoyancy_gradient_inputs! | 448.5 / 455.7 | 303.1 / 305.2 | 1.48x / 1.49x |\r\n| \u00b7 \u00b7 set_precip_fraction! | 2690.0 / 2742.3 | 336.9 / 342.0 | 7.98x / 8.02x |\r\n| \u00b7 set_face_diffusivities! | 440.3 / 449.5 | 295.9 / 298.0 | 1.49x / 1.51x |\r\n| \u00b7 set_microphysics_tendency_cache! | 10561.5 / 10604.5 | 1771.5 / 1787.9 | 5.96x / 5.93x |\r\n| **remaining_tendency! (total)** | 10270.7 / 10381.3 | 7178.2 / 7206.9 | 1.43x / 1.44x |\r\n| \u00b7 horizontal_tracer_advection_tendency! | 1087.5 / 1097.7 | 1046.5 / 1053.7 | 1.04x / 1.04x |\r\n| \u00b7 hyperdiffusion_tendency! | 3789.8 / 3810.3 | 2776.1 / 2796.5 | 1.37x / 1.36x |\r\n| \u00b7 explicit_vertical_advection_tendency! | 1172.5 / 1178.6 | 855.0 / 858.1 | 1.37x / 1.37x |\r\n| \u00b7 viscous_sponge_tendency! | 1323.0 / 1369.1 | 1311.7 / 1329.2 | 1.01x / 1.03x |\r\n| \u00b7 surface_flux_tendency! | 1389.6 / 1399.8 | 368.6 / 372.7 | 3.77x / 3.76x |\r\n| \u00b7 edmfx_tke_tendency! | 659.5 / 668.7 | 414.7 / 418.8 | 1.59x / 1.60x |\r\n| **initialize_implicit_stage_problem!** | 18759.7 / 18818.0 | 10391.6 / 10447.9 | 1.81x / 1.80x |\r\n| **correct_implicit_advection_tendency!** | 393.2 / 398.3 | 393.2 / 396.3 | 1.00x / 1.01x |\r\n| **update_jacobian! (total)** | 14580.7 / 14784.5 | 5029.9 / 5071.9 | 2.90x / 2.92x |\r\n| \u00b7 update_advection_jacobian! | 1274.9 / 1285.1 | 458.8 / 465.9 | 2.78x / 2.76x |\r\n| \u00b7 update_sedimentation_jacobian! | 1628.2 / 1639.4 | 862.2 / 891.9 | 1.89x / 1.84x |\r\n| \u00b7 update_diffusion_jacobian! | 1386.5 / 1391.6 | 635.9 / 643.1 | 2.18x / 2.16x |\r\n| \u00b7 update_sgs_advection_jacobian! | 7291.9 / 7358.5 | 2162.7 / 2192.4 | 3.37x / 3.36x |\r\n| \u00b7 update_sgs_diffusion_jacobian! | 354.3 / 357.4 | 225.3 / 227.3 | 1.57x / 1.57x |\r\n| \u00b7 update_sgs_entr_detr_jacobian! | 722.9 / 727.0 | 289.8 / 295.9 | 2.49x / 2.46x |\r\n| \u00b7 update_sgs_boundary_condition_jacobian! | 159.7 / 160.8 | 107.5 / 107.5 | 1.49x / 1.50x |\r\n| \u00b7 update_sgs_massflux_jacobian! | 2072.6 / 2076.7 | 1105.9 / 1113.1 | 1.87x / 1.87x |\r\n\r\n### Equivalence with main\r\n\r\nMaximum relative difference for 25 state, tendency, Jacobian-solve, and precomputed quantities, from `compute_refs` in the harness:\r\n\r\n- **Bit-identical (23):** `Y.c` and `Y.f` after `initialize_implicit_stage_problem!`, implicit `Y\u209c.f`, `invert_jacobian!` `\u0394Y.f`, remaining `Y\u209c.c` and `Y\u209c.f`, `Y\u209c_lim.c`, `Y\u209c.c` (correct_implicit), `\u1da0K_h`, `\u1da0K_u`, `\u1d9cgrad\u1d65_\u03b8_liq_ice`, `\u1d9cgrad\u1d65_q_tot`, `\u1d9ccloud_fraction`, `\u1d9cprecip_frac`, `\u1d9csgs_moments`, `\u1d9cl_mix`, `\u1d9cT\u2032T\u2032`, `\u1d9cq\u2032q\u2032`, `\u1d9ccorr_Tq`, `\u1d9c\u03b1`, `\u1d9cmp_tendency\u2070`, and the surface rain and snow fluxes.\r\n- **Roundoff level, within the harness's 1e-5 Float32 tolerance:**\r\n\r\n| Quantity | max relative difference |\r\n|---|---|\r\n| implicit `Y\u209c.c` | 8.44e-07 |\r\n| `invert_jacobian!` `\u0394Y.c` | 1.46e-06 |\r\n\r\nOn CPU, the fused updraft sedimentation tendency and Jacobian are bit-identical to main's broadcasts on a perturbed AMIP h_elem 4 state, and 20 steps of four EDMF and single-column configurations (TRMM 1M and 0M, BOMEX with a passive tracer, single-column precipitation) are bit-identical to main. DYCOMS RF02 differs at roundoff from step ~10, as it did before this rebase.\r\n\r\nTo reproduce, run `perf/benchmark_components.jl` in `save` mode on main, then in `compare` mode on this branch.\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\nhttps://claude.ai/code/session_013hQP9j5RmSpmQPbuUCcUPz\r\n\r\n",
+    "changedFiles": 39,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-27T18:07:00Z",
+    "deletions": 2897,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-02T05:26:46Z",
+    "number": 4934,
+    "title": "Fuse column loops and eliminate temporary global caches"
+  },
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Restores two behaviors that #4934 changed: `sfc_tke` in the fused covariance loop holds the local TKE (see https://github.com/CliMA/ClimaAtmos.jl/pull/4934#discussion_r4439224249), and `\u1d9cbuoygrad` is never written for an EDMF model without covariances, which leaves `\u1d9cl_mix` uninitialized.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T05:36:45Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "3D70F0",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7zFICo",
+        "name": "bugfix :bug: :hammer:"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-02T16:40:49Z",
+    "number": 4952,
+    "title": "fix: restore the surface TKE and the buoyancy gradient after #4934"
+  },
+  {
+    "additions": 131,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\n#14 -- this will link to issue 14\nCloses #2 -- this will automatically close issue 2 on PR merge\n-->\nWith `ImplicitCloudLiquidFormation` and prognostic EDMF, the implicit-stage predictor (`solve_sgs_updraft_tracers_implicit_stage_analytic!`) condensed `\u0394q_lcl = \u03c4(1 \u2212 exp(\u2212dt\u03b3/\u03c4)) S` into the updraft `q_lcl` but left the grid-mean `\u03c1q_lcl` unchanged. With one Newton iteration and no `(\u03c1q_lcl, q_lcl\u02b2)` Jacobian block, the grid mean only received `\u03c1a\u02b2 S` evaluated at the already-saturated predictor state, so the environment `q_lcl` of the stage fell by `\u03c1a\u02b2 \u0394q_lcl / \u03c1a\u2070`, and `enforce_edmf_updraft_constraints!` (`edmfx_filter`) clipped the updraft `q_lcl` to `\u03c1q_lcl / \u03c1a`. The `u\u2083` solve still saw the condensed, buoyant predictor state.\n\nIn `prognostic_edmfx_bomex_column` (ARS222, dt 120 s, 1 Newton iteration) with `ImplicitCloudLiquidFormation` and `condensation_evaporation_timescale = 10`, the updraft `q_lcl` was exactly 0 in 76 % of updraft samples above 600 m, with the updraft 15\u201340 % supersaturated and 1\u20134 K colder than the environment. The clip fired at 94\u201397 % of stages and removed ~95 % of the updraft liquid. dt 60 s, explicit condensation, a 100 s timescale, or 3 Newton iterations did not show it.\n\nThe predictor now adds `\u03c1a\u02b2 \u0394q_lcl` to the grid-mean `\u03c1q_lcl`, in the last Picard round only (the loop restores the updraft scalars between rounds but not the grid mean).\n\n## To-do\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \n- Proposed task\n-->\n\n\n## Content\n<!---  specific tasks that are currently complete \n- Solution implemented\n-->\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-01T06:04:07Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-02T21:52:45Z",
+    "number": 4951,
+    "title": "Implicit condensation: add the updraft predictor increment to grid mean"
+  },
+  {
+    "additions": 301,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\n\nStretched vertical grids (`z_stretch: true`) use ClimaCore's two-scale `Meshes.BoundaryLayerHyperbolicTangentStretching` (CliMA/ClimaCore.jl#2709), which refines the boundary layer with scale height `z_pbl` (new key, default 2200 m) while matching the layer thickness `dz_bottom` at the surface and `dz_top` (new key, default 3000 m) at the model top. The keys flow from `default_config.yml` through `get_grid` to `SphereGrid`, `ColumnGrid`, `BoxGrid`, and `PlaneGrid`, whose vertical mesh the new `get_z_mesh` builds.\n\nThe rule admits `z_elem` within a range set by `dz_bottom`, `dz_top`, `z_pbl`, and `z_max`. Outside that range, ClimaCore's mesh constructor raises an `ArgumentError` that names the range, and `get_z_mesh` lets it propagate. The 10-level default grid lies below the range (its mean spacing equals `dz_top`), so the grid constructors default to `z_stretch = false`.\n\nAdds the 79-level configurations `numerics_sphere_he24ze79.yml` and `numerics_column_ze79.yml`, and tests of the uniform, fine, custom-`dz_top`, and rejected cases.\n\n## Configuration changes\n\nEvery Buildkite job was classified against the real constructor (YAML-parsed pipelines, including `commands:` steps and `JOB_NAME` expansion): 27 jobs run two-scale, 59 uniform, none rejected.\n\n- 31 configs whose grids the rule rejects set `z_stretch: false` and drop their unused `dz_bottom`: the 10-level default grid (including `numerics_sphere_he6ze10.yml`), the 25-level `bm_*` perf grids, and the 50-level gray radiative-equilibrium column. The YAML default stays `z_stretch: true`.\n- Three configs keep stretching with a `dz_top` inside the range the rule admits for them: `numerics_sphere_he6ze31.yml` (8000 m; range 6090 to 30000 m), the 200-level ERA5-driven column (500 m; range 490 to 500 m), and the RCEMIP box CRM (2000 m; range 840 to 2960 m).\n- The shallow cases set a `dz_top` close to the top spacing they have on `main`, so the global 3000 m default does not coarsen them aloft: `larcform1_1M_prognostic_edmfx.yml` 250 m (9 km domain), the three `plane_*` tests 600 m (21 km, mountain waves), and `prognostic_edmfx_armvaranal_column.yml` 1000 m (15 km). Their maximum adjacent-layer ratios stay at or below 1.13.\n- `single_column_hydrostatic_balance_ft64.yml` states `z_stretch: true` because CI pairs it with `numerics_sphere_he6ze10.yml`, which sets false.\n- `reproducibility_tests/ref_counter.jl` is bumped: every stretched CI grid changes.\n\nKnown leftover: `bm_aquaplanet_progedmf.yml` runs alone on the rejected 25-level grid and also paired with `he6ze31`, so the paired benchmark runs uniform.\n\n## Review notes\n\nSpacing of the single-scale rule on `main` versus the two-scale rule with the chosen `dz_top`, computed against ClimaCore `main`:\n\n| grid | `dz_top` [m] | top spacing [m] | levels below 2 km | max adjacent-layer ratio |\n|---|---|---|---|---|\n| ze63, 60 km, `dz_bottom` 30 m | 3000 (default) | 2864 \u2192 3000 | 21 \u2192 22 | 1.10 \u2192 1.11 |\n| he24ze79, 60 km, 28 m | 3000 (default) | 2210 \u2192 3000 | 25 \u2192 33 | 1.08 \u2192 1.14 |\n| `larcform1` column, 90 levels, 9 km, 10 m | 250 | 231 \u2192 250 | 50 \u2192 51 | 1.05 \u2192 1.05 |\n| `plane_*` tests, 100 levels, 21 km, 10 m | 600 | 578 \u2192 600 | 46 \u2192 47 | 1.06 \u2192 1.06 |\n| `armvaranal` column, 45 levels, 15 km, 30 m | 1000 | 797 \u2192 1000 | 20 \u2192 23 | 1.11 \u2192 1.13 |\n| ERA5 column, 200 levels, 45 km, 30 m | 500 | 481 \u2192 500 | 42 \u2192 47 | 1.02 \u2192 1.02 |\n\nThe ERA5 column's admissible window (490 to 500 m) is set by packing 200 levels from 30 m over 45 km with `z_pbl = 2200` m; `z_pbl = 3000` m widens it only to 580 m. The chosen 500 m reproduces the spacing on `main` to within 4 percent at every level.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 78,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T21:06:51Z",
+    "deletions": 66,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-02T23:37:06Z",
+    "number": 4949,
+    "title": "Use two-scale boundary-layer vertical stretching and add 79-level configs"
+  }
+]
