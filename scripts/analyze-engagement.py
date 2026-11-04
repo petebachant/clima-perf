@@ -19,14 +19,14 @@ from __future__ import annotations
 
 import json
 import os
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import plotly.colors as pc
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+from repo_colors import repo_color
 
 ROOT = Path.cwd()
 DATA = ROOT / "data"
@@ -91,15 +91,6 @@ MIN_QUARTER = "2018-Q1"
 # are clearly automated — usually Julia ecosystem bots.
 EXTRA_BOTS: set[str] = {"JuliaTagBot", "attobot"}
 
-# Pinned colors for the highest-profile repos so they read the same in
-# every figure; the remaining names draw from the palette, which has these
-# hues removed so nothing else reuses them.
-PINNED_COLORS = {
-    "Oceananigans": "#1F77B4",  # blue
-    "ClimaAtmos": "#EDB120",  # yellow
-    "ClimaCore": "#D62728",  # red
-    "ClimaLand": "#2CA02C",  # green
-}
 
 
 MONTHS_SHOWN = 24
@@ -548,42 +539,19 @@ def main() -> None:
         ]
 
     # ----- Shared repo/package colors -----------------------------------
-    # Same package name gets the same color in every panel and figure,
-    # ranked by all-time external engagement.
-    combined_totals: dict[str, float] = defaultdict(float)
-    for names in (
+    # Every figure in the project colors a repo by name (repo_colors.py),
+    # so a package reads the same everywhere and doesn't change color when
+    # its rank does.
+    names = set()
+    for col in (
         cit_events_df.loc[cit_events_df["cited_package"] != "", "cited_package"]
         if not cit_events_df.empty
         else [],
         eng_events_df["repo"] if not eng_events_df.empty else [],
         deps_df["clima_package"] if not deps_df.empty else [],
     ):
-        for name in names:
-            combined_totals[name] += 1
-    # Ties break by name so colors don't shuffle between runs.
-    unified_order = sorted(
-        combined_totals, key=lambda k: (-combined_totals[k], k)
-    )
-
-    palette = (
-        list(pc.qualitative.Plotly)
-        + list(pc.qualitative.D3)
-        + list(pc.qualitative.Light24)
-        + list(pc.qualitative.Dark24)
-    )
-    palette = [
-        c
-        for c in palette
-        if c.upper() not in {v.upper() for v in PINNED_COLORS.values()}
-    ]
-    color_for: dict[str, str] = {}
-    _next = 0
-    for _name in unified_order:
-        if _name in PINNED_COLORS:
-            color_for[_name] = PINNED_COLORS[_name]
-        else:
-            color_for[_name] = palette[_next % len(palette)]
-            _next += 1
+        names.update(col)
+    color_for = {name: repo_color(name) for name in names}
 
     # ----- Quarterly figure, all time -------------------------------------
     all_quarters = sorted(

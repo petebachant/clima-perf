@@ -37,6 +37,7 @@ import plotly.graph_objects as go
 # its name, so it is imported by path rather than as a package.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 projecttoml_graph = import_module("projecttoml-graph")
+from repo_colors import repo_color  # noqa: E402
 
 ROOT = Path.cwd()
 
@@ -129,11 +130,8 @@ def main() -> None:
     out.to_csv(ROOT / "results/repo-cochange.csv", index=False)
 
     # --- Figure ----------------------------------------------------------
-    palette = [
-        "#1F77B4", "#EDB120", "#D62728", "#2CA02C",
-        "#9467BD", "#8C564B", "#17BECF", "#E377C2",
-    ]
-    color_for = {r: palette[i % len(palette)] for i, r in enumerate(repos)}
+    # Same color per repo as every other figure in the project
+    color_for = {r: repo_color(r) for r in repos}
 
     # Cascade timeline: of the dependency updates in each quarter, what
     # fraction landed within the cascade window of a release in another

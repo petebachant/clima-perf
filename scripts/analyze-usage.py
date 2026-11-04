@@ -29,6 +29,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from repo_colors import OTHER_COLOR, repo_color
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
@@ -126,7 +128,7 @@ def traffic_figure() -> go.Figure:
             name=repo,
             legendgroup=repo,
             marker=dict(
-                color=PALETTE[i] if repo != "Other" else OTHER,
+                color=repo_color(repo) if repo != "Other" else OTHER_COLOR,
                 line=dict(color=SURFACE, width=1),
             ),
             hovertemplate="%{x|%b %d}: %{y} views<extra>" + repo + "</extra>",
@@ -145,7 +147,7 @@ def traffic_figure() -> go.Figure:
             legendgroup=repo,
             showlegend=False,
             mode="lines+markers",
-            line=dict(color=PALETTE[i], width=2),
+            line=dict(color=repo_color(repo), width=2),
             marker=dict(size=8, line=dict(color=SURFACE, width=2)),
             hovertemplate="%{x|%b %d}: %{y} unique visitors<extra>"
             + repo
@@ -159,7 +161,7 @@ def traffic_figure() -> go.Figure:
         y=rest,
         name="Other repos (sum)",
         mode="lines",
-        line=dict(color=OTHER, width=2),
+        line=dict(color=OTHER_COLOR, width=2),
         hovertemplate="%{x|%b %d}: %{y} unique visitors, summed across "
         "the other repos<extra></extra>",
         row=2,
@@ -277,7 +279,7 @@ def peer_installs_figure() -> go.Figure:
             y=daily[pkg],
             name=pkg,
             mode="lines",
-            line=dict(color=PALETTE[i], width=2),
+            line=dict(color=repo_color(pkg), width=2),
             hovertemplate="%{x|%b %d}: %{y} user installs<extra>"
             + pkg
             + "</extra>",
