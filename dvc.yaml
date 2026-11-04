@@ -266,6 +266,34 @@ stages:
           persist: false
     desc: Automatically generated from the 'analyze-adopters' stage in
       calkit.yaml. Changes made here will be overwritten.
+  analyze-usage:
+    cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-usage.py
+    deps:
+      - scripts/analyze-usage.py
+      - data/github-traffic
+      - data/julia-downloads
+      - data/blog
+      - data/github-code-dependents
+      - results/external-adopters.csv
+      - .calkit/env-locks/analyze
+    outs:
+      - figures/repo-traffic.json:
+          cache: false
+          persist: false
+      - figures/repo-referrers.json:
+          cache: false
+          persist: false
+      - figures/julia-installs.json:
+          cache: false
+          persist: false
+      - figures/julia-installs-peers.json:
+          cache: false
+          persist: false
+      - figures/repo-usage.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'analyze-usage' stage in calkit.yaml.
+      Changes made here will be overwritten.
   analyze-dev-speed:
     cmd: calkit nb execute --environment analyze --no-check --to html
       "notebooks/analyze-dev-speed.ipynb"

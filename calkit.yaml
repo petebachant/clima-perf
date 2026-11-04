@@ -354,6 +354,33 @@ pipeline:
           storage: git
         - path: figures/external-adopters.json
           storage: git
+    analyze-usage:
+      description: >
+        Chart the accumulated usage snapshots: daily GitHub views and
+        unique visitors per repo with blog posts marked, top referrers,
+        average daily Julia installs per package (user vs. CI), Oceananigans
+        installs against Julia peers, and outside repos using CliMA
+        packages by the year they were created.
+      kind: python-script
+      script_path: scripts/analyze-usage.py
+      environment: analyze
+      inputs:
+        - data/github-traffic
+        - data/julia-downloads
+        - data/blog
+        - data/github-code-dependents
+        - results/external-adopters.csv
+      outputs:
+        - path: figures/repo-traffic.json
+          storage: git
+        - path: figures/repo-referrers.json
+          storage: git
+        - path: figures/julia-installs.json
+          storage: git
+        - path: figures/julia-installs-peers.json
+          storage: git
+        - path: figures/repo-usage.json
+          storage: git
     analyze-dev-speed:
       description: Analyze things like PR resolution speed to see changes over
         time.
@@ -522,6 +549,43 @@ figures:
       while in progress), stacked by repo. Repo colors match the quarterly
       external engagement figure.
     stage: analyze-engagement
+  - path: figures/repo-traffic.json
+    title: GitHub traffic
+    description: >
+      Daily page views of CliMA repos stacked by repo, and daily unique
+      visitors for the three most-viewed repos (the rest summed in gray),
+      with blog post dates marked. GitHub keeps 14 days of traffic, so the
+      series starts on 2026-10-21 and grows from there.
+    stage: analyze-usage
+  - path: figures/repo-referrers.json
+    title: Repo traffic referrers
+    description: >
+      Where visitors to CliMA repos came from over the newest 14-day
+      window, as unique visitors summed over repos. GitHub reports only
+      each repo's top 10 referrers.
+    stage: analyze-usage
+  - path: figures/julia-installs.json
+    title: Julia installs by package
+    description: >
+      Average daily unique IP addresses installing each CliMA package from
+      the Julia package servers over the last 28 days, split into user and
+      CI clients and ranked by user installs. Packages pulled in by other
+      packages count too.
+    stage: analyze-usage
+  - path: figures/julia-installs-peers.json
+    title: Oceananigans installs vs. Julia peers
+    description: >
+      Daily user (non-CI) installs of Oceananigans next to SpeedyWeather
+      and Trixi, from the Julia package servers.
+    stage: analyze-usage
+  - path: figures/repo-usage.json
+    title: Outside repos using CliMA packages
+    description: >
+      Public repos outside CliMA whose Project.toml lists a CliMA package
+      (from the weekly code search, with CliMA members, spin-offs, and
+      copies excluded), by the year the repo was created and whether it was
+      pushed to in the last 180 days.
+    stage: analyze-usage
   - path: figures/external-adopters.json
     title: External adopters by package
     description: >
@@ -618,12 +682,20 @@ datasets:
     description: >
       Hand-picked OpenAlex IDs for publications-page entries that have no
       DOI and that title search can't match, each with the evidence.
+    created_by:
+      name: Pete Bachant
+      email: petebachant@gmail.com
+      with_ai: Claude Opus 5.5
   - path: data/adopter-labels.csv
     title: Adopter segment labels
     description: >
       Hand-curated segment labels for GitHub accounts whose public profile
       doesn't say who they are or says it misleadingly, each with the
       evidence. Overrides the profile rules in analyze-adopters.
+    created_by:
+      name: Pete Bachant
+      email: petebachant@gmail.com
+      with_ai: Claude Opus 5.5
   - path: results/external-adopters.csv
     title: External adopters by package
     description: >
