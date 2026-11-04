@@ -162,9 +162,6 @@ def main() -> int:
             n_pkg += 1
         n_found += n_pkg
         print(f"  {pkg['package']}: {n_pkg} files outside CliMA")
-    if len(failed) == len(packages):
-        print("ERROR: every search failed; check GH_TOKEN", file=sys.stderr)
-        return 1
     write_jsonl(hits_path, [log[k] for k in sorted(log)])
 
     # Metadata for every repo ever seen, so repos that dropped out of the
@@ -203,10 +200,14 @@ def main() -> int:
             owner_rows.append(old_owners.get(login, {"login": login}))
     write_jsonl(OUT_DIR / "owners.jsonl", owner_rows)
 
+    # Hits for the packages that worked are kept, but a failed search would
+    # otherwise look like a package nobody uses
+    if failed:
+        print(f"ERROR: search failed for {', '.join(failed)}", file=sys.stderr)
+        return 1
     print(
         f"✓ {n_found} hits this run, {len(log)} (package, repo, file) "
         f"rows logged, {len(repos)} repos, {len(owners)} owners"
-        + (f"; failed: {', '.join(failed)}" if failed else "")
     )
     return 0
 

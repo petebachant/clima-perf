@@ -11,9 +11,13 @@ The stage runs once per UTC day on a Calkit schedule input, and the
 current day is read from the period file Calkit writes (see period.py).
 
 On GitHub Actions ``GH_TOKEN`` is set
-from ``secrets.GITHUB_TOKEN`` and ``gh`` is therefore already authenticated.
-Locally the user runs ``gh auth login`` once (the calkit setup dependency
-checks this).
+from the ``CLIMA_GH_TOKEN`` secret, a personal token with push access to
+the CliMA repos, so ``gh`` is already authenticated.
+
+Errors on single repos don't stop the run, but they make it exit non-zero
+at the end, so a gap in the data fails the pipeline rather than passing
+quietly. Locally the user runs ``gh auth login`` once (the calkit setup
+dependency checks this).
 
 Data layout (everything under ``data/github/``)::
 
@@ -22,6 +26,7 @@ Data layout (everything under ``data/github/``)::
     issues/<repo>/<YYYY-MM-DD>.json  # issues created that UTC day (omitted if 0)
     issues/<repo>/.last_fetched
     repo_stats/<YYYY-MM-DD>.jsonl    # one snapshot row per repo per UTC day
+    discussions/<repo>.jsonl         # rewritten each run, by number
     forks/<repo>.jsonl               # append-only, deduped by fork full_name
     releases/<repo>.jsonl            # append-only, deduped by release id
     projecttoml/<repo>.jsonl         # append-only, deduped by commit SHA
@@ -33,12 +38,13 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Iterable
 
-from clima_repos import CLIMA_REPOS
+from clima_repos import CLIMA_REPOS, repo_slug
 from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -58,48 +64,58 @@ PR_FIELDS = (
 )
 ISSUE_FIELDS = "number,title,author,createdAt,labels"
 
-# Repos with detailed PR pulls (the team-relevant set from clima-analysis).
-PR_REPOS = [
-    "ClimaAtmos", "ClimaCoupler", "ClimaLand", "ClimaCore", "Thermodynamics",
-    "CloudMicrophysics", "ClimaParams", "ClimaOcean", "EnsembleKalmanProcesses",
-    "CalibrateEmulateSample", "ClimaCalibrate", "ClimaUtilities",
-    "ClimaDiagnostics", "ClimaAnalysis", "SurfaceFluxes", "Insolation",
-    "RRTMGP", "Oceananigans", "ClimaSeaIce", "ClimaTimeSteppers", "ClimaComms",
-    "ClimaEarth",
-]
+# Every stream covers every tracked repo, so per-repo engagement compares
+# like with like. A repo new to the list backfills from its creation date.
+PR_REPOS = ISSUE_REPOS = STATS_REPOS = PROJECTTOML_REPOS = CLIMA_REPOS
 
-# Broader set used for daily stats + fork/release snapshots.
-STATS_REPOS = CLIMA_REPOS
+# gh search pacing: GitHub allows 30 search requests a minute
+SEARCH_INTERVAL_S = 2.1
+SEARCH_CAP = 1000
 
-# Issues subset (external-use signal — same set clima-analysis uses).
-ISSUE_REPOS = [
-    "ClimaAtmos", "ClimaCore", "ClimaParams", "Thermodynamics", "CloudMicrophysics",
-    "SurfaceFluxes", "Insolation", "Oceananigans", "ClimaTimeSteppers", "ClimaSeaIce",
-]
+# Problems that lose data. Each stream records its failures here and keeps
+# going, so one bad repo doesn't block the rest, but main() exits non-zero
+# if there are any, so a broken token or repo fails the pipeline instead of
+# quietly leaving a gap.
+FAILURES: list[str] = []
 
-# Repos whose Project.toml commit history we track for propagation
-# analysis. This is the set that shows up as a dependency in another
-# package's Project.toml, so the release cascade is visible end to end:
-# the low-level utilities everything builds on, the mid-level physics
-# packages, and the top-level apps (ClimaAtmos, ClimaLand, ClimaCoupler).
-PROJECTTOML_REPOS = [
-    "ClimaAtmos", "ClimaCore", "ClimaParams", "Thermodynamics",
-    "CloudMicrophysics", "ClimaLand", "ClimaCoupler",
-    "SurfaceFluxes", "Insolation", "RRTMGP",
-    "ClimaUtilities", "ClimaDiagnostics", "ClimaAnalysis",
-    "ClimaTimeSteppers", "ClimaComms", "ClimaSeaIce",
-    "ClimaOcean", "EnsembleKalmanProcesses", "CalibrateEmulateSample",
-    "ClimaCalibrate",
-]
+# Repos the token can read, with their REST metadata; set in main()
+REPO_META: dict[str, dict] = {}
+
+
+def fail(stream: str, repo: str, err: Exception | str) -> None:
+    if isinstance(err, subprocess.CalledProcessError):
+        tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
+        err = tail[0]
+    print(f"  ERROR: {stream} {repo}: {err}", file=sys.stderr)
+    FAILURES.append(f"{stream} {repo}: {err}")
 
 
 # --- gh CLI helpers ---------------------------------------------------------
 
+TRANSIENT = ("HTTP 5", "timeout", "timed out", "connection", "EOF", "abuse",
+             "secondary rate limit", "API rate limit exceeded")
+
+
 def gh(*args: str) -> str:
-    """Run gh CLI; return stdout. Raises CalledProcessError on failure."""
-    return subprocess.run(
-        ["gh", *args], check=True, capture_output=True, text=True,
-    ).stdout
+    """Run gh CLI; return stdout, retrying transient errors.
+
+    Raises CalledProcessError once retries run out or on a permanent error,
+    e.g., a 403 or 404.
+    """
+    for attempt in range(4):
+        try:
+            return subprocess.run(
+                ["gh", *args], check=True, capture_output=True, text=True,
+            ).stdout
+        except subprocess.CalledProcessError as err:
+            msg = err.stderr or ""
+            if attempt == 3 or not any(t in msg for t in TRANSIENT):
+                raise
+            wait = 60 if "rate limit" in msg else 5 * 2**attempt
+            print(f"  retrying in {wait}s: {msg.strip()[-120:]}",
+                  file=sys.stderr)
+            time.sleep(wait)
+    raise AssertionError("unreachable")
 
 
 def gh_api_paginated(path: str) -> list:
@@ -157,6 +173,36 @@ def write_marker(path: Path, d: date) -> None:
 
 # --- generic per-day search fetcher -----------------------------------------
 
+def search_window(
+    repo: str, kind: str, qualifier: str, fields: str, start: date, end: date
+) -> list[dict]:
+    """Every PR or issue matching ``qualifier`` from ``start`` to ``end``.
+
+    gh's search stops at 1,000 results, so a window that hits the cap is
+    split in half and each half fetched on its own. Raises
+    CalledProcessError if a call fails.
+    """
+    query = f"{qualifier}:{start.isoformat()}..{end.isoformat()}"
+    state = ["--state", "merged"] if kind == "pr" else ["--state", "all"]
+    time.sleep(SEARCH_INTERVAL_S)
+    items = json.loads(gh(
+        kind, "list", "--repo", repo_slug(repo), *state,
+        "--search", query, "--limit", str(SEARCH_CAP), "--json", fields,
+    ))
+    if len(items) < SEARCH_CAP:
+        return items
+    if start == end:
+        raise subprocess.CalledProcessError(
+            1, "gh", stderr=f"{query} has {SEARCH_CAP}+ results in one day"
+        )
+    mid = start + (end - start) // 2
+    return search_window(repo, kind, qualifier, fields, start, mid) + (
+        search_window(
+            repo, kind, qualifier, fields, mid + timedelta(days=1), end
+        )
+    )
+
+
 def fetch_search_chunked(
     repo: str,
     kind: str,            # "pr" or "issue"
@@ -167,9 +213,10 @@ def fetch_search_chunked(
     """Fetch all events matching the time qualifier and bucket them into
     per-UTC-day files.
 
-    We issue at most one ``gh`` call per (repo, calendar year) so a 6-12 month
-    backfill is one or two calls per repo instead of one per day. Per-day
-    files keep storage aligned with the user-visible chunk semantics.
+    One search per (repo, calendar year), split further only if a year hits
+    the result cap, so a backfill is a call or two per repo-year. The
+    per-repo ``.last_fetched`` marker only advances past windows fetched in
+    full, so a failure is retried on the next run.
     """
     repo_lc = repo.lower()
     out_dir = DATA_ROOT / out_subdir / repo_lc
@@ -177,48 +224,25 @@ def fetch_search_chunked(
     marker = out_dir / ".last_fetched"
 
     last = read_marker(marker)
-    start_day = (last + timedelta(days=1)) if last else BACKFILL_START
+    if last:
+        start_day = last + timedelta(days=1)
+    else:
+        created = (REPO_META[repo].get("created_at") or "")[:10]
+        start_day = max(BACKFILL_START, date.fromisoformat(created)
+                        if created else BACKFILL_START)
     if start_day > LAST_DAY:
         return
 
-    # Iterate by calendar-year chunks. Search API silently truncates above
-    # ~1000 results; capping at a year keeps every CliMA repo well under that.
+    ts_field = "mergedAt" if kind == "pr" else "createdAt"
     cur = start_day
     while cur <= LAST_DAY:
-        year_end = date(cur.year, 12, 31)
-        chunk_end = min(year_end, LAST_DAY)
-        query = f"{qualifier}:{cur.isoformat()}..{chunk_end.isoformat()}"
-
-        if kind == "pr":
-            cmd = [
-                "pr", "list", "--repo", f"CliMA/{repo}.jl",
-                "--state", "merged",
-                "--search", query,
-                "--limit", "1000",
-                "--json", fields,
-            ]
-        else:
-            cmd = [
-                "issue", "list", "--repo", f"CliMA/{repo}.jl",
-                "--state", "all",
-                "--search", query,
-                "--limit", "1000",
-                "--json", fields,
-            ]
+        chunk_end = min(date(cur.year, 12, 31), LAST_DAY)
         try:
-            items = json.loads(gh(*cmd))
+            items = search_window(repo, kind, qualifier, fields, cur, chunk_end)
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: {kind} {repo} {query}: {tail[0]}", file=sys.stderr)
+            fail(kind, f"{repo} {cur}..{chunk_end}", err)
             return
-        if len(items) >= 1000:
-            print(
-                f"  WARN: {kind} {repo} {query} hit 1000-result cap; some "
-                "rows may be missing.",
-                file=sys.stderr,
-            )
 
-        ts_field = "mergedAt" if kind == "pr" else "createdAt"
         by_day: dict[date, list[dict]] = defaultdict(list)
         for it in items:
             ts = it.get(ts_field)
@@ -246,13 +270,13 @@ def fetch_search_chunked(
 
 def fetch_prs() -> None:
     print("→ PRs (per-day, year-chunked queries)")
-    for repo in PR_REPOS:
+    for repo in readable(PR_REPOS):
         fetch_search_chunked(repo, "pr", "merged", PR_FIELDS, "prs")
 
 
 def fetch_issues() -> None:
     print("→ Issues (per-day, year-chunked queries)")
-    for repo in ISSUE_REPOS:
+    for repo in readable(ISSUE_REPOS):
         fetch_search_chunked(repo, "issue", "created", ISSUE_FIELDS, "issues")
 
 
@@ -260,7 +284,12 @@ def fetch_issues() -> None:
 
 def fetch_repo_stats() -> None:
     """One JSONL file per UTC day with star/watcher/fork/issue counts for
-    every repo in STATS_REPOS. Treats the snapshot as "as of end of LAST_DAY"."""
+    every repo in STATS_REPOS. Treats the snapshot as "as of end of LAST_DAY".
+
+    Only a complete snapshot is written, since a day's file is never
+    revisited: if any repo couldn't be read, the day is left for the next
+    run to retry.
+    """
     print(f"→ Repo stats snapshot for {LAST_DAY}")
     out_dir = DATA_ROOT / "repo_stats"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -268,24 +297,21 @@ def fetch_repo_stats() -> None:
     if out_path.exists():
         print(f"  already have {out_path.name}")
         return
-    rows = []
-    for repo in STATS_REPOS:
-        try:
-            out = gh(
-                "api", f"repos/CliMA/{repo}.jl",
-                "--jq",
-                "{name: .name, stars: .stargazers_count, "
-                "watchers: .subscribers_count, forks: .forks_count, "
-                "open_issues: .open_issues_count}",
-            ).strip()
-        except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: stats {repo}: {tail[0]}", file=sys.stderr)
-            continue
-        if out:
-            row = json.loads(out)
-            row["snapshot_date"] = LAST_DAY.isoformat()
-            rows.append(row)
+    missing = [r for r in STATS_REPOS if r not in REPO_META]
+    if missing:
+        fail("stats", ", ".join(missing), "unreadable, so no snapshot today")
+        return
+    rows = [
+        {
+            "name": REPO_META[r]["name"],
+            "stars": REPO_META[r]["stargazers_count"],
+            "watchers": REPO_META[r]["subscribers_count"],
+            "forks": REPO_META[r]["forks_count"],
+            "open_issues": REPO_META[r]["open_issues_count"],
+            "snapshot_date": LAST_DAY.isoformat(),
+        }
+        for r in STATS_REPOS
+    ]
     write_jsonl(out_path, rows)
     print(f"  wrote {len(rows)} rows to {out_path.name}")
 
@@ -300,16 +326,15 @@ def fetch_forks() -> None:
     """
     print("→ Forks (append-only)")
     base_dir = DATA_ROOT / "forks"
-    for repo in STATS_REPOS:
+    for repo in readable(STATS_REPOS):
         repo_lc = repo.lower()
         out_path = base_dir / f"{repo_lc}.jsonl"
         existing = read_jsonl(out_path)
         seen = {e.get("fork_full_name") for e in existing}
         try:
-            pages = gh_api_paginated(f"repos/CliMA/{repo}.jl/forks")
+            pages = gh_api_paginated(f"repos/{repo_slug(repo)}/forks")
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: forks {repo}: {tail[0]}", file=sys.stderr)
+            fail("forks", repo, err)
             continue
         new = 0
         for f in pages:
@@ -339,18 +364,17 @@ def fetch_releases() -> None:
     """Releases per repo (append-only JSONL, deduped by release id)."""
     print("→ Releases (append-only)")
     base_dir = DATA_ROOT / "releases"
-    for repo in STATS_REPOS:
+    for repo in readable(STATS_REPOS):
         repo_lc = repo.lower()
         out_path = base_dir / f"{repo_lc}.jsonl"
         existing = read_jsonl(out_path)
         seen = {e.get("id") for e in existing}
         try:
             pages = gh_api_paginated(
-                f"repos/CliMA/{repo}.jl/releases?per_page=100"
+                f"repos/{repo_slug(repo)}/releases?per_page=100"
             )
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: releases {repo}: {tail[0]}", file=sys.stderr)
+            fail("releases", repo, err)
             continue
         new = 0
         for r in pages:
@@ -386,7 +410,7 @@ def fetch_projecttoml_commits() -> None:
     """
     print("→ Project.toml commits (incremental via ?since=)")
     base_dir = DATA_ROOT / "projecttoml"
-    for repo in PROJECTTOML_REPOS:
+    for repo in readable(PROJECTTOML_REPOS):
         repo_lc = repo.lower()
         out_path = base_dir / f"{repo_lc}.jsonl"
         existing = read_jsonl(out_path)
@@ -399,11 +423,10 @@ def fetch_projecttoml_commits() -> None:
             params.append(f"since={latest_ts}")
         try:
             pages = gh_api_paginated(
-                f"repos/CliMA/{repo}.jl/commits?{'&'.join(params)}"
+                f"repos/{repo_slug(repo)}/commits?{'&'.join(params)}"
             )
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: projecttoml {repo}: {tail[0]}", file=sys.stderr)
+            fail("projecttoml", repo, err)
             continue
         new = 0
         for c in pages:
@@ -446,7 +469,7 @@ def fetch_stargazers() -> None:
     """
     print("→ Stargazers (append-only)")
     base_dir = DATA_ROOT / "stargazers"
-    for repo in STATS_REPOS:
+    for repo in readable(STATS_REPOS):
         repo_lc = repo.lower()
         out_path = base_dir / f"{repo_lc}.jsonl"
         existing = read_jsonl(out_path)
@@ -455,11 +478,10 @@ def fetch_stargazers() -> None:
             out = gh(
                 "api", "--paginate",
                 "-H", "Accept: application/vnd.github.v3.star+json",
-                f"repos/CliMA/{repo}.jl/stargazers?per_page=100",
+                f"repos/{repo_slug(repo)}/stargazers?per_page=100",
             ).strip()
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: stargazers {repo}: {tail[0]}", file=sys.stderr)
+            fail("stargazers", repo, err)
             continue
         pages: list = []
         if out:
@@ -537,6 +559,9 @@ def fetch_clima_members() -> None:
             print(f"  fetched {len(fetched)} from {endpoint}")
             break
 
+    if not fetched:
+        # Without the member list, CliMA people would count as external
+        fail("members", "CliMA", "neither members endpoint was readable")
     new = fetched - existing
     merged = sorted(existing | fetched)
     out_path.write_text(json.dumps({"members": merged}, indent=2))
@@ -548,24 +573,116 @@ def fetch_clima_members() -> None:
 
 def fetch_repo_creation_dates() -> None:
     """Single JSONL refreshed each run; the data is effectively static
-    once a repo exists but we refresh anyway in case repos are added."""
+    once a repo exists but we refresh anyway in case repos are added.
+    Rows for repos that couldn't be read this run are kept."""
     print("→ Repo creation dates")
     out_path = DATA_ROOT / "repo_creation_dates.jsonl"
-    rows = []
+    rows = {r["name"]: r for r in read_jsonl(out_path)}
     for repo in STATS_REPOS:
+        meta = REPO_META.get(repo)
+        if meta:
+            rows[meta["name"]] = {
+                "name": meta["name"],
+                "created_at": meta["created_at"],
+            }
+    write_jsonl(out_path, rows.values())
+    print(f"  wrote {len(rows)} repos")
+
+
+def fetch_discussions() -> None:
+    """GitHub Discussions per repo (JSONL rewritten each run, by number).
+
+    Oceananigans users ask many of their questions here rather than in
+    issues. Only repos with Discussions turned on are fetched; discussions
+    started in the current UTC day are left for the next run.
+    """
+    print("→ Discussions")
+    base_dir = DATA_ROOT / "discussions"
+    query = """
+    query($owner: String!, $name: String!, $endCursor: String) {
+      repository(owner: $owner, name: $name) {
+        discussions(first: 100, after: $endCursor,
+                    orderBy: {field: CREATED_AT, direction: ASC}) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            number title createdAt answerChosenAt
+            author { login __typename }
+            category { name }
+          }
+        }
+      }
+    }"""
+    for repo in readable(STATS_REPOS):
+        if not REPO_META[repo].get("has_discussions"):
+            continue
+        owner, name = repo_slug(repo).split("/")
         try:
             out = gh(
-                "api", f"repos/CliMA/{repo}.jl",
-                "--jq", "{name: .name, created_at: .created_at}",
-            ).strip()
+                "api", "graphql", "--paginate", "-f", f"query={query}",
+                "-F", f"owner={owner}", "-F", f"name={name}",
+            )
         except subprocess.CalledProcessError as err:
-            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
-            print(f"  WARN: created_at {repo}: {tail[0]}", file=sys.stderr)
+            fail("discussions", repo, err)
             continue
-        if out:
-            rows.append(json.loads(out))
-    write_jsonl(out_path, rows)
-    print(f"  wrote {len(rows)} repos")
+        rows = []
+        decoder, idx, out = json.JSONDecoder(), 0, out.strip()
+        while idx < len(out):
+            page, idx = decoder.raw_decode(out, idx)
+            while idx < len(out) and out[idx].isspace():
+                idx += 1
+            for d in page["data"]["repository"]["discussions"]["nodes"]:
+                if d["createdAt"] >= TODAY_UTC_START_ISO:
+                    continue
+                author = d.get("author") or {}
+                rows.append({
+                    "repo": f"{repo}.jl",
+                    "number": d["number"],
+                    "title": d["title"],
+                    "created_at": d["createdAt"],
+                    "answer_chosen_at": d.get("answerChosenAt"),
+                    "author_login": author.get("login"),
+                    "author_type": author.get("__typename"),
+                    "category": (d.get("category") or {}).get("name"),
+                })
+        rows.sort(key=lambda r: r["number"])
+        write_jsonl(base_dir / f"{repo.lower()}.jsonl", rows)
+        print(f"  discussions {repo}: {len(rows)}")
+
+
+def readable(repos: list[str]) -> list[str]:
+    """The repos the token could read at the start of the run."""
+    return [r for r in repos if r in REPO_META]
+
+
+def check_access() -> bool:
+    """Fail fast if the token can't do what the streams need.
+
+    The workflow's own GITHUB_TOKEN can read repos but not list stargazers,
+    which is how stars silently stopped updating in October 2026.
+    """
+    try:
+        gh("api", "-H", "Accept: application/vnd.github.v3.star+json",
+           "repos/CliMA/ClimaAtmos.jl/stargazers?per_page=1")
+        return True
+    except subprocess.CalledProcessError as err:
+        fail("access", "token", err)
+        print(
+            "ERROR: GH_TOKEN can't list stargazers on CliMA repos. In CI it "
+            "should come from the CLIMA_GH_TOKEN secret.",
+            file=sys.stderr,
+        )
+        return False
+
+
+def load_repo_meta() -> None:
+    """Read every tracked repo's metadata once; unreadable ones fail."""
+    print("→ Repo metadata")
+    for repo in STATS_REPOS:
+        try:
+            REPO_META[repo] = json.loads(gh("api", f"repos/{repo_slug(repo)}"))
+        except subprocess.CalledProcessError as err:
+            fail("repo", repo, err)
+    print(f"  read {len(REPO_META)} of {len(STATS_REPOS)} repos")
 
 
 def main() -> int:
@@ -573,15 +690,25 @@ def main() -> int:
     print(f"Backfill start (when no prior data): {BACKFILL_START}")
     DATA_ROOT.mkdir(parents=True, exist_ok=True)
 
+    if not check_access():
+        return 1
+    load_repo_meta()
     fetch_prs()
     fetch_issues()
     fetch_repo_stats()
     fetch_forks()
     fetch_releases()
     fetch_stargazers()
+    fetch_discussions()
     fetch_projecttoml_commits()
     fetch_repo_creation_dates()
     fetch_clima_members()
+    if FAILURES:
+        print(f"✗ {len(FAILURES)} failures; data from them is missing:",
+              file=sys.stderr)
+        for f in FAILURES:
+            print(f"  {f}", file=sys.stderr)
+        return 1
     print("✓ Done.")
     return 0
 

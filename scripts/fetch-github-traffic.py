@@ -30,7 +30,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from clima_repos import CLIMA_REPOS
+from clima_repos import CLIMA_REPOS, repo_slug
 from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -96,7 +96,7 @@ def daily_rows(repo: str, items: list[dict]) -> list[dict]:
         if day < TODAY_UTC.isoformat():
             rows.append(
                 {
-                    "repo": f"{repo}.jl",
+                    "repo": repo_slug(repo).split("/")[1],
                     "date": day,
                     "count": it["count"],
                     "uniques": it["uniques"],
@@ -111,7 +111,7 @@ def main() -> int:
     failed: list[str] = []
     fetched_on = TODAY_UTC.isoformat()
     for repo in CLIMA_REPOS:
-        base = f"repos/CliMA/{repo}.jl/traffic"
+        base = f"repos/{repo_slug(repo)}/traffic"
         try:
             v = gh_api(f"{base}/views?per=day")
             c = gh_api(f"{base}/clones?per=day")
@@ -128,7 +128,7 @@ def main() -> int:
             referrers.append(
                 {
                     "fetched_on": fetched_on,
-                    "repo": f"{repo}.jl",
+                    "repo": repo_slug(repo).split("/")[1],
                     "referrer": r["referrer"],
                     "count": r["count"],
                     "uniques": r["uniques"],
@@ -138,7 +138,7 @@ def main() -> int:
             paths.append(
                 {
                     "fetched_on": fetched_on,
-                    "repo": f"{repo}.jl",
+                    "repo": repo_slug(repo).split("/")[1],
                     "path": p["path"],
                     "title": p["title"],
                     "count": p["count"],
@@ -147,25 +147,23 @@ def main() -> int:
             )
         print(f"  {repo}: {v.get('uniques', 0)} unique visitors over 14 days")
 
-    # Every repo failing means the token can't read traffic at all, e.g.,
-    # it's missing or lacks push access. Fail loudly rather than let the
-    # 14-day window quietly roll past.
-    if len(failed) == len(CLIMA_REPOS):
-        print(
-            "ERROR: couldn't read traffic for any repo. Is GH_TOKEN a token "
-            "with push access to the CliMA repos?",
-            file=sys.stderr,
-        )
-        return 1
-
     n_views = upsert_daily(OUT_DIR / "views.csv", views)
     n_clones = upsert_daily(OUT_DIR / "clones.csv", clones)
     replace_snapshot(OUT_DIR / "referrers.csv", REFERRER_FIELDS, referrers)
     replace_snapshot(OUT_DIR / "paths.csv", PATH_FIELDS, paths)
+    # Repos that failed are written for nothing this run. A run within 14
+    # days recovers their daily views and clones, but exit non-zero so the
+    # failure is seen before the window rolls past.
+    if failed:
+        print(
+            f"ERROR: couldn't read traffic for {', '.join(failed)}. GH_TOKEN "
+            "needs push access to every tracked CliMA repo.",
+            file=sys.stderr,
+        )
+        return 1
     print(
         f"✓ {n_views} new repo-days of views, {n_clones} of clones, "
         f"{len(referrers)} referrer rows, {len(paths)} path rows"
-        + (f"; failed: {', '.join(failed)}" if failed else "")
     )
     return 0
 

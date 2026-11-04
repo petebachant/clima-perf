@@ -47,7 +47,9 @@ jobs:
           # gh CLI inside the clima-data pixi env picks up GH_TOKEN
           # automatically, so no `gh auth login` is needed in CI. The
           # workflow's own GITHUB_TOKEN can't list stargazers or read traffic
-          # stats on CliMA repos, so prefer a personal token that can.
-          GH_TOKEN: ${{ secrets.CLIMA_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          # stats on CliMA repos, so use a personal token that can, with no
+          # fallback: if the secret goes missing, the fetch stages fail
+          # rather than quietly fetching less.
+          GH_TOKEN: ${{ secrets.CLIMA_GH_TOKEN }}
           OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO || 'petebachant@gmail.com' }}
           OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}

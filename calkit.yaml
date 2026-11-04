@@ -157,9 +157,12 @@ pipeline:
       description: >
         Clone JuliaRegistries/General and update a single dependents.jsonl
         event log per (clima_package, dependent) pair, tracking
-        first_seen_at + last_seen_at. First run does a full-history clone
-        and backfills first_seen_at from git log; subsequent runs use a
-        shallow clone. Runs once per UTC day.
+        first_seen_at + last_seen_at. Matches CliMA packages by UUID in
+        both Deps.toml and WeakDeps.toml (package extensions), counting
+        CLIMAParameters as ClimaParams. When what's tracked changes, it does
+        a full-history clone and backfills first_seen_at for the newly
+        tracked dependents from git log; otherwise a shallow clone. Runs
+        once per UTC day.
       kind: python-script
       script_path: scripts/fetch-registry.py
       environment: clima-data
@@ -167,6 +170,7 @@ pipeline:
         - kind: schedule
           period: 1 day
         - scripts/period.py
+        - scripts/clima_repos.py
       outputs:
         - path: data/julia-registry
           storage: git
@@ -174,7 +178,9 @@ pipeline:
     fetch-citations:
       description: >
         Parse every entry on https://clima.caltech.edu/publications/, resolve
-        each to an OpenAlex work (DOI lookup or title+year search), and
+        each to an OpenAlex work (DOI lookup, a hand-picked ID from
+        data/openalex-overrides.csv, title+year search, or the ID resolved
+        on an earlier run, which follows OpenAlex merges), and
         snapshot the citation graph as four normalized JSONL tables
         (clima-pubs, citing-pubs, citations, authors) under data/openalex/.
         Runs once per UTC day. Internal-vs-external classification and
@@ -185,6 +191,7 @@ pipeline:
       inputs:
         - kind: schedule
           period: 1 day
+        - data/openalex-overrides.csv
       outputs:
         - path: data/openalex
           storage: git
@@ -278,8 +285,9 @@ pipeline:
     analyze-engagement:
       description: >
         Count external engagement with CliMA's products per quarter: paper
-        citations, GitHub stars, forks, issues, and merged PRs, and new
-        Julia-registry dependents, excluding CliMA's own people and bots.
+        citations, GitHub stars, forks, issues, merged PRs, and discussions,
+        and new Julia-registry dependents, excluding CliMA's own people,
+        spin-offs run by CliMA developers, and bots.
         Writes one event table per stream and
         figures/external-engagement.json (quarterly), plus monthly and weekly
         variants.
@@ -306,9 +314,10 @@ pipeline:
     analyze-blog:
       description: >
         For each post in the blog's package series (since 2026-07-28) that
-        names a tracked package, compare the package's external GitHub events (stars, forks, issues, merged PRs)
-        in the 28 days from the post to the count its rate over the prior
-        90 days predicts.
+        names a tracked package, compare the package's external GitHub
+        events (stars, forks, issues, merged PRs, discussions) in the 28
+        days from the post to the count its rate over the prior 90 days
+        predicts.
       kind: python-script
       script_path: scripts/analyze-blog.py
       environment: analyze
@@ -500,13 +509,15 @@ figures:
       The external engagement figure binned by month over the last 24
       months, including the current one (drawn lighter while in progress):
       paper citations, software paper citations, GitHub
-      stars/forks/issues/PRs, and new Julia registry dependents. Colors
+      stars/forks/issues/PRs/discussions, and new Julia registry
+      dependents. Colors
       match the quarterly figure.
     stage: analyze-engagement
   - path: figures/github-engagement-weekly.json
     title: Weekly GitHub engagement
     description: >
-      External GitHub stars, forks, opened issues, and merged PRs per week
+      External GitHub stars, forks, opened issues, merged PRs, and
+      discussions per week
       over the last 52 weeks, including the current one (drawn lighter
       while in progress), stacked by repo. Repo colors match the quarterly
       external engagement figure.
@@ -517,15 +528,17 @@ figures:
       Distinct GitHub accounts outside CliMA with a repo that lists each
       CliMA package as a direct dependency in its Project.toml (from code
       search and the Julia registry), stacked by segment from their public
-      profiles. CliMA members, groups run by CliMA developers, and copies of
-      CliMA repos aren't counted.
+      profiles. CliMA members, spin-offs run by CliMA developers
+      (NumericalEarth), and copies of CliMA repos aren't counted. The ESM
+      components (ClimaAtmos, ClimaLand, ClimaCoupler) always get a row.
     stage: analyze-adopters
   - path: figures/blog-post-engagement.json
     title: GitHub activity after blog posts
     description: >
       For each post in the blog's package series (since 2026-07-28) that
-      names a tracked package, the package's external GitHub events (stars, forks, opened issues, merged PRs) in
-      the 28 days from the post, next to the count its rate over the prior
+      names a tracked package, the package's external GitHub events (stars,
+      forks, opened issues, merged PRs, discussions) in the 28 days from the
+      post, next to the count its rate over the prior
       90 days predicts. Oceananigans has its own panel because its activity
       is about ten times any other package's. Posts less than 28 days old
       are compared over the days so far.
@@ -600,6 +613,11 @@ datasets:
       each repo's metadata and its owner's public profile (no names or
       emails).
     stage: fetch-code-dependents
+  - path: data/openalex-overrides.csv
+    title: OpenAlex ID overrides
+    description: >
+      Hand-picked OpenAlex IDs for publications-page entries that have no
+      DOI and that title search can't match, each with the evidence.
   - path: data/adopter-labels.csv
     title: Adopter segment labels
     description: >
@@ -670,7 +688,7 @@ datasets:
   - path: results/github-engagement.csv
     title: GitHub engagement events
     description: One row per external star / fork / opened issue / merged PR
-      (login is non-CliMA-org, non-bot), with repo, event type, login,
+      / discussion (login is non-CliMA-org, non-bot), with repo, event type, login,
       timestamp, and quarter.
     stage: analyze-engagement
   - path: results/new-registry-dependents.csv
@@ -815,8 +833,8 @@ questions:
       three channels tracked, activity rises by about {combined_per_year}
       events per year, from {combined_first} per quarter in the earliest
       window to {combined_last} per quarter most recently. Paper citations
-      contribute {cit_per_year} per year and GitHub stars, forks, issues, and
-      merged PRs from outside the org contribute {eng_per_year} per year, both
+      contribute {cit_per_year} per year and GitHub stars, forks, issues,
+      merged PRs, and discussions from outside the org contribute {eng_per_year} per year, both
       close to linear over the period. New external Julia-registry dependents
       are the smallest channel but also rising, at {deps_per_year} per year
       ({deps_first} to {deps_last} per quarter). The growth is broad rather

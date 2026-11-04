@@ -55,6 +55,7 @@ SEGMENTS = {
     "Unknown": "#a8a7a1",
 }
 EXCLUDED = ["Internal", "Affiliated", "Copy"]
+ESM_COMPONENTS = ["ClimaAtmos", "ClimaLand", "ClimaCoupler"]
 
 # First match wins, so the more specific segments come first: a carbon
 # removal startup is climate tech, not industry, and a postdoc with a lab
@@ -136,7 +137,7 @@ def load_uses(members: set[str]) -> pd.DataFrame:
     ]
     for d in read_jsonl(REGISTRY):
         repo = repo_name_from_url(d.get("dependent_repo"))
-        if repo and not d.get("is_clima"):
+        if repo and not d.get("is_clima") and not d.get("is_affiliated"):
             rows.append(
                 {
                     "package": d["clima_package"],
@@ -167,6 +168,11 @@ def make_figure(adopters: pd.DataFrame) -> go.Figure:
         .unstack(fill_value=0)
         .reindex(columns=list(SEGMENTS), fill_value=0)
     )
+    # The ESM components always get a row, so having no outside users shows
+    # as a zero rather than as a missing bar
+    for pkg in ESM_COMPONENTS:
+        if pkg not in pivot.index:
+            pivot.loc[pkg] = 0
     pivot = pivot.loc[pivot.sum(axis=1).sort_values().index]
     totals = pivot.sum(axis=1)
     fig = go.Figure()
@@ -324,7 +330,7 @@ def main() -> None:
         # The ESM components, which show up as zero when nobody uses them
         **{
             f"{pkg.lower()}_accounts": int(by_pkg.get(pkg, 0))
-            for pkg in ("ClimaAtmos", "ClimaLand", "ClimaCoupler")
+            for pkg in ESM_COMPONENTS
         },
         "accounts_without_oceananigans": int(
             counted[counted["package"] != "Oceananigans"]["login"].nunique()

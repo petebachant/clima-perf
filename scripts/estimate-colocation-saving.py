@@ -175,7 +175,8 @@ def external_dependents() -> dict[str, int]:
         if not line.strip():
             continue
         row = json.loads(line)
-        if not row.get("is_clima"):
+        # Spin-off orgs run by CliMA developers aren't outside users either
+        if not row.get("is_clima") and not row.get("is_affiliated"):
             pkg = row["clima_package"]
             ext[pkg] = ext.get(pkg, 0) + 1
     return ext

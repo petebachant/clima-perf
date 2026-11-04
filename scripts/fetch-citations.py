@@ -31,6 +31,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import csv
 import sys
 import time
 from pathlib import Path
@@ -41,6 +42,7 @@ from bs4 import BeautifulSoup, Tag
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "data" / "openalex"
+OVERRIDES = REPO_ROOT / "data" / "openalex-overrides.csv"
 
 
 PUBLICATIONS_URL = "https://clima.caltech.edu/publications/"
@@ -179,6 +181,27 @@ def fetch_work_by_doi(doi: str) -> dict | None:
         if err.response is not None and err.response.status_code == 404:
             return None
         raise
+
+
+def fetch_work_by_id(openalex_id: str) -> dict | None:
+    """Fetch a work by OpenAlex ID. OpenAlex follows merges, so an ID that
+    was merged into another work returns the surviving one."""
+    short = openalex_id.rstrip("/").rsplit("/", 1)[-1]
+    try:
+        return get_json(f"{OPENALEX_WORKS}/{short}", {"select": SELECT_FULL})
+    except requests.HTTPError as err:
+        if err.response is not None and err.response.status_code == 404:
+            return None
+        raise
+
+
+def load_overrides() -> dict[str, str]:
+    """Hand-picked OpenAlex IDs for pubs title search can't match, keyed by
+    normalized title (data/openalex-overrides.csv)."""
+    if not OVERRIDES.exists():
+        return {}
+    with OVERRIDES.open(newline="") as f:
+        return {_title_norm(r["title"]): r["openalex_id"] for r in csv.DictReader(f)}
 
 
 def _title_norm(s: str) -> str:
@@ -395,8 +418,9 @@ def main() -> int:
     # genuinely has no publications. Overwriting the tables here would wipe the
     # whole dataset (and cascade every citation subgraph out of existence),
     # breaking the downstream analyze notebook. Bail out and keep the last-good
-    # committed tables instead; the next scheduled run (tomorrow) retries. This mirrors the per-pub carry-forward below for transient
-    # OpenAlex resolution failures.
+    # committed tables instead; the next scheduled run (tomorrow) retries.
+    # This mirrors the per-pub carry-forward below for transient OpenAlex
+    # resolution failures.
     if not sources:
         print(
             "WARN: parsed 0 publication entries from "
@@ -408,6 +432,7 @@ def main() -> int:
         return 0
 
     print("Resolving CliMA pubs against OpenAlex...")
+    overrides = load_overrides()
     clima_extras_rows: list[dict] = []
     new_resolved: dict[str, dict] = {}
     new_authors: dict[str, dict] = {}
@@ -425,19 +450,36 @@ def main() -> int:
                 method = "doi"
             except requests.RequestException as err:
                 print(f"  WARN: DOI {src['doi']}: {err}", file=sys.stderr)
+        override = overrides.get(_title_norm(src["title"]))
+        if work is None and override:
+            try:
+                work = fetch_work_by_id(override)
+                method = "override" if work else ""
+            except requests.RequestException as err:
+                print(f"  WARN: override {override}: {err}", file=sys.stderr)
         if work is None:
             try:
                 work = fetch_work_by_title(src["title"], src["year"])
                 method = "title_search" if work else ""
             except requests.RequestException as err:
                 print(f"  WARN: title search {src['title'][:60]!r}: {err}", file=sys.stderr)
+        prior = cached_extras_by_source.get(source_key(src["doi"], src["title"]))
+        if work is None and prior:
+            # Title search can stop matching when OpenAlex edits a title or
+            # year, or merges the work into another. Re-fetching the ID we
+            # resolved before keeps the count and citing works current
+            # rather than frozen.
+            try:
+                work = fetch_work_by_id(prior["openalex_id"])
+                method = "previous_id" if work else ""
+            except requests.RequestException as err:
+                print(f"  WARN: work {prior['openalex_id']}: {err}", file=sys.stderr)
         if work is None or not work.get("id"):
             # Live resolution failed. If we resolved this exact page entry on a
             # previous run, keep its last-known resolution (plus cached edges/
             # authors, stitched below) rather than deleting the pub and
             # cascading its whole citation subgraph out of the dataset. Only a
             # genuinely new, never-resolved entry goes to unresolved.
-            prior = cached_extras_by_source.get(source_key(src["doi"], src["title"]))
             cid = prior["openalex_id"] if prior else None
             if prior and cid in cached_resolved and cid not in seen_works:
                 seen_works.add(cid)
@@ -477,16 +519,20 @@ def main() -> int:
         f"({len(cache_hit)} cache-hit, {len(cache_miss)} need refetch, "
         f"{len(carried_forward)} carried forward, {len(unresolved)} unresolved)"
     )
-    if carried_forward:
-        for c in carried_forward[:5]:
-            print(f"    carried forward (live resolve failed): {c['title'][:80]!r}")
-        if len(carried_forward) > 5:
-            print(f"    ...and {len(carried_forward) - 5} more")
-    if unresolved:
-        for u in unresolved[:5]:
-            print(f"    unresolved: {u['title'][:80]!r} ({u['year']})")
-        if len(unresolved) > 5:
-            print(f"    ...and {len(unresolved) - 5} more")
+    # Both mean citations are missing or frozen, so say so on stderr. A
+    # lasting one needs a DOI on the publications page or a row in
+    # data/openalex-overrides.csv.
+    for c in carried_forward:
+        print(
+            f"  WARN: carried forward, counts frozen: {c['title'][:80]!r}",
+            file=sys.stderr,
+        )
+    for u in unresolved:
+        print(
+            f"  WARN: unresolved, citations missing: {u['title'][:80]!r} "
+            f"({u['year']})",
+            file=sys.stderr,
+        )
 
     print(f"Enumerating citing works for {len(cache_miss)} pub(s) with new citations...")
     new_edges: list[dict] = []

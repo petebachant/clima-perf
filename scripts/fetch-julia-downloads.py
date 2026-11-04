@@ -34,7 +34,7 @@ import tomllib
 import urllib.request
 from pathlib import Path
 
-from clima_repos import CLIMA_REPOS
+from clima_repos import CLIMA_REPOS, is_package
 from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -75,7 +75,7 @@ def package_uuids() -> dict[str, tuple[str, str]]:
     """
     registry = tomllib.loads(fetch(REGISTRY_URL).decode())
     by_name = {v["name"]: uuid for uuid, v in registry["packages"].items()}
-    wanted = [(n, "clima") for n in CLIMA_REPOS] + [
+    wanted = [(n, "clima") for n in CLIMA_REPOS if is_package(n)] + [
         (n, "peer") for n in PEER_PKGS
     ]
     out = {}

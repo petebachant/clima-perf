@@ -1,9 +1,9 @@
 """Compare external GitHub activity after each blog post to its prior rate.
 
 For every post in the package series (from its launch on 2026-07-28) that
-names a tracked package in its title, counts the
-package's external GitHub events (stars, forks, opened issues, merged PRs,
-from results/github-engagement.csv) in the 28 days from the post date, and
+names a tracked package in its title, counts the package's external GitHub
+events (stars, forks, opened issues, merged PRs, and discussions, from
+results/github-engagement.csv) in the 28 days from the post date, and
 compares that to the count its rate over the 90 days before the post
 predicts. Windows still in progress are compared over the days observed so
 far. This is a before/after comparison per package, not a controlled one:
@@ -42,7 +42,7 @@ BASELINE_DAYS = 90
 # Oceananigans doesn't flatten everything else against zero.
 HIGH_ACTIVITY = 20
 
-EVENT_TYPES = ["star", "fork", "issue", "pr_merged"]
+EVENT_TYPES = ["star", "fork", "issue", "pr_merged", "discussion"]
 
 # Two shades of one hue (validated as an ordinal pair on the light surface)
 EXPECTED_COLOR = "#86b6ef"
@@ -140,7 +140,8 @@ def make_figure(df: pd.DataFrame, through: pd.Timestamp) -> go.Figure:
             f"{r['expected_events']}<br>"
             f"Actual in {r['days_observed']} days: {r['actual_events']} "
             f"({r['actual_star']} stars, {r['actual_fork']} forks, "
-            f"{r['actual_issue']} issues, {r['actual_pr_merged']} PRs)"
+            f"{r['actual_issue']} issues, {r['actual_pr_merged']} PRs, "
+            f"{r['actual_discussion']} discussions)"
             for _, r in panel.iterrows()
         ]
         for col, name, color in (
@@ -178,7 +179,8 @@ def make_figure(df: pd.DataFrame, through: pd.Timestamp) -> go.Figure:
     day = f"{through:%b} {through.day}, {through.year}"
     fig.update_layout(
         title="External GitHub activity after each blog post"
-        f"<br><sup>Stars, forks, issues, and merged PRs vs. the count the "
+        f"<br><sup>Stars, forks, issues, merged PRs, and discussions vs. the "
+        "count the "
         f"prior {BASELINE_DAYS}-day rate predicts; data through {day}</sup>",
         height=140 + 34 * len(df) + 60 * len(panels),
         margin=dict(t=90, b=50, l=20, r=20),

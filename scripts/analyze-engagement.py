@@ -201,7 +201,7 @@ def make_engagement_figure(
         subplot_titles=(
             "All paper citations",
             "Software paper citations",
-            "GitHub stars/forks/issues/PRs",
+            "GitHub stars/forks/issues/PRs/discussions",
             "New Julia registry dependents",
         ),
         row_heights=[0.24, 0.24, 0.24, 0.24],
@@ -297,7 +297,8 @@ def make_weekly_github_figure(
         )
     fig.update_layout(
         barmode="stack",
-        title=f"External GitHub stars/forks/issues/PRs, last {WEEKS_SHOWN} weeks"
+        title="External GitHub stars/forks/issues/PRs/discussions, last "
+        f"{WEEKS_SHOWN} weeks"
         + in_progress_note("week", through, in_progress),
         height=600,
         margin=dict(t=50, b=40, l=60, r=20),
@@ -510,12 +511,24 @@ def main() -> None:
                     continue
                 add_eng_event(repo, "pr_merged", login, pr.get("mergedAt"))
 
+    for f in (DATA / "github" / "discussions").glob("*.jsonl"):
+        for line in f.read_text().splitlines():
+            if not line.strip():
+                continue
+            d = json.loads(line)
+            login = d.get("author_login")
+            if d.get("author_type") == "Bot" or not is_external(login):
+                continue
+            repo = camel((d.get("repo") or "").replace(".jl", ""))
+            add_eng_event(repo, "discussion", login, d.get("created_at"))
+
     eng_events_df = pd.DataFrame(eng_event_rows)
 
     # ----- New external Julia-registry dependents -------------------------
     # Read the event-log table written by fetch-registry. Group by the quarter
     # of ``first_seen_at`` to get "new external dependents per quarter, by
-    # CliMA package". External = the dependent's repo is not in the CliMA org.
+    # CliMA package". External = the dependent's repo is not in the CliMA org
+    # or a spin-off org run by CliMA developers (is_affiliated).
     deps_path = DATA / "julia-registry" / "dependents.jsonl"
     deps_df = (
         pd.read_json(deps_path, lines=True)
@@ -523,7 +536,12 @@ def main() -> None:
         else pd.DataFrame()
     )
     if not deps_df.empty:
-        deps_df = deps_df[~deps_df["is_clima"]].copy()
+        affiliated = (
+            deps_df["is_affiliated"].fillna(False).astype(bool)
+            if "is_affiliated" in deps_df
+            else False
+        )
+        deps_df = deps_df[~deps_df["is_clima"] & ~affiliated].copy()
         deps_df["quarter"] = deps_df["first_seen_at"].map(date_to_quarter)
         deps_df = deps_df[
             deps_df["quarter"].notna() & (deps_df["quarter"] >= MIN_QUARTER)
