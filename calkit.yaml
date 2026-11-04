@@ -189,6 +189,21 @@ pipeline:
         - path: data/openalex
           storage: git
           delete_before_run: false
+    fetch-blog:
+      description: >
+        Fetch every post on the clima.caltech.edu blog from its WordPress
+        API: date, title, link, the packages its title names, and the CliMA
+        repos it links to.
+      kind: python-script
+      script_path: scripts/fetch-blog.py
+      environment: clima-data
+      inputs:
+        - kind: schedule
+          period: 1 day
+      outputs:
+        - path: data/blog
+          storage: git
+          delete_before_run: false
     fetch-github-traffic:
       description: >
         Snapshot GitHub traffic (daily views and clones, plus top referrers
@@ -268,6 +283,25 @@ pipeline:
         - path: results/github-engagement.csv
           storage: git
         - path: results/new-registry-dependents.csv
+          storage: git
+    analyze-blog:
+      description: >
+        For each blog post that names a tracked package, compare the
+        package's external GitHub events (stars, forks, issues, merged PRs)
+        in the 28 days from the post to the count its rate over the prior
+        90 days predicts.
+      kind: python-script
+      script_path: scripts/analyze-blog.py
+      environment: analyze
+      inputs:
+        - data/blog
+        - results/github-engagement.csv
+        - data/github/repo_stats
+        - scripts/clima_repos.py
+      outputs:
+        - path: results/blog-post-engagement.csv
+          storage: git
+        - path: figures/blog-post-engagement.json
           storage: git
     analyze-dev-speed:
       description: Analyze things like PR resolution speed to see changes over
@@ -435,6 +469,16 @@ figures:
       while in progress), stacked by repo. Repo colors match the quarterly
       external engagement figure.
     stage: analyze-engagement
+  - path: figures/blog-post-engagement.json
+    title: GitHub activity after blog posts
+    description: >
+      For each blog post that names a tracked package, the package's
+      external GitHub events (stars, forks, opened issues, merged PRs) in
+      the 28 days from the post, next to the count its rate over the prior
+      90 days predicts. Oceananigans has its own panel because its activity
+      is about ten times any other package's. Posts less than 28 days old
+      are compared over the days so far.
+    stage: analyze-blog
   - path: figures/weekly-benchmarks.json
     title: Weekly benchmarks
     stage: analyze-weekly
@@ -497,6 +541,19 @@ showcase:
   - markdown_file: results/amip-repo-diff-links.md
 
 datasets:
+  - path: data/blog
+    title: CliMA blog posts
+    description: >
+      Every post on the clima.caltech.edu blog, with its date, title, link,
+      the packages its title names, and the CliMA repos it links to.
+    stage: fetch-blog
+  - path: results/blog-post-engagement.csv
+    title: GitHub activity after blog posts
+    description: >
+      One row per (blog post, featured package): external GitHub events by
+      type in the 28 days from the post, and the count the package's prior
+      90-day rate predicts.
+    stage: analyze-blog
   - path: data/github-traffic
     title: GitHub traffic
     description: >
