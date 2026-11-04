@@ -148,6 +148,7 @@ pipeline:
         - kind: schedule
           period: 1 day
         - scripts/period.py
+        - scripts/clima_repos.py
       outputs:
         - path: data/github
           storage: git
@@ -186,6 +187,42 @@ pipeline:
           period: 1 day
       outputs:
         - path: data/openalex
+          storage: git
+          delete_before_run: false
+    fetch-github-traffic:
+      description: >
+        Snapshot GitHub traffic (daily views and clones, plus top referrers
+        and pages over the last 14 days) for the CliMA repos fetch-github
+        tracks. GitHub keeps only 14 days, so this runs daily and
+        accumulates it. Needs a token with push access to the repos.
+      kind: python-script
+      script_path: scripts/fetch-github-traffic.py
+      environment: clima-data
+      inputs:
+        - kind: schedule
+          period: 1 day
+        - scripts/period.py
+        - scripts/clima_repos.py
+      outputs:
+        - path: data/github-traffic
+          storage: git
+          delete_before_run: false
+    fetch-julia-downloads:
+      description: >
+        Snapshot Julia package-server download stats (unique IPs and
+        requests per day, by client type and region) for CliMA's registered
+        packages plus a few peers. The servers publish only about the last
+        31 days, so this runs daily and accumulates them.
+      kind: python-script
+      script_path: scripts/fetch-julia-downloads.py
+      environment: clima-data
+      inputs:
+        - kind: schedule
+          period: 1 day
+        - scripts/period.py
+        - scripts/clima_repos.py
+      outputs:
+        - path: data/julia-downloads
           storage: git
           delete_before_run: false
     analyze:
@@ -460,6 +497,22 @@ showcase:
   - markdown_file: results/amip-repo-diff-links.md
 
 datasets:
+  - path: data/github-traffic
+    title: GitHub traffic
+    description: >
+      Daily views and clones (total and unique) per CliMA repo, plus daily
+      snapshots of each repo's top 10 referrers and pages over the previous
+      14 days, accumulated from GitHub's 14-day traffic window starting
+      2026-10-21.
+    stage: fetch-github-traffic
+  - path: data/julia-downloads
+    title: Julia package downloads
+    description: >
+      Daily unique IPs and requests from the Julia package servers for
+      CliMA's registered packages and a few peers, split by client type
+      (user, CI, unknown) and by package-server region, accumulated from the
+      servers' rolling 31-day window starting 2026-10-04.
+    stage: fetch-julia-downloads
   - path: results/amip.csv
     title: Flagship AMIP benchmark results
     description: Results from the flagship AMIP benchmark (16 horiz. elem.) over

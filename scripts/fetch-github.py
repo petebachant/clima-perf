@@ -38,6 +38,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Iterable
 
+from clima_repos import CLIMA_REPOS
 from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -68,17 +69,7 @@ PR_REPOS = [
 ]
 
 # Broader set used for daily stats + fork/release snapshots.
-STATS_REPOS = [
-    "ClimaAtmos", "ClimaCore", "ClimaParams", "Thermodynamics", "CloudMicrophysics",
-    "ClimaCoupler", "ClimaLand", "ClimaOcean", "SurfaceFluxes", "Insolation",
-    "RRTMGP", "ClimaUtilities", "ClimaDiagnostics", "ClimaAnalysis",
-    "Oceananigans", "ClimaSeaIce", "SeawaterPolynomials", "CubedSphere",
-    "ClimaTimeSteppers", "ClimaComms", "UnrolledUtilities", "MultiBroadcastFusion",
-    "LazyBroadcast", "NullBroadcasts", "StructuredPrinting", "OperatorFlux",
-    "ClimaInterpolations", "RootSolvers", "ArtifactWrappers",
-    "ClimaEarth", "ClimaViz", "RandomFeatures",
-    "EnsembleKalmanProcesses", "CalibrateEmulateSample", "ClimaCalibrate",
-]
+STATS_REPOS = CLIMA_REPOS
 
 # Issues subset (external-use signal — same set clima-analysis uses).
 ISSUE_REPOS = [

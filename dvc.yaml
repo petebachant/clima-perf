@@ -76,6 +76,7 @@ stages:
       - scripts/fetch-github.py
       - .calkit/local/current-periods/1-day-utc.txt
       - scripts/period.py
+      - scripts/clima_repos.py
       - .calkit/envs/clima-data/pixi.lock
     outs:
       - data/github:
@@ -109,6 +110,36 @@ stages:
           cache: false
           persist: true
     desc: Automatically generated from the 'fetch-citations' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  fetch-github-traffic:
+    cmd: calkit xenv -n clima-data --no-check -- python
+      scripts/fetch-github-traffic.py
+    deps:
+      - scripts/fetch-github-traffic.py
+      - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/period.py
+      - scripts/clima_repos.py
+      - .calkit/envs/clima-data/pixi.lock
+    outs:
+      - data/github-traffic:
+          cache: false
+          persist: true
+    desc: Automatically generated from the 'fetch-github-traffic' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  fetch-julia-downloads:
+    cmd: calkit xenv -n clima-data --no-check -- python
+      scripts/fetch-julia-downloads.py
+    deps:
+      - scripts/fetch-julia-downloads.py
+      - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/period.py
+      - scripts/clima_repos.py
+      - .calkit/envs/clima-data/pixi.lock
+    outs:
+      - data/julia-downloads:
+          cache: false
+          persist: true
+    desc: Automatically generated from the 'fetch-julia-downloads' stage in
       calkit.yaml. Changes made here will be overwritten.
   analyze:
     cmd: calkit nb execute --environment analyze --no-check --to html
