@@ -3,7 +3,9 @@
 Reads the OpenAlex citations, GitHub activity, and Julia-registry dependents
 the fetch stages write, keeps only external events, and writes one event
 table per stream plus quarterly (all-time), monthly (last 24 months),
-and weekly GitHub (last 52 weeks) figures:
+and weekly GitHub (last 52 weeks) figures. Each figure includes the period
+in progress, drawn lighter, so it updates every day rather than only once a
+period ends:
 
 - ``results/external-citations.csv``
 - ``results/github-engagement.csv``
@@ -102,6 +104,37 @@ PINNED_COLORS = {
 
 MONTHS_SHOWN = 24
 
+# Bars for the period still in progress are drawn this much lighter, so a
+# partial count doesn't read as a dip.
+IN_PROGRESS_OPACITY = 0.45
+
+
+def data_through(eng_events_df: pd.DataFrame) -> pd.Timestamp:
+    """The last UTC day the fetched data covers.
+
+    fetch-github writes one repo-stats snapshot named for each day it
+    covers, so the newest marks how far the data reaches. Falls back to the
+    day of the newest GitHub event.
+    """
+    snapshots = sorted((DATA / "github" / "repo_stats").glob("*.jsonl"))
+    if snapshots:
+        return pd.Timestamp(snapshots[-1].stem)
+    ts = pd.to_datetime(eng_events_df["event_at"], utc=True)
+    return ts.dt.tz_localize(None).max().normalize()
+
+
+def bar_opacity(periods, in_progress) -> list[float]:
+    """Per-bar opacity, lighter for the period in progress."""
+    return [IN_PROGRESS_OPACITY if p == in_progress else 1.0 for p in periods]
+
+
+def in_progress_note(unit: str, through: pd.Timestamp, in_progress) -> str:
+    """Title suffix explaining the lighter bar, if there is one."""
+    if in_progress is None:
+        return ""
+    day = f"{through:%b} {through.day}, {through.year}"
+    return f"<br><sup>Lighter bars: {unit} in progress, data through {day}</sup>"
+
 
 def month_start(values: pd.Series) -> pd.Series:
     """First day of the month for each date or ISO timestamp (NaT if bad)."""
@@ -132,12 +165,15 @@ def make_engagement_figure(
     unit: str,
     color_for: dict[str, str],
     title: str,
+    in_progress=None,
 ) -> go.Figure:
     """Four stacked-bar panels of external engagement, one bar per period.
 
     Each event table needs a ``period_col`` column; events outside
-    ``periods`` are dropped.
+    ``periods`` are dropped. The bars for ``in_progress``, the period still
+    under way, are drawn lighter.
     """
+    opacity = bar_opacity(periods, in_progress)
     all_by_period = (
         cit_events_df.groupby(period_col).size().reindex(periods, fill_value=0)
         if not cit_events_df.empty
@@ -175,6 +211,7 @@ def make_engagement_figure(
         x=periods,
         y=all_by_period.tolist(),
         marker_color="#888",
+        marker_opacity=opacity,
         showlegend=False,
         row=1,
         col=1,
@@ -190,6 +227,7 @@ def make_engagement_figure(
                 x=periods,
                 y=pivot[name].tolist(),
                 marker_color=color_for[name],
+                marker_opacity=opacity,
                 legendgroup=name,
                 showlegend=name not in legend_shown,
                 row=row,
@@ -201,7 +239,8 @@ def make_engagement_figure(
         barmode="stack",
         title=title,
         height=900,
-        margin=dict(t=50, b=40, l=60, r=20),
+        # Room for the in-progress note under the title
+        margin=dict(t=90, b=40, l=60, r=20),
         legend=dict(tracegroupgap=0, itemsizing="constant", font=dict(size=11)),
     )
     fig.update_yaxes(title_text=f"Citations/{unit}", row=1, col=1)
@@ -216,17 +255,25 @@ WEEKS_SHOWN = 52
 
 
 def make_weekly_github_figure(
-    eng_events_df: pd.DataFrame, color_for: dict[str, str]
+    eng_events_df: pd.DataFrame,
+    color_for: dict[str, str],
+    through: pd.Timestamp,
 ) -> go.Figure:
-    """Stacked weekly external GitHub events by repo over the last year."""
+    """Stacked weekly external GitHub events by repo over the last year.
+
+    Weeks start on Monday. The last bar is the week containing ``through``,
+    which is drawn lighter while it's still in progress.
+    """
     ts = pd.to_datetime(eng_events_df["event_at"], utc=True).dt.tz_localize(
         None
     )
     week = ts.dt.normalize() - pd.to_timedelta(ts.dt.weekday, unit="D")
-    end = week.max()  # Start of the newest (possibly partial) week
-    start = end - pd.Timedelta(weeks=WEEKS_SHOWN)
-    weeks = pd.date_range(start, end, freq="7D", inclusive="left")
-    in_window = (week >= start) & (week < end)
+    current = through - pd.Timedelta(days=through.weekday())
+    weeks = pd.date_range(end=current, periods=WEEKS_SHOWN, freq="7D")
+    # A week ending on Sunday is complete once the data reaches that day
+    in_progress = current if through.weekday() < 6 else None
+    opacity = bar_opacity(weeks, in_progress)
+    in_window = (week >= weeks[0]) & (week <= current)
     pivot = (
         eng_events_df[in_window]
         .assign(week=week[in_window])
@@ -243,13 +290,15 @@ def make_weekly_github_figure(
             x=weeks,
             y=pivot[repo].tolist(),
             marker_color=color_for[repo],
+            marker_opacity=opacity,
             hovertemplate="Week of %{x|%b %d, %Y}<br>%{y} events<extra>"
             + repo
             + "</extra>",
         )
     fig.update_layout(
         barmode="stack",
-        title="External GitHub stars/forks/issues/PRs, last 52 weeks",
+        title=f"External GitHub stars/forks/issues/PRs, last {WEEKS_SHOWN} weeks"
+        + in_progress_note("week", through, in_progress),
         height=600,
         margin=dict(t=50, b=40, l=60, r=20),
         # List the biggest repos first rather than in stack order.
@@ -524,6 +573,12 @@ def main() -> None:
         | set(eng_events_df.get("quarter", []))
         | set(deps_df.get("quarter", []))
     )
+    through = data_through(eng_events_df)
+    next_day = through + pd.Timedelta(days=1)
+    # A period is in progress unless the data reaches its last day
+    current_quarter = quarter_key(through)
+    if quarter_key(next_day) != current_quarter:
+        current_quarter = None
     fig = make_engagement_figure(
         cit_events_df,
         eng_events_df,
@@ -532,19 +587,17 @@ def main() -> None:
         periods=all_quarters,
         unit="quarter",
         color_for=color_for,
-        title="External engagement",
+        title="External engagement"
+        + in_progress_note("quarter", through, current_quarter),
+        in_progress=current_quarter,
     )
 
     # ----- Monthly figure, last 24 months ---------------------------------
-    # The window ends at the last complete month before the newest GitHub
-    # event (the GitHub data is refreshed daily), so a partial month doesn't
-    # read as a dip.
-    newest_month = month_start(eng_events_df["event_at"]).max()
-    months = pd.date_range(
-        end=newest_month - pd.DateOffset(months=1),
-        periods=MONTHS_SHOWN,
-        freq="MS",
-    )
+    # The window ends at the month the data reaches into, which is drawn
+    # lighter while it's in progress (the data is refreshed daily).
+    last_month = through.to_period("M").to_timestamp()
+    months = pd.date_range(end=last_month, periods=MONTHS_SHOWN, freq="MS")
+    current_month = last_month if next_day.month == through.month else None
     monthly_fig = make_engagement_figure(
         cit_events_df.assign(
             month=month_start(cit_events_df.get("publication_date"))
@@ -557,13 +610,13 @@ def main() -> None:
         periods=months,
         unit="month",
         color_for=color_for,
-        title=f"External engagement, last {MONTHS_SHOWN} months",
+        title=f"External engagement, last {MONTHS_SHOWN} months"
+        + in_progress_note("month", through, current_month),
+        in_progress=current_month,
     )
 
     # ----- Weekly GitHub engagement over the last year --------------------
-    # Weeks start on Monday. The window ends at the last complete week
-    # before the newest event, so a partial week doesn't read as a dip.
-    weekly_fig = make_weekly_github_figure(eng_events_df, color_for)
+    weekly_fig = make_weekly_github_figure(eng_events_df, color_for, through)
 
     # ----- Persist figure + event-level CSVs ------------------------------
     os.makedirs(ROOT / "figures", exist_ok=True)

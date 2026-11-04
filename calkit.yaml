@@ -13,8 +13,10 @@ requirements:
     description: >
       The fetch-github stage uses the gh CLI to pull data from CliMA org
       repos. Run this once locally to authenticate. On GitHub Actions the
-      run-pipeline workflow sets GH_TOKEN from the workflow's GITHUB_TOKEN,
-      so no interactive login is needed there.
+      run-pipeline workflow sets GH_TOKEN from the CLIMA_GH_TOKEN secret, a
+      personal token with push access to the CliMA repos, since the
+      workflow's own GITHUB_TOKEN can't list stargazers or read traffic
+      stats there.
   - kind: env-var
     name: BUILDKITE_PAT
     description: Buildkite personal access token.
@@ -383,7 +385,8 @@ figures:
     title: Monthly external engagement
     description: >
       The external engagement figure binned by month over the last 24
-      complete months: paper citations, software paper citations, GitHub
+      months, including the current one (drawn lighter while in progress):
+      paper citations, software paper citations, GitHub
       stars/forks/issues/PRs, and new Julia registry dependents. Colors
       match the quarterly figure.
     stage: analyze-engagement
@@ -391,8 +394,9 @@ figures:
     title: Weekly GitHub engagement
     description: >
       External GitHub stars, forks, opened issues, and merged PRs per week
-      over the last 52 complete weeks, stacked by repo. Repo colors match
-      the quarterly external engagement figure.
+      over the last 52 weeks, including the current one (drawn lighter
+      while in progress), stacked by repo. Repo colors match the quarterly
+      external engagement figure.
     stage: analyze-engagement
   - path: figures/weekly-benchmarks.json
     title: Weekly benchmarks
