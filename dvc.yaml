@@ -240,6 +240,30 @@ stages:
           persist: false
     desc: Automatically generated from the 'analyze-blog' stage in calkit.yaml.
       Changes made here will be overwritten.
+  analyze-adopters:
+    cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-adopters.py
+    deps:
+      - scripts/analyze-adopters.py
+      - data/github-code-dependents
+      - data/julia-registry/dependents.jsonl
+      - data/github/clima_members.json
+      - data/adopter-labels.csv
+      - .calkit/env-locks/analyze
+    outs:
+      - results/external-adopters.csv:
+          cache: false
+          persist: false
+      - results/adopter-accounts.csv:
+          cache: false
+          persist: false
+      - results/adopters-summary.json:
+          cache: false
+          persist: false
+      - figures/external-adopters.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'analyze-adopters' stage in
+      calkit.yaml. Changes made here will be overwritten.
   analyze-dev-speed:
     cmd: calkit nb execute --environment analyze --no-check --to html
       "notebooks/analyze-dev-speed.ipynb"

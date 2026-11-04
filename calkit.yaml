@@ -322,6 +322,29 @@ pipeline:
           storage: git
         - path: figures/blog-post-engagement.json
           storage: git
+    analyze-adopters:
+      description: >
+        Count the GitHub accounts outside CliMA that list each CliMA package
+        as a direct dependency (from code search and the Julia registry),
+        label each account by segment from its public profile or
+        data/adopter-labels.csv, and flag which are still active.
+      kind: python-script
+      script_path: scripts/analyze-adopters.py
+      environment: analyze
+      inputs:
+        - data/github-code-dependents
+        - data/julia-registry/dependents.jsonl
+        - data/github/clima_members.json
+        - data/adopter-labels.csv
+      outputs:
+        - path: results/external-adopters.csv
+          storage: git
+        - path: results/adopter-accounts.csv
+          storage: git
+        - path: results/adopters-summary.json
+          storage: git
+        - path: figures/external-adopters.json
+          storage: git
     analyze-dev-speed:
       description: Analyze things like PR resolution speed to see changes over
         time.
@@ -488,6 +511,15 @@ figures:
       while in progress), stacked by repo. Repo colors match the quarterly
       external engagement figure.
     stage: analyze-engagement
+  - path: figures/external-adopters.json
+    title: External adopters by package
+    description: >
+      Distinct GitHub accounts outside CliMA with a repo that lists each
+      CliMA package as a direct dependency in its Project.toml (from code
+      search and the Julia registry), stacked by segment from their public
+      profiles. CliMA members, groups run by CliMA developers, and copies of
+      CliMA repos aren't counted.
+    stage: analyze-adopters
   - path: figures/blog-post-engagement.json
     title: GitHub activity after blog posts
     description: >
@@ -560,6 +592,40 @@ showcase:
   - markdown_file: results/amip-repo-diff-links.md
 
 datasets:
+  - path: data/github-code-dependents
+    title: GitHub repos depending on CliMA packages
+    description: >
+      Weekly code-search log of Project.toml files outside the CliMA org
+      that list a CliMA package by UUID, with first/last-seen dates, plus
+      each repo's metadata and its owner's public profile (no names or
+      emails).
+    stage: fetch-code-dependents
+  - path: data/adopter-labels.csv
+    title: Adopter segment labels
+    description: >
+      Hand-curated segment labels for GitHub accounts whose public profile
+      doesn't say who they are or says it misleadingly, each with the
+      evidence. Overrides the profile rules in analyze-adopters.
+  - path: results/external-adopters.csv
+    title: External adopters by package
+    description: >
+      One row per (GitHub account, CliMA package) for accounts with a repo
+      that lists the package as a direct dependency, with segment, repos,
+      how it was found, and whether any of those repos was pushed to in the
+      last 180 days.
+    stage: analyze-adopters
+  - path: results/adopter-accounts.csv
+    title: Adopter accounts
+    description: >
+      One row per GitHub account found depending on a CliMA package, with
+      its segment, the profile text or label that set it, and its packages.
+    stage: analyze-adopters
+  - path: results/adopters-summary.json
+    title: External adopters summary
+    description: >
+      Headline counts for the adopters question: accounts by segment and by
+      package, the ESM components' counts, and how many are active.
+    stage: analyze-adopters
   - path: data/blog
     title: CliMA blog posts
     description: >
@@ -864,3 +930,43 @@ questions:
       release and propagation overhead for packages with no external users,
       not as a wall-clock or PR-count win; the {frac_substantive:.0%}
       substantive remainder (interface adaptation) would still be work.
+  - question: Which packages attract external adopters, and who are they?
+    evidence:
+      - kind: figure
+        path: figures/external-adopters.json
+      - kind: result
+        path: results/adopters-summary.json
+        values:
+          n: external_accounts
+          top: top_package
+          top_n: top_package_accounts
+          others: accounts_without_oceananigans
+          second: second_package
+          second_n: second_package_accounts
+          atmos: climaatmos_accounts
+          land: climaland_accounts
+          coupler: climacoupler_accounts
+          known: known_accounts
+          acad_pct: academic_pct_of_known
+          labs: lab_accounts
+          cdr: climate_tech_accounts
+          industry: industry_accounts
+          oss: open_source_accounts
+          unknown: unknown_accounts
+          active: active_accounts
+    answer: >
+      Mostly {top}, and mostly academic ocean scientists. {n} GitHub accounts
+      outside CliMA have a public repo listing a CliMA package as a direct
+      dependency, and {top_n} of them use {top}. {others} use some other
+      CliMA package, led by ones that come with ocean modeling, like
+      {second} ({second_n}). The atmosphere and land side of the Earth
+      system model has almost no outside users: {atmos} accounts depend on
+      ClimaAtmos directly, {land} on ClimaLand, and {coupler} on
+      ClimaCoupler. Of the {known} accounts whose profiles say who they
+      are, {acad_pct}% are academic, then {labs} research labs or
+      government, {cdr} climate tech or carbon removal groups, {oss}
+      open-source projects, and {industry} companies; {unknown} more give no
+      affiliation. {active} of the {n} pushed to a repo using a CliMA
+      package in the last 180 days. Code search only sees public repos'
+      default branches, so private use, including any by companies, is
+      invisible here.
