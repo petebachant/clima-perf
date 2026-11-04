@@ -778,9 +778,10 @@ datasets:
   - path: results/engagement-summary.json
     title: External engagement summary
     description: >
-      Per-quarter trend rates for external citations, GitHub engagement, and
-      new Julia-registry dependents, plus a combined rate, for the engagement
-      question.
+      Long-run and last-two-years trends for external citations, GitHub
+      engagement (Oceananigans and the other repos separately), and new
+      Julia-registry dependents, plus the last four complete quarters
+      against the four before, for the engagement question.
     stage: summarize-engagement
   - path: results/dev-throughput-summary.json
     title: Development throughput summary
@@ -820,25 +821,33 @@ questions:
       - kind: result
         path: results/engagement-summary.json
         values:
-          combined_per_year: combined.per_year_slope
-          combined_first: combined.first_window_mean
-          combined_last: combined.last_window_mean
-          cit_per_year: citations.per_year_slope
-          eng_per_year: github_events.per_year_slope
-          deps_per_year: registry_dependents.per_year_slope
-          deps_first: registry_dependents.first_window_mean
-          deps_last: registry_dependents.last_window_mean
+          through: last_complete_quarter
+          cit_long: citations.long_run_per_year
+          cit_recent: citations.recent_per_year
+          cit_last: citations.last_year_mean
+          cit_prior: citations.prior_year_mean
+          ocean_last: github_oceananigans.last_year_mean
+          ocean_prior: github_oceananigans.prior_year_mean
+          ocean_pct: github_oceananigans.change_pct
+          rest_last: github_other_repos.last_year_mean
+          rest_prior: github_other_repos.prior_year_mean
+          rest_pct: github_other_repos.change_pct
+          deps_last: registry_dependents.last_year_mean
     answer: >
-      External engagement is growing steadily, not flattening. Across the
-      three channels tracked, activity rises by about {combined_per_year}
-      events per year, from {combined_first} per quarter in the earliest
-      window to {combined_last} per quarter most recently. Paper citations
-      contribute {cit_per_year} per year and GitHub stars, forks, issues,
-      merged PRs, and discussions from outside the org contribute {eng_per_year} per year, both
-      close to linear over the period. New external Julia-registry dependents
-      are the smallest channel but also rising, at {deps_per_year} per year
-      ({deps_first} to {deps_last} per quarter). The growth is broad rather
-      than driven by one product.
+      Outside engagement is growing only through Oceananigans; the rest is
+      flat or shrinking. Outside citations of CliMA papers grew by
+      {cit_long} a quarter per year over the whole record but only
+      {cit_recent} per year over the last two years: the four quarters
+      through {through} averaged {cit_last} a quarter, against {cit_prior}
+      the year before. The newest quarters keep gaining citations for months
+      as papers are indexed, so they will rise somewhat, but not enough to
+      change the picture. On GitHub, outside stars, forks, issues, merged
+      PRs, and discussions on Oceananigans changed {ocean_pct:+}% year over
+      year ({ocean_prior} to {ocean_last} a quarter), while every other
+      CliMA repo combined changed {rest_pct:+}% ({rest_prior} to
+      {rest_last}). New
+      outside Julia-registry dependents remain rare, about {deps_last} a
+      quarter.
   - question: How has software development throughput changed over time within
       the CliMA organization?
     evidence:
