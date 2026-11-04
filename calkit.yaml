@@ -189,6 +189,25 @@ pipeline:
         - path: data/openalex
           storage: git
           delete_before_run: false
+    fetch-code-dependents:
+      description: >
+        Search GitHub code for each CliMA package's UUID in Project.toml
+        files to find repos that depend on it directly, including ones that
+        aren't registered packages. Keeps a first/last-seen log of hits plus
+        each repo's metadata and its owner's public profile. Code search is
+        slow (10 requests a minute), so this runs weekly.
+      kind: python-script
+      script_path: scripts/fetch-code-dependents.py
+      environment: clima-data
+      inputs:
+        - kind: schedule
+          period: 1 week
+        - scripts/period.py
+        - data/julia-downloads/packages.csv
+      outputs:
+        - path: data/github-code-dependents
+          storage: git
+          delete_before_run: false
     fetch-blog:
       description: >
         Fetch every post on the clima.caltech.edu blog from its WordPress
@@ -286,8 +305,8 @@ pipeline:
           storage: git
     analyze-blog:
       description: >
-        For each blog post that names a tracked package, compare the
-        package's external GitHub events (stars, forks, issues, merged PRs)
+        For each post in the blog's package series (since 2026-07-28) that
+        names a tracked package, compare the package's external GitHub events (stars, forks, issues, merged PRs)
         in the 28 days from the post to the count its rate over the prior
         90 days predicts.
       kind: python-script
@@ -472,8 +491,8 @@ figures:
   - path: figures/blog-post-engagement.json
     title: GitHub activity after blog posts
     description: >
-      For each blog post that names a tracked package, the package's
-      external GitHub events (stars, forks, opened issues, merged PRs) in
+      For each post in the blog's package series (since 2026-07-28) that
+      names a tracked package, the package's external GitHub events (stars, forks, opened issues, merged PRs) in
       the 28 days from the post, next to the count its rate over the prior
       90 days predicts. Oceananigans has its own panel because its activity
       is about ten times any other package's. Posts less than 28 days old
@@ -550,9 +569,9 @@ datasets:
   - path: results/blog-post-engagement.csv
     title: GitHub activity after blog posts
     description: >
-      One row per (blog post, featured package): external GitHub events by
-      type in the 28 days from the post, and the count the package's prior
-      90-day rate predicts.
+      One row per (series blog post, featured package): external GitHub
+      events by type in the 28 days from the post, and the count the
+      package's prior 90-day rate predicts.
     stage: analyze-blog
   - path: data/github-traffic
     title: GitHub traffic

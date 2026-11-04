@@ -111,6 +111,21 @@ stages:
           persist: true
     desc: Automatically generated from the 'fetch-citations' stage in
       calkit.yaml. Changes made here will be overwritten.
+  fetch-code-dependents:
+    cmd: calkit xenv -n clima-data --no-check -- python
+      scripts/fetch-code-dependents.py
+    deps:
+      - scripts/fetch-code-dependents.py
+      - .calkit/local/current-periods/1-week-utc.txt
+      - scripts/period.py
+      - data/julia-downloads/packages.csv
+      - .calkit/envs/clima-data/pixi.lock
+    outs:
+      - data/github-code-dependents:
+          cache: false
+          persist: true
+    desc: Automatically generated from the 'fetch-code-dependents' stage in
+      calkit.yaml. Changes made here will be overwritten.
   fetch-blog:
     cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-blog.py
     deps:

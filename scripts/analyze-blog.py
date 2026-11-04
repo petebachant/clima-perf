@@ -1,6 +1,7 @@
 """Compare external GitHub activity after each blog post to its prior rate.
 
-For every post that names a tracked package in its title, counts the
+For every post in the package series (from its launch on 2026-07-28) that
+names a tracked package in its title, counts the
 package's external GitHub events (stars, forks, opened issues, merged PRs,
 from results/github-engagement.csv) in the 28 days from the post date, and
 compares that to the count its rate over the 90 days before the post
@@ -32,6 +33,9 @@ POSTS = ROOT / "data" / "blog" / "posts.jsonl"
 EVENTS = ROOT / "results" / "github-engagement.csv"
 REPO_STATS = ROOT / "data" / "github" / "repo_stats"
 
+# The package series launched with this post; older posts were occasional
+# and years apart, so they aren't comparable.
+SERIES_START = "2026-07-28"
 AFTER_DAYS = 28
 BASELINE_DAYS = 90
 # Packages whose expected count tops this get their own panel and scale, so
@@ -57,6 +61,8 @@ def post_rows(events: pd.DataFrame, through: pd.Timestamp) -> pd.DataFrame:
     rows = []
     for line in POSTS.read_text().splitlines():
         post = json.loads(line)
+        if post["date"] < SERIES_START:
+            continue
         day = pd.Timestamp(post["date"])
         observed = min(AFTER_DAYS, (through - day).days + 1)
         if observed < 1:
@@ -199,11 +205,10 @@ def main() -> None:
     make_figure(df, through).write_json(
         ROOT / "figures" / "blog-post-engagement.json"
     )
-    series = df[df["post_date"] >= "2026-07-28"]
     print(
-        f"{len(df)} post-package pairs; since the series began: "
-        f"{series['actual_events'].sum()} actual vs. "
-        f"{series['expected_events'].sum():.1f} expected events"
+        f"{len(df)} post-package pairs: "
+        f"{df['actual_events'].sum()} actual vs. "
+        f"{df['expected_events'].sum():.1f} expected events"
     )
 
 
