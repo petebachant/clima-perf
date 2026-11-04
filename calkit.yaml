@@ -103,7 +103,9 @@ pipeline:
       kind: jupyter-notebook
       environment: bk
       notebook_path: notebooks/buildkite.ipynb
-      always_run: true
+      inputs:
+        - kind: schedule
+          period: 1 day
       html_storage: git
       executed_ipynb_storage: git
       outputs:
@@ -124,7 +126,9 @@ pipeline:
       kind: python-script
       script_path: scripts/fetch-weekly-buildkite.py
       environment: bk
-      always_run: true
+      inputs:
+        - kind: schedule
+          period: 1 day
       outputs:
         - path: data/buildkite-weekly
           delete_before_run: false
@@ -133,12 +137,15 @@ pipeline:
       description: >
         Incrementally fetch CliMA-org GitHub data (PRs, issues, repo stats,
         forks, releases, Project.toml commits, repo creation dates) up to
-        the start of the current UTC day. Resumes from the latest
-        previously-fetched timestamp on each run.
+        the start of the current UTC day. Runs once per UTC day and resumes
+        from the latest previously-fetched timestamp.
       kind: python-script
       script_path: scripts/fetch-github.py
       environment: clima-data
-      always_run: true
+      inputs:
+        - kind: schedule
+          period: 1 day
+        - scripts/period.py
       outputs:
         - path: data/github
           storage: git
@@ -149,11 +156,14 @@ pipeline:
         event log per (clima_package, dependent) pair, tracking
         first_seen_at + last_seen_at. First run does a full-history clone
         and backfills first_seen_at from git log; subsequent runs use a
-        shallow clone. No-ops if today's UTC day has already been processed.
+        shallow clone. Runs once per UTC day.
       kind: python-script
       script_path: scripts/fetch-registry.py
       environment: clima-data
-      always_run: true
+      inputs:
+        - kind: schedule
+          period: 1 day
+        - scripts/period.py
       outputs:
         - path: data/julia-registry
           storage: git
@@ -164,13 +174,14 @@ pipeline:
         each to an OpenAlex work (DOI lookup or title+year search), and
         snapshot the citation graph as four normalized JSONL tables
         (clima-pubs, citing-pubs, citations, authors) under data/openalex/.
-        No-ops once the marker records the current UTC day. Internal-vs-
-        external classification and package grouping happen in
-        analyze-engagement.
+        Runs once per UTC day. Internal-vs-external classification and
+        package grouping happen in analyze-engagement.
       kind: python-script
       script_path: scripts/fetch-citations.py
       environment: clima-data
-      always_run: true
+      inputs:
+        - kind: schedule
+          period: 1 day
       outputs:
         - path: data/openalex
           storage: git

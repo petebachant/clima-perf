@@ -23,8 +23,7 @@ We deliberately do NOT compute "is_internal" here. That filter (citing pub
 shares any author with any CliMA pub) belongs downstream in the analyze
 notebook, which already has the right context to apply it.
 
-No-ops if ``data/openalex/.last_fetched`` already records yesterday's UTC
-day, matching the resumable pattern used by fetch-github.
+The stage runs once per UTC day on a Calkit schedule input.
 """
 
 from __future__ import annotations
@@ -34,7 +33,6 @@ import os
 import re
 import sys
 import time
-from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable, Iterator
 
@@ -44,9 +42,6 @@ from bs4 import BeautifulSoup, Tag
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "data" / "openalex"
 
-TODAY_UTC = datetime.now(timezone.utc).date()
-LAST_DAY = TODAY_UTC - timedelta(days=1)
-COMPLETED_MARKER = OUT_DIR / ".last_fetched"
 
 PUBLICATIONS_URL = "https://clima.caltech.edu/publications/"
 OPENALEX_WORK_BY_DOI = "https://api.openalex.org/works/doi:"
@@ -353,29 +348,10 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(ln) for ln in path.read_text().splitlines() if ln.strip()]
 
 
-def read_marker(path: Path) -> date | None:
-    if not path.exists():
-        return None
-    try:
-        return date.fromisoformat(path.read_text().strip())
-    except ValueError:
-        return None
-
-
-def write_marker(path: Path, d: date) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(d.isoformat() + "\n")
-
-
 # --- Main ------------------------------------------------------------------
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    if read_marker(COMPLETED_MARKER) == LAST_DAY:
-        print(
-            f"Already fetched citation data for UTC day {LAST_DAY}; nothing to do."
-        )
-        return 0
 
     # Load any prior snapshot so we can skip citing-works enumeration for
     # CliMA pubs whose ``cited_by_count`` is unchanged. The lightweight clima-
@@ -419,8 +395,7 @@ def main() -> int:
     # genuinely has no publications. Overwriting the tables here would wipe the
     # whole dataset (and cascade every citation subgraph out of existence),
     # breaking the downstream analyze notebook. Bail out and keep the last-good
-    # committed tables instead, leaving the marker untouched so the next run
-    # retries. This mirrors the per-pub carry-forward below for transient
+    # committed tables instead; the next scheduled run (tomorrow) retries. This mirrors the per-pub carry-forward below for transient
     # OpenAlex resolution failures.
     if not sources:
         print(
@@ -614,7 +589,6 @@ def main() -> int:
         # Clear a stale unresolved file from a previous run.
         (OUT_DIR / "unresolved-pubs.jsonl").unlink(missing_ok=True)
 
-    write_marker(COMPLETED_MARKER, LAST_DAY)
     print(
         f"✓ Wrote {n_resolved} resolved pubs ({n_clima} clima), "
         f"{n_edges} citation edges, {n_authors} authors."

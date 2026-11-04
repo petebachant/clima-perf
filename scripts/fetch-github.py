@@ -7,7 +7,10 @@ For each repo and data type we:
 - Only fetch data whose timestamp is strictly before the start of the
   *current* UTC day, so every batch we commit represents complete UTC days.
 
-This is meant to run nightly on GitHub Actions, where ``GH_TOKEN`` is set
+The stage runs once per UTC day on a Calkit schedule input, and the
+current day is read from the period file Calkit writes (see period.py).
+
+On GitHub Actions ``GH_TOKEN`` is set
 from ``secrets.GITHUB_TOKEN`` and ``gh`` is therefore already authenticated.
 Locally the user runs ``gh auth login`` once (the calkit setup dependency
 checks this).
@@ -31,15 +34,17 @@ import json
 import subprocess
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Iterable
+
+from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = REPO_ROOT / "data" / "github"
 
 # Fetch up to (but not including) start of the current UTC day.
-TODAY_UTC = datetime.now(timezone.utc).date()
+TODAY_UTC = current_day()
 LAST_DAY = TODAY_UTC - timedelta(days=1)
 TODAY_UTC_START_ISO = f"{TODAY_UTC.isoformat()}T00:00:00Z"
 
@@ -577,14 +582,6 @@ def main() -> int:
     print(f"Backfill start (when no prior data): {BACKFILL_START}")
     DATA_ROOT.mkdir(parents=True, exist_ok=True)
 
-    # Global short-circuit: if the previous successful run already covered
-    # LAST_DAY, there is nothing to do today. Skips ALL per-repo work
-    # (forks/releases pagination, repo-stats snapshot, etc.).
-    completed_marker = DATA_ROOT / ".last_completed_day"
-    if read_marker(completed_marker) == LAST_DAY:
-        print(f"Already completed for UTC day {LAST_DAY}; nothing to do.")
-        return 0
-
     fetch_prs()
     fetch_issues()
     fetch_repo_stats()
@@ -594,7 +591,6 @@ def main() -> int:
     fetch_projecttoml_commits()
     fetch_repo_creation_dates()
     fetch_clima_members()
-    write_marker(completed_marker, LAST_DAY)
     print("✓ Done.")
     return 0
 

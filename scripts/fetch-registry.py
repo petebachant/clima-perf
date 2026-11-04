@@ -27,13 +27,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import date, datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
+
+from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "data" / "julia-registry"
 
-TODAY_UTC = datetime.now(timezone.utc).date()
+TODAY_UTC = current_day()
 LAST_DAY = TODAY_UTC - timedelta(days=1)
 
 REGISTRY_URL = "https://github.com/JuliaRegistries/General"
@@ -187,17 +189,7 @@ def first_seen_via_git(clone_path: Path, clima_pkg: str, dependent_pkg: str) -> 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     today = LAST_DAY.isoformat()
-
     latest_run_path = OUT_DIR / "latest_run.json"
-    if latest_run_path.exists():
-        try:
-            if json.loads(latest_run_path.read_text()).get("date") == today:
-                print(
-                    f"Registry already snapshotted for {today}; nothing to do."
-                )
-                return 0
-        except json.JSONDecodeError:
-            pass
 
     out_path = OUT_DIR / "dependents.jsonl"
     existing = {

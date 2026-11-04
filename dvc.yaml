@@ -45,6 +45,7 @@ stages:
       "notebooks/buildkite.ipynb"
     deps:
       - .calkit/notebooks/cleaned/notebooks/buildkite.ipynb
+      - .calkit/local/current-periods/1-day-utc.txt
       - .calkit/env-locks/bk
     outs:
       - buildkite:
@@ -54,7 +55,6 @@ stages:
           cache: false
       - .calkit/notebooks/html/notebooks/buildkite.html:
           cache: false
-    always_changed: true
     desc: Automatically generated from the 'fetch-buildkite' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-weekly-buildkite:
@@ -62,24 +62,25 @@ stages:
       scripts/fetch-weekly-buildkite.py
     deps:
       - scripts/fetch-weekly-buildkite.py
+      - .calkit/local/current-periods/1-day-utc.txt
       - .calkit/env-locks/bk
     outs:
       - data/buildkite-weekly:
           cache: false
           persist: true
-    always_changed: true
     desc: Automatically generated from the 'fetch-weekly-buildkite' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-github:
     cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-github.py
     deps:
       - scripts/fetch-github.py
+      - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/period.py
       - .calkit/envs/clima-data/pixi.lock
     outs:
       - data/github:
           cache: false
           persist: true
-    always_changed: true
     desc: Automatically generated from the 'fetch-github' stage in calkit.yaml.
       Changes made here will be overwritten.
   fetch-registry:
@@ -87,12 +88,13 @@ stages:
       scripts/fetch-registry.py
     deps:
       - scripts/fetch-registry.py
+      - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/period.py
       - .calkit/envs/clima-data/pixi.lock
     outs:
       - data/julia-registry:
           cache: false
           persist: true
-    always_changed: true
     desc: Automatically generated from the 'fetch-registry' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-citations:
@@ -100,12 +102,12 @@ stages:
       scripts/fetch-citations.py
     deps:
       - scripts/fetch-citations.py
+      - .calkit/local/current-periods/1-day-utc.txt
       - .calkit/envs/clima-data/pixi.lock
     outs:
       - data/openalex:
           cache: false
           persist: true
-    always_changed: true
     desc: Automatically generated from the 'fetch-citations' stage in
       calkit.yaml. Changes made here will be overwritten.
   analyze:
