@@ -1231,3 +1231,63 @@ stages:
       md5: 526a6bd8c5eb57047d5ec5ba0350be61.dir
       size: 443977
       nfiles: 3
+  fetch-blog:
+    cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-blog.py
+    deps:
+    - path: .calkit/envs/clima-data/pixi.lock
+      hash: md5
+      md5: 229f417a297ee00639b0351ef3b69d9c
+      size: 47901
+    - path: .calkit/local/current-periods/1-day-utc.txt
+      hash: md5
+      md5: 240aad8a1402a46e4d88c1e717598ab6
+      size: 11
+    - path: scripts/fetch-blog.py
+      hash: md5
+      md5: 8d7e261146a6752a8671939c6b27cb3a
+      size: 3173
+    outs:
+    - path: data/blog
+      hash: md5
+      md5: d8988882f4250e3d160f21852947c46e.dir
+      size: 18451
+      nfiles: 1
+  analyze-blog:
+    cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-blog.py
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: bd4ac862a0f5408617ddc484d346527e.dir
+      size: 2229
+      nfiles: 2
+    - path: data/blog
+      hash: md5
+      md5: d8988882f4250e3d160f21852947c46e.dir
+      size: 18451
+      nfiles: 1
+    - path: data/github/repo_stats
+      hash: md5
+      md5: 7a4168db135d131f6d96a21da1e7b30d.dir
+      size: 588120
+      nfiles: 142
+    - path: results/github-engagement.csv
+      hash: md5
+      md5: 1b975626b582229b8675d3d223a73c65
+      size: 258218
+    - path: scripts/analyze-blog.py
+      hash: md5
+      md5: 4941fe55954f1ef45491d8f365d89e4e
+      size: 7648
+    - path: scripts/clima_repos.py
+      hash: md5
+      md5: 4b390dbd1e8329da3ac97f05b83fac63
+      size: 1041
+    outs:
+    - path: figures/blog-post-engagement.json
+      hash: md5
+      md5: c1dbf2bd94f2fd8754c45144955a6f52
+      size: 19340
+    - path: results/blog-post-engagement.csv
+      hash: md5
+      md5: 1c26cd42263acd372cd70fd32793a31b
+      size: 2848
