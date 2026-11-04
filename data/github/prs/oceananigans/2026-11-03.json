@@ -1,0 +1,376 @@
+[
+  {
+    "additions": 484,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `Models` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nHydrostaticFreeSurfaceModels now imports `implicit_step!` from its owner, `Oceananigans.TimeSteppers`, instead of through `TurbulenceClosures`. #6416 relies on this, so this PR should merge first.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 76,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:46Z",
+    "deletions": 563,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-03T01:33:09Z",
+    "number": 6412,
+    "title": "Extend methods explicitly: Models"
+  },
+  {
+    "additions": 68,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Tl;dr\n\nSince #6286, `WENOVectorInvariant` has a spurious growing `2\u0394z` mode. This is a regression: v0.114.1 and earlier do not have it, and v0.115.0 and later do. It can be derived using the discrete equations. The fix is very easy, simply use higher-order interpolation of the vertical velocity when computing the vertical momentum fluxes `wu` and `wv`.\n\nOn a balanced jet with no closure, the fix removes the grid-scale noise and the spurious buoyancy mixing it causes, for about 1% more cost per time step on GPU. The benefit is largest in that quiet flow: in the turbulence tests below, the effect on mixing is small.\n\nThis was found while pursuing a `CompressibleWENOVectorInvariant` for Breeze.\n\nClaude description below:\n\nCloses #6400.\n\n**Correction:** this is a regression from #6286 (merged 2026-10-22), not a long-standing problem. #6286 changed the advecting `w` in upwind momentum fluxes from fourth to second order, which it needed for flux-form walls, but the vector-invariant cross scheme stayed fourth order, so $r_1 \\ne 0$. v0.114.1 is not affected. v0.115.0, v0.116.0, v0.116.1 and main are.\n\nBalanced jet, 128\u00b2\u00d724, 30 days, default `WENOVectorInvariant()`, run on each code version:\n\n| Code | \u27e8u\u2032\u00b2\u27e9 day 30 | Max eddy `w` day 10 | Buoyancy variance lost | Linear max \u03c3, s\u207b\u00b9 (32\u00d78) |\n|---|---|---|---|---|\n| before #6286 | 2.2e-8 | 1.8e-6 | 1.22e-5 | 1.30e-6 |\n| main | 5.3e-2 | 1.5e-2 | 6.07e-4 | 2.03e-5 |\n| #6402 | 2.2e-8 | 1.8e-6 | 1.22e-5 | 1.30e-6 |\n\n\nSince #6286, `WENOVectorInvariant()` has a spurious growing mode with a large 2\u0394z component. #6400 has the full derivation. This PR removes it by changing how $w$ is interpolated onto the velocity point in the vertical momentum flux.\n\n### The cancellation\n\nThe vector-invariant $u$ tendency includes these two terms:\n\n$$u\\,(\\partial_x u + \\partial_y v) \\quad\\text{and}\\quad \\partial_z(w\\,u)$$\n\nExpanding the second and using continuity, $\\partial_z w = -(\\partial_x u + \\partial_y v)$:\n\n$$\\partial_z(w\\,u) = w\\,\\partial_z u - u\\,(\\partial_x u + \\partial_y v)$$\n\nSo the $u\\,\\partial_y v$ in the first term should cancel exactly against the same piece of the second, leaving $w\\,\\partial_z u$.\n\nOn the C-grid, $\\partial_y v$ and $w$ are at cell centers but $u$ is at the x-face, so both have to be interpolated in $x$ to reach $u$. The cancellation is exact only if both use the same interpolation:\n\n| Quantity interpolated to the $u$ point | main | This PR |\n|---|---|---|\n| Divergence cross term, $\\partial_y v$ | `Centered(order=4)` | `Centered(order=4)` (unchanged) |\n| Advecting $w$ in the vertical flux | two-point average | `Centered(order=4)` |\n\nThe flux for $u$ changes as follows, and the flux for $v$ gets the same change in $y$:\n\n```julia\n# Before\nw\u0303 = \u2111x\u1da0\u1d43\u1d43(i, j, k, grid, Az_q\u1d9c\u1d9c\u1da0, W)\n\n# This PR\nw\u0303 = _symmetric_interpolate_x\u1da0\u1d43\u1d43(i, j, k, grid, scheme, scheme.upwinding.cross_scheme, Az_q\u1d9c\u1d9c\u1da0, W)\n```\n\n### Why it matters\n\nWith different interpolations, a residual survives in the $u$ equation as a coupling to $v$, and a second one survives in the $v$ equation (the upwinded vorticity flux against the kinetic-energy cross term) as a coupling to $u$:\n\n$$r_1 = c_4 - C_x = \\tfrac13\\sin\\theta\\,\\sin\\tfrac\\theta2, \\qquad r_2 = \\rho_9 - c_4$$\n\nTheir product is a positive feedback, and that is the spurious mode. Using `scheme.upwinding.cross_scheme` for $w$ makes $r_1 = c_4 - c_4 = 0$, which breaks the loop. $r_2$ remains, but in the tests below it has nothing to feed back into.\n\n### The change\n\n- `vertical_advection_U/V` now call `vector_invariant_flux_Wu/Wv`, which receive the whole `VectorInvariant` scheme.\n- By default these call the existing `vertical_flux_Wu/Wv`, so nothing else changes.\n- The new behavior applies only to `OnlySelfUpwinding` with an upwind-biased vertical scheme and explicit time discretization.\n- The shared `advective_momentum_flux_Wu/Wv` methods aren't touched, because flux-form `WENO` uses them too.\n- These cases keep today's flux, and I haven't analyzed whether they have the same problem: `CrossAndSelfUpwinding`, centered vertical schemes, and `AdaptiveVerticallyImplicitDiscretization`.\n\n### Near walls\n\nIn periodic cases this PR recovers the pre-#6286 operator (identical linear spectra). Near walls it does not. In a test with $x$ walls and a velocity jump at the wall, the tendency at the third cell is 2.67, against 0.82 before #6286 and on main; on an immersed staircase the maximum is 75.5, against 59.8 before #6286 and 52.5 on main. That test reads a real $\\delta_x U$, so these values do not show harm to near-wall flow, but this is unresolved. Using the cross scheme's own cutoff did not change them, and a cutoff matching the old vertical-scheme stencil was not tested.\n\n### Test\n\nThe new test, `test/unit/vector_invariant_vertical_flux.jl`, checks the cancellation directly. With uniform $u$ and random $v$ (and the reverse), `vertical_advection_U/V` should vanish at interior levels. For the `U` case with `WENOVectorInvariant()`:\n\n| | max tendency residual |\n|---|---|\n| old flux | 4.0e-5 |\n| this PR | 1.1e-19 |\n| test threshold | 1.6e-14 |\n\n### Results\n\nThe reproducer from #6400 on this branch (CPU, 64\u00b2\u00d716, Float64), printing $\\langle u'^2\\rangle$ at days 0 to 5:\n\n```\nWENO9 (flux form)        3.3e-11  1.1e-11  9.7e-12  9.1e-12  8.8e-12  8.5e-12\nWENOVectorInvariant()    3.3e-11  9.1e-12  7.9e-12  7.4e-12  7.3e-12  7.3e-12\nfrozen weights           3.3e-11  8.9e-12  7.8e-12  7.2e-12  7.2e-12  7.1e-12\n```\n\nBefore this change, the `WENOVectorInvariant()` row reached 3.8e-8 and the frozen-weight row 1.3e-7 at day 5.\n\nThe numbers below come from #6400, using a local override on 0.116.1 with `Centered(order=4)` for $w$. That is the same interpolation as the default here, but these runs have not been repeated on this branch.\n\n| Check | main | this fix | `WENO(order=9)` |\n|---|---|---|---|\n| Max linear growth rate, s\u207b\u00b9 (stratified / thin / screen), rigorous bound | 1.35e-4 / 1.59e-4 / 8.40e-5 | 2.70e-6 / 2.13e-6 / 7.50e-7 | about 2.7e-6 / 2.1\u20132.7e-6 / 7.5e-7 |\n| Balanced jet 128\u00b2\u00d724, \u27e8u\u2032\u00b2\u27e9 at day 30 | 7.0e-2 | 2.2e-8 | 2.4e-8 |\n| Geostrophic turbulence 128\u00b2, \u03b6 error at day 10 | 0.475 | 0.475 | 0.546 |\n| Bickley jet, \u03b6 error at day 20 | 0.544 | 0.497 | 0.580 |\n| \u03b2-channel wave, min bottom pressure anomaly at day 15 (25 km reference: \u22125322) | \u22124676 | \u22124573 | \u22124637 |\n| Turbulence cost, ms/step on a T4 | 24.9 | 25.2 | 32.8 |\n\n### Numerical mixing\n\nOn the balanced jet (128\u00b2\u00d724, no closure, local override on 0.116.1, not repeated on this branch):\n\n| | main | this fix | `WENO(order=9)` |\n|---|---|---|---|\n| Max eddy $w$ at mid-depth, day 10, m/s | 0.010 | 1.8e-6 | 2.3e-6 |\n| Fraction of buoyancy variance lost by day 30 | 6.53e-4 | 1.22e-5 | 1.22e-5 |\n\nThe 1.22e-5 is common to the schemes and is probably from the free-surface flux, not mixing. This case is the most favorable one: it shows the mechanism, not the size of the effect in a forced or turbulent simulation.\n\n### Cost\n\nThe change adds a horizontal stencil, not a vertical one: $w$ is interpolated in $x$ and $y$, and the $z$ reconstruction of $u$ and $v$ is unchanged. So the term's relative cost does not grow with `Nz`.\n\nMedians of 30 calls, three repeats, hydrostatic free-surface model, tracer WENO5, no closure, comparing this change with the old flux on a T4:\n\n| Grid | Vertical U + V term | Full time step |\n|---|---|---|\n| 256\u00b2\u00d7100 | +4.3% | +0.9% |\n| 512\u00b2\u00d725 | +4.2% | +1.2% |\n| 512\u00b2\u00d7100 | +4.3% | +0.7% |\n\nSingle-threaded CPU gave +1.5\u20131.9% per step, but with method redefinition in both modes, so those numbers are only indicative.\n\nThe tempting `OnlySelfUpwinding(cross_scheme = Centered(order=2))` is still not a fix. It makes $r_1 = 0$ but enlarges $r_2$, and a different branch takes over: in the reproducer on this branch it still grows, reaching 5.0e-7 at day 5.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABbXuK5Q",
+        "number": 6400,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6400"
+      }
+    ],
+    "createdAt": "2026-10-31T14:35:39Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-11-03T04:37:56Z",
+    "number": 6402,
+    "title": "Fix spurious instability in `WENOVectorInvariant` by making the vertical flux consistent with the divergence cross term"
+  },
+  {
+    "additions": 51,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `Utils` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:27:31Z",
+    "deletions": 50,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-03T05:17:14Z",
+    "number": 6417,
+    "title": "Extend methods explicitly: Utils"
+  },
+  {
+    "additions": 151,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `DistributedComputations` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:26:20Z",
+    "deletions": 166,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-03T08:03:37Z",
+    "number": 6409,
+    "title": "Extend methods explicitly: DistributedComputations"
+  },
+  {
+    "additions": 143,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `TurbulenceClosures` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\n**Merge after #6412.** HydrostaticFreeSurfaceModels imported `implicit_step!` through `TurbulenceClosures`, which only had that name because of its `import`. #6412 switches that import to the owner, `Oceananigans.TimeSteppers`.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:27:22Z",
+    "deletions": 182,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-03T11:26:39Z",
+    "number": 6416,
+    "title": "Extend methods explicitly: TurbulenceClosures"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjIwMDk5NTg5",
+      "is_bot": false,
+      "login": "ali-ramadhan",
+      "name": "Ali Ramadhan"
+    },
+    "body": " Resolves #6421.\n\nThis PR indexes with literals, so the compiler knows the type of every field. `_rk_substep_solution!` in the same module already does this. To catch such performance regressions in the future, this PR adds a test to ensure that memory allocations do not grow with grid size.\n\nBenchmarks:\n\n| | before | after | one-layer `HydrostaticFreeSurfaceModel` |\n|---|---|---|---|\n| 72 \u00d7 72, 1 thread | 5.98 ms, 161 MiB | 0.100 ms, 0.07 MiB | 0.093 ms |\n| 288 \u00d7 288, 1 thread | 102.8 ms, 2574 MiB | 1.35 ms, 0.07 MiB | 1.23 ms |\n| 288 \u00d7 288, 8 threads | 98.8 ms, 2575 MiB | 0.70 ms, 0.29 MiB | 1.00 ms |",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABb8pBxg",
+        "number": 6421,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6421"
+      }
+    ],
+    "createdAt": "2026-11-02T21:18:30Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "7ee23f",
+        "description": "So we can get the wrong answer even faster",
+        "id": "MDU6TGFiZWwxMjI2NzM1NDk1",
+        "name": "performance \ud83c\udfcd\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-11-03T13:00:58Z",
+    "number": 6422,
+    "title": "Fix `ShallowWaterModel` allocating memory at every grid point on the CPU"
+  },
+  {
+    "additions": 326,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This PR removes the Cox stencil implementation in favor of just the triad implementation. The `IsopycnalSkewSymmetricDiffusivity` then changes numerically in the background.\r\nThe advective form GM is maintained.\r\n\r\nTo be merged after #5938 is merged",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-09T08:50:57Z",
+    "deletions": 624,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-11-03T14:44:26Z",
+    "number": 5955,
+    "title": "Remove Cox stencil ISSD"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Raises Dependabot's cadence and fixes two gaps in the Julia entry.\n\n**Schedule.** Both the `github-actions` and the `julia` entries move from `weekly` to a cron schedule, Monday, Wednesday and Friday at 09:00 UTC. Every-other-day is not one of Dependabot's fixed intervals, and `*/2` on the day of month would run on consecutive days at month boundaries, so fixed weekdays are used instead.\n\n**Directories.** The Julia entry listed `/benchmark`, which does not exist; the environment is at `/benchmarking`, so that line was silently doing nothing. `/docs` was not listed at all and is added. The three `validation/*` environments are still left out; say if you'd like them covered too.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T14:58:02Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      }
+    ],
+    "mergedAt": "2026-11-03T15:36:35Z",
+    "number": 6427,
+    "title": "Dependabot runs three times a week and watches the docs environment"
+  },
+  {
+    "additions": 24,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Extend methods in `TimeSteppers` as `Module.f(...) = ...` (after `using Module: Module`) instead of via `import Module: f`. Imports are also consolidated and sorted. No behaviour change.\n\nPart of #6405.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T10:27:13Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "C5DEF5",
+        "description": "Extend methods as Module.f(...) = ... instead of via import Module: f",
+        "id": "LA_kwDOCRy_aM8AAAADAopeEQ",
+        "name": "qualified method extensions"
+      }
+    ],
+    "mergedAt": "2026-11-03T20:06:29Z",
+    "number": 6415,
+    "title": "Extend methods explicitly: TimeSteppers"
+  },
+  {
+    "additions": 54,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Run the doctests (docstrings and `docs/src` pages) in a new `doctests/doctests` test instead of the docs build. It runs in the GPU test job only, since some doctests build grids on a GPU.\r\n\r\n\r\nTrying to reduce a bit the docs built.\r\n\r\nAlso by running the doctest in the main CI then they get reported to Codecov?",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T22:36:56Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-11-03T20:07:10Z",
+    "number": 6423,
+    "title": "Run doctests in the test suite instead of the docs build"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Adds Zheng et al. (2026) to the publications list and puts the few remaining title-case titles in sentence case.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T20:38:47Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-11-03T20:39:20Z",
+    "number": 6438,
+    "title": "Add Zheng et al. (2026) to the publications list"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/dependabot"
+    },
+    "body": "Updates the requirements on [SeawaterPolynomials](https://github.com/CliMA/SeawaterPolynomials.jl) to permit the latest version.\nUpdates `SeawaterPolynomials` to 0.3.11\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/releases\">SeawaterPolynomials's releases</a>.</em></p>\n<blockquote>\n<h2>v0.3.11</h2>\n<h2>SeawaterPolynomials v0.3.11</h2>\n<p><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/compare/v0.3.10...v0.3.11\">Diff since v0.3.10</a></p>\n<p><strong>Merged pull requests:</strong></p>\n<ul>\n<li>Temperature conversion functions (<a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/51\">#51</a>) (<a href=\"https://github.com/simone-silvestri\"><code>@\u200bsimone-silvestri</code></a>)</li>\n<li>(0.3.11) Downgrade project version to 0.3.11 (<a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/54\">#54</a>) (<a href=\"https://github.com/simone-silvestri\"><code>@\u200bsimone-silvestri</code></a>)</li>\n</ul>\n<p><strong>Closed issues:</strong></p>\n<ul>\n<li>Enable CLA Workflow (<a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/46\">#46</a>)</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/edf904b94e0ec01974632d8e2c0dedc6dd341613\"><code>edf904b</code></a> Merge pull request <a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/54\">#54</a> from CliMA/ss/bump-back</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/facbadea27d7dcb4d349716faa36bcbea6a7612b\"><code>facbade</code></a> Change project version to 0.3.11</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/fdeb840844e199479dfccefd415282dfb17178b7\"><code>fdeb840</code></a> Merge pull request <a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/51\">#51</a> from CliMA/ss/temperature-conversions</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/db8e046eeceff46d993411379d623dc68b2a482b\"><code>db8e046</code></a> change temperature conventions</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/f4ff0b5d42504bc902180a992ff69094d8433145\"><code>f4ff0b5</code></a> change to constants</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/baf6e828e16961a7c64d395d67cf511d97204974\"><code>baf6e82</code></a> temperature conversion</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/18f3797f74cbf9f478b13789d9957934b1063ab1\"><code>18f3797</code></a> Merge pull request <a href=\"https://redirect.github.com/CliMA/SeawaterPolynomials.jl/issues/44\">#44</a> from CliMA/ncc/typing</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/5ef9c6fc30cc72db4bb7d650b45ff4ee75bbe71f\"><code>5ef9c6f</code></a> Update and rename ci.yml to CI.yml</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/e7cd5ede76abf99051a323263cb944d221913a7c\"><code>e7cd5ed</code></a> Update ci.yml</li>\n<li><a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/commit/0ca7db0b25db62a47fc82847b2f65273633e0d37\"><code>0ca7db0</code></a> bump patch release</li>\n<li>Additional commits viewable in <a href=\"https://github.com/CliMA/SeawaterPolynomials.jl/compare/v0.1.0...v0.3.11\">compare view</a></li>\n</ul>\n</details>\n<br />\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T15:40:41Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      },
+      {
+        "color": "a270ba",
+        "description": "Pull requests that update julia code",
+        "id": "LA_kwDOCRy_aM8AAAACdijpGw",
+        "name": "julia"
+      }
+    ],
+    "mergedAt": "2026-11-03T20:40:55Z",
+    "number": 6429,
+    "title": "Bump SeawaterPolynomials in /docs"
+  }
+]

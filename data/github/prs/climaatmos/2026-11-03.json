@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 954,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\n\nReformulates the non-equilibrium cloud-fraction floor and the condensate partition of the truncated-Gaussian SGS closure, and applies review fixes on top.\n\n### Closure changes\n\n- The augmented width `_sgs_augmented_sigma` is written in terms of the subsaturation deficit `max(0, -mu_S)` of cloud-available water. The four provisional floor-release shape parameters are removed.\n- `_compute_cloud_fraction` partitions condensate into its equilibrium part `min(q_c, q_c_eq) / sigma_aug` and the non-equilibrium excess `max(0, q_c - q_c_eq) / sqrt(sigma_aug^2 + delta_sub^2)`, so the overcast limit is exact.\n- Under `PrognosticEDMFX`, the theta-to-T Jacobian is evaluated at the environment state.\n- `conditional_rule` collapses nearly coincident cloud edges `t_a` and `t_e`, whose moments are differences of nearly equal tail integrals.\n- Non-equilibrium updraft cloud fraction is evaluated against the updraft vapor subsaturation deficit, consistently in cloud cover and in the radiative inhomogeneity moments.\n- New provisional parameter `sgs_cloud_species_constant_timescales` (default 0) selects the constant condensation and sublimation timescales in the 1M cloud-species flux blend.\n\n### Review fixes\n\n- The Picard cloud-fraction iterates receive the configured displacement truncation, matching the final update.\n- The updraft cover kernel floors its width at `\u03f5_numerics`, evaluates the condensate test with `ifelse`, and guards the in-cloud condensate division.\n- `add_cloud_species_diffusion\u1d65!` branches once on the timescale switch so each broadcast has a concretely typed relaxation time.\n- Docstrings for `SGSQuadratureParameters` and the timescale parameters describe the current parameter set; `NEWS.md` records the removed and added parameters.\n- Tests cover the sliver collapse in `conditional_rule`; the updraft cloud-fraction test builds parameters directly.\n\n### Open modeling choice\n\nThe updraft cover uses the vapor deficit `q_sat - q_vap`, while the environment floor uses the deficit of cloud-available total water `q_sat - q_cloud`. The two differ only where updraft condensate is comparable to the deficit.\n\nPeeled from ts/swcre-30pct (05dc54e1f) onto main.\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T23:29:47Z",
+    "deletions": 592,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T18:13:31Z",
+    "number": 4950,
+    "title": "Improve SGS variance and non-equilibrium cloud-fraction closures"
+  },
+  {
+    "additions": 1290,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \nAdd implicit ice formation; `implicit_microphysics` now treats both liquid condensation and ice sublimation implicitly decoupled from other microphysical processes which remain constant during implicit solve.\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- I have read and checked the items on the review checklist.\n",
+    "changedFiles": 43,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T00:15:37Z",
+    "deletions": 1418,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T19:52:46Z",
+    "number": 4946,
+    "title": "Implicit ice formation"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "The calibration pipeline was using a new depot with each build, this PR updates the pipeline to use the same shared depot used by the main CI pipeline.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T15:50:59Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T21:57:08Z",
+    "number": 4956,
+    "title": "Use read-only depot in calibration pipeline"
+  }
+]

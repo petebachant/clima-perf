@@ -1,0 +1,107 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Those two files cause errors on formatter: https://github.com/CliMA/CloudMicrophysics.jl/pull/838",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T19:35:19Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "85ad9c",
+        "description": "All things that matter",
+        "id": "MDU6TGFiZWwzMjAxNzIwNTk5",
+        "name": "CI tests & docs"
+      },
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T20:31:37Z",
+    "number": 839,
+    "title": "Format dev-guides"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This follows conventions in other repos. It is not strictly needed but is useful for preventing builds from corrupting the depot.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T20:25:28Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T21:51:17Z",
+    "number": 840,
+    "title": "Prevent init step running concurrently across builds"
+  },
+  {
+    "additions": 69,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "\n- **Bound 1-moment `Chen2022` precipitation terminal velocities**: Adds `v_max` to [`Chen2022VelTypeRain`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/TerminalVelocity.jl#L205-L220) (`Chen2022_rain_terminal_velocity_max`, default `10 m/s`) and [`Chen2022VelTypeLargeIce`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/parameters/TerminalVelocity.jl#L181-L194) (`Chen2022_large_ice_terminal_velocity_max`, default `3 m/s`), and applies a smooth asymptotic upper bound $w / \\sqrt{1 + (w / v_{\\max})^2}$ in the 1M `Chen2022` [`terminal_velocity`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Microphysics1M.jl#L301-L382) methods for rain and snow to represent the physical fall-speed ceiling from hydrodynamic breakup (Gunn & Kinzer, 1949).\n- **Guard against non-positive air density ($\\rho \\le 0$)**: Floors $\\rho_a$ with `\u03f5_numerics` instead of `0` in [`Chen2022_vel_coeffs`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Common.jl#L306-L356) (where negative density exponents otherwise produce `Inf`/`NaN` at $\\rho_a = 0$), and guards $\\rho \\le 0$ in [`particle_terminal_velocity`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Common.jl#L471-L478) (`StokesRegimeVelType`), [`get_v0`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/Microphysics1M.jl#L108-L117) (`Blk1MVelTypeRain`), and [`MicrophysicsNonEq.terminal_velocity`](file:///Users/climanna/clones/CloudMicrophysics.jl/src/MicrophysicsNonEq.jl#L415-L448).",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T19:26:02Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "0D5276",
+        "description": "All things that go down",
+        "id": "LA_kwDOFzm_uM8AAAABVxG6Ng",
+        "name": "Terminal velocity"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-03T23:11:05Z",
+    "number": 838,
+    "title": "Bound 1M Chen2022 terminal velocities and guard non-positive air density"
+  }
+]
