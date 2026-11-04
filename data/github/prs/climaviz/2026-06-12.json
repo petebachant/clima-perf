@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 1410,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Adds observation benchmarking for carbon and atmosphere variables, ClimaCoupler (multi-component) support, a one-page model performance summary, and a responsiveness pass.\n\n## Benchmarks\n- **Carbon**: `nee` (CarbonTracker CT2022), `gpp` (GOSIF-GPP v2), `er` (residual NEE+GPP), `hr` (Hashimoto 2015), from the `inversion_nee` artifact. Carbon fluxes are displayed in `g C m\u207b\u00b2 day\u207b\u00b9`.\n- **ERA5 surface fluxes** registered under both the ClimaLand names (`lhf`, `shf`, `lwu`, `swu`) and the ClimaAtmos/CMIP names (`hfls`, `hfss`, `rlus`, `rsus`).\n- Observation **product names** (ERA5, GOSIF, CarbonTracker, \u2026) shown in the time-series legend, bias map title/colorbar, and metrics rows.\n\n## Dashboard features\n- **`dashboard(path; coupled = true)`** for ClimaCoupler outputs: a Component menu (atmos / land / ocean / seaice; empty components hidden), atmos restricted to its monthly `_1M_` native-grid diagnostics, missing land `start_date` inherits the atmos one, per-component benchmark caches.\n- **\"Model summary\" button**: overlay with the global RMSE (and bias) of every benchmarked variable over the full simulation period, per season (All-time/DJF/MAM/JJA/SON), color-coded by RMSE relative to the observed mean \u2014 model performance in one image. Persisted in the cache; `precompute = true` warms it.\n- **Time-series mode menu**: Local (click map) or Global. Global statistics (time series, metrics table, summary) follow the component's spatial mask: ocean-masked land mean for land runs, full globe for atmos, land-masked ocean mean for ocean/seaice.\n- `run_title` kwarg for a caption in the menu.\n\n## Responsiveness\n- Benchmark session caches are keyed `(variable, reduction, period, level)` and retained across variable switches \u2014 revisiting a variable repaints instantly.\n- Colorbar limits (full-field quantile scan) cached per (variable, \u2026, height).\n- Time-slider scrubbing no longer blocks ~2 s per tick on a cache miss: per-frame metrics run asynchronously with latest-wins semantics.\n\n## Docs & tests\n- New **Dashboard** docs page (usage, menus, benchmarks, coupled mode, custom obs loaders, caching); obs registries added to the API reference.\n- `test/test_coupler.jl`: component discovery, `_1M_` pruning, mask specs, summary formatting. Suite at 82 tests; verified end-to-end against a ClimaCoupler AMIP run (component switches, benchmarks, summary) via a live-browser drive test.\n\n## Left for a follow-up\n- [ ] Read ocean and seaice diagnostics (the example AMIP run has none to test against)\n\n<img width=\"2435\" height=\"1282\" alt=\"image\" src=\"https://github.com/user-attachments/assets/d76bb97e-3bde-4969-819e-33118281a8a1\" />\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-03T20:46:53Z",
+    "deletions": 190,
+    "labels": [],
+    "mergedAt": "2026-06-12T17:25:39Z",
+    "number": 67,
+    "title": "Coupled-mode dashboard, carbon & atmos benchmarks, model summary"
+  }
+]

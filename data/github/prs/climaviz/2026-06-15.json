@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 77,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Problem\n\nThe `/amip` coupled dashboard crashed on load with:\n\n> Time dimension is not in non-decreasing order after aggregating datasets.\n\n`discover_components` built each component's `SimDir` from the component root (e.g. `clima_atmos/`). Because `ClimaAnalysis.SimDir` enumerates files with `walkdir` (recursing the whole tree), a component folder that held **both** the current run's `output_active`/`output_NNNN` subfolder **and** stale loose `.nc` files left at the top level from an earlier run picked up each variable twice and tried to stitch their overlapping time axes \u2014 failing in `_get_time_name_from_mfds`.\n\nIn the affected run, `clima_atmos/` had 80 leftover top-level `.nc` files (older runs) alongside the current run in `output_0000/`. Components that write loose files with no `output_*` subdir (land/ocean/coupler) were never affected, which is why `/land_longrun` worked.\n\n## Fix\n\nAdd `_resolve_sim_path`, which points each component's `SimDir` at `output_active` (or, failing that, the highest-numbered `output_NNNN`) when present, and otherwise reads the folder itself. The component `path` field stays the folder root, so the `.climaviz_cache` location is unchanged.\n\n## Tests\n\n- `_resolve_sim_path`: loose-files / `output_active` symlink / numbered-dirs cases\n- `discover_components`: asserts stale top-level files are ignored when `output_active` exists\n\nAll coupler + summary tests pass locally.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-15T17:12:01Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-06-15T17:14:38Z",
+    "number": 68,
+    "title": "Read coupled components from output_active to avoid stale-file stitch error"
+  }
+]

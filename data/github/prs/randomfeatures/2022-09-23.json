@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2427,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "Added examples for training hyperparameters with EKP and the current interfaces. Minimizes a cost that approximates the KRR cost function (i.e. misfit + RKHS norm) weighted by noise and variability from data and random features.\r\n\r\nFurther work could look at optimizing randomized Kernel-flow cost functions\r\n\r\n## Content\r\n1. `_direct` approximates the kernel ridge regression function with misfit weighted by `noise_sd^2`\r\n2. `_withcov` as in `_direct`, but the weights the misfit with the RF posterior variance. Performs better in >1D\r\n3. `_matchingcov` as in `_withcov` but also tries to nudge the RF posterior variance towards `noise_sd^2`. \r\nThese are used in `test/Methods/runtests/jl` to obtain reasonable lengthscales.\r\n\r\n## Example results\r\n- `1d_to_1d_regression_direct_matchingcov.jl` - 1d input - 1d output problem, learning a standard deviation of the centred Gaussian feature distribution for three Random feature types (Fourier, Relu & Sigmoid) here with 80 data points\r\n[Fit_and_predict_1D_4.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629436/Fit_and_predict_1D.pdf)\r\n- `nd_to_1d_regression_direct_matchingcov.jl` - nd input  - 1d output problem with Fourier features, and 1 standard deviation of a Gaussian learnt per dimension.  e.g. 40 data points in 1D and for 6D (tested to work ok up-to 10D) [NB i think I used more points to predict here, in the final graphs so the uncertainties are reduced compared with below]\r\n[Fit_and_predict_ND_1of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629493/Fit_and_predict_ND_1of6.pdf)\r\n[Fit_and_predict_ND_2of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629494/Fit_and_predict_ND_2of6.pdf)\r\n[Fit_and_predict_ND_3of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629495/Fit_and_predict_ND_3of6.pdf)\r\n[Fit_and_predict_ND_4of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629496/Fit_and_predict_ND_4of6.pdf)\r\n[Fit_and_predict_ND_5of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629497/Fit_and_predict_ND_5of6.pdf)\r\n[Fit_and_predict_ND_6of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9629498/Fit_and_predict_ND_6of6.pdf)\r\n\r\n\r\n- `1d_to_1d_regression_direct_withcov.jl`  - three Random feature types (Fourier, Relu & Sigmoid) here with 20,40 and 80 points\r\n[Fit_and_predict_1D_1.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603051/Fit_and_predict_1D_1.pdf)\r\n[Fit_and_predict_1D_2.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603052/Fit_and_predict_1D_2.pdf)\r\n[Fit_and_predict_1D_4.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603053/Fit_and_predict_1D_4.pdf)\r\n\r\n- `nd_to_1d_regression_direct_withcov.jl`- Here for 6 input dimensions (struggles a bit beyond 7D) - plots are prediction slices along different dimensions. \r\n[Fit_and_predict_ND_1of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603054/Fit_and_predict_ND_1of6.pdf)\r\n[Fit_and_predict_ND_2of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603056/Fit_and_predict_ND_2of6.pdf)\r\n[Fit_and_predict_ND_3of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603057/Fit_and_predict_ND_3of6.pdf)\r\n[Fit_and_predict_ND_4of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603058/Fit_and_predict_ND_4of6.pdf)\r\n[Fit_and_predict_ND_5of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603059/Fit_and_predict_ND_5of6.pdf)\r\n[Fit_and_predict_ND_6of6.pdf](https://github.com/CliMA/RandomFeatures.jl/files/9603060/Fit_and_predict_ND_6of6.pdf)\r\n\r\n- (Deprecated) `1d_to_1d_regression_direct.jl` & `nd_to_1d_regression_direct.jl` as above - but less stable and less effective cost function\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-09-14T20:34:57Z",
+    "deletions": 645,
+    "labels": [],
+    "mergedAt": "2022-09-23T17:43:29Z",
+    "number": 11,
+    "title": "Basic Hyperparameter training examples with EKP"
+  }
+]

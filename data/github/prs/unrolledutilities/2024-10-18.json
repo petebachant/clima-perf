@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 57,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR replaces the splatted expressions in generatively unrolled function definitions with calls to macros from `Base.Cartesian`, such as `@nexprs` and `@ntuple`. Although the resulting LLVM code should be identical, it appears that delaying the unrolling process until macro expansion significantly improves compilation time and memory usage, with many of the unit tests showing ~50% reductions in memory usage.\r\n\r\nAside from edge cases with empty and single-element iterators, there are no longer any unit tests for which recursive unrolling compiles faster than generative unrolling, so this PR makes generative unrolling the default for all iterators. In addition, this PR fixes an error related to \"`gc_handles`\" that was previously being thrown for iterators with more than 8185 elements, so there are no longer any restrictions to iterator length for unrolling. I also suspect that this will finally fix the compilation issue described in #13, but that remains to be seen.\r\n\r\n@charleskawczynski, thank you for suggesting that I look into this!",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-12T02:02:27Z",
+    "deletions": 87,
+    "labels": [],
+    "mergedAt": "2024-10-18T23:54:35Z",
+    "number": 16,
+    "title": "Improve compilation by using macros from Base.Cartesian"
+  }
+]

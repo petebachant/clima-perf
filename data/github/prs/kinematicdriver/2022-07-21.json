@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR changes the way we guard against having small negative numbers in our moisture tracers. \r\n\r\nIn case when, for example, `q_liq` is a very small negative number:\r\n\r\n `microphysics_function(q_liq) = 0` . \r\n\r\nBut we also limit for not overshooting the tendency due to too long time step by taking \r\n\r\n`tendency = min(q_liq/dt, microphysics_function(q_liq)`. \r\n\r\nIn that case we would end up with a wrong, small negative tendency. To prevent that I now changed it to\r\n\r\n`tendency = min(max(0.0, q_liq/dt), microphysics_function(q_liq)`. \r\n\r\nIf you actually plot snow profiles, you will notice we have some very small snow values. This PR fixes it.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2022-07-21T04:31:05Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "LA_kwDOHP0thM7zDN6r",
+        "name": "bug"
+      }
+    ],
+    "mergedAt": "2022-07-21T16:44:38Z",
+    "number": 70,
+    "title": "changes in guarding against small negatives, fixes snow profiles"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 60,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR fixes the inlining of generated functions, which will hopefully prevent compilation from hanging in the non-orographic gravity wave parametrization test in ClimaAtmos.\r\n\r\nNormally, inlining works by inserting an `inline` annotation at the beginning of a function definition:\r\n```julia\r\njulia> @macroexpand @inline add_one_expr(x) = Expr(:call, :+, :x, 1)\r\n:(add_one_expr(x) = begin\r\n          $(Expr(:meta, :inline))\r\n          #= REPL[13]:1 =#\r\n          Expr(:call, :+, :x, 1)\r\n      end)\r\n```\r\n\r\nWhen the function is generated, though, the `@inline` macro inserts two such annotations (one at the start of the generated function and one in the expression that generates it):\r\n```julia\r\njulia> @macroexpand @inline @generated add_one(x) = Expr(:call, :+, :x, 1)\r\n:(add_one(x) = begin\r\n          $(Expr(:meta, :inline))\r\n          if $(Expr(:generated))\r\n              $(Expr(:meta, :inline))\r\n              #= REPL[10]:1 =#\r\n              Expr(:call, :+, :x, 1)\r\n          else\r\n              $(Expr(:meta, :generated_only))\r\n              return\r\n          end\r\n      end)\r\n```\r\n\r\nThis type of expression is probably not supported by the compiler, and I think it is responsible for the strange behavior we have been seeing in ClimaAtmos. Specifically, we have observed that replacing the definition\r\n```julia\r\n@inline @generated function val_unrolled_reduce(op, ::Val{N}, init) where {N}\r\n    return foldl((:init, 1:N...)) do prev_op_expr, item_expr\r\n        :(op($prev_op_expr, $item_expr))\r\n    end\r\nend\r\n```\r\nwith an equivalent version that uses assignment syntax\r\n```julia\r\n@inline @generated val_unrolled_reduce(op, ::Val{N}, init) where {N} =\r\n    foldl((:init, 1:N...)) do prev_op_expr, item_expr\r\n        :(op($prev_op_expr, $item_expr))\r\n    end\r\n```\r\ncauses compilation to hang. Having the double `inline` annotation here is probably forcing the compiler to enter some unhandled infinite loop or `wait` condition for this complex test (though I don't think we're seeing a compiler bug here because such a use case probably isn't supported).\r\n\r\nIn order to correctly inline generated functions, we need to only insert the `inline` annotation at the start of the generated function expression. For example,\r\n```julia\r\njulia> @macroexpand @generated add_one(x) = Expr(:block, Expr(:meta, :inline), Expr(:call, :+, :x, 1))\r\n:(add_one(x) = begin\r\n          #= REPL[14]:1 =#\r\n          if $(Expr(:generated))\r\n              #= REPL[14]:1 =#\r\n              Expr(:block, Expr(:meta, :inline), Expr(:call, :+, :x, 1))\r\n          else\r\n              $(Expr(:meta, :generated_only))\r\n              return\r\n          end\r\n      end)\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-09-10T18:28:19Z",
+    "deletions": 40,
+    "labels": [
+      {
+        "color": "d73a4a",
+        "description": "Something isn't working",
+        "id": "LA_kwDOLleF4s8AAAABkcN_6Q",
+        "name": "bug"
+      }
+    ],
+    "mergedAt": "2024-09-18T18:32:44Z",
+    "number": 13,
+    "title": "Fix inlining of generated functions"
+  }
+]

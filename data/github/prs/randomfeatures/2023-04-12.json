@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 749,
+    "author": {
+      "id": "MDQ6VXNlcjQ3NDEyMTUy",
+      "is_bot": false,
+      "login": "odunbar",
+      "name": "Oliver Dunbar"
+    },
+    "body": "In this PR\r\n- Woodbury acceleration for `predict_cov`\r\n- `predict!()` into preallocated arrays\r\n-  `AbstractType` -> `T ... where {T <: AbstractType}`\r\n- removed `cat(X...)` calls\r\nthese lead to reduction of memory and increase of speed by ~2-3 times in `nd_to_md_regression_direct_withcov.jl` example (and in CES's GCM example or branch `orad/RF`) \r\n\r\nAlso \r\n- discovered the bottleneck of the code, calculation of `PhiTPhi` in `Methods.jl` line 232\r\n- attempt to accelerate this with svd, with no success \r\n\r\nI'm sure further acceleration is possible, as there appears to be still a 50% recompilation time on subsequent calls to codes in the REPL.\r\n\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2023-04-11T22:50:45Z",
+    "deletions": 433,
+    "labels": [],
+    "mergedAt": "2023-04-12T01:48:27Z",
+    "number": 39,
+    "title": "Accelerations learnt from profiling"
+  }
+]

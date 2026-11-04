@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "This PR uses `Distances.haversine` in favor of defining a custom made method. The two give indistinguishable results:\r\n\r\n```Julia\r\nusing Oceananigans.Grids: lat_lon_to_cartesian\r\nusing Distances\r\n\r\nfunction haversine_custom(a, b, radius)\r\n    \u03bb\u2081, \u03c6\u2081 = a\r\n    \u03bb\u2082, \u03c6\u2082 = b\r\n\r\n    x\u2081, y\u2081, z\u2081 = lat_lon_to_cartesian(\u03c6\u2081, \u03bb\u2081, radius)\r\n    x\u2082, y\u2082, z\u2082 = lat_lon_to_cartesian(\u03c6\u2082, \u03bb\u2082, radius)\r\n\r\n    return radius * acos(max(-1.0, min((x\u2081 * x\u2082 + y\u2081 * y\u2082 + z\u2081 * z\u2082) / radius^2, 1.0)))\r\nend\r\n\r\nusing Test\r\n\r\nfor i in 1:100\r\n    (\u03bb1, \u03c61) = rand()*360, (2rand()-1)*90\r\n    (\u03bb2, \u03c62) = rand()*360, (2rand()-1)*90\r\n\r\n    radius = rand() * 6300e3\r\n\r\n    @test haversine_custom((\u03bb1, \u03c61), (\u03bb2, \u03c62), radius) \u2248 Distances.haversine((\u03bb1, \u03c61), (\u03bb2, \u03c62), radius)\r\nend\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-11-12T09:11:11Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2024-11-12T09:47:48Z",
+    "number": 55,
+    "title": "Use `Distances.haversine`"
+  }
+]

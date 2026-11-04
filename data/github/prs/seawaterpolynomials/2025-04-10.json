@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Before this PR:\r\n\r\n```Julia\r\njulia> using SeawaterPolynomials\r\n\r\njulia> eos = SeawaterPolynomials.TEOS10.TEOS10EquationOfState();\r\n\r\njulia> \u03b1 = SeawaterPolynomials.thermal_expansion(0, 35, 0, eos)\r\nERROR: InexactError: Int64(40.18861714285714)\r\nStacktrace:\r\n [1] Int64(x::Float64)\r\n   @ Base ./float.jl:912\r\n [2] s\r\n   @ ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/SeawaterPolynomials.jl/src/TEOS10.jl:84 [inlined]\r\n [3] thermal_sensitivity\r\n   @ ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/SeawaterPolynomials.jl/src/TEOS10.jl:262 [inlined]\r\n [4] thermal_expansion(\u0398::Int64, S\u1d2c::Int64, Z::Int64, eos::SeawaterPolynomials.BoussinesqEquationOfState{SeawaterPolynomials.TEOS10.TEOS10SeawaterPolynomial{Float64}, Float64})\r\n   @ SeawaterPolynomials ~/Library/CloudStorage/OneDrive-TheUniversityofMelbourne/Documents/Research/SeawaterPolynomials.jl/src/SeawaterPolynomials.jl:125\r\n [5] top-level scope\r\n   @ REPL[3]:1\r\n\r\njulia> \u03b1 = SeawaterPolynomials.thermal_expansion(0, Float64(35), 0, eos)\r\n5.28716593778166e-5\r\n```\r\n\r\nSo the temperature could be an integer and it would be converted. But the salinity couldn't...\r\n\r\nAfter this PR:\r\n\r\n```Julia\r\njulia> using SeawaterPolynomials^C\r\n\r\njulia> eos = SeawaterPolynomials.TEOS10.TEOS10EquationOfState();\r\n\r\njulia> \u03b1 = SeawaterPolynomials.thermal_expansion(0, 35, 0, eos)\r\n5.28716593778166e-5\r\n```",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-04-09T23:10:56Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2025-04-10T02:19:12Z",
+    "number": 44,
+    "title": "Ensure \u0398 and S\u1d2c are of the same type as eltype(eos)"
+  }
+]

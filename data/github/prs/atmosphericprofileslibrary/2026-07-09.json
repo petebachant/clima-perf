@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 29,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Convert the shared `linear_interp` helper from Interpolations.jl (`Gridded(Linear())`/`Flat()` over host `Vector`s, non-isbits) to `ClimaInterpolations.Interpolation1D.Interpolate1D` (`Linear()`/`Flat()`) over `StaticArrays` `SVector` knot and value storage; all 32 data-backed profile constructors route through this helper, so the conversion is uniform and each constructor keeps its signature, knots, linear interpolation and flat extrapolation. This is needed because ClimaAtmos captures these profile callables in structs that are broadcast to the device, which requires the callables to be isbits.\n\nValues match the previous implementation to machine epsilon rather than bitwise, owing to the barycentric arithmetic ordering in `Interpolate1D`.\n\nThe two-dimensional `TRMM_LBA_radiation` profile is out of scope: `Interpolation1D` is one-dimensional, so it retains its Interpolations.jl backing and remains the sole non-isbits profile.\n\nValidation: the full test suite passes; `isbits` holds for every profile callable across `Float32` and `Float64` except `TRMM_LBA_radiation`; a dense sweep over a representative sample (`Bomex_tke_prescribed`, `GATE_III` T/q_tot/u/dTdt, `TRMM_LBA` T/u/v/RH, `Larcform1_RH`, `ARM_SGP`) agrees with the previous implementation to machine epsilon.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-09T17:20:23Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-07-09T23:36:06Z",
+    "number": 61,
+    "title": "feat: make data-backed profiles isbits for device broadcast"
+  }
+]

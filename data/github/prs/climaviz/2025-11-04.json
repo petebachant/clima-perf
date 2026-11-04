@@ -1,0 +1,18 @@
+[
+  {
+    "additions": 238,
+    "author": {
+      "is_bot": true,
+      "login": "app/copilot-swe-agent"
+    },
+    "body": "Adds a checkbox to toggle between 2D projected maps and 3D globe visualization in the main ClimaViz dashboard.\n\n## Changes\n\n- **`src/figures.jl`**: Added `create_main_figure_3d()` function that creates a 3D globe using `GeoMakie.GlobeAxis` (equirectangular projection for 2D, globe for 3D)\n- **`src/dashboard.jl`**: Create dual figure setup with both 2D and 3D views, add \"3D Globe\" checkbox, synchronize titles and dark mode between views\n- **`src/layout.jl`**: Add \"3D Globe\" checkbox to Menu card, use `@lift` macro to reactively swap displayed figure\n\n## Implementation\n\n```julia\n# Checkbox toggles between two pre-rendered figures\nglobe_3d_checkbox = Checkbox(false)\n\n# 2D uses equirectangular projection\nax = GeoAxis(fig[1, 1], title = title, dest = \"+proj=eqc\")\n\n# 3D uses GlobeAxis\nax_3d = GeoMakie.GlobeAxis(fig_3d[1, 1]; show_axis = false, title = title_3d)\n\n# Reactive toggle in layout\nmap_fig = @lift($(globe_3d) ? fig_3d : fig)\n```\n\nBoth visualization modes display the same simulation data with automatic synchronization. Dark mode support is included for both views.\n\n<!-- START COPILOT CODING AGENT SUFFIX -->\n\n\n\n<details>\n\n<summary>Original prompt</summary>\n\n> Look at https://docs.makie.org/dev/reference/blocks/box and https://github.com/CliMA/ClimaViz.jl/blob/main/animations/clouds/cloud_animation_3d.jl - use that information to add a checkbox labeled \"3D globe\" to the menu. If that checkbox is selected, hide the box of the surface figure ( put it in a Makie.box first of course), and instead show the same surface but in a 3D axis (as in the cloud 3d code). Basically you just make another figure in GeoMakie.globeaxis, out it in a Makie.box, and depending of the checkbox you show the surface in a 2d axis or 3d axis. I hope it makes sense!\n\n\n</details>\n\n\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/CliMA/ClimaViz.jl/issues/new?title=\u2728+Set+up+Copilot+instructions&body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E&assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2025-11-03T21:43:19Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2025-11-04T18:35:41Z",
+    "number": 32,
+    "title": "Add 3D globe toggle to main ClimaViz dashboard"
+  }
+]

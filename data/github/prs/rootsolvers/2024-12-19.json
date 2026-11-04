@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 10,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "The test environment was really old and didn't actually properly resolve (on Julia 1.11).\r\n\r\nThis PR removes `CUDAKernels` and bumps compat of `KernelAbstractions.jl` to include 0.9 (latest) in the test environment.\r\n\r\nAlso updated buildkite to run on new central.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-18T18:32:59Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "dcf9a1",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDODtiwL88AAAABRpk0rA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2024-12-19T00:39:10Z",
+    "number": 55,
+    "title": "fix cuda tests and buildkite env"
+  },
+  {
+    "additions": 78,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nAdd pretty printing to `VerboseSolutionResults` and `CompactSolutionResults`\r\n\r\n## Content\r\n### `VerboseSolution`\r\nInstead of\r\n```julia\r\nsol = find_zero(x -> x^2 - 100^2, SecantMethod{Float64}(0.0, 1000.0), VerboseSolution())\r\nRootSolvers.VerboseSolutionResults{Float64}(99.99999999994358, true, -1.1283191270194948e-8, 11, [0.0, 1000.0, 10.0, 19.801980198019802, 342.19269102990063, 46.343480236256255, 66.55339226067036, 115.89617612520117, 97.08591709962043, 99.78250389820813, 100.00321941765937, 99.99999649519104], [-10000.0, 990000.0, -9900.0, -9607.881580237232, 107095.83779428503, -7852.281839591726, -5570.645978597342, 3431.9236404436488, -574.3247009256283, -43.45191580407845, 0.6438938965238776, -0.0007009617802395951])\r\n```\r\nprinting of the struct, now shows:\r\n```julia\r\nsol = find_zero(x -> x^2 - 100^2, SecantMethod{Float64}(0.0, 1000.0), VerboseSolution())\r\nVerboseSolutionResults{Float64}:\r\n\u251c\u2500\u2500 Status: converged\r\n\u251c\u2500\u2500 Root: 99.99999999994358\r\n\u251c\u2500\u2500 Error: -1.1283191270194948e-8\r\n\u251c\u2500\u2500 Iterations: 11\r\n\u2514\u2500\u2500 History:\r\n    \u251c\u2500\u2500 iter  1: x =        0, err = -1e+04\r\n    \u251c\u2500\u2500 iter  2: x =     1000, err = 9.9e+05\r\n    \u251c\u2500\u2500 iter  3: x =       10, err = -9900\r\n    \u251c\u2500\u2500 iter  4: x =   19.802, err = -9608\r\n    \u251c\u2500\u2500 iter  5: x =   342.19, err = 1.071e+05\r\n    \u251c\u2500\u2500 iter  6: x =   46.343, err = -7852\r\n    \u251c\u2500\u2500 iter  7: x =   66.553, err = -5571\r\n    \u251c\u2500\u2500 iter  8: x =    115.9, err = 3432\r\n    \u251c\u2500\u2500 iter  9: x =   97.086, err = -574.3\r\n    \u251c\u2500\u2500 iter 10: x =   99.783, err = -43.45\r\n    \u251c\u2500\u2500 iter 11: x =      100, err = 0.6439\r\n    \u2514\u2500\u2500 iter 12: x =      100, err = -0.000701\r\n```\r\n(the word \"converged\" is green. If the method did not converge, the status is \"failed to converge\", in red)\r\n\r\nFor instances with more than 20 iterations, printing is truncated\r\n```julia\r\nsol = find_zero(x -> x^2 - 100^2, SecantMethod{Float64}(0.0, 100000.0), VerboseSolution(), RelativeSolutionTolerance(1e-40), 30)\r\nVerboseSolutionResults{Float64}:\r\n\u251c\u2500\u2500 Status: converged\r\n\u251c\u2500\u2500 Root: 100.0\r\n\u251c\u2500\u2500 Error: 0.0\r\n\u251c\u2500\u2500 Iterations: 23\r\n\u2514\u2500\u2500 History:\r\n    \u251c\u2500\u2500 iter  1: x =        0, err = -1e+04\r\n    \u251c\u2500\u2500 iter  2: x =    1e+05, err = 1e+10\r\n    \u251c\u2500\u2500 iter  3: x =      0.1, err = -1e+04\r\n    \u251c\u2500\u2500 iter  4: x =      0.2, err = -1e+04\r\n    \u251c\u2500\u2500 iter  5: x =    33333, err = 1.111e+09\r\n    \u251c\u2500\u2500 iter  6: x =      0.5, err = -10000\r\n    \u251c\u2500\u2500 iter  7: x =  0.79998, err = -9999\r\n    \u251c\u2500\u2500 iter  8: x =   7692.7, err = 5.917e+07\r\n    \u251c\u2500\u2500 iter  9: x =   2.0997, err = -9996\r\n    \u22ee            \u22ee                \u22ee\r\n    \u22ee            \u22ee                \u22ee\r\n    \u251c\u2500\u2500 iter 15: x =    36.01, err = -8703\r\n    \u251c\u2500\u2500 iter 16: x =   54.413, err = -7039\r\n    \u251c\u2500\u2500 iter 17: x =   132.26, err = 7493\r\n    \u251c\u2500\u2500 iter 18: x =   92.122, err = -1514\r\n    \u251c\u2500\u2500 iter 19: x =   98.867, err = -225.3\r\n    \u251c\u2500\u2500 iter 20: x =   100.05, err = 9.347\r\n    \u251c\u2500\u2500 iter 21: x =      100, err = -0.05322\r\n    \u251c\u2500\u2500 iter 22: x =      100, err = -1.243e-05\r\n    \u251c\u2500\u2500 iter 23: x =      100, err = 1.637e-11\r\n    \u2514\u2500\u2500 iter 24: x =      100, err = 0\r\n```\r\n\r\n### `CompactSolution`\r\nInstead of \r\n```julia\r\nsol = find_zero(x -> x^2 - 100^2, SecantMethod{Float64}(0.0, 1000.0), CompactSolution())\r\nRootSolvers.CompactSolutionResults{Float64}(99.99999999994358, true)\r\n```\r\nwe now have\r\n```julia\r\nsol = find_zero(x -> x^2 - 100^2, SecantMethod{Float64}(0.0, 1000.0), CompactSolution())\r\nCompactSolutionResults{Float64}:\r\n\u251c\u2500\u2500 Status: converged\r\n\u2514\u2500\u2500 Root: 99.99999999994358\r\n```\r\n\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-12-16T23:18:33Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "dcf9a1",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDODtiwL88AAAABRpk0rA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2024-12-19T02:29:05Z",
+    "number": 52,
+    "title": "add pretty printing to `(Compact/Verbose)SolutionResults`"
+  }
+]

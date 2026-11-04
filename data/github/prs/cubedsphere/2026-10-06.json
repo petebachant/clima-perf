@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 42,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Needed for https://github.com/CliMA/Oceananigans.jl/pull/5799, but also makes `compute_cell_areas` 6x faster for everyone.  Suggested by @vchuravy.\r\n\r\n> `spherical_area_triangle` collected its vertices into `Vector`s and used `LinearAlgebra.dot` and `cross` on them, i.e. BLAS, and `spherical_quadrilateral_vertices` built its vertices as `Vector`s too. Every area allocated, and the functions couldn't be used in GPU kernels (Oceananigans computes the areas of tripolar grid cells in a kernel, which with KernelAbstractions 0.10 is compiled even on the CPU, and the BLAS call made LLVM abort).\r\n> \r\n> Convert the vertices to `SVector`s instead of collecting them, which accepts the same inputs (tuples, vectors) without allocating, and build the vertices of `spherical_quadrilateral_vertices` as `SVector`s. The areas don't allocate any more, and `compute_cell_areas` on a 40\u00d740 grid takes 144 \u03bcs and allocates 12.9 KB (its result) instead of 892 \u03bcs and 5.6 MB, with areas equal to the previous ones within 3e-15 relative.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-06T15:40:37Z",
+    "deletions": 18,
+    "labels": [],
+    "mergedAt": "2026-10-06T22:10:48Z",
+    "number": 56,
+    "title": "Compute spherical areas with StaticArrays instead of heap vectors"
+  }
+]

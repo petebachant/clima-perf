@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 481,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR replaces #35, adding an extensive set of CPU/GPU compilation tests and fixing several issues they uncovered:\r\n- `Core.kwcall` needs its recursion limit disabled to support nested `reduce`/`accumulate` calls with the `init` keyword argument, as explained in [this comment](https://github.com/CliMA/UnrolledUtilities.jl/pull/35#issuecomment-5289065049)\r\n- `unrolled_push` needs to be generated using `ntuple` instead of splatting to avoid the `max_tuple_splat` limit from `base/compiler/types.jl`\r\n- `unrolled_applyat` needs to call `Base.throw_boundserror` instead of `throw(BoundsError(...))` to make use of the `@device_override` in `CUDA.jl`\r\n- `unrolled_allunique` needs to perform a reduction instead of using `unrolled_unique` to avoid the runtime comparison limit of `unrolled_unique`\r\n- `unrolled_accumulate` for `StaticBitVector` had a syntax error introduced in an earlier PR\r\n\r\nSeveral tests are still marked as broken:\r\n- `unrolled_any`/`unrolled_all`/`unrolled_count` can be unstable on GPUs when given functions of non-singleton values that return runtime booleans\r\n- `unrolled_applyat`/`unrolled_findmax`/`unrolled_findmin`/`unrolled_flatmap` can also be unstable on GPUs with non-boolean runtime values\r\n\r\nEach of these issues could be resolved in one of three ways: fix a bug in the text harness, fix an inefficiency in the source code, or identify a new compilation limit and add a corresponding `@testset` to `compilation_limits.jl`.\r\n\r\nAfter the lingering issues are fixed in a future PR, these tests can be generalized to a user-friendly analogue of `@test_opt` from `JET.jl`, and we can use them throughout other packages. Unlike `@test_opt`, these tests precisely target what we need on every device \u2014 CPUs must be able to run without heap allocations, and GPUs must be able to compile kernels without IR errors.\r\n\r\nIn addition, this PR moves the temporary patches from ClimaCore's `Utilities.Unrolled` module into UnrolledUtilities:\r\n- New `unrolled_setindex`/`unrolled_insert` functions, which are analogous to `Base.setindex` and `insert!`\r\n- A fast path for `Tuple` arguments in `unrolled_map`, which reduces latency and allocations during compilation\r\n- A `@propagate_inbounds` version of `unrolled_map`, which allows it to support indexing operations; this is combined with the new fast path methods to avoid defining another function",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-03T21:55:31Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2026-09-09T09:47:28Z",
+    "number": 36,
+    "title": "Add tests for CPU/GPU compilation limits"
+  }
+]

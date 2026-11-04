@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 15,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR fixes type stabilities in the ClimaCore unit tests that were introduced by changes to `unrolled_product` in #21. It does this by adding `Base.@assume_effects :foldable` annotations to the function closures in `unrolled_product`, ensuring that the compiler does not trigger the recursion limit when performing unrolled operations in ClimaCore's `MatrixFields` module.\r\n\r\nIn the future, we will probably want to generalize this to all function closures in UnrolledUtilities. Unfortunately, there does not seem to be a good way to automate this (unlike for regular `Function`s, whose recursion limits are already disabled by UnrolledUtilities), so we will need to manually add these compiler annotations to every `do ... end` block.\r\n\r\nUnfortunately, the compiler seems to ignore the annotations when testing code coverage. I have no idea how to fix this, so for now I've just disabled the allocations test for `unrolled_product` when testing code coverage.\r\n\r\nWhile experimenting with this PR, I also found that we can occasionally get false negatives in the benchmark tests for constant propagation on Julia 1.11, so I've modified how we measure `rettype_const` to avoid this.\r\n\r\nCloses: CliMA/ClimaCore.jl#2217",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOFT2Pms6tD4hy",
+        "number": 2217,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzNTYzNTU5OTQ=",
+          "name": "ClimaCore.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCore.jl/issues/2217"
+      }
+    ],
+    "createdAt": "2025-03-07T19:06:47Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2025-03-08T03:24:58Z",
+    "number": 23,
+    "title": "Fix recursion instability in unrolled_product"
+  }
+]

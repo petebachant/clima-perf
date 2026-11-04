@@ -1,0 +1,38 @@
+[
+  {
+    "additions": 52,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "After experimenting in CliMA/ClimaAtmos.jl#3313, I've found that two changes are needed to remove the `val_unrolled_reduce` workaround for GPUs: removal of internal function calls with keyword arguments and forced specialization on function arguments.\r\n\r\nThe first of these changes also seems to marginally decrease the amount of time and memory required for compilation of some unit tests, with the decrease most clearly noticeable in the `Very Long Iterators` comparison table. This confirms a long-standing suspicion that function calls with keyword arguments make compilation of low-level kernels more difficult.\r\n\r\nI'm somewhat surprised that the second of these changes is necessary, given that everything is already inlined and it makes no observable difference for compilation on CPUs. Just to be on the safe side, though, I've added forced specialization for every function exported by this package.\r\n\r\nHopefully these changes will be enough to make UnrolledUtilities fully type-stable on GPUs.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-18T22:53:17Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2024-10-22T18:42:59Z",
+    "number": 18,
+    "title": "Fix GPU compilation bugs that required val_unrolled_reduce workaround"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2024-10-22T19:57:49Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2024-10-22T19:58:31Z",
+    "number": 19,
+    "title": "Bump to v0.1.6"
+  }
+]

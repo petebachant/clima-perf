@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 4099,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "**Docstring/doc review**\r\n\r\nBrings the docs and docstrings into compliance with the CliMA developer guides and fixes a GPU test failure. No source logic changes; src/ edits are docstrings only.\r\n\r\nDocstrings (src/RootSolvers.jl): corrected and reformatted for dev-guide compliance; added # Returns sections and documented find_zero's failure, tolerance, and scalar/real scope semantics.\r\nDocs (GettingStarted.md, index.md): fixed typos and reduced redundancy across README/index/Getting-Started.\r\n\r\n**Dev-guides integration**\r\n- Vendored [CliMA/DeveloperGuides](https://github.com/CliMA/DeveloperGuides) as a git subtree under docs/dev-guides/, with a monthly auto-update workflow, an AGENTS.md, and a README pointer.\r\n- Remove stale untracked `docs/build/` (already gitignored).\r\n\r\n**Tests**\r\n\r\n* GPU tests (test/runtests.jl): skip NewtonsMethodAD on the sin problem on GPU \u2014 ForwardDiff's sin(::Dual) lowers to CUDA's device sincos, whose Ref allocation currently fails GPU codegen under GPUCompiler (upstream limitation). CPU still covers this case; all other problems/methods are unaffected.",
+    "changedFiles": 39,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-28T03:51:49Z",
+    "deletions": 176,
+    "labels": [],
+    "mergedAt": "2026-06-28T21:21:05Z",
+    "number": 86,
+    "title": "Improves documentation; vendors dev-guides"
+  }
+]

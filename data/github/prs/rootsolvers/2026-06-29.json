@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 203,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Improves the Newton and bracketing solvers and trims branches on the broadcast/GPU path. \r\n\r\n## Robustness\r\n\r\n* Newton line search now recovers from steps that overshoot into a non-finite region (continues backtracking instead of aborting on the first non-finite trial).\r\n* Singular-step fallback keys on !isfinite(\u0394x) instead of a fixed |f\u2032| \u2264 1e-5 threshold \u2014 scale-invariant, and no longer spuriously fires on small-scale or high-multiplicity roots.\r\n* Bracketing methods converge on |x\u2099\u208a\u2081 \u2212 x\u2099| rather than bracket width, so Regula Falsi (which can pin one endpoint) stops promptly.\r\n* `default_tol` is keyed on the underlying float type, so scalars, arrays, and duals over the same element type share one default.\r\n\r\n## GPU performance\r\n\r\n* Newton's singular-derivative fallback is now an inline finite-difference step in the same loop instead of a tail call into a separate secant solver \u2014 Newton kernel ~40% smaller IR, ~50% fewer branches (better occupancy, recovers to the true derivative next step, keeps VerboseSolution history).\r\n* Use branchless |/& instead of short-circuit ||/&& (especially effective in hot loops, e.g., tolerance functors, Brent)",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-28T23:59:21Z",
+    "deletions": 50,
+    "labels": [],
+    "mergedAt": "2026-06-29T20:37:38Z",
+    "number": 87,
+    "title": "Newton/bracketing robustness fixes + GPU-friendly branchless solver"
+  }
+]

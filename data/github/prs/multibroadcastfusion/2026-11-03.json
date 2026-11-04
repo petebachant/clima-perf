@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "This was not tested previously. ClimaCore cannot upgrade to 1.12 until this is fixed. \r\n\r\nThe way `Base.Meta.lower(Main, _)` works changed in Julia 1.12.\r\n\r\n\r\nBefore:\r\n```\r\n\r\njulia> Base.Meta.lower(Main, :(@. a = b + sqrt(c)))\r\n:($(Expr(:thunk, CodeInfo(\r\n    @ none within `top-level scope`\r\n1 \u2500 %1 = a\r\n\u2502   %2 = +\r\n\u2502   %3 = b\r\n\u2502   %4 = Base.broadcasted(sqrt, c)\r\n\u2502   %5 = Base.broadcasted(%2, %3, %4)\r\n\u2502   %6 = Base.materialize!(%1, %5)\r\n\u2514\u2500\u2500      return %6\r\n))))\r\n\r\n```\r\nAfter:\r\n```\r\njulia> Base.Meta.lower(Main, :(@. a = b + sqrt(c)))\r\n:($(Expr(:thunk, CodeInfo(\r\n1 \u2500 %1 = Main.a\r\n\u2502   %2 = Main.:+\r\n\u2502   %3 = Main.b\r\n\u2502   %4 = Main.sqrt\r\n\u2502   %5 = Main.c\r\n\u2502   %6 =   dynamic Base.broadcasted(%4, %5)\r\n\u2502   %7 =   dynamic Base.broadcasted(%2, %3, %6)\r\n\u2502   %8 =   dynamic Base.materialize!(%1, %7)\r\n\u2514\u2500\u2500      return %8\r\n))))\r\n\r\n```\r\n\r\n\r\n\r\n\r\nThis package was previously lowering code into the `Main` module. After Julia v1.12, unbound variables would also get assigned to that module. This could be incorrect if the macro resolves outside of the main module. This commit introduces a temporary lowering module. The lowering module is then stripped from the name of unbound variables.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T18:02:43Z",
+    "deletions": 3,
+    "labels": [],
+    "mergedAt": "2026-11-03T21:55:09Z",
+    "number": 62,
+    "title": "Fix support for julia 1.12 and 1.13"
+  }
+]

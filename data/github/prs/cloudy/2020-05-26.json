@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1241,
+    "author": {
+      "id": "MDQ6VXNlcjEwNjczMDcw",
+      "is_bot": false,
+      "login": "bielim",
+      "name": ""
+    },
+    "body": "The main goal of this branch is to provide better, distribution-specific ways of updating the distribution parameters given some moments of that distribution. \r\n\r\nIt contains the following updates and additions:\r\n- `ExponentialMixture` and `GammaMixture`: These two new subtypes of `ParticleDistributions` can (and should) be used for mixtures of exponential distributions and mixtures of Gamma distributions instead of the generic `Mixture` subtype. \r\n- The function `update_params_from_moments` now dispatches to different moments-to-parameters mappings (function `moments_to_params`) depending on the type of distribution: For simple exponential and Gamma distributions, the mapping is computed analytically, and parameters for `ExponentialMixtures` and `GammaMixtures` are determined by setting up nonlinear systems of equations that relate the moments to the unknown parameters (function `construct_system`). For generic primitive or mixture distribution where no \"cleverer\" way of determining the parameters is implemented, the mapping is still done by the originally implemented optimization procedure. \r\n- To solve the nonlinear system of equations for `ExponentialMixtures` and `GammaMixtures`, the Julia package `NLPModelsKnitro` is used, which is a thin KNITRO wrapper for NLP (Nonlinear Programming) models. KNITRO is a commercial solver but a free demo version can be downloaded from the Artelys website at https://www.artelys.com/solvers/knitro/. Future updates may provide the user with the option to choose between different solvers -- e.g., another option is the Julia package `Ipopt`, but note that KNITRO is a much more powerful and mature solver. At the moment, running examples with `ExponentialMixtures` and `GammaMixtures` requires the user to install and correctly set up KNITRO (see also docs at http://www.juliaopt.org/KNITRO.jl/latest/).\r\n- The parameter values at the previous time step provide a good initial guess for finding the parameters at the current time step. Access to the distribution at the previous time step is made possible by supplying the distribution as a parameter to the ODE solver and update it at each time step.\r\n- While these changes help to make the moment-to-parameter update more accurate and reliable, there are in some cases (depending on the initial `ParticleDistribution`) still issues with the ODE solver which are not related to the moments-to-parameters mapping itself, e.g., moments can become negative. To help alleviate such issues, all examples now include a callback to the ODE solver, which checks at each time step if any of the distribution parameters have left their \"save domain\" -- if that is the case, the integration is terminated even if the end of the integration time period has not been reached yet. Future updates may include a similar way to gracefully exit the integration if moments become negative (in the current implementation, negative moments lead to errors/crashes).\r\n- Finally, if there are cases of `ParticleDistributions` where none of the moments-to-parameters mapping methods described above work well, one can implement additional `moments_to_params` functions that use predictions of regression models (e.g., random forests) which have been trained to learn the moments-to-parameters mapping for that specific distribution. At this point it's not clear if that will be needed, but it's another possible future enhancement.",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2020-05-17T02:00:23Z",
+    "deletions": 272,
+    "labels": [
+      {
+        "color": "a2eeef",
+        "description": "New feature or request",
+        "id": "MDU6TGFiZWwxNjYxOTk1Mjkw",
+        "name": "enhancement"
+      }
+    ],
+    "mergedAt": "2020-05-26T20:13:24Z",
+    "number": 53,
+    "title": "New methods to map from moments to parameters"
+  }
+]

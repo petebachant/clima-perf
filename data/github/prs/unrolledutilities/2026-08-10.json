@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 200,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Problem\r\n\r\n`unrolled_filter`, `unrolled_split`, and `unrolled_unique` are reductions that\r\npush items into a tuple accumulator, so the accumulator's type changes at every\r\nstep. For long or complexly typed iterators, Julia inference's recursion-widening\r\nheuristics widen the accumulator, and the resulting dynamic dispatch and heap\r\nallocation cannot be compiled for GPUs. This broke ClimaAtmos AMIP runs through\r\nClimaCore's use of `unrolled_filter` in GPU kernels (`InvalidIRError` with\r\n`gpu_gc_pool_alloc` and `jl_f__apply_iterate` in `unrolled_push_into`).\r\n\r\n## Fix\r\n\r\nImplement all three functions in terms of `unrolled_flatmap`, which maps each\r\nitem to an empty or singleton iterator based only on that item's type, so no\r\nrecursively growing type is inferred. `unrolled_unique` keeps an item when no\r\npreceding item has the same value of `f` \u2014 quadratically many comparisons, but\r\nthe pushing reduction it replaces was also quadratic.\r\n\r\nSemantics are unchanged. Version bumped to 0.1.10.\r\n\r\nAlso fixed one unrelated CI error related to PrettyTables v3\r\nincompatibility in `test/test_and_analyze.jl`.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-09T06:36:58Z",
+    "deletions": 30,
+    "labels": [],
+    "mergedAt": "2026-08-10T05:07:30Z",
+    "number": 33,
+    "title": "fix: implement filter, split, and unique in terms of unrolled_flatmap"
+  }
+]
