@@ -19,9 +19,10 @@ the last 180 days, a rough retention signal.
 
 Writes:
 
-- ``results/external-adopters.csv``: one row per (account, package)
-- ``results/adopter-accounts.csv``: one row per account, with its segment
-  and the profile text that set it
+- ``results/external-adopters.csv``: one row per (outside account,
+  package), set-aside accounts left out
+- ``results/adopter-accounts.csv``: one row per account, set-aside ones
+  included, with its segment and the profile text that set it
 - ``results/adopters-summary.json``: headline counts
 - ``figures/external-adopters.json``: adopters per package by segment
 """
@@ -284,9 +285,11 @@ def main() -> None:
     )
     accounts["packages"] = accounts["login"].map(acct_pkgs)
     (ROOT / "results").mkdir(exist_ok=True)
-    adopters.sort_values(["package", "segment", "login"]).to_csv(
-        ROOT / "results" / "external-adopters.csv", index=False
-    )
+    # Only outside adoption; the set-aside accounts stay in
+    # adopter-accounts.csv with their segment, for auditing
+    adopters[adopters["segment"].isin(SEGMENTS)].sort_values(
+        ["package", "segment", "login"]
+    ).to_csv(ROOT / "results" / "external-adopters.csv", index=False)
     accounts.sort_values(["segment", "login"]).to_csv(
         ROOT / "results" / "adopter-accounts.csv", index=False
     )

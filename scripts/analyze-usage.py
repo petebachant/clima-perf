@@ -384,10 +384,7 @@ def weekly_installs_figure() -> go.Figure:
 
 def usage_figure() -> go.Figure:
     adopters = pd.read_csv(ROOT / "results" / "external-adopters.csv")
-    counted = adopters[
-        ~adopters["segment"].isin(["Internal", "Affiliated", "Copy"])
-    ]
-    repo_names = {r for s in counted["repos"] for r in s.split()}
+    repo_names = {r for s in adopters["repos"] for r in s.split()}
     meta = {
         r["full_name"]: r
         for r in read_jsonl(DATA / "github-code-dependents" / "repos.jsonl")

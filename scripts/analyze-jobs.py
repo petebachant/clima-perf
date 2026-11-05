@@ -12,8 +12,8 @@ per job at the deepest stage it reached:
 1. Watcher: starred or forked a repo
 2. Asker: opened an issue or a discussion
 3. User: has a public repo listing one of the job's packages as a direct
-   dependency (from analyze-adopters, so CliMA's own, affiliated, and copied
-   repos are already set aside)
+   dependency (from analyze-adopters' external-adopters.csv, which already
+   leaves out CliMA's own, affiliated, and copied repos)
 4. Contributor: had a pull request merged
 
 Stars, forks, issues, discussions, and contributions count over the last
@@ -63,7 +63,6 @@ PRS = ROOT / "data" / "github" / "prs"
 MEMBERS = ROOT / "data" / "github" / "clima_members.json"
 
 WINDOW_DAYS = 730
-EXCLUDED_SEGMENTS = ["Internal", "Affiliated", "Copy"]
 MIN_PRIOR_CITATIONS = 10
 
 # Ordinal blue ramp, validated with --ordinal: deeper stages are darker
@@ -339,7 +338,6 @@ def main() -> None:
     events = eng[(eng["event_at"] > start) & eng["job"].notna()]
 
     adopters = pd.read_csv(ADOPTERS)
-    adopters = adopters[~adopters["segment"].isin(EXCLUDED_SEGMENTS)]
     adopters = adopters.assign(job=adopters["package"].map(job_of_repo))
     adopters = adopters[adopters["job"].notna()]
     users = adopters.groupby(["job", "login"], as_index=False)["active"].any()
