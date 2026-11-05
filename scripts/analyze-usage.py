@@ -10,10 +10,10 @@ Reads the snapshots the fetch stages accumulate and writes six figures:
   package, user vs. CI
 - ``figures/julia-installs-peers.json``: Oceananigans' daily user installs
   against Julia peers
-- ``figures/julia-installs-weekly.json``: average daily user installs per
-  week for each CliMA package, one panel each, so growth shows as the
-  history accumulates (the package servers only keep 31 days, so it starts
-  when fetch-julia-downloads first ran)
+- ``figures/julia-installs-weekly.json``: user installs per week stacked
+  by package, like the engagement charts, so growth shows as the history
+  accumulates (the package servers only keep 31 days, so it starts when
+  fetch-julia-downloads first ran)
 - ``figures/repo-usage.json``: outside repos that list a CliMA package as a
   direct dependency, by the year the repo was created and whether it's
   still active
@@ -54,7 +54,6 @@ OTHER = "#a8a7a1"
 SURFACE = "#fcfcfb"
 INK_MUTED = "#52514e"
 TOP_REPOS = 7
-MIN_DAILY_INSTALLS = 5
 IN_PROGRESS_OPACITY = 0.45
 ACTIVE_DAYS = 180
 
@@ -76,7 +75,7 @@ def blog_posts(start: pd.Timestamp, end: pd.Timestamp) -> list[dict]:
 
 
 def mark_posts(fig: go.Figure, posts: list[dict], rows: list[int]) -> None:
-    for p in posts:
+    for i, p in enumerate(posts):
         for row in rows:
             fig.add_vline(
                 x=p["day"],
@@ -87,7 +86,8 @@ def mark_posts(fig: go.Figure, posts: list[dict], rows: list[int]) -> None:
         # Inside the top panel, so it doesn't collide with its title
         fig.add_annotation(
             x=p["day"],
-            y=0.98,
+            # Alternate heights so labels of posts a week apart don't collide
+            y=0.98 - 0.06 * (i % 2),
             yref="y domain",
             text=f" Blog: {p['label']}",
             showarrow=False,
@@ -304,6 +304,14 @@ def peer_installs_figure() -> go.Figure:
 
 
 def weekly_installs_figure() -> go.Figure:
+    """Weekly user installs stacked by package, like the engagement charts.
+
+    An install is a unique IP address fetching the package on a day, so a
+    week's bar is the sum over its days and packages. The same person
+    installing Oceananigans also fetches CubedSphere and others, so the
+    stack measures package installs, not people. Weeks start on Monday; a
+    partial first week is dropped and the week in progress drawn lighter.
+    """
     dl = pd.read_csv(DATA / "julia-downloads" / "by-date.csv")
     with (DATA / "julia-downloads" / "packages.csv").open() as f:
         groups = {r["package"]: r["group"] for r in csv.DictReader(f)}
@@ -312,79 +320,61 @@ def weekly_installs_figure() -> go.Figure:
         & dl["package"].map(lambda p: groups.get(p) == "clima")
     ]
     dl["date"] = pd.to_datetime(dl["date"])
-    daily = dl.groupby(["package", "date"])["request_addrs"].sum()
-    days = pd.date_range(dl["date"].min(), dl["date"].max())
-    daily = daily.unstack("package").reindex(days, fill_value=0).fillna(0)
-    # Weeks start on Monday; the first and last may be partial, so each
-    # bar is the average over the days the week has data for
-    week = daily.index.to_period("W-SUN").start_time
-    weekly = daily.groupby(week).mean()
-    n_days = daily.groupby(week).size()
-    # A partial first week is mostly one kind of day (weekend or weekday),
-    # which skews its average; only the week in progress may be partial
-    if n_days.iloc[0] < 7 and len(n_days) > 1:
-        weekly, n_days = weekly.iloc[1:], n_days.iloc[1:]
-    last_week = weekly.index[-1]
-    in_progress = n_days[last_week] < 7
-
-    mean = daily.mean().sort_values(ascending=False)
-    pkgs = list(mean[mean >= MIN_DAILY_INSTALLS].index)
-    cols = 4
-    rows = -(-len(pkgs) // cols)
-    fig = make_subplots(
-        rows=rows,
-        cols=cols,
-        subplot_titles=pkgs,
-        shared_xaxes=True,
-        vertical_spacing=0.5 / rows,
-        horizontal_spacing=0.06,
+    through = dl["date"].max()
+    days = pd.date_range(dl["date"].min(), through)
+    daily = (
+        dl.groupby(["date", "package"])["request_addrs"]
+        .sum()
+        .unstack(fill_value=0)
+        .reindex(days, fill_value=0)
     )
-    opacity = [
-        IN_PROGRESS_OPACITY if (w == last_week and in_progress) else 1.0
-        for w in weekly.index
-    ]
-    featured = {}
-    for post in read_jsonl(DATA / "blog" / "posts.jsonl"):
-        for pkg in post["featured_packages"]:
-            day = pd.Timestamp(post["date"])
-            if days[0] <= day <= days[-1]:
-                featured.setdefault(pkg.removesuffix(".jl"), []).append(day)
-    for i, pkg in enumerate(pkgs):
-        row, col = i // cols + 1, i % cols + 1
+    week = daily.index.to_period("W-SUN").start_time
+    weekly = daily.groupby(week).sum()
+    n_days = daily.groupby(week).size()
+    if n_days.iloc[0] < 7 and len(n_days) > 1:
+        weekly = weekly.iloc[1:]
+    weeks = weekly.index
+    in_progress = weeks[-1] if through.weekday() < 6 else None
+    opacity = [IN_PROGRESS_OPACITY if w == in_progress else 1.0 for w in weeks]
+
+    fig = make_subplots(rows=1, cols=1)
+    order = weekly.sum().sort_values(ascending=False, kind="stable")
+    for pkg in order[order > 0].index:
         fig.add_bar(
-            x=weekly.index,
-            y=weekly[pkg],
-            marker=dict(color=repo_color(pkg), opacity=opacity),
-            customdata=n_days.values,
-            hovertemplate="Week of %{x|%b %d}: %{y:.0f} user installs/day "
-            "(%{customdata} days of data)<extra>" + pkg + "</extra>",
-            showlegend=False,
-            row=row,
-            col=col,
+            name=pkg,
+            x=weeks,
+            y=weekly[pkg].tolist(),
+            marker_color=repo_color(pkg),
+            marker_opacity=opacity,
+            hovertemplate="Week of %{x|%b %d, %Y}<br>%{y} user installs"
+            "<extra>" + pkg + "</extra>",
         )
-        for day in featured.get(pkg, []):
-            fig.add_vline(
-                x=day, line=dict(color=INK_MUTED, width=1), row=row, col=col
-            )
-        fig.update_yaxes(rangemode="tozero", row=row, col=col)
+    mark_posts(fig, blog_posts(weeks[0], through), rows=[1])
     note = (
-        f"; the week of {last_week:%b %d} is in progress (lighter)"
-        if in_progress
+        f"Lighter bars: week in progress, data through {through:%b} "
+        f"{through.day}, {through.year}. "
+        if in_progress is not None
         else ""
     )
     fig.update_layout(
-        title="Weekly Julia user installs of CliMA packages"
-        "<br><sup>Average unique IP addresses per day from user (non-CI) "
-        f"clients, weeks starting Monday, from {weekly.index[0]:%Y-%m-%d}"
-        f"{note}.<br>Each panel has its own scale; vertical lines mark blog "
-        "posts featuring the package. Packages averaging under "
-        f"{MIN_DAILY_INSTALLS} a day aren't shown</sup>",
-        height=140 + 150 * rows,
-        margin=dict(t=130, b=40, l=40, r=20),
-        bargap=0.2,
+        barmode="stack",
+        title="Julia user installs of CliMA packages, by week"
+        f"<br><sup>{note}Unique IP addresses per package per day from user "
+        "(non-CI) clients, summed; one install of Oceananigans also<br>"
+        "fetches CubedSphere and others, so this counts package installs, "
+        "not people. The package servers keep 31 days, so the history "
+        f"starts {weeks[0]:%b} {weeks[0].day}, {weeks[0].year}</sup>",
+        height=600,
+        margin=dict(t=100, b=40, l=60, r=20),
+        legend=dict(
+            traceorder="normal",
+            tracegroupgap=0,
+            itemsizing="constant",
+            font=dict(size=11),
+        ),
     )
-    fig.update_annotations(font=dict(size=12))
-    fig.update_xaxes(tickformat="%b %d")
+    fig.update_yaxes(title_text="Installs/week")
+    fig.update_xaxes(title_text="Week starting")
     return fig
 
 
