@@ -420,6 +420,7 @@ def main() -> None:
     cit_events_df = joined[
         [
             "quarter",
+            "cited_openalex_id",
             "cited_doi",
             "cited_package",
             "citing_openalex_id",
@@ -612,7 +613,7 @@ def main() -> None:
     weekly_fig.write_json(ROOT / "figures/github-engagement-weekly.json")
 
     cit_events_df.sort_values(
-        ["quarter", "cited_doi", "citing_openalex_id"]
+        ["quarter", "cited_openalex_id", "citing_openalex_id"]
     ).to_csv(ROOT / "results/external-citations.csv", index=False)
     eng_events_df.sort_values(
         ["quarter", "repo", "event_type", "event_at"]

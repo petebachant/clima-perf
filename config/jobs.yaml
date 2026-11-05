@@ -1,0 +1,247 @@
+# Jobs to be done: the user problems CliMA's software and science solve.
+#
+# Each job groups the packages and CliMA papers (by OpenAlex work ID, from
+# data/openalex/clima-pubs.jsonl) that serve it, so analyze-jobs can count
+# outside pull per problem rather than per repo. A job needn't have a package:
+# some are served so far only by papers, e.g., a method outside authors
+# implement themselves. Every tracked repo and every CliMA paper must appear
+# exactly once; analyze-jobs fails on a repo that's missing and warns on a
+# paper, so new ones get placed here.
+
+jobs:
+  ocean-sea-ice:
+    name: Ocean and sea-ice modeling
+    job: >
+      Simulate the ocean and sea ice, from process studies to global
+      mesoscale-resolving climate runs, on GPUs.
+    packages:
+      - Oceananigans
+      - ClimaOcean
+      - ClimaSeaIce
+      - SeawaterPolynomials
+      - CubedSphere
+      - OrthogonalSphericalShellGrids
+    papers:
+      - W2765564267  # Baroclinic instability in the presence of convection (2018)
+      - W2808478298  # Note on the rate of restratification in the baroclinic spind... (2018)
+      - W3010893923  # Uncertainty quantification of ocean parameterizations: appli... (2020)
+      - W4409888035  # A GPU-based ocean dynamical core for routine mesoscale-resol... (2025)
+      - W4400648418  # A new WENO-based momentum advection scheme for simulations o... (2024)
+      - W4409627313  # Formulation and calibration of CATKE, a one-equation paramet... (2025)
+      - W3112591808  # Near-inertial waves and turbulence driven by the growth of s... (2021)
+      - W3158862728  # On the settling depth of meltwater escaping from beneath Ant... (2021)
+      - W4388974130  # Transition to turbulence in wind-drift layers (2023)
+      - W4306773594  # Ocean general circulation models simulate total ocean transp... (2024)
+      - W3012627022  # Turbulent mixing of a passive scalar in the ocean mixed laye... (2020)
+      - W3088889034  # Oceananigans.jl: fast and friendly geophysical fluid dynamic... (2020)
+      - W4407806351  # High-level, high-resolution ocean modeling at all scales. (2025)
+      - W7109206249  # NORi: An ML-augmented ocean boundary layer parameterization (2026)
+      - W3006708737  # The vortex gas scaling regime of baroclinic turbulence (2020)
+      - W4296126394  # Transport and emergent stratification in the equilibrated Ea... (2022)
+  calibration-uq:
+    name: Calibration and UQ
+    job: >
+      Fit a model's parameters to data and quantify their uncertainty,
+      without gradients, for any model, climate or not.
+    packages:
+      - EnsembleKalmanProcesses
+      - CalibrateEmulateSample
+      - ClimaCalibrate
+      - RandomFeatures
+    papers:
+      - W2272734273  # Analysis of the ensemble Kalman filter for inverse problems (2017)
+      - W3040929669  # Calibrate, emulate, sample (2021)
+      - W3113646778  # Calibration and uncertainty quantification of convective par... (2021)
+      - W4225401869  # Iterated Kalman methodology for inverse problems (2022)
+      - W3166559945  # Consensus based sampling (2022)
+      - W4306146787  # Efficient derivative-free Bayesian inference for large-scale... (2022)
+      - W4226079007  # Parameter uncertainty quantification in an idealized GCM wit... (2022)
+      - W3148409799  # Ensemble inference methods for models with noisy and expensi... (2022)
+      - W4407891680  # Hyperparameter optimization for randomized algorithms: A cas... (2025)
+      - W2964636739  # Interacting Langevin diffusions: (2020)
+      - W2191914807  # Filter based methods for statistical linear inverse problems (2017)
+      - W4311796651  # EnsembleKalmanProcesses.jl: Derivative-free ensemble-based m... (2022)
+      - W4396738654  # CalibrateEmulateSample.jl: Accelerated parametric uncertaint... (2024)
+      - W2296087295  # Posterior consistency for Gaussian process approximations of... (2018)
+      - W4283732814  # Ensemble-based experimental design for targeting data requis... (2022)
+      - W4410252831  # Nesterov acceleration for ensemble Kalman inversion and vari... (2025)
+      - W7162085158  # Likelihood-informed dimension reduction across tempered Baye... (2026)
+      - W7147542716  # Bayesian calibration of dynamic models of earthquake sequenc... (2026)
+      - W2996521624  # Reconciling Bayesian and perimeter regularization for binary... (2021)
+      - W4293744237  # Training physics-based machine-learning parameterizations wi... (2022)
+      - W4293223814  # An efficient Bayesian approach to learning droplet collision... (2022)
+      - W4392578939  # Filtering dynamical systems using observations of statistics (2024)
+      - W4400103783  # Learning optimal filters using variational inference (2024)
+  ml-closures:
+    name: ML closures and model error
+    job: >
+      Learn the parts of a model that physics doesn't pin down, e.g.,
+      subgrid closures or structural error, from data.
+    packages: []
+    papers:
+      - W3094611249  # Use of neural networks for stable, accurate and physically c... (2021)
+      - W3182899221  # A framework for machine learning of model error in dynamical... (2022)
+      - W3017093197  # Learning stochastic closures using ensemble Kalman inversion (2021)
+      - W4399244200  # Learning about structural errors in models of complex dynami... (2024)
+      - W4404430509  # Online learning of entrainment closures in a hybrid machine... (2024)
+      - W4403617251  # Online learning of eddy-viscosity and backscattering closure... (2026)
+      - W4296754083  # The cost-accuracy trade-off in operator learning with neural... (2022)
+      - W3196963853  # Convergence rates for learning linear operators from noisy d... (2023)
+      - W3028316595  # The random feature model for input-output maps between Banac... (2021)
+      - W3024746885  # Kernel analog forecasting: multiscale test problems (2021)
+      - W4386044464  # Tipping point forecasting in non-stationary dynamics on func... (2023)
+      - W4405943563  # Response theory via generative score modeling (2024)
+      - W4383374911  # Statistical non-locality of dynamically coherent structures (2023)
+      - W4403611634  # Representing turbulent statistics with partitions of state s... (2024)
+      - W4403608255  # Representing turbulent statistics with partitions of state s... (2024)
+  atmos-physics:
+    name: Atmospheric physics components
+    job: >
+      Represent clouds, microphysics, radiation, turbulence, and surface
+      exchange in any atmosphere model.
+    packages:
+      - Thermodynamics
+      - CloudMicrophysics
+      - RRTMGP
+      - Insolation
+      - SurfaceFluxes
+      - Cloudy
+      - ClimaParams
+      - AtmosphericProfilesLibrary
+      - KinematicDriver
+    papers:
+      - W2786572313  # An extended eddy-diffusivity mass-flux scheme for unified re... (2018)
+      - W3047394539  # Unified entrainment and detrainment closures for extended ed... (2020)
+      - W3092771686  # A generalized mixing length closure for eddy-diﬀusivity mass... (2020)
+      - W4220824006  # A library of large-eddy simulations forced by global climate... (2022)
+      - W3000906388  # Statistically steady state large-eddy simulations forced by... (2020)
+      - W4225879100  # Seasonal cycle of idealized polar clouds: Large eddy simulat... (2021)
+      - W4224308440  # PySDM v1: particle-based cloud modeling package for warm-rai... (2022)
+      - W4366404763  # New developments in PySDM and PySDM-examples v2: collisional... (2023)
+      - W4308735998  # Spanning the gap from bulk to bin: a novel spectral microphy... (2022)
+      - W4385281082  # Breakups are complicated: an efficient representation of col... (2023)
+      - W4401024135  # Training warm-rain bulk microphysics schemes using super-dro... (2024)
+      - W3129111981  # Top-of-atmosphere albedo bias from neglecting three-dimensio... (2021)
+      - W4388766379  # Enhanced cloud top longwave radiative cooling due to the eff... (2023)
+      - W4387429082  # Accelerating large-eddy simulations of clouds with tensor pr... (2023)
+  atmosphere:
+    name: Atmosphere modeling
+    job: >
+      Simulate the global atmosphere for weather and climate.
+    packages:
+      - ClimaAtmos
+    papers:
+      - W4294959428  # Large-eddy simulations with ClimateMachine v0.2.0: a new ope... (2022)
+      - W4366832513  # The flux-differencing discontinuous Galerkin method applied... (2023)
+      - W7134165301  # The Climate Modeling Alliance atmosphere dynamical core: Con... (2026)
+  coupled-esm:
+    name: Coupled Earth system modeling
+    job: >
+      Run coupled atmosphere, ocean, land, and sea-ice simulations, e.g.,
+      AMIP or climate projections.
+    packages:
+      - ClimaCoupler
+      - ClimaEarth
+    papers: []
+  land:
+    name: Land modeling
+    job: >
+      Simulate land surface water, energy, carbon, and vegetation, and
+      compare them to observations.
+    packages:
+      - ClimaLand
+      - Land
+      - GriddingMachine
+    papers:
+      - W3160362971  # Accounting for canopy structure improves hyperspectral radia... (2021)
+      - W3127041937  # Optimization theory explains nighttime stomatal responses (2021)
+      - W3117385319  # Optimal model complexity for terrestrial carbon cycle predic... (2021)
+      - W4324353139  # Modeling global vegetation gross primary productivity, trans... (2023)
+      - W4384469762  # The importance of hyperspectral soil albedo information for... (2023)
+      - W4226252579  # On the impact of canopy model complexity on simulated carbon... (2022)
+      - W4410799069  # Impacts of leaf traits on vegetation optical properties in E... (2025)
+      - W4220973663  # CARDAMOM-FluxVal version 1.0: a FLUXNET-based validation sys... (2022)
+      - W4221121861  # Information content of soil hydrology in the Amazon as infor... (2022)
+      - W4302283863  # Technical note: common ambiguities in plant hydraulics (2022)
+      - W4226088762  # Resolving temperature limitation on spring productivity in a... (2022)
+      - W4412645231  # Toward routing river water in land surface models with recur... (2025)
+      - W7118845808  # ClimaLand: A land surface model for advancing climate modeli... (2025)
+      - W4410568261  # A physics-constrained neural differential equation framework... (2025)
+      - W3112630006  # Lagged effects regulate the inter-annual variability of the... (2020)
+      - W3176164357  # Testing stomatal models at stand level in deciduous angiospe... (2021)
+      - W4281666160  # GriddingMachine: a database and software for earth system mo... (2022)
+      - W4401518337  # Shifting from plant functional types to traits: enhancing bi... (2024)
+      - W7172386197  # A next-generation snow albedo parameterization for climate m... (2026)
+  local-risk:
+    name: Local climate risk
+    job: >
+      Turn climate and weather model output into local, decision-relevant
+      projections of extremes and hazards, e.g., by downscaling.
+    packages: []
+    papers:
+      - W4409795612  # Dynamical-generative downscaling of climate model ensembles (2025)
+      - W4393193378  # Unpaired downscaling of fluid flows with diffusion bridges (2024)
+      - W4405399462  # Changes in the frequency of observed temperature extremes la... (2024)
+      - W7162069379  # How short climate records affect GEV-based estimates of rare... (2026)
+      - W7208748172  # Improving precipitation forecasts in an AI weather model usi... (2026)
+      - W4406650975  # Improving tropical cyclone rapid intensification forecasts w... (2025)
+      - W3136879904  # Predicting the interannual variability of California’s total... (2021)
+      - W4399008399  # Illuminating snow droughts: The future of Western United Sta... (2024)
+  infrastructure:
+    name: Numerics and infrastructure
+    job: >
+      Build fast, portable Earth system model code: discretizations, time
+      steppers, parallelism, diagnostics, and analysis.
+    packages:
+      - ClimaCore
+      - ClimaTimeSteppers
+      - ClimaComms
+      - ClimaUtilities
+      - ClimaDiagnostics
+      - ClimaAnalysis
+      - ClimaInterpolations
+      - ClimaViz
+      - RootSolvers
+      - ArtifactWrappers
+      - UnrolledUtilities
+      - MultiBroadcastFusion
+      - LazyBroadcast
+      - NullBroadcasts
+      - StructuredPrinting
+      - OperatorFlux
+      - GilbertCurves
+    papers:
+      - W3182781792  # MPI.jl: Julia bindings for the Message Passing Interface (2021)
+
+# CliMA papers that don't serve a job a user would adopt: perspectives on
+# where climate modeling should go, and scientific findings. Their outside
+# citations are reported but not credited to any job.
+not_jobs:
+  vision:
+    - W2750605337  # Earth system modeling 2.0: A blueprint for models that learn... (2017)
+    - W2569139521  # Climate goals and computing the future of clouds (2017)
+    - W4386465713  # Harnessing AI and computing to advance climate modelling and... (2023)
+    - W4399809729  # Opinion: Optimizing climate models with process knowledge, r... (2024)
+    - W3169745485  # Accelerating progress in climate science (2021)
+    - W4391753703  # Toward a US framework for continuity of satellite observatio... (2024)
+    - W4394910410  # Accelerating scientific discovery with AI-aided automation (2023)
+  finding:
+    - W2917099771  # Possible climate transitions from breakup of stratocumulus d... (2019)
+    - W3177221950  # Assessing biases and climate implications of the diurnal pre... (2021)
+    - W3163545403  # Constraining the date of a seasonally ice-free Arctic using... (2021)
+    - W3099698824  # Solar geoengineering may not prevent strong warming from dir... (2020)
+    - W3117014400  # Assessing the influence of COVID-19 on the shortwave radiati... (2021)
+    - W4410867326  # Observational constraints imply limited future Atlantic meri... (2025)
+    - W3197186350  # A quantitative scaling theory for meridional heat transport... (2021)
+    - W2981175420  # Midwinter suppression of storm tracks in an idealized zonall... (2020)
+    - W4401511136  # Precipitation over a wide range of climates simulated with c... (2024)
+    - W4402356612  # A systematic local view of the long-term changes of the atmo... (2024)
+    - W4415226306  # An energetic framework for understanding Hadley circulation... (2025)
+    - W7140127652  # A theory of seasonally varying axisymmetric Hadley circulati... (2026)
+    - W7170809965  # High-resolution simulations reveal positive global warming f... (2026)
+    - W7213449966  # Estimating the maximum mean precipitation in hothouse climat... (2025)
+    - W4366003771  # CO2-driven stratocumulus breakup in a bulk boundary layer mo... (2023)
+    - W4366003243  # Stratocumulus-cumulus transition explained by bulk boundary... (2023)
+    - W4392084444  # The evolving butterfly: Statistics in a changing attractor (2024)
+    - W3200896642  # Epidemic management and control through risk-dependent indiv... (2022)
+    - W4406810255  # Models for information propagation on graphs (2025)

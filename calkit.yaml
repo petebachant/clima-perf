@@ -356,6 +356,33 @@ pipeline:
           storage: git
         - path: figures/external-adopters.json
           storage: git
+    analyze-jobs:
+      description: >
+        Group packages and CliMA papers into jobs to be done per
+        config/jobs.yaml, then compare jobs on outside pull (accounts by
+        the deepest funnel stage reached, users, contributors, and outside
+        citations) against internal effort (CliMA members' merged PRs).
+      kind: python-script
+      script_path: scripts/analyze-jobs.py
+      environment: analyze
+      inputs:
+        - config/jobs.yaml
+        - scripts/clima_repos.py
+        - results/github-engagement.csv
+        - results/external-adopters.csv
+        - results/external-citations.csv
+        - data/openalex
+        - data/github/prs
+        - data/github/clima_members.json
+      outputs:
+        - path: results/jobs.csv
+          storage: git
+        - path: results/jobs-summary.json
+          storage: git
+        - path: figures/job-funnel.json
+          storage: git
+        - path: figures/job-scorecard.json
+          storage: git
     analyze-usage:
       description: >
         Chart the accumulated usage snapshots: daily GitHub views and
@@ -651,6 +678,23 @@ figures:
       release/Registrator/propagation burden and how many users outside
       CliMA that burden actually serves.
 
+  - path: figures/job-funnel.json
+    title: Outside accounts by job and funnel stage
+    description: >
+      Distinct GitHub accounts outside CliMA engaging with each job to be
+      done's repos over the last two years, each at the deepest stage it
+      reached: watcher (star or fork), asker (issue or discussion), user (a
+      public repo depending on the job's packages), or contributor (a
+      merged PR). Jobs served only by papers have no funnel.
+    stage: analyze-jobs
+  - path: figures/job-scorecard.json
+    title: Effort and outside pull by job to be done
+    description: >
+      Per job, side by side: CliMA members' merged PRs (effort), outside
+      users, outside contributors, and outside citations of the job's
+      papers, over the last two years (users are the current snapshot).
+    stage: analyze-jobs
+
 notebooks:
   - path: notebooks/analyze.ipynb
     title: Analysis
@@ -724,6 +768,30 @@ datasets:
       Headline counts for the adopters question: accounts by segment and by
       package, the ESM components' counts, and how many are active.
     stage: analyze-adopters
+  - path: config/jobs.yaml
+    title: Jobs to be done
+    description: >
+      Hand-curated mapping of every tracked CliMA repo and every CliMA
+      paper to the user problem (job to be done) it serves, plus papers
+      that are perspectives or findings rather than a job.
+    created_by:
+      name: Pete Bachant
+      email: petebachant@gmail.com
+      with_ai: Claude Opus 5.5
+  - path: results/jobs.csv
+    title: Outside pull and effort by job
+    description: >
+      One row per job to be done: outside accounts by deepest funnel stage,
+      users, contributors, stargazers, CliMA members' merged PRs, outside
+      citations (two-year, all-time, last year, and prior year), and the
+      ratios derived from them.
+    stage: analyze-jobs
+  - path: results/jobs-summary.json
+    title: Jobs summary
+    description: >
+      Headline values for the jobs question, per job and for the leading
+      candidates.
+    stage: analyze-jobs
   - path: data/blog
     title: CliMA blog posts
     description: >
@@ -1077,3 +1145,54 @@ questions:
       package in the last 180 days. Code search only sees public repos'
       default branches, so private use, including any by companies, is
       invisible here.
+  - question: Which job to be done is likely to be CliMA's next big product,
+      like Oceananigans?
+    evidence:
+      - kind: figure
+        path: figures/job-scorecard.json
+      - kind: figure
+        path: figures/job-funnel.json
+      - kind: result
+        path: results/jobs-summary.json
+        values:
+          top: top_job
+          top_share: top_job_deep_share_pct
+          ocean_users: ocean_sea_ice_users
+          ocean_contrib: ocean_sea_ice_contributors
+          ocean_deep: ocean_sea_ice_deep_pct
+          cal_deep: calibration_uq_deep_pct
+          best: best_ratio_job
+          best_ratio: best_ratio
+          top_ratio: top_ratio
+          most_cited: most_cited_job
+          most_cited_n: most_cited_n
+          ocean_cites: ocean_sea_ice_citations_2y
+          fastest: fastest_cited_job
+          fastest_pct: fastest_cited_pct
+          fastest_prior: fastest_cited_prior_year
+          fastest_last: fastest_cited_last_year
+          ml_cites: ml_closures_citations_2y
+          esm_pr_pct: esm_pr_pct
+          esm_users: esm_users
+    answer: >
+      No other job has a funnel like Oceananigans' yet, but a few show
+      pull of other kinds. {top} accounts for {top_share}% of the outside
+      accounts that use or contribute to any job's packages, with
+      {ocean_users} users and {ocean_contrib} contributors. It doesn't
+      convert better than the others: {ocean_deep}% of the outside accounts
+      it reaches become users or contributors, against {cal_deep}% for
+      calibration and UQ. What sets it apart is how many people it reaches.
+      Of the rest, {best} has the most outside users per CliMA PR
+      ({best_ratio} per 100, against {top_ratio} for ocean). The job with
+      the most outside citations is {most_cited}, with {most_cited_n} in
+      two years against {ocean_cites} for ocean. {fastest} has the
+      fastest-growing outside citations, up {fastest_pct}% in the last year
+      ({fastest_prior} to {fastest_last}), with no CliMA package serving it
+      yet; ML closures and model error ({ml_cites} citations) is the same
+      kind of paper-only job. Atmosphere and coupled Earth system modeling
+      take {esm_pr_pct}% of CliMA members' merged PRs and account for
+      {esm_users} of the outside users found. These measure outside pull
+      only. They can't weigh jobs CliMA's strategy needs regardless, like a
+      full Earth system model, whose value may come through the science and
+      projections it produces rather than outside adoption, so they rank
+      candidates rather than pick one.
