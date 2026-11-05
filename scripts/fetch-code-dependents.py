@@ -14,35 +14,47 @@ changes, which the first/last-seen log absorbs.
 Data layout (everything under ``data/github-code-dependents/``)::
 
     hits.jsonl    # clima_package, repo, path, first_seen_at, last_seen_at
+    added.jsonl   # clima_package, repo, path, added_at, added_sha
     repos.jsonl   # metadata for every repo with a hit, refreshed each run
     owners.jsonl  # public profile fields for each repo owner, refreshed
 
 ``first_seen_at`` is when this pipeline first found the hit, not when the
-dependency was added; repo ``created_at`` is a lower bound for that. CliMA
-org repos are skipped here. CliMA members' own repos are kept and tagged
-internal downstream.
+dependency was added. ``added.jsonl`` has that instead: for each (package,
+repo) outside CliMA, the first commit on the default branch whose copy of
+the repo's shallowest matching Project.toml lists the package's UUID, found
+by binary search over the commits that touched the file. It's computed once
+per pair and kept, so only new pairs cost API calls. A file moved from
+elsewhere dates from its move. CliMA org repos are skipped here. CliMA
+members' own repos are kept in the hits and tagged internal downstream, but
+aren't dated.
 """
 
 from __future__ import annotations
 
+import base64
 import csv
 import json
 import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import quote
 
+from clima_repos import AFFILIATED_ORGS
 from period import current_day
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "data" / "github-code-dependents"
 PACKAGES = REPO_ROOT / "data" / "julia-downloads" / "packages.csv"
+MEMBERS = REPO_ROOT / "data" / "github" / "clima_members.json"
 
 TODAY = current_day().isoformat()
 
 # Code search allows 10 requests a minute
 SEARCH_INTERVAL_S = 6.5
 MAX_PAGES = 10  # 100 results a page; search stops at 1,000
+# Dating stops, to resume next run, when the core API budget gets this low
+MIN_CORE_REMAINING = 300
 
 REPO_FIELDS = [
     "full_name",
@@ -110,6 +122,99 @@ def search(query: str) -> list[dict]:
     return items
 
 
+def file_lists(repo: str, path: str, sha: str, uuid: str) -> bool:
+    """Whether ``path`` at commit ``sha`` contains ``uuid``."""
+    try:
+        res = gh_api(f"repos/{repo}/contents/{quote(path)}?ref={sha}")
+    except subprocess.CalledProcessError:
+        return False  # the file didn't exist at that commit
+    return uuid in base64.b64decode(res.get("content", "")).decode(
+        errors="replace"
+    )
+
+
+def date_added(repo: str, path: str, uuid: str) -> dict | None:
+    """The first commit on the default branch where ``path`` lists ``uuid``.
+
+    Assumes the dependency, once added, stayed, which holds for nearly all
+    repos; one that dropped and re-added a package dates from one of the
+    times it was added.
+    """
+    out = subprocess.run(
+        [
+            "gh",
+            "api",
+            "--paginate",
+            f"repos/{repo}/commits?path={quote(path)}&per_page=100",
+            "--jq",
+            '.[] | "\\(.sha) \\(.commit.committer.date)"',
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    commits = [line.split() for line in out.splitlines() if line.strip()]
+    commits.reverse()  # oldest first
+    if not commits:
+        return None
+    lo, hi = 0, len(commits) - 1  # the newest commit lists it
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if file_lists(repo, path, commits[mid][0], uuid):
+            hi = mid
+        else:
+            lo = mid + 1
+    return {"added_sha": commits[lo][0], "added_at": commits[lo][1]}
+
+
+def core_remaining() -> int:
+    return gh_api("rate_limit")["resources"]["core"]["remaining"]
+
+
+def date_dependencies(
+    log: dict, uuids: dict[str, str], skip_owners: set[str]
+) -> int:
+    """Fill in ``added.jsonl`` for pairs not dated yet; returns failures."""
+    path = OUT_DIR / "added.jsonl"
+    added = {(r["clima_package"], r["repo"]): r for r in read_jsonl(path)}
+    shallowest: dict[tuple[str, str], str] = {}
+    for pkg, repo, file in log:
+        if repo.split("/")[0] in skip_owners:
+            continue
+        key = (pkg, repo)
+        best = shallowest.get(key)
+        if best is None or (file.count("/"), file) < (best.count("/"), best):
+            shallowest[key] = file
+    todo = [k for k in sorted(shallowest) if k not in added]
+    print(f"Dating {len(todo)} new (package, repo) dependencies")
+    n_failed = 0
+    for i, (pkg, repo) in enumerate(todo):
+        if i % 25 == 0 and core_remaining() < MIN_CORE_REMAINING:
+            print(
+                f"  WARN: API budget low; {len(todo) - i} left for next run",
+                file=sys.stderr,
+            )
+            break
+        file = shallowest[(pkg, repo)]
+        try:
+            found = date_added(repo, file, uuids[pkg])
+        except subprocess.CalledProcessError as err:
+            tail = (err.stderr or "").strip().splitlines()[-1:] or [str(err)]
+            print(f"  WARN: {repo} {file}: {tail[0]}", file=sys.stderr)
+            n_failed += 1
+            continue
+        if found is None:
+            continue
+        added[(pkg, repo)] = {
+            "clima_package": pkg,
+            "repo": repo,
+            "path": file,
+            **found,
+        }
+    write_jsonl(path, [added[k] for k in sorted(added)])
+    return n_failed
+
+
 def read_jsonl(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -164,6 +269,10 @@ def main() -> int:
         print(f"  {pkg['package']}: {n_pkg} files outside CliMA")
     write_jsonl(hits_path, [log[k] for k in sorted(log)])
 
+    members = set(json.loads(MEMBERS.read_text())["members"])
+    uuids = {p["package"]: p["uuid"] for p in packages}
+    n_undated = date_dependencies(log, uuids, members | AFFILIATED_ORGS)
+
     # Metadata for every repo ever seen, so repos that dropped out of the
     # index still have a row
     repos = sorted({r["repo"] for r in log.values()})
@@ -204,6 +313,9 @@ def main() -> int:
     # otherwise look like a package nobody uses
     if failed:
         print(f"ERROR: search failed for {', '.join(failed)}", file=sys.stderr)
+        return 1
+    if n_undated:
+        print(f"ERROR: dating failed for {n_undated} pairs", file=sys.stderr)
         return 1
     print(
         f"✓ {n_found} hits this run, {len(log)} (package, repo, file) "

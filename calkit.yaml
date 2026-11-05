@@ -286,8 +286,9 @@ pipeline:
       description: >
         Count external engagement with CliMA's products per quarter: paper
         citations, GitHub stars, forks, issues, merged PRs, and discussions,
-        and new Julia-registry dependents, excluding CliMA's own people,
-        spin-offs run by CliMA developers, and bots.
+        and outside repos newly depending on a CliMA package (Julia
+        registry or GitHub code search), excluding CliMA's own people,
+        spin-offs run by CliMA developers, copies, and bots.
         Writes one event table per stream and
         figures/external-engagement.json (quarterly), plus monthly and weekly
         variants.
@@ -300,6 +301,8 @@ pipeline:
         - data/github
         - data/openalex
         - data/julia-registry
+        - data/github-code-dependents
+        - results/adopter-accounts.csv
       outputs:
         - path: figures/external-engagement.json
           storage: git
@@ -311,7 +314,7 @@ pipeline:
           storage: git
         - path: results/github-engagement.csv
           storage: git
-        - path: results/new-registry-dependents.csv
+        - path: results/new-dependents.csv
           storage: git
     analyze-blog:
       description: >
@@ -388,7 +391,8 @@ pipeline:
         Chart the accumulated usage snapshots: daily GitHub views and
         unique visitors per repo with blog posts marked, top referrers,
         average daily Julia installs per package (user vs. CI), Oceananigans
-        installs against Julia peers, and outside repos using CliMA
+        installs against Julia peers, weekly user installs per package, and
+        outside repos using CliMA
         packages by the year they were created.
       kind: python-script
       script_path: scripts/analyze-usage.py
@@ -409,6 +413,8 @@ pipeline:
         - path: figures/julia-installs.json
           storage: git
         - path: figures/julia-installs-peers.json
+          storage: git
+        - path: figures/julia-installs-weekly.json
           storage: git
         - path: figures/repo-usage.json
           storage: git
@@ -528,7 +534,7 @@ pipeline:
     summarize-engagement:
       description: >
         Reduce the three external-engagement event streams (citations,
-        GitHub engagement, registry dependents) to per-quarter trend rates
+        GitHub engagement, new dependents) to per-quarter trend rates
         for the engagement question. Writes
         results/engagement-summary.json.
       kind: python-script
@@ -537,7 +543,7 @@ pipeline:
       inputs:
         - results/external-citations.csv
         - results/github-engagement.csv
-        - results/new-registry-dependents.csv
+        - results/new-dependents.csv
       outputs:
         - path: results/engagement-summary.json
           storage: git
@@ -571,8 +577,8 @@ figures:
       The external engagement figure binned by month over the last 24
       months, including the current one (drawn lighter while in progress):
       paper citations, software paper citations, GitHub
-      stars/forks/issues/PRs/discussions, and new Julia registry
-      dependents. Colors
+      stars/forks/issues/PRs/discussions, and new outside repos depending
+      on a CliMA package. Colors
       match the quarterly figure.
     stage: analyze-engagement
   - path: figures/github-engagement-weekly.json
@@ -612,6 +618,15 @@ figures:
     description: >
       Daily user (non-CI) installs of Oceananigans next to SpeedyWeather
       and Trixi, from the Julia package servers.
+    stage: analyze-usage
+  - path: figures/julia-installs-weekly.json
+    title: Weekly Julia user installs of CliMA packages
+    description: >
+      Average daily user (non-CI) installs per week for each CliMA package
+      averaging at least 5 a day, one panel each with its own scale, with
+      blog posts featuring the package marked. The package servers keep
+      only 31 days, so the history starts when this pipeline first fetched
+      them (October 2026) and grows daily.
     stage: analyze-usage
   - path: figures/repo-usage.json
     title: Outside repos using CliMA packages
@@ -839,11 +854,13 @@ datasets:
       / discussion (login is non-CliMA-org, non-bot), with repo, event type, login,
       timestamp, and quarter.
     stage: analyze-engagement
-  - path: results/new-registry-dependents.csv
-    title: New external Julia-registry dependents
-    description: One row per (CliMA package, external dependent) pair, with the
-      dependent's repo URL and the quarter when it first appeared in the Julia
-      General registry as a dependent.
+  - path: results/new-dependents.csv
+    title: New outside dependent repos
+    description: >
+      One row per (CliMA package, outside repo depending on it), from the
+      Julia registry or GitHub code search, dated by the registry version
+      or Project.toml commit that first listed the package. CliMA's own org
+      and members, spin-offs, and copies of CliMA repos aren't counted.
     stage: analyze-engagement
   - path: buildkite
     title: Buildkite flagship AMIP jobs
@@ -928,7 +945,7 @@ datasets:
     description: >
       Long-run and last-two-years trends for external citations, GitHub
       engagement (Oceananigans and the other repos separately), and new
-      Julia-registry dependents, plus the last four complete quarters
+      outside dependent repos, plus the last four complete quarters
       against the four before, for the engagement question.
     stage: summarize-engagement
   - path: results/dev-throughput-summary.json
@@ -980,7 +997,8 @@ questions:
           rest_last: github_other_repos.last_year_mean
           rest_prior: github_other_repos.prior_year_mean
           rest_pct: github_other_repos.change_pct
-          deps_last: registry_dependents.last_year_mean
+          deps_last: new_dependents.last_year_mean
+          deps_prior: new_dependents.prior_year_mean
     answer: >
       Outside engagement is growing only through Oceananigans; the rest is
       flat or shrinking. Outside citations of CliMA papers grew by
@@ -993,9 +1011,11 @@ questions:
       PRs, and discussions on Oceananigans changed {ocean_pct:+}% year over
       year ({ocean_prior} to {ocean_last} a quarter), while every other
       CliMA repo combined changed {rest_pct:+}% ({rest_prior} to
-      {rest_last}). New
-      outside Julia-registry dependents remain rare, about {deps_last} a
-      quarter.
+      {rest_last}). Outside repos newly listing a CliMA package as a
+      dependency, mostly unregistered research code found by GitHub code
+      search and led by Oceananigans, averaged {deps_last} a quarter over
+      the last year, against {deps_prior} the year before. Code search only
+      sees repos that still exist, so older quarters are undercounted.
   - question: How has software development throughput changed over time within
       the CliMA organization?
     evidence:

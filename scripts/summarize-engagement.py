@@ -6,8 +6,8 @@ Combines the event streams analyze-engagement writes:
 - ``results/github-engagement.csv`` -- external stars, forks, issues, merged
   PRs, and discussions, split here into Oceananigans and every other repo,
   since Oceananigans is most of it
-- ``results/new-registry-dependents.csv`` -- new external Julia-registry
-  dependents per quarter
+- ``results/new-dependents.csv`` -- outside repos newly depending on a
+  CliMA package per quarter, from the Julia registry or GitHub code search
 
 A single trend over the whole record hides a change of pace, e.g.,
 citations that grew for years and then leveled off, so each stream gets
@@ -82,7 +82,7 @@ def summarize_series(counts: pd.Series) -> dict:
 def main() -> None:
     cit = pd.read_csv(ROOT / "results" / "external-citations.csv")
     eng = pd.read_csv(ROOT / "results" / "github-engagement.csv")
-    deps = pd.read_csv(ROOT / "results" / "new-registry-dependents.csv")
+    deps = pd.read_csv(ROOT / "results" / "new-dependents.csv")
     last_q = last_complete_quarter(eng)
 
     def per_quarter(df: pd.DataFrame) -> pd.Series:
@@ -101,7 +101,7 @@ def main() -> None:
         "github_events": per_quarter(eng),
         "github_oceananigans": per_quarter(eng[is_ocean]),
         "github_other_repos": per_quarter(eng[~is_ocean]),
-        "registry_dependents": per_quarter(deps),
+        "new_dependents": per_quarter(deps),
     }
     summary = {name: summarize_series(s) for name, s in streams.items()}
     summary["last_complete_quarter"] = last_q

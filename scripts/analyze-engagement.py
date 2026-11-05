@@ -1,7 +1,8 @@
 """Count external engagement with CliMA's products over time.
 
-Reads the OpenAlex citations, GitHub activity, and Julia-registry dependents
-the fetch stages write, keeps only external events, and writes one event
+Reads the OpenAlex citations, GitHub activity, and outside dependents (from
+the Julia registry and GitHub code search) the fetch stages write, keeps only
+external events, and writes one event
 table per stream plus quarterly (all-time), monthly (last 24 months),
 and weekly GitHub (last 52 weeks) figures. Each figure includes the period
 in progress, drawn lighter, so it updates every day rather than only once a
@@ -9,7 +10,7 @@ period ends:
 
 - ``results/external-citations.csv``
 - ``results/github-engagement.csv``
-- ``results/new-registry-dependents.csv``
+- ``results/new-dependents.csv``
 - ``figures/external-engagement.json``
 - ``figures/external-engagement-monthly.json``
 - ``figures/github-engagement-weekly.json``
@@ -85,12 +86,13 @@ def date_to_quarter(value) -> str | None:
 # Anything before 2018-Q1 is noise from old papers that predate the CliMA
 # packaging effort; the time-series axis is cropped to that floor.
 MIN_QUARTER = "2018-Q1"
+# analyze-adopters segments that aren't outside adoption
+ADOPTER_EXCLUDED = ["Internal", "Affiliated", "Copy"]
 
 
 # Bot accounts whose ``is_bot`` field is false on the GitHub API but which
 # are clearly automated — usually Julia ecosystem bots.
 EXTRA_BOTS: set[str] = {"JuliaTagBot", "attobot"}
-
 
 
 MONTHS_SHOWN = 24
@@ -124,7 +126,9 @@ def in_progress_note(unit: str, through: pd.Timestamp, in_progress) -> str:
     if in_progress is None:
         return ""
     day = f"{through:%b} {through.day}, {through.year}"
-    return f"<br><sup>Lighter bars: {unit} in progress, data through {day}</sup>"
+    return (
+        f"<br><sup>Lighter bars: {unit} in progress, data through {day}</sup>"
+    )
 
 
 def month_start(values: pd.Series) -> pd.Series:
@@ -144,6 +148,82 @@ def stacked_pivot(
         .size()
         .unstack(fill_value=0)
         .reindex(periods, fill_value=0)
+    )
+
+
+def repo_key(url_or_name: str) -> str:
+    """``owner/name`` in lowercase without ``.jl``, from a URL or a name."""
+    key = url_or_name.strip().lower()
+    for prefix in (
+        "https://github.com/",
+        "http://github.com/",
+        "git@github.com:",
+    ):
+        key = key.removeprefix(prefix)
+    return key.removesuffix(".git").removesuffix("/").removesuffix(".jl")
+
+
+def load_new_dependents() -> pd.DataFrame:
+    """One row per (CliMA package, outside repo that depends on it).
+
+    Registry dependents date from the first registry version listing the
+    package (fetch-registry), and GitHub repos from the commit that added it
+    to their Project.toml (fetch-code-dependents). A repo found both ways
+    counts once, at the earlier date. Accounts analyze-adopters sets aside
+    (CliMA's own org and members, spin-offs, and copies of CliMA repos)
+    don't count, so both sources leave out the same accounts.
+    """
+    accounts = pd.read_csv(ROOT / "results" / "adopter-accounts.csv")
+    excluded = set(
+        accounts.loc[
+            accounts["segment"].isin(ADOPTER_EXCLUDED), "login"
+        ].str.lower()
+    )
+    rows = []
+    reg_path = DATA / "julia-registry" / "dependents.jsonl"
+    for line in reg_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        d = json.loads(line)
+        if d.get("is_clima") or d.get("is_affiliated"):
+            continue
+        rows.append(
+            {
+                "clima_package": d["clima_package"],
+                "repo": d["dependent_repo"],
+                "key": repo_key(d["dependent_repo"]),
+                "added_at": str(d["first_seen_at"])[:10],
+                "source": "registry",
+            }
+        )
+    added_path = DATA / "github-code-dependents" / "added.jsonl"
+    if added_path.exists():
+        for line in added_path.read_text().splitlines():
+            if not line.strip():
+                continue
+            d = json.loads(line)
+            rows.append(
+                {
+                    "clima_package": d["clima_package"],
+                    "repo": d["repo"],
+                    "key": repo_key(d["repo"]),
+                    "added_at": d["added_at"][:10],
+                    "source": "GitHub",
+                }
+            )
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df = df[~df["key"].str.split("/").str[0].isin(excluded)]
+    df = df.sort_values("added_at")
+    return (
+        df.groupby(["clima_package", "key"], as_index=False)
+        .agg(
+            repo=("repo", "first"),
+            added_at=("added_at", "first"),
+            source=("source", lambda s: " and ".join(sorted(set(s)))),
+        )
+        .drop(columns="key")
     )
 
 
@@ -193,7 +273,7 @@ def make_engagement_figure(
             "All paper citations",
             "Software paper citations",
             "GitHub stars/forks/issues/PRs/discussions",
-            "New Julia registry dependents",
+            "New dependent repos (GitHub or Julia registry)",
         ),
         row_heights=[0.24, 0.24, 0.24, 0.24],
     )
@@ -237,7 +317,7 @@ def make_engagement_figure(
     fig.update_yaxes(title_text=f"Citations/{unit}", row=1, col=1)
     fig.update_yaxes(title_text=f"Citations/{unit}", row=2, col=1)
     fig.update_yaxes(title_text=f"Events/{unit}", row=3, col=1)
-    fig.update_yaxes(title_text=f"New deps/{unit}", row=4, col=1)
+    fig.update_yaxes(title_text=f"Repos/{unit}", row=4, col=1)
     fig.update_xaxes(title_text=unit.capitalize(), row=4, col=1)
     return fig
 
@@ -289,8 +369,7 @@ def make_weekly_github_figure(
     fig.update_layout(
         barmode="stack",
         title="External GitHub stars/forks/issues/PRs/discussions, last "
-        f"{WEEKS_SHOWN} weeks"
-        + in_progress_note("week", through, in_progress),
+        f"{WEEKS_SHOWN} weeks" + in_progress_note("week", through, in_progress),
         height=600,
         margin=dict(t=50, b=40, l=60, r=20),
         # List the biggest repos first rather than in stack order.
@@ -315,8 +394,12 @@ def main() -> None:
     resolved_pubs_df = pd.read_json(
         openalex_dir / "resolved-pubs.jsonl", lines=True
     )
-    clima_extras_df = pd.read_json(openalex_dir / "clima-pubs.jsonl", lines=True)
-    citation_edges_df = pd.read_json(openalex_dir / "citations.jsonl", lines=True)
+    clima_extras_df = pd.read_json(
+        openalex_dir / "clima-pubs.jsonl", lines=True
+    )
+    citation_edges_df = pd.read_json(
+        openalex_dir / "citations.jsonl", lines=True
+    )
     clima_pubs_df = clima_extras_df.merge(
         resolved_pubs_df, on="openalex_id", how="left"
     )
@@ -333,14 +416,12 @@ def main() -> None:
             json.loads(members_path.read_text()).get("members", [])
         )
 
-
     def is_external(login: str | None) -> bool:
         if not login:
             return False
         if login.endswith("[bot]") or login in EXTRA_BOTS:
             return False
         return login not in clima_members
-
 
     # ----- CamelCase repo lookup -----------------------------------------
     camel_by_lc: dict[str, str] = {}
@@ -365,10 +446,8 @@ def main() -> None:
             name = json.loads(line)["name"].replace(".jl", "")
             camel_by_lc.setdefault(name.lower(), name)
 
-
     def camel(name: str) -> str:
         return camel_by_lc.get(name.lower(), name)
-
 
     # ----- Citation event table -------------------------------------------
     # "Internal" = the citing pub is itself a CliMA pub (a self-citation by the
@@ -388,7 +467,10 @@ def main() -> None:
             if not line.strip():
                 continue
             au = json.loads(line)
-            if au.get("orcid") is None and au.get("display_name") == "Anonymous":
+            if (
+                au.get("orcid") is None
+                and au.get("display_name") == "Anonymous"
+            ):
                 placeholder_author_ids.add(au["openalex_id"])
 
     clima_pub_ids: set[str] = set(clima_pubs_df["openalex_id"])
@@ -415,8 +497,12 @@ def main() -> None:
         how="left",
     ).merge(cited_lookup, on="cited_openalex_id", how="left")
     joined = joined[~joined["is_internal"].fillna(False)]
-    joined = joined[joined["quarter"].notna() & (joined["quarter"] >= MIN_QUARTER)]
-    joined["cited_package"] = joined["cited_doi"].map(package_for_doi).fillna("")
+    joined = joined[
+        joined["quarter"].notna() & (joined["quarter"] >= MIN_QUARTER)
+    ]
+    joined["cited_package"] = (
+        joined["cited_doi"].map(package_for_doi).fillna("")
+    )
     cit_events_df = joined[
         [
             "quarter",
@@ -430,7 +516,6 @@ def main() -> None:
 
     # ----- Event-level GitHub engagement rows -----------------------------
     eng_event_rows: list[dict] = []
-
 
     def add_eng_event(
         repo: str, event_type: str, login: str | None, iso_ts: str | None
@@ -453,7 +538,6 @@ def main() -> None:
                 "event_at": iso_ts,
             }
         )
-
 
     for f in (DATA / "github" / "stargazers").glob("*.jsonl"):
         for line in f.read_text().splitlines():
@@ -516,25 +600,10 @@ def main() -> None:
 
     eng_events_df = pd.DataFrame(eng_event_rows)
 
-    # ----- New external Julia-registry dependents -------------------------
-    # Read the event-log table written by fetch-registry. Group by the quarter
-    # of ``first_seen_at`` to get "new external dependents per quarter, by
-    # CliMA package". External = the dependent's repo is not in the CliMA org
-    # or a spin-off org run by CliMA developers (is_affiliated).
-    deps_path = DATA / "julia-registry" / "dependents.jsonl"
-    deps_df = (
-        pd.read_json(deps_path, lines=True)
-        if deps_path.exists()
-        else pd.DataFrame()
-    )
+    # ----- New outside dependents (Julia registry or GitHub) -------------
+    deps_df = load_new_dependents()
     if not deps_df.empty:
-        affiliated = (
-            deps_df["is_affiliated"].fillna(False).astype(bool)
-            if "is_affiliated" in deps_df
-            else False
-        )
-        deps_df = deps_df[~deps_df["is_clima"] & ~affiliated].copy()
-        deps_df["quarter"] = deps_df["first_seen_at"].map(date_to_quarter)
+        deps_df["quarter"] = deps_df["added_at"].map(date_to_quarter)
         deps_df = deps_df[
             deps_df["quarter"].notna() & (deps_df["quarter"] >= MIN_QUARTER)
         ]
@@ -590,7 +659,7 @@ def main() -> None:
             month=month_start(cit_events_df.get("publication_date"))
         ),
         eng_events_df.assign(month=month_start(eng_events_df["event_at"])),
-        deps_df.assign(month=month_start(deps_df["first_seen_at"]))
+        deps_df.assign(month=month_start(deps_df["added_at"]))
         if not deps_df.empty
         else deps_df,
         period_col="month",
@@ -620,21 +689,15 @@ def main() -> None:
     ).to_csv(ROOT / "results/github-engagement.csv", index=False)
     if not deps_df.empty:
         deps_df[
-            [
-                "quarter",
-                "clima_package",
-                "dependent_name",
-                "dependent_repo",
-                "first_seen_at",
-            ]
-        ].sort_values(["quarter", "clima_package", "dependent_name"]).to_csv(
-            ROOT / "results/new-registry-dependents.csv", index=False
+            ["quarter", "clima_package", "repo", "source", "added_at"]
+        ].sort_values(["quarter", "clima_package", "repo"]).to_csv(
+            ROOT / "results/new-dependents.csv", index=False
         )
 
     print(
         f"{len(cit_events_df)} citation events | "
         f"{len(eng_events_df)} engagement events | "
-        f"{len(deps_df)} new external registry dependents"
+        f"{len(deps_df)} outside dependent repos"
     )
 
 

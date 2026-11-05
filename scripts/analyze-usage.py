@@ -1,6 +1,6 @@
 """Chart repo traffic, Julia installs, and use of CliMA packages in repos.
 
-Reads the snapshots the fetch stages accumulate and writes five figures:
+Reads the snapshots the fetch stages accumulate and writes six figures:
 
 - ``figures/repo-traffic.json``: daily GitHub views (stacked by repo) and
   unique visitors (lines) with blog post dates marked
@@ -10,6 +10,10 @@ Reads the snapshots the fetch stages accumulate and writes five figures:
   package, user vs. CI
 - ``figures/julia-installs-peers.json``: Oceananigans' daily user installs
   against Julia peers
+- ``figures/julia-installs-weekly.json``: average daily user installs per
+  week for each CliMA package, one panel each, so growth shows as the
+  history accumulates (the package servers only keep 31 days, so it starts
+  when fetch-julia-downloads first ran)
 - ``figures/repo-usage.json``: outside repos that list a CliMA package as a
   direct dependency, by the year the repo was created and whether it's
   still active
@@ -50,6 +54,8 @@ OTHER = "#a8a7a1"
 SURFACE = "#fcfcfb"
 INK_MUTED = "#52514e"
 TOP_REPOS = 7
+MIN_DAILY_INSTALLS = 5
+IN_PROGRESS_OPACITY = 0.45
 ACTIVE_DAYS = 180
 
 
@@ -297,6 +303,91 @@ def peer_installs_figure() -> go.Figure:
     return fig
 
 
+def weekly_installs_figure() -> go.Figure:
+    dl = pd.read_csv(DATA / "julia-downloads" / "by-date.csv")
+    with (DATA / "julia-downloads" / "packages.csv").open() as f:
+        groups = {r["package"]: r["group"] for r in csv.DictReader(f)}
+    dl = dl[
+        (dl["client_type"] == "user")
+        & dl["package"].map(lambda p: groups.get(p) == "clima")
+    ]
+    dl["date"] = pd.to_datetime(dl["date"])
+    daily = dl.groupby(["package", "date"])["request_addrs"].sum()
+    days = pd.date_range(dl["date"].min(), dl["date"].max())
+    daily = daily.unstack("package").reindex(days, fill_value=0).fillna(0)
+    # Weeks start on Monday; the first and last may be partial, so each
+    # bar is the average over the days the week has data for
+    week = daily.index.to_period("W-SUN").start_time
+    weekly = daily.groupby(week).mean()
+    n_days = daily.groupby(week).size()
+    # A partial first week is mostly one kind of day (weekend or weekday),
+    # which skews its average; only the week in progress may be partial
+    if n_days.iloc[0] < 7 and len(n_days) > 1:
+        weekly, n_days = weekly.iloc[1:], n_days.iloc[1:]
+    last_week = weekly.index[-1]
+    in_progress = n_days[last_week] < 7
+
+    mean = daily.mean().sort_values(ascending=False)
+    pkgs = list(mean[mean >= MIN_DAILY_INSTALLS].index)
+    cols = 4
+    rows = -(-len(pkgs) // cols)
+    fig = make_subplots(
+        rows=rows,
+        cols=cols,
+        subplot_titles=pkgs,
+        shared_xaxes=True,
+        vertical_spacing=0.5 / rows,
+        horizontal_spacing=0.06,
+    )
+    opacity = [
+        IN_PROGRESS_OPACITY if (w == last_week and in_progress) else 1.0
+        for w in weekly.index
+    ]
+    featured = {}
+    for post in read_jsonl(DATA / "blog" / "posts.jsonl"):
+        for pkg in post["featured_packages"]:
+            day = pd.Timestamp(post["date"])
+            if days[0] <= day <= days[-1]:
+                featured.setdefault(pkg.removesuffix(".jl"), []).append(day)
+    for i, pkg in enumerate(pkgs):
+        row, col = i // cols + 1, i % cols + 1
+        fig.add_bar(
+            x=weekly.index,
+            y=weekly[pkg],
+            marker=dict(color=repo_color(pkg), opacity=opacity),
+            customdata=n_days.values,
+            hovertemplate="Week of %{x|%b %d}: %{y:.0f} user installs/day "
+            "(%{customdata} days of data)<extra>" + pkg + "</extra>",
+            showlegend=False,
+            row=row,
+            col=col,
+        )
+        for day in featured.get(pkg, []):
+            fig.add_vline(
+                x=day, line=dict(color=INK_MUTED, width=1), row=row, col=col
+            )
+        fig.update_yaxes(rangemode="tozero", row=row, col=col)
+    note = (
+        f"; the week of {last_week:%b %d} is in progress (lighter)"
+        if in_progress
+        else ""
+    )
+    fig.update_layout(
+        title="Weekly Julia user installs of CliMA packages"
+        "<br><sup>Average unique IP addresses per day from user (non-CI) "
+        f"clients, weeks starting Monday, from {weekly.index[0]:%Y-%m-%d}"
+        f"{note}.<br>Each panel has its own scale; vertical lines mark blog "
+        "posts featuring the package. Packages averaging under "
+        f"{MIN_DAILY_INSTALLS} a day aren't shown</sup>",
+        height=140 + 150 * rows,
+        margin=dict(t=130, b=40, l=40, r=20),
+        bargap=0.2,
+    )
+    fig.update_annotations(font=dict(size=12))
+    fig.update_xaxes(tickformat="%b %d")
+    return fig
+
+
 def usage_figure() -> go.Figure:
     adopters = pd.read_csv(ROOT / "results" / "external-adopters.csv")
     counted = adopters[
@@ -379,8 +470,9 @@ def main() -> None:
     referrers_figure().write_json(out / "repo-referrers.json")
     installs_figure().write_json(out / "julia-installs.json")
     peer_installs_figure().write_json(out / "julia-installs-peers.json")
+    weekly_installs_figure().write_json(out / "julia-installs-weekly.json")
     usage_figure().write_json(out / "repo-usage.json")
-    print("wrote 5 figures")
+    print("wrote 6 figures")
 
 
 if __name__ == "__main__":
