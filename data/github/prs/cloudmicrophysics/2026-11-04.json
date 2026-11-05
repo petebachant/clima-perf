@@ -1,0 +1,107 @@
+[
+  {
+    "additions": 1016,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "# Purpose\r\n\r\nThis PR fixes the densification of melting P3 rime, makes the rime densification in wet growth continuous, makes the collision integrals accurate at a low number of quadrature nodes, and corrects the latent heats of wet growth and melting.\r\n\r\n# Content\r\n\r\n- **Bug fix:** on main, the densification factor, `f`, was `1` for `T \u2265 T_freeze`, because the maximum freezing rate is zero there, so the rime densified at the full rate while the ice melted. The densification is now `0` for `T \u2265 T_freeze`.\r\n- **Updated closure:** The rime densification in wet growth scales with the shed fraction of the collected liquid, `(QCSHD + QRSHD) / \u222bM_col`, in place of the fraction collected by sizes in wet growth, which stepped at the quadrature nodes as the wet-growth onset diameter moved. The shed fraction is continuous below freezing.\r\n- **Refactor:** The collision processes move to `src/P3/processes`, unchanged.\r\n- **Performance:** The liquid integrals are split at the fall-speed crossing, and the ice integral at the wet-growth onset diameters, where the integrands have kinks. Ice self-collection is integrated over the triangle `D\u2081 \u2264 D\u2082`.\r\n- **Performance:** Rain is integrated by the same quadrature as cloud, in place of the incomplete-gamma closed form. Split at the crossing, the quadrature is as accurate as the closed form and faster.\r\n- **Consistency:** The maximum freezing rate of wet growth and the melting rate take the latent heats at the freezing temperature of the particle surface. With the latent heat of fusion at the air temperature, the heat to remove in wet growth was 17% too small at 20 K of supercooling.\r\n\r\n## Breaking changes\r\n\r\n- `\u222bliquid_ice_collisions` returns nine rates; the wet-growth indicator `\u222b\ud835\udfd9_wet_M_col` is removed.\r\n- `closed_rain_inner_NM`, `get_liquid_integrals_rain_closed` and `gamma_inc_moment` are removed.\r\n- `volumetric_collision_rate_integrand` and `compute_local_rime_density` return callable objects with the same call signatures as the former closures.\r\n\r\n## Review guide\r\n\r\nThe PR has 4 commits (click link to view diff only from that commit):\r\n(1) [P3 rime densification from the shed fraction](https://github.com/CliMA/CloudMicrophysics.jl/pull/827/commits/7bee7521f4e67eee8e4b63597e35c008aeaddfa9)\r\n(2) [Move the P3 collision processes to src/P3/processes](https://github.com/CliMA/CloudMicrophysics.jl/pull/827/commits/ef44e956955317bba6f8daaf4714a1cd85a6ca1a)\r\n(3) [P3 collision integrals split at their kinks, with rain by quadrature](https://github.com/CliMA/CloudMicrophysics.jl/pull/827/commits/e05f8fdc2aeaf0cf2a03470e6c46a9978a6533a0)\r\n(4) [P3 wet growth and melting with latent heats at the particle surface](https://github.com/CliMA/CloudMicrophysics.jl/pull/827/commits/506d8643e94531644903b69b3277ec91c0e56f78)\r\n\r\n\r\nThe 2nd and 3rd commits improve the accuracy and speed of the quadrature and relocate code; they are low-risk and can probably be skipped during review.\r\n\r\nThe rime densification (commit 1) and latent heats of wet growth and melting (commit 4) are the physics changes, and may benefit from more careful review.\r\n\r\n---\r\n\r\n### Comparison of approaches to do rime densification in wet growth: Morrison and Milbrandt (2015), main, and this PR\r\n\r\nFor an ice particle of diameter $`D`$, denote:\r\n- $`C(D)`$, the rate at which it collects cloud and rain,\r\n- $`W(D)`$, the largest rate at which it can freeze the collected liquid, the heat-limited rate of Musil (1970), and\r\n- $`N'(D)`$, the ice size distribution.\r\n\r\n**Morrison and Milbrandt (2015), appendix C, section g.** P3 compares two bulk rates over the whole ice size distribution:\r\n- the dry growth rate $`\\overline C = \\int C N' dD`$, the total collection of liquid, and\r\n- the wet growth rate $`\\overline W = \\int W N' dD`$, the heat-limited freezing rate.\r\n\r\nWhere the dry growth rate exceeds the wet growth rate, the difference is shed as 1-mm raindrops, and the particles \"become soaked and undergo densification\" within one time step:\r\n\r\n```math\r\n\\overline C > \\overline W \\text{ and } T < T_0 \\quad \\Longrightarrow \\quad B_\\mathrm{rim} \\leftarrow q_\\mathrm{rim} / \\rho^*, \\qquad \\rho^* = 900\\ \\mathrm{kg\\,m^{-3}}.\r\n```\r\n\r\nSo even if the bulk collection exceeds the freezing limit by a small amount, the bulk rime density jumps to 900 kg m\u207b\u00b3 at once, at a rate that depends on the time step.\r\n\r\n**main.** CloudMicrophysics compares $`C`$ and $`W`$ at each ice diameter instead, so particles of some sizes shed while others freeze all they collect. Instead of an instantaneous step, the rime mass and volume relax toward solid ice over $`\\tau_\\mathrm{wet}`$ (100 s), scaled by a densification factor $`f`$:\r\n\r\n```math\r\n\\partial_t L_\\mathrm{rim} = f \\, \\frac{L_\\mathrm{ice} - L_\\mathrm{rim}}{\\tau_\\mathrm{wet}}, \\qquad\r\n\\partial_t B_\\mathrm{rim} = f \\, \\frac{L_\\mathrm{ice} / \\rho_i - B_\\mathrm{rim}}{\\tau_\\mathrm{wet}}.\r\n```\r\n\r\nOn main, $`f`$ is the fraction of the collected mass that particles in wet growth collect:\r\n\r\n```math\r\nf_\\mathrm{wet} = \\frac{\\int \\mathbf{1}(C > W) \\, C \\, N' dD}{\\int C \\, N' dD}.\r\n```\r\n\r\nA size counts with its whole collected mass once $`C`$ exceeds $`W`$, so the integrand jumps at the wet-growth onset diameters, and a fixed-node quadrature turns $`f_\\mathrm{wet}`$ into a staircase in the state. Computed exactly, $`f_\\mathrm{wet}`$ is continuous, but its derivative jumps at the onset of wet growth. Above freezing $`W = 0`$, every size counts, and the rime densified at the full rate while the ice melted; this PR fixes that bug with a check on the temperature, which would apply to $`f_\\mathrm{wet}`$ as well.\r\n\r\n**This PR.** The densification factor is the fraction of the collected liquid that does not freeze, restricted to subfreezing temperatures:\r\n\r\n```math\r\nf_\\mathrm{shd} = \\frac{\\int \\max(C - W, 0) \\, N' dD}{\\int C \\, N' dD} \\, \\mathbf{1}(T < T_0)\r\n= \\frac{\\mathrm{QCSHD} + \\mathrm{QRSHD}}{\\mathrm{QCFRZ} + \\mathrm{QCSHD} + \\mathrm{QRFRZ} + \\mathrm{QRSHD}}.\r\n```\r\n\r\nThe shed fraction is chosen for its behavior, not derived from the physics of soaking: it is a proxy for the regime in which particles cannot freeze all they collect. It is $`f_\\mathrm{wet}`$ with the indicator replaced by each size's own shed fraction, $`\\max(C - W, 0) / C`$.\r\n- The integrand is continuous in $`D`$, so the quadrature gives an $`f_\\mathrm{shd}`$ that is continuous in the state below freezing.\r\n- It is zero at the onset of wet growth and at and above freezing, as in P3, so the rime no longer densifies while the ice melts.\r\n- Since $`\\max(C - W, 0) = \\mathbf{1}(C \\gt  W)(C - W)`$, it is smaller than $`f_\\mathrm{wet}`$ by the frozen part of the collection of particles in wet growth, $`f_\\mathrm{wet} - f_\\mathrm{shd} = \\int \\mathbf{1}(C \\gt  W) \\, W \\, N' dD \\,/ \\int C \\, N' dD \\ge 0`$.\r\n\r\nBelow about 2 g m\u207b\u00b3 of liquid water, in high-density wet growth, the collected water does not enter the interior of the particle (Rasmussen and Heymsfield 1987), so little densification is expected there, and $`f_\\mathrm{shd}`$ stays small in such states.\r\n\r\n<img width=\"2400\" height=\"940\" alt=\"image\" src=\"https://github.com/user-attachments/assets/86150032-3249-43e4-9ec0-db1ab1d7ff12\" />\r\n\r\n*The densification factor against air temperature in three states of the single P3 ice category, computed with the code of this PR. Above the dashed line, $`f = 0.1`$, the effective densification time $`\\tau_\\mathrm{wet} / f`$ is shorter than 1000 s, about the residence time of a particle in a convective updraft. For main and this PR, a factor of one relaxes the rime toward solid ice with the e-folding time $`\\tau_\\mathrm{wet}`$; in the P3 Fortran reference, the adjustment is instantaneous.*\r\n\r\n**Limitations.**\r\n- $`\\tau_\\mathrm{wet}`$ = 100 s has the order of magnitude of the time to refreeze water soaked into graupel and small hail, 10 to 100 s, but it is not derived or constrained by observations, and the sensitivity of results to it is not known.\r\n- Just below freezing $`W`$ vanishes, so $`f_\\mathrm{shd}`$ approaches one, and it drops to zero at 0 \u00b0C.\r\n- The factor is a bulk quantity: the rime of all particles relaxes at the rate set by the shed liquid of the largest ones.\r\n\r\n**A prognostic liquid fraction is the more correct framing.** Soaking is liquid retained in the ice that freezes later, as in spongy growth and in melting. Shedding returns the unfrozen liquid to rain in the same volume, where the ice can collect and freeze it again, but this stands in only partly for retained liquid, and not for liquid soaked into the interior. With the liquid on ice as a prognostic variable, as in the liquid-fraction extension of P3 (Cholette et al. 2019), the retained liquid and the rate at which it freezes would set the densification, and the proxy $`f_\\mathrm{shd}`$ and the timescale $`\\tau_\\mathrm{wet}`$ would no longer be needed. Without it, this PR approximates the process while conserving mass and energy.\r\n\r\n\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T05:13:19Z",
+    "deletions": 812,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-04T00:22:12Z",
+    "number": 827,
+    "title": "feat(P3)!: continuous rime densification and collision integrals split at their kinks"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "Deposition nucleation in the two-moment P3 tendencies now creates crystals at `P3Scheme.ice_mean_particle_mass_min`, the mass of a solid-ice sphere of the ClimaParams diameter `D_nuc`, instead of a hardcoded 10 \u03bcm diameter. With the default `D_nuc` of 2 \u03bcm, a nucleated crystal is 125 times lighter.\n\nThe ice number adjustment still relaxes toward its hardcoded bounds of 1e-12 to 1e-5 kg, which removes most of the nucleated number; a later PR in this stack replaces it with the bounds of the P3 state.\n\nThe version moves to 0.48.0, a breaking release for the changes listed in #827.\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T07:39:58Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "126EAB",
+        "description": "Predicted particle properties",
+        "id": "LA_kwDOFzm_uM8AAAABXOdxBw",
+        "name": "P3"
+      },
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-04T00:22:13Z",
+    "number": 829,
+    "title": "fix(P3): nucleate ice crystals at the mass of the P3 diameter D_nuc"
+  },
+  {
+    "additions": 119,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T22:59:33Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-04T23:46:09Z",
+    "number": 842,
+    "title": "Add temperature limits of cloud ice deposition"
+  }
+]

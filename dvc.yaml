@@ -268,6 +268,34 @@ stages:
           persist: false
     desc: Automatically generated from the 'analyze-adopters' stage in
       calkit.yaml. Changes made here will be overwritten.
+  analyze-jobs:
+    cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-jobs.py
+    deps:
+      - scripts/analyze-jobs.py
+      - config/jobs.yaml
+      - scripts/clima_repos.py
+      - results/github-engagement.csv
+      - results/external-adopters.csv
+      - results/external-citations.csv
+      - data/openalex
+      - data/github/prs
+      - data/github/clima_members.json
+      - .calkit/env-locks/analyze
+    outs:
+      - results/jobs.csv:
+          cache: false
+          persist: false
+      - results/jobs-summary.json:
+          cache: false
+          persist: false
+      - figures/job-funnel.json:
+          cache: false
+          persist: false
+      - figures/job-scorecard.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'analyze-jobs' stage in calkit.yaml.
+      Changes made here will be overwritten.
   analyze-usage:
     cmd: calkit xenv -n analyze --no-check -- python scripts/analyze-usage.py
     deps:

@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "The `NetCDFWriter different horizontal points` test makes the field it writes by deep-copying `Fields.coordinate_field(space).z` and adding to it in place. CliMA/ClimaCore.jl#2717 stores the local geometry of grids in `DataLayouts.InvariantArray`s, whose loads are marked invariant, so they cannot be modified. `copy` of a geometry field (like `similar` and broadcasts over it) returns a field of ordinary arrays, but `deepcopy` keeps the `InvariantArray`s, so the in-place update throws `ArgumentError: Cannot modify InvariantArray`.\r\n\r\nThis PR uses `copy` instead, which gives a field with the same values on the same space:\r\n- With the current ClimaCore release (v1.0.8), `test/writers.jl` passes with identical results either way (every testset, including 18/18 in this one).\r\n- With CliMA/ClimaCore.jl#2717, the `copy` version passes, and the `deepcopy` version fails this testset with the error above.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T01:08:22Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "53c80a",
+        "description": "",
+        "id": "LA_kwDOH9KWKs8AAAACsi5--Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-04T05:02:31Z",
+    "number": 207,
+    "title": "Copy instead of deep-copying a coordinate field in a writer test"
+  }
+]

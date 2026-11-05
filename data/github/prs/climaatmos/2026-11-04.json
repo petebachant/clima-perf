@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 247,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "## Summary\r\n\r\nPasses the in-cloud liquid specific humidity to the aerosol droplet-number closure in `update_cloud_properties!`, replaces the unbounded linear-in-log closure with a bounded log-saturation law, and zero-initializes `prescribed_aerosols_field` at cache construction.\r\n\r\n### Closure and cache changes\r\n\r\n- `update_cloud_properties!` passes the in-cloud liquid specific humidity `max(0, q_liq) / max(eps, cf)` [kg/kg] to `ml_N_cloud_liquid_droplets`, matching the units of the reference `q\u2080_liq`, and drops the column liquid-water-path integral.\r\n- `ml_N_cloud_liquid_droplets` evaluates `s = \u03a3_i \u03b1_i log(max(c_i / c\u2080_i, 10\u207b\u00b3)) + \u03b1_q log(max(q_l / q\u2080, 10\u207b\u00b3))` and `N = N\u2080 exp(\u0394_max tanh(s / \u0394_max))` with `\u0394_max = ln 3`, so `N \u2208 [N\u2080 / 3, 3 N\u2080]` and `N \u2248 N\u2080 (1 + s)` for small `|s|`. The bound and the floor are provisional (TODO note in the docstring).\r\n- A species with no prescribed bins enters the closure at its reference concentration (`sum_aerosol_bins!`), so it leaves `N` unchanged. Before, it was floored at `10\u207b\u00b3 c\u2080` and lowered `N` (to ~0.35 N\u2080 with no aerosols, for nonzero `\u03b1`).\r\n- The liquid and ice effective radii are zero where the cloud fraction is zero, which changes the `reffclw` and `reffcli` diagnostics there. RRTMGP masks those cells, so fluxes are unaffected.\r\n- `prescribed_aerosols_field` is zero-initialized. It is evaluated only in the RRTMGP radiation callback, so it stays zero with gray or no radiation, including in the 2M activation; the comment records this with a TODO.\r\n\r\nWith the default `\u03b1 = 0`, `N = N\u2080` and the radiative fluxes are unchanged. Coefficients fitted to the linear closure need refitting.\r\n\r\nPeeled from `ts/swcre-30pct` (`ac51a67ee`) onto `main`.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T05:05:23Z",
+    "deletions": 107,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-04T09:25:46Z",
+    "number": 4955,
+    "title": "Use in-cloud liquid specific humidity and bounded log-saturation in aerosol droplet activation"
+  }
+]
