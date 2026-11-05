@@ -37,7 +37,7 @@ import plotly.graph_objects as go
 # its name, so it is imported by path rather than as a package.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 projecttoml_graph = import_module("projecttoml-graph")
-from repo_colors import repo_color  # noqa: E402
+from repo_colors import canonical_name, repo_color  # noqa: E402
 
 ROOT = Path.cwd()
 
@@ -53,7 +53,7 @@ def load_commits() -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
-                "repo": c.repo,
+                "repo": canonical_name(c.repo),
                 "date": c.date,
                 "quarter": projecttoml_graph.quarter_of(c.date),
                 "message": c.message,
@@ -67,9 +67,9 @@ def load_commits() -> pd.DataFrame:
 
 def main() -> None:
     commits = load_commits()
-    commits = commits[
-        commits["quarter"] >= GRAPH_START_QUARTER
-    ].reset_index(drop=True)
+    commits = commits[commits["quarter"] >= GRAPH_START_QUARTER].reset_index(
+        drop=True
+    )
 
     repos = sorted(commits["repo"].unique())
     quarters = sorted(commits["quarter"].unique())
@@ -115,9 +115,11 @@ def main() -> None:
                     "corr": float(corr.loc[a, b]),
                 }
             )
-    pairs = pd.DataFrame(pair_rows).sort_values(
-        "corr", ascending=False
-    ).reset_index(drop=True)
+    pairs = (
+        pd.DataFrame(pair_rows)
+        .sort_values("corr", ascending=False)
+        .reset_index(drop=True)
+    )
 
     # --- Dependency graph edges -----------------------------------------
     edge_counts = projecttoml_graph.dependency_edges(
@@ -174,7 +176,7 @@ def main() -> None:
     # many edges.
     deps_of: dict[str, set[str]] = {r: set() for r in repos}
     n_dependents: dict[str, int] = {r: 0 for r in repos}
-    for (src, dst) in edge_counts:
+    for src, dst in edge_counts:
         if src in deps_of and dst in deps_of:
             deps_of[src].add(dst)
             n_dependents[dst] += 1
@@ -185,9 +187,7 @@ def main() -> None:
     left_order = sorted(repos, key=lambda r: (-len(deps_of[r]), r))
     right_order = sorted(repos, key=lambda r: (n_dependents[r], r))
 
-    labels = [f"{r}  " for r in left_order] + [
-        f"  {r}" for r in right_order
-    ]
+    labels = [f"{r}  " for r in left_order] + [f"  {r}" for r in right_order]
     left_index = {r: i for i, r in enumerate(left_order)}
     right_index = {r: len(left_order) + i for i, r in enumerate(right_order)}
 

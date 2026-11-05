@@ -27,7 +27,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from repo_colors import repo_color
+from repo_colors import repo_color, repo_rank, sort_repos
 
 ROOT = Path.cwd()
 DATA = ROOT / "data"
@@ -291,8 +291,8 @@ def make_engagement_figure(
     # shows once and toggles everywhere.
     legend_shown: set[str] = set()
     for row, pivot in panels:
-        totals = pivot.sum().sort_values(ascending=False, kind="stable")
-        for name in totals[totals > 0].index:
+        totals = pivot.sum()
+        for name in sort_repos(totals[totals > 0].index):
             fig.add_bar(
                 name=name,
                 x=periods,
@@ -300,6 +300,7 @@ def make_engagement_figure(
                 marker_color=color_for[name],
                 marker_opacity=opacity,
                 legendgroup=name,
+                legendrank=repo_rank(name),
                 showlegend=name not in legend_shown,
                 row=row,
                 col=1,
@@ -312,7 +313,14 @@ def make_engagement_figure(
         height=900,
         # Room for the in-progress note under the title
         margin=dict(t=90, b=40, l=60, r=20),
-        legend=dict(tracegroupgap=0, itemsizing="constant", font=dict(size=11)),
+        # The shared repo order, top to bottom (stacked bars default to
+        # reversed)
+        legend=dict(
+            traceorder="normal",
+            tracegroupgap=0,
+            itemsizing="constant",
+            font=dict(size=11),
+        ),
     )
     fig.update_yaxes(title_text=f"Citations/{unit}", row=1, col=1)
     fig.update_yaxes(title_text=f"Citations/{unit}", row=2, col=1)
@@ -353,11 +361,12 @@ def make_weekly_github_figure(
         .unstack(fill_value=0)
         .reindex(weeks, fill_value=0)
     )
-    order = pivot.sum().sort_values(ascending=False, kind="stable")
+    totals = pivot.sum()
     fig = go.Figure()
-    for repo in order[order > 0].index:
+    for repo in sort_repos(totals[totals > 0].index):
         fig.add_bar(
             name=repo,
+            legendrank=repo_rank(repo),
             x=weeks,
             y=pivot[repo].tolist(),
             marker_color=color_for[repo],
@@ -372,7 +381,7 @@ def make_weekly_github_figure(
         f"{WEEKS_SHOWN} weeks" + in_progress_note("week", through, in_progress),
         height=600,
         margin=dict(t=50, b=40, l=60, r=20),
-        # List the biggest repos first rather than in stack order.
+        # The shared repo order, top to bottom
         legend=dict(
             traceorder="normal",
             tracegroupgap=0,

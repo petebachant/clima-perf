@@ -33,7 +33,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from repo_colors import OTHER_COLOR, repo_color
+from repo_colors import OTHER_COLOR, repo_color, repo_rank, sort_repos
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -125,7 +125,7 @@ def traffic_figure() -> go.Figure:
         .reindex(days, fill_value=0)
         .fillna(0)
     )
-    for i, repo in enumerate(top + ["Other"]):
+    for i, repo in enumerate(sort_repos(top + ["Other"])):
         if repo not in pivot:
             continue
         fig.add_bar(
@@ -133,6 +133,7 @@ def traffic_figure() -> go.Figure:
             y=pivot[repo],
             name=repo,
             legendgroup=repo,
+            legendrank=repo_rank(repo),
             marker=dict(
                 color=repo_color(repo) if repo != "Other" else OTHER_COLOR,
                 line=dict(color=SURFACE, width=1),
@@ -166,6 +167,7 @@ def traffic_figure() -> go.Figure:
         x=days,
         y=rest,
         name="Other repos (sum)",
+        legendrank=repo_rank("Other") + 1,
         mode="lines",
         line=dict(color=OTHER_COLOR, width=2),
         hovertemplate="%{x|%b %d}: %{y} unique visitors, summed across "
@@ -183,6 +185,7 @@ def traffic_figure() -> go.Figure:
         height=720,
         margin=dict(t=110, b=40, l=60, r=20),
         hovermode="closest",
+        legend=dict(traceorder="normal"),
     )
     fig.update_yaxes(title_text="Views", row=1, col=1)
     fig.update_yaxes(title_text="Unique visitors", row=2, col=1)
@@ -338,10 +341,11 @@ def weekly_installs_figure() -> go.Figure:
     opacity = [IN_PROGRESS_OPACITY if w == in_progress else 1.0 for w in weeks]
 
     fig = make_subplots(rows=1, cols=1)
-    order = weekly.sum().sort_values(ascending=False, kind="stable")
-    for pkg in order[order > 0].index:
+    totals = weekly.sum()
+    for pkg in sort_repos(totals[totals > 0].index):
         fig.add_bar(
             name=pkg,
+            legendrank=repo_rank(pkg),
             x=weeks,
             y=weekly[pkg].tolist(),
             marker_color=repo_color(pkg),
