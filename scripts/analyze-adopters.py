@@ -14,6 +14,12 @@ adoption are set aside rather than counted: CliMA's own org and members
 (internal), groups run by CliMA developers (affiliated), and copies of CliMA
 repos (copy).
 
+Each (account, package) row has ``added_at``, the earliest date one of the
+account's repos started depending on the package (its Project.toml commit
+from fetch-code-dependents, or the registry version, falling back to repo
+creation until a repo is dated), and ``repo_created_at``, its oldest such
+repo's creation date.
+
 An adopter is active if any of its repos using the package was pushed to in
 the last 180 days, a rough retention signal.
 
@@ -126,13 +132,19 @@ def repo_name_from_url(url: str | None) -> str | None:
 
 
 def load_uses(members: set[str]) -> pd.DataFrame:
-    """One row per (package, repo) with how it was found."""
+    """One row per (package, repo) with how it was found and when it was
+    added: the Project.toml commit that first listed the package, or the
+    registry version that first did."""
+    added = {
+        (a["clima_package"], a["repo"]): a["added_at"][:10]
+        for a in read_jsonl(CODE / "added.jsonl")
+    }
     rows = [
         {
             "package": h["clima_package"],
             "repo": h["repo"],
             "source": "code search",
-            "first_seen_at": h["first_seen_at"],
+            "added_at": added.get((h["clima_package"], h["repo"])),
         }
         for h in read_jsonl(CODE / "hits.jsonl")
     ]
@@ -144,7 +156,7 @@ def load_uses(members: set[str]) -> pd.DataFrame:
                     "package": d["clima_package"],
                     "repo": repo,
                     "source": "registry",
-                    "first_seen_at": d["first_seen_at"],
+                    "added_at": str(d["first_seen_at"])[:10],
                 }
             )
     df = pd.DataFrame(rows)
@@ -155,7 +167,7 @@ def load_uses(members: set[str]) -> pd.DataFrame:
         .agg(
             repo=("repo", "first"),
             sources=("source", lambda s: ", ".join(sorted(set(s)))),
-            first_seen_at=("first_seen_at", "min"),
+            added_at=("added_at", "min"),
         )
         .reset_index()
     )
@@ -241,6 +253,16 @@ def main() -> None:
     uses["pushed_at"] = [
         (repos.get(k) or {}).get("pushed_at") for k in uses["repo_key"]
     ]
+    uses["repo_created_at"] = [
+        ((repos.get(k) or {}).get("created_at") or "")[:10] or None
+        for k in uses["repo_key"]
+    ]
+    # Repos fetch-code-dependents hasn't dated yet fall back to their
+    # creation date, a lower bound. A repo with history from before it was
+    # created on GitHub (imported, or copied with its commits) got the
+    # dependency when it was created, not in that older history
+    dates = uses[["added_at", "repo_created_at"]]
+    uses["added_at"] = dates.max(axis=1).where(dates.notna().any(axis=1))
 
     accounts = []
     for login in sorted(set(uses["login"])):
@@ -269,7 +291,8 @@ def main() -> None:
                 "sources",
                 lambda s: ", ".join(sorted(set(", ".join(s).split(", ")))),
             ),
-            first_seen_at=("first_seen_at", "min"),
+            added_at=("added_at", "min"),
+            repo_created_at=("repo_created_at", "min"),
             last_pushed_at=(
                 "pushed_at",
                 lambda s: s.dropna().max() if s.notna().any() else None,

@@ -196,6 +196,15 @@ def load_new_dependents() -> pd.DataFrame:
                 "source": "registry",
             }
         )
+    # A repo with history from before it was created on GitHub (imported,
+    # or copied with its commits) got the dependency when it was created
+    created = {}
+    repos_path = DATA / "github-code-dependents" / "repos.jsonl"
+    if repos_path.exists():
+        for line in repos_path.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                created[r["full_name"]] = (r.get("created_at") or "")[:10]
     added_path = DATA / "github-code-dependents" / "added.jsonl"
     if added_path.exists():
         for line in added_path.read_text().splitlines():
@@ -207,7 +216,9 @@ def load_new_dependents() -> pd.DataFrame:
                     "clima_package": d["clima_package"],
                     "repo": d["repo"],
                     "key": repo_key(d["repo"]),
-                    "added_at": d["added_at"][:10],
+                    "added_at": max(
+                        d["added_at"][:10], created.get(d["repo"], "")
+                    ),
                     "source": "GitHub",
                 }
             )
