@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 3014,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "# Purpose\n\nThis PR makes the P3 size-distribution integrals readable from lookup tables instead of evaluated by quadrature at every call.\n\n# Content\n\n- `P3Scheme.with_tables(mp, ArrayType)` builds the tables once from the parameters, in the array type of the host, and returns a copy of `mp` whose `integration` is the tables. Quadrature remains the default and generates the tables.\n- With tables, the slope of the ice size distribution comes from an inverse table, and the ventilation moment, the self-collection rate and the fall speeds come from tables of the ice integrals.\n- `\u222bliquid_ice_collisions` reads the collected cloud and rain, their impact scales and the rime density from tables. It divides the collected mass into frozen and shed mass with tables of the wet set, the particle sizes that collect more liquid than they can freeze.\n- The tables support the SB2006 cloud size distribution and the limited SB2006 rain size distribution, and `with_tables` throws an `ArgumentError` for any other. Tables built from other parameters throw an `ArgumentError` at construction.\n- `bulk_liquid_ice_collision_sources` no longer asserts on every call that the cloud and rain size distributions have the same liquid water density. Both read the density from the parameter `density_liquid_water`, and the rates use the density of the cloud size distribution.\n- Without tables, the results are identical to those of `main`, bit for bit, in Float32 and Float64.\n\nThe first commit adds the tables of the slope and the ice integrals, and the second adds the tables of the liquid-ice collisions and the wet set. The third raises the time limit of the CI test job from 30 to 45 minutes: on Windows with Julia 1.10, a run whose package cache misses precompiles all dependencies in the test step, and the table tests then push it past 30 minutes. The table tests compare against the quadrature in Float32 only, which halves their time.\n\n# Accuracy and cost\n\nAgainst Gauss-Legendre quadrature of order 16, the 99th percentile of the relative error is at most 1.0% for the ice integrals, and at most 3.0% for the collected masses and numbers and for the frozen mass. It is 3.6% for the rime volume of rain, 5.9% for the rime volume of cloud, and 2.4% for the total rime volume.\n\nOn one thread of an Apple M4 Max in Float32, a call of `bulk_microphysics_tendencies` for the two-moment scheme with P3 ice takes about 3.6 \u03bcs instead of 300 \u03bcs, about 80 times faster. Of its parts, `P3State` takes 0.6 \u03bcs instead of 4.8 \u03bcs, the self-collection 0.06 \u03bcs instead of 183 \u03bcs, and the liquid-ice collisions 2.4 \u03bcs instead of 152 \u03bcs below freezing. All tables take 104 MB in Float32. They build in about 70 s on 16 CPU threads of an Apple M4 Max, and in 2.8 s on its GPU after the first call.\n\nOn one NVIDIA A100 in Float32, a broadcast of `bulk_microphysics_tendencies` over 63 \u00d7 65536 points takes 126 ms instead of 3753 ms when all points have the same state, 114 ms instead of 2302 ms when the states vary smoothly between neighboring points, and 145 ms instead of 3996 ms when every point has an independent random state, 20 to 30 times faster. Neighboring points with different ice states therefore slow the tables by about 25%. On the A100, the tables build in 1.6 s after the first call, which takes 31 s with the compilation. On 20000 sampled points, the 99.9th percentile of the relative difference between the GPU and the CPU tables is at most 6e-4 for every tendency.\n\n\n\n\n\n",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-24T07:24:37Z",
+    "deletions": 73,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T23:32:11Z",
+    "number": 834,
+    "title": "feat(P3): lookup tables for the P3 size-distribution integrals"
+  }
+]

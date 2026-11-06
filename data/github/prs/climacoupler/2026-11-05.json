@@ -1,0 +1,95 @@
+[
+  {
+    "additions": 17,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "Cache checkpoints previously saved and restored every field of a model cache, including its `AbstractSpace`s and their `local_geometry_field`s. CliMA/ClimaCore.jl#2717 stored local geometry fields in arrays that could not be modified, so restoring the cache would throw an error (see the restart jobs of downstream build [98](https://buildkite.com/clima/climacoupler-downstream/builds/98)). That PR has since been closed, but it will be revived after ClimaCore's dependencies are [updated to properly support `CUDA.Const`](https://github.com/CliMA/ClimaCore.jl/pull/2717#pullrequestreview-5772678734).\r\n\r\n`CacheIterator` now stops at ClimaCore spaces and grids, and `restore!` ignores them, since they remain unchanged during simulations. These changes will ensure that CliMA/ClimaCore.jl#2717 passes its downstream tests pass once it gets revived.\r\n\r\nThis PR was generated using Claude Code.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T06:10:59Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T01:32:20Z",
+    "number": 2204,
+    "title": "Do not save or restore ClimaCore spaces in checkpoints"
+  },
+  {
+    "additions": 686,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "CMIP Manifest changes:\r\n  - Accessors 0.1.45 \u2192 0.1.46\r\n  - ArrayLayouts 1.15.1 \u2192 1.16.0\r\n  - BFloat16s 0.6.2 \u2192 0.6.4\r\n  - BlockArrays 1.10.2 \u2192 1.10.3\r\n  - Blosc_jll 1.21.7+0 \u2192 1.21.8+0\r\n  - Cairo_jll 1.18.8+0 \u2192 1.18.8+1\r\n  - ChainRules 1.73.1 \u2192 1.74.10\r\n  - ChainRulesCore 1.26.2 \u2192 1.26.8\r\n  - ClimaAnalysis 0.5.24 \u2192 0.5.25\r\n  - ClimaAtmos 0.42.15 \u2192 0.42.17\r\n  - ClimaCore 1.0.4 \u2192 1.0.5\r\n  - ClimaDiagnostics 0.3.11 \u2192 0.4.0\r\n  - ClimaLand 1.13.1 \u2192 1.14.1\r\n  - ClimaParams 1.3.2 \u2192 1.3.6 \r\n  - CloudMicrophysics 0.45.0 \u2192 0.47.0\r\n  - Colors 0.13.3 \u2192 0.13.4\r\n  - ColorSchemes 3.31.0 \u2192 3.32.0\r\n  - ColorTypes 0.12.4 \u2192 0.12.5\r\n  - ColorVectorSpace 0.11.0 \u2192 0.11.2\r\n  - ComputePipeline 0.1.8 \u2192 0.1.9\r\n  - CRlibm 1.0.2 \u2192 1.1.1\r\n  - CUDA 5.11.3 \u2192 6.4.1\r\n  - CUDA_Compiler_jll 0.4.4+1 \u2192 0.6.3+2\r\n  - CUDA_Driver_jll 13.3.5+0 \u2192 13.3.6+0\r\n  - CUDA_Runtime_jll 0.21.0+1 \u2192 0.25.0+3\r\n  - DelaunayTriangulation 1.6.7 \u2192 1.7.0\r\n  - Distributions 0.25.131 \u2192 0.25.133\r\n  - EnzymeCore 0.8.23 \u2192 0.8.26\r\n  - Expat_jll 2.8.4+0 \u2192 2.10.0+0\r\n  - FFTA 0.3.1 \u2192 0.3.2\r\n  - FillArrays 1.18.1 \u2192 1.18.2\r\n  - Flux 0.16.12 \u2192 0.16.15\r\n  - Fontconfig_jll 2.17.1+0 \u2192 2.18.3+0\r\n  - ForwardDiff 1.4.6 \u2192 1.4.7\r\n  - FreeType2_jll 2.14.3+1 \u2192 2.15.0+0\r\n  - FriBidi_jll 1.0.17+0 \u2192 1.0.19+0\r\n  - GeoMakie 0.7.17 \u2192 0.7.18\r\n  - Glib_jll 2.88.3+0 \u2192 2.90.1+0\r\n  - GPUCompiler 1.17.1 \u2192 2.10.0\r\n  - GPUToolbox 1.1.1 \u2192 3.5.0\r\n  - HarfBuzz_jll 100.14004.0+0 \u2192 100.15000.0+0\r\n  - HDF5_jll 2.2.3+0 \u2192 1.14.2+1\r\n  - HTTP 2.11.0 \u2192 2.14.2\r\n  - HypergeometricFunctions 0.3.30 \u2192 0.3.31\r\n  - InverseFunctions 0.1.17 \u2192 0.1.18\r\n  - IrrationalConstants 0.2.6 \u2192 0.2.7\r\n  - IRTools 0.4.21 \u2192 0.4.25\r\n  - IterTools 1.10.0 \u2192 1.11.0\r\n  - JpegTurbo_jll 3.2.0+1 \u2192 3.2.1+0\r\n  - JSON 1.11.0 \u2192 1.13.4\r\n  - JSON3 1.14.3 \u2192 1.14.4\r\n  - Krylov 0.10.11 \u2192 0.10.12\r\n  - LERC_jll 4.2.0+0 \u2192 4.3.0+0\r\n  - libaom_jll 3.15.1+0 \u2192 3.15.3+0\r\n  - libdeflate_jll 1.26.0+0 \u2192 1.26.0+1\r\n  - libva_jll 2.23.0+0 \u2192 2.24.1+0\r\n  - libzip_jll 1.11.4+0 \u2192 1.12.1+0\r\n  - LinearOperators 2.14.1 \u2192 2.14.3\r\n  - MicrosoftMPI_jll 10.1.4+3 \u2192 10.1.5+0\r\n  - Missings 1.2.0 \u2192 1.2.1\r\n  - MLDataDevices 1.17.10 \u2192 1.18.0\r\n  - MLUtils 0.4.13 \u2192 0.4.15\r\n  - MutableArithmetics 1.9.0 \u2192 1.9.3\r\n  - NaNMath 1.1.4 \u2192 1.1.5\r\n  - NaNStatistics 0.6.56 \u2192 0.6.62\r\n  - NetCDF_jll 401.1000.101+0 \u2192 400.902.209+0\r\n  - NNlib 0.9.48 \u2192 0.9.58\r\n  - OffsetArrays 1.17.0 \u2192 1.18.0\r\n  - OpenBLAS32_jll 0.3.34+0 \u2192 0.3.34+1\r\n  - OpenEXR_jll 3.5.2+0 \u2192 3.5.3+0\r\n  - Optimisers 0.4.9 \u2192 0.4.11\r\n  - Parsers 2.8.8 \u2192 2.8.11\r\n  - Preferences 1.6.0 \u2192 1.6.1\r\n  - ProgressMeter 1.11.0 \u2192 1.13.0\r\n  - Reseau 1.6.0 \u2192 1.6.6\r\n  - Roots 3.0.11 \u2192 3.0.13\r\n  - RRTMGP 1.1.0 \u2192 1.1.1\r\n  - SCS 2.7.0 \u2192 2.7.1\r\n  - Setfield 1.1.2 \u2192 1.2.0\r\n  - SIMD 3.8.0 \u2192 3.8.1\r\n  - SparseMatrixColorings 0.4.26 \u2192 0.4.29\r\n  - SpecialFunctions 2.9.0 \u2192 2.9.1\r\n  - SQLite_jll 3.54.0+0 \u2192 3.54.1+0\r\n  - StaticArrays 1.9.23 \u2192 1.9.24\r\n  - StructUtils 2.10.0 \u2192 2.12.0\r\n  - SurfaceFluxes 1.5.1 \u2192 1.6.0\r\n  - TimerOutputs 0.5.29 \u2192 1.2.2\r\n  - UnrolledUtilities 0.1.11 \u2192 0.1.12\r\n  - URIs 1.7.1 \u2192 1.7.3\r\n  - Xorg_libX11_jll 1.8.13+0 \u2192 1.8.14+0\r\n  - Xorg_libXrender_jll 0.9.12+0 \u2192 0.9.13+0\r\n  - Zygote 0.7.13 \u2192 0.7.15\r\n  \r\nNew: CompilerCaching 0.5.1, CUDACore 6.4.1, CUDATools 6.4.1, cuBLAS 6.4.1, cuFFT 6.4.1, CUPTI 6.4.1, cuRAND 6.4.1, cuSOLVER 6.4.1, cuSPARSE 6.4.1, LMDB 3.0.1, LMDB_jll 1.0.3+0, MSVCRuntime_jll 14.51.36247+0, NVML 6.4.1, NVPTX_LLVM_Backend_jll 23.1.2+2, tree_sitter_gcn_jll 0.1.0+0, tree_sitter_llvm_jll 1.1.0+0, tree_sitter_ptx_jll 0.1.0+0, tree_sitter_spirv_jll 0.1.0+0\r\n\r\nRemoved: aws_c_auth_jll, aws_c_cal_jll, aws_c_common_jll, aws_c_compression_jll, aws_c_http_jll, aws_c_io_jll, aws_c_s3_jll, aws_c_sdkutils_jll, aws_checksums_jll, CommonWorldInvalidations, IfElse, mpif_jll, s2n_tls_jll, Static, StaticArrayInterface\r\n\r\nDowngrades: HDF5_jll (2.2.3 \u2192 1.14.2) and NetCDF_jll (401.1000 \u2192 400.902).\r\n\r\nCMIP Project.toml changes:\r\n- CUDA = \"5\" \u2192 \"5, 6\".\r\n- NaNStatistics = \"< 0.6.57\" \u2192 \"0.6.58\". The cap (#1931) was for a hang in the coupler's bias plots. 0.6.58's notes say it restores comparison methods that 0.6.57 dropped, which is the likely cause. I can remove this if the hang is still there in 0.6.58.",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T20:01:27Z",
+    "deletions": 599,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T01:43:54Z",
+    "number": 2207,
+    "title": "Update CMIP Manifests"
+  },
+  {
+    "additions": 179,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Adds an example to the docs that runs one year of the coarse fully coupled configuration,\r\n`config/longrun_configs/cmip_coarse.yml`, on one GPU and plots the monthly-mean wind over the polar\r\noceans, their sea ice, and the surrounding land.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T18:08:25Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0075ca",
+        "description": "Improvements or additions to documentation",
+        "id": "MDU6TGFiZWwyNDgyNjUxMzI2",
+        "name": "documentation"
+      }
+    ],
+    "mergedAt": "2026-11-05T03:31:32Z",
+    "number": 2200,
+    "title": "Add coarse CMIP example"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T03:37:13Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-05T03:58:53Z",
+    "number": 2210,
+    "title": "(0.3.0) Bump minor version"
+  }
+]

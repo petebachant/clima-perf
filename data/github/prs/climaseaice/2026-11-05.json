@@ -1,0 +1,34 @@
+[
+  {
+    "additions": 39,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "Discrete-form boundary conditions on the ice velocities don't work at the moment. The halo fills after each velocity update (`fill_halo_regions!(u)` in the explicit solver, and the per-substep fill in the split-explicit solver) are called without `clock` and `fields`. So a boundary condition like\r\n\r\n```julia\r\n@inline west_inflow(j, k, grid, clock, fields) = 0.05 * fields.\u2135[1, j, k]\r\nu_bcs = FieldBoundaryConditions(grid, (Face(), Center(), nothing);\r\n                                west = NormalFlowBoundaryCondition(west_inflow, discrete_form = true))\r\n```\r\n\r\nerrors on the first time step with `MethodError: objects of type DiscreteBoundaryFunction ... are not callable`. This rules out open-boundary conditions whose inflow velocity depends on the ice state at the boundary.\r\n\r\nThis PR passes the same `clock` and `fields(model)` that `update_state!` uses to both fills. In the split-explicit solver, a small `fill_halo_arguments` helper builds the argument tuple, because distributed fills take the communication buffers before `clock, fields`.\r\n\r\nThe new test in `test_lateral_boundary_conditions.jl` takes one step with the boundary condition above, for the explicit solver (viscous rheology) and the split-explicit solver (EVP). It checks that u at the west face equals 0.05 \u2135. It errors on main and passes here.\r\n\r\nRelated: #188 touches the same fill in the split-explicit solver. Whichever goes in second will need a small rebase. The `communicate` path in #188 calls `fill_halo_regions!(u)` without clock either, so it would need the same arguments.\r\n\r\nCloses #201.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOJN11r88AAAABcRxgaw",
+        "number": 201,
+        "repository": {
+          "id": "R_kgDOJN11rw",
+          "name": "ClimaSeaIce.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaSeaIce.jl/issues/201"
+      }
+    ],
+    "createdAt": "2026-10-26T21:20:44Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-11-05T07:39:53Z",
+    "number": 193,
+    "title": "Pass clock and fields to the ice-velocity halo fills"
+  }
+]

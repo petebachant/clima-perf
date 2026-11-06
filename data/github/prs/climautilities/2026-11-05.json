@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 2904,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "In https://github.com/CliMA/ClimaUtilities.jl/pull/248, limited support was adding for interpolating data onto a field defined on a multiple column simulation. The limitation being that the data for all the columns must have the same time and no dimensions other than the column dimensions are supported.\r\n\r\nThis PR adds interpolation for multiple column simulation from NetCDF files where each file represent a single column with\r\n1. times that differ across columns,\r\n2. `z` dimension that differs across columns,\r\n3. time preprocessing for each column,  \r\n4. and reusing data when the same file is reused.\r\n\r\nThe main limitation with this design is that the entire time series for all the columns must be loaded at the same time. Additional support for lazily loading data can be added in a future PR. Furthermore, additional support for loading from a single NetCDF file can also be added since as the number of NetCDF files grow, it become quickly infeasible to use this time varying input.\r\n\r\nThe other addition is adding a `DataSource` struct which simplifies how the users pass in NetCDF files to the ragged time varying input. ",
+    "changedFiles": 22,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T21:26:05Z",
+    "deletions": 29,
+    "labels": [
+      {
+        "color": "1a814e",
+        "description": "",
+        "id": "LA_kwDOKJvhPM8AAAACsi5aTg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T19:49:50Z",
+    "number": 258,
+    "title": "Add ragged time varying inputs for multiple column simulation"
+  }
+]

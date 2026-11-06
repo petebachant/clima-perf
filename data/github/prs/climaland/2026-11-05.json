@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 207,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds automatic differentiation tests using `ForwardDiff` for a subset of functions which check that soil skin-temperature solve, screen level reconstruction, and snow skin-temperature solve are compatible with automatic differentiation.\r\n\r\nI asked a LLM to write a majority of the code.\r\n\r\ncloses https://github.com/CliMA/ClimaLand.jl/issues/1914",
+    "changedFiles": 7,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOGiZe4s8AAAABWfb_fQ",
+        "number": 1914,
+        "repository": {
+          "id": "R_kgDOGiZe4g",
+          "name": "ClimaLand.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaLand.jl/issues/1914"
+      }
+    ],
+    "createdAt": "2026-10-13T18:38:58Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T01:30:05Z",
+    "number": 1917,
+    "title": "Add ForwardDiff tests for surface flux path"
+  },
+  {
+    "additions": 916,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nI noticed when looking at some site level runs that the root extraction could sometimes be quite different from transpiration. This could happen if the plant hydraulics parameters are incorrect, so that the canopy is transpiring at a reasonable rate (moisture stress computed from soil moisture), but the water flux computed by applying Darcy's law to a canopy leaf potential and the soil potential leads to something that doesnt extract very much water from the soil (because leaf water potential is very wrong). Then the leaf water content decreases in time, while the plant is transpiring, and the soil isnt losing water. Because the plant has a linear retention curve, things don't break. Moreover, when we compute psi using theta, we clipped theta at zero, so theta was becoming more and more negative without increasing the flux (because psi was capped).\r\n\r\nThis branch tries out a version where the root extraction ~ transpiration. It is not exact, I think because transpiration is computing implicitly while the root extraction is explicit, but it's a first pass at something more like what we would want in steady state. Because of this, we still make use of a prognostic water content in order to track total water correctly.\r\n\r\nAdditionally, this PR corrects the field capacity formula. This is the same critical saturation used for bare soil evaporation.  We also introduce a wilting point so that the transpiration can turn off before the soil reaches the residual water content (asymptotically).\r\n\r\n\r\n\r\n## Impact\r\nin 2 year runs:\r\nLHF RMSE drops from 12.0 to 11.6, SHF drops from 11.4 to 11.0, including in improvements in the Amazon basin.\r\nThis PR also improves our T/ET partitioning from ~50% to ~55%.\r\n\r\nin 19 year run: https://buildkite.com/clima/climaland-long-runs/builds/5153 vs the main run the previous day: \r\nRMSE on LHF drops from to 11.5 10.7; SHF: to 11 to 10.2, and the partitioning of the bowen ratio looks improved: RMSE is unchanged but the seasonal cycle looks much better (Partioning leaderboard). \r\n\r\n## To do\r\nfix single erroring buildkite job; recalibrate. \r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 27,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T00:03:36Z",
+    "deletions": 171,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-05T04:28:14Z",
+    "number": 1937,
+    "title": "Steady state (approximately) plant hydraulics"
+  }
+]

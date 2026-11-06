@@ -1,0 +1,379 @@
+[
+  {
+    "additions": 187,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\nFixes #5717. Writing a **windowed field** to NetCDF \u2014 a field whose `indices` pin an axis to a sub-range \u2014 failed with `ArgumentError: Variable 'z_aaf' already exists in dataset but its values differ from expected`.\n\nThe canonical example is the free-surface displacement (`model.free_surface.displacement`), a `ZFaceField` windowed to the top face `(:, :, N+1:N+1)`. But the bug affects any windowed field, e.g. `view(T, :, :, Nz:Nz)` or a manually windowed `ZFaceField`.\n\n### Root cause\n\nNetCDF dimensions are file-global, and a *coordinate variable* maps one dimension name to one set of coordinate values. At file initialization `gather_dimensions` pre-creates the canonical full-extent coordinates (`z_aaf`, `z_aac`, \u2026) from the grid. A windowed field covers only part of an axis, so its `nodes` give coordinate values that differ from the canonical dimension \u2014 and the writer tried to reuse the same dimension name, triggering the collision.\n\nThe previous code handled **only** the free-surface displacement, via a special case gated on `output_name == \"displacement\"` plus a `_displacement` dimension-name suffix. Naming the output anything else (the issue reporter used `\"\u03b7\"`) bypassed it entirely, and no other windowed field was supported.\n\n### Fix\n\nA single general mechanism, `resolve_windowed_dim_name`, replaces the special-casing. For each field axis it compares the field's coordinate values against what already exists in the dataset:\n\n- **reuse** the canonical dimension when values match (full fields, and writer-sliced fields whose values match the canonical sliced coordinate), or\n- **allocate** the next free `name_2`, `name_3`, \u2026 when values differ (any windowed field), deduping fields that share the same window.\n\nRenamed dimensions inherit the base coordinate's attributes (units/long_name). The free-surface displacement is now just one instance of this \u2014 the `output_name == \"displacement\"` special case and the `dimension_name_generator_free_surface` helper are removed. Detection is name-agnostic and grid-agnostic.\n\n## Behavior change\n\nThe free-surface displacement's z-dimension is now named `z_aaf_2` (generic windowed naming) instead of `z_aaf_displacement`. Existing free-surface test assertions are updated accordingly.\n\n## Tests\n\nAdds `test_netcdf_windowed_field_output` covering:\n- a windowed center field and a windowed face field written alongside the full field at the same location (`z_aac`/`z_aac_2`, `z_aaf`/`z_aaf_2` coexist);\n- correctness of the windowed coordinate values, inherited attributes, and round-tripped data;\n- the free surface output under a non-conventional name (`\"\u03b7\"`);\n- windowing combined with writer `indices` (issue #5717 test 4).\n\nVerified locally: the new test passes, the existing free-surface tests (all immersed \u00d7 stretched variants) pass with the updated `z_aaf_2` name, and the singleton/Flat/reduced-field tests are unaffected.\n\n## Not included (separate issue)\n\nIssue tests 3 and 5 (`Integral(disp; dims=3)` combined with writer `indices` or an x/y `view`) fail with a `DimensionMismatch` *inside the reduction computation* \u2014 the operand keeps full x/y while the reduction output Field is built with sliced indices. That lives in the generic `Reduction`/`construct_output` machinery rather than NetCDF dimension naming, so it's left for a follow-up.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 5,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABGgmHDw",
+        "number": 5717,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/5717"
+      }
+    ],
+    "createdAt": "2026-06-24T15:52:54Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-11-05T02:07:13Z",
+    "number": 5719,
+    "title": "Support writing windowed fields to NetCDF (fixes #5717)"
+  },
+  {
+    "additions": 80,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "FFT-based Poisson solvers now work on grids with `Bounded` directions under `ReactantState`. Until now, planning a transform in a `Bounded` direction under Reactant threw an error, so closed-basin `NonhydrostaticModel`s could not be compiled or differentiated with Reactant.\n\nLike CUDA, Reactant has FFTs but no real-to-real transforms. So `ReactantState` now takes the GPU path, which builds discrete cosine transforms from FFTs (Makhoul 1980):\n\n- `arch isa GPU` checks in `src/Solvers` become `arch isa FFTBasedDCTArchitecture`, where `FFTBasedDCTArchitecture = Union{GPU, ReactantState}`.\n- `Bounded` directions get FFT plans instead of an error.\n\nReverse-mode differentiation with Reactant requires kernels to be raised. Raising currently fails for two kernels in this path:\n\n- the index-permutation kernels, which store a complex value at a computed index (EnzymeAD/Reactant.jl#3497);\n- the spectral division, which uses a complex `ifelse` (EnzymeAD/Reactant.jl#3475).\n\nUnder `ReactantState`, these two steps are written as array operations instead. To let the extension specialize the spectral division, it moves into a new function, `spectral_poisson_solve!`. GPU and CPU behavior is unchanged.\n\n### Test\n\n`test/reactant/fft_models.jl` adds a 2D `(Bounded, Bounded, Flat)` `NonhydrostaticModel`, compiled with Reactant. It runs four RK3 steps from a non-trivial initial state, including the projection in `set!`, and must match the CPU model with `rtol=1e-10`. The whole file passes on an A100 (7/7).\n\n### Motivation\n\nThis makes Maddison's (2026) online learning setup possible: a barotropic double gyre in a closed basin, differentiated through with Reactant and Enzyme. An example built on it will follow in a separate PR.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-22T17:48:07Z",
+    "deletions": 26,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-11-05T02:08:43Z",
+    "number": 6319,
+    "title": "Support Bounded FFT-based Poisson solves under Reactant"
+  },
+  {
+    "additions": 133,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "`Enzyme.autodiff` of any `TripolarGrid` model compiled with Reactant (`raise=true, raise_first=true`) currently fails:\n\n```\nerror: could not compute the adjoint for this operation \"enzymexla.jit_call\"() <{... fn = @\"##call__Z19gpu__compute_y_bcs_...\", operand_layouts = [], output_operand_aliases = [], xla_side_effect_free}> : () -> ()\n```\n\nOn a `TripolarGrid`, every field has a `Zipper` north boundary condition. `Zipper` was not in `NotFluxBC`, so `compute_y_bcs!` launched `_compute_y_bcs!` for u, v, \u03b7 and every tracer, even though both sides of that kernel do nothing (the `ZBC` method of `compute_y_north_bc!` was already a no-op). Raising turns the empty kernel into a side-effect-free `jit_call` with no operands. The forward pass deletes it as dead code, so forward runs work. In reverse mode the Enzyme pass finds the call and has no adjoint for it. The Reactant side is reported in EnzymeAD/Reactant.jl#3636 with a stand-alone MWE.\n\nThis PR adds `ZBC` to `NotFluxBC`, so no kernel is launched, and removes the redundant `compute_y_north_bc!(..., ::ZBC, ...)` method.\n\nIt also adds `test/reactant/tripolar.jl`, for `(CenterFolded, UPivot)` and `(FaceFolded, FPivot)`:\n- `fill_halo_regions!` compiled with `raise=true`, compared with the CPU on the parent array (halos included);\n- a small immersed `TripolarGrid`, with land over the two north singularities and the southern row (their metrics are degenerate). It uses `ExplicitFreeSurface`, `HydrostaticSphericalCoriolis` and `SplitRungeKutta3`. The test runs it forward against the CPU (with `first_time_step!` for the first step) and checks the Enzyme gradient of \u03a3 \u03b7(T)\u00b2 with respect to \u03b7(0) against a centred finite difference.\n\nResults (outside CI, 24 \u00d7 16 grid, 20 steps, Reactant 0.2.303): the forward run matches the CPU to about 4e-16. The adjoint matches centred FD to 1e-10 per cell, including cells next to the fold, and to 1e-12 along a random direction, for both pivots. Without the change the gradient does not compile. The new test file also passes with Reactant 0.2.299, the version pinned in `test/Project.toml`.\n\nOn the \"CanonicalizeLoopsPass segfault\" comment (removed in #6395): ~2,900 raised and ~1,000 un-raised compilations of the tripolar halo fill, on current versions and with the February 2026 ones (Reactant 0.2.228, Oceananigans 0.105), gave no crash and no mismatch.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T13:19:23Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:09:10Z",
+    "number": 6396,
+    "title": "Fix Enzyme gradients of TripolarGrid models under Reactant (no empty y-flux kernel for Zipper BCs)"
+  },
+  {
+    "additions": 140,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Summary\n\n`_update_hydrostatic_pressure!` starts its integral from the top halo cell center: the top term uses `\u0394z\u1d9c\u1d9c\u1da0(Nz+1)`, one full spacing above the top cell center. The fluid surface is only half a cell above it. In effect there is a layer of thickness `\u0394z/2` that has weight but no volume. This PR starts the integral at the top of the domain, using `\u0394z\u1d9c\u1d9c\u1d9c(Nz)/2` and the buoyancy in the top cell, so `pHY\u2032` no longer reads the halo. MITgcm does the same in `calc_phi_hyd.F` (`dRlocM = rF(1)-rC(1)`).\n\nNo dispatch on vertical coordinate or free surface is needed: `\u0394z\u1d9c\u1d9c\u1d9c` already scales with \u03c3 on z-star grids. The same kernel serves `NonhydrostaticModel` and `HydrostaticFreeSurfaceModel`.\n\n## Why half a cell is correct\n\n**Truncation.** Against an analytical `b(x, z)`, `\u2202x pHY\u2032` converges at first order before this change and at second order after it (uniform and stretched grids).\n\n**Energy.** With interior `p[k+1] - p[k] = \u0394z\u1da0 \u2111z(b)`, top tracer flux `w_T b_N` and `w_T = \u2202t \u03b7`, summation by parts gives\n\n    d/dt(KE + PE + g \u03b7\u00b2/2) = \u03a3 Az w_T (z_N b_N - p_N)\n\nwhich vanishes for every flow only if `p_N = z_N b_N = -(\u0394z_N/2) b_N`.\n\nInviscid test on a static grid (6 hours, 2nd-order centered tracer advection):\n\n| \u0394t | Energy drift, full spacing | Predicted `\u222b(\u0394z/2) b w_T` | Energy drift, half cell |\n|---|---|---|---|\n| 40 s | 1.938e6 | 1.935e6 | 0.14 |\n| 20 s | 1.938e6 | 1.937e6 | 0.034 |\n\nThe remaining half-cell drift scales as \u0394t\u00b2. On z-star the drift falls from 1.946e6 to 266; that residual does not depend on \u0394t and has not been traced.\n\n## Expected impact on solutions\n\nThe error is uniform through each column, so it acts like a shift in free surface height, `\u03b4\u03b7 = \u0394z b_top / 2g`. It should mostly appear in \u03b7, not in the flow:\n\n- **Rigid lid:** pure gauge; `pNHS` absorbs it (`max|\u0394u|` ~ 1e-16).\n- **Static grid (z), free surface:** steady velocities are unchanged. Differences appear only during adjustment.\n- **z-star, free surface:** the \u03b7 difference changes layer thickness, giving a steady difference of order `\u03b4\u03b7/H`.\n\nWind- and buoyancy-driven reentrant channel with a ridge, 32\u00d732\u00d716, 50 m top cell, frozen `b`:\n\n| Coordinate | Free surface | Steady \u0394T | \u0394\u03b7 (N\u2013S) |\n|---|---|---|---|\n| z | split-explicit | 0.0000 Sv (of 203.00) | 4.86 cm |\n| z | implicit | 0.0000 Sv | 4.86 cm |\n| z-star | split-explicit | 0.0022 Sv (of 202.90) | 4.86 cm |\n| z-star | implicit | 0.0022 Sv | 4.86 cm |\n\nTransport differs by up to about 4.5% on day 1 of adjustment from the same initial state. With evolving `b` (z, split-explicit, 12 years, not equilibrated) the difference after spin-up is 0.0015\u20130.006%. These runs are coarse and non-eddying, so they do not test eddy-rectified effects.\n\n## Lagrangian closure and reference data\n\nThis PR also fixes an existing bug that the change above exposed. `compute_pressure_correction!` fills velocity halos with the predictor `u*`, and the correction updates only the interior, so `LagrangianAveraging` dynamic Smagorinsky read predictor velocities from stale halos in `step_closure_prognostics!`. That made the closure sensitive to the pressure gauge. The closure now fills velocity halos first, which takes the difference caused by the pressure change from 2.6e-9 to 1.8e-15 in a 16\u00b3 LES.\n\nBoth changes alter that closure's solutions, so its two LES regression files are regenerated with the test's own recipe. They live in glwagner/OceananigansArtifacts.jl#10, and the test data is bumped to `regression_truth_data_v3`. All other regression files keep their URLs and still pass.\n\n## Nonhydrostatic model with a free surface\n\nThis model is affected as well, and with buoyancy `pHY\u2032` is on by default. In the hydrostatic limit, compared with `HydrostaticFreeSurfaceModel` using the half cell (2D, `Lx/H = 1000`, implicit free surface):\n\n| Model | max abs \u0394u | max abs \u0394\u03b7 |\n|---|---|---|\n| Hydrostatic, full spacing | 1.04e-2 | 0.788 |\n| Nonhydrostatic, `pHY\u2032`, full spacing | 1.04e-2 | 0.788 |\n| Nonhydrostatic, `pHY\u2032`, half cell | 1.8e-6 | 8.1e-5 |\n| Nonhydrostatic, `hydrostatic_pressure_anomaly=nothing` | 1.04e-2 | 0.788 |\n\nThe last row is a separate, unfixed problem. Surface `w` gets no buoyancy, which appears to give an error of the same size and opposite sign to the full-spacing one. It affects only users who turn `pHY\u2032` off on a free-surface model.\n\n## Dependency on ConservativeRegridding\n\n`ConservativeRegridding` 0.2.20 caps Oceananigans at 0.117, so the test and docs environments cannot resolve 0.118.0. CI cannot pass until a release allowing 0.118 is registered.\n\n## Tests\n\n- New `test/unit/hydrostatic_pressure.jl`: `pHY\u2032 = b z` for uniform `b` on uniform, stretched and mutable grids, independence from the halo, and closure of the energy budget. It fails on `main` and passes here.\n- On CPU, `unit/buoyancy`, `unit/quality_assurance`, `regression/hydrostatic`, `time_stepping/nonhydrostatic_models`, `vertical_coordinate/zstar`, `vertical_coordinate/conservation_explicit` and `hydrostatic_free_surface` pass.\n- `regression` and `turbulence_closures` pass with the regenerated data (513 tests). These ran with the version held at 0.117.0 because of the compat cap above.\n- Not run: the full test suite, GPU, distributed, and anything at 0.118.0.\n\nSolutions change, so the version goes to 0.118.0. `spatial_operators.md` had the same flaw in its discrete formula. That is corrected, along with the continuous integrals and an index in the discrete `w` sum, and the notation now follows the Oceananigans paper (`p_{hy}`, `\\Delta z^{ccf}`). This formula predates the 2020 off-by-one fix (7d4e5b674), which did not introduce it.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 12,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T19:17:23Z",
+    "deletions": 24,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:09:20Z",
+    "number": 6398,
+    "title": "Start hydrostatic pressure integral half a cell below the top"
+  },
+  {
+    "additions": 1018,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "This PR adds two features to `LagrangianParticles` that are needed for particle interactions (e.g. collisions) and for particles that leave the domain (e.g. precipitation reaching the ground, deposition on walls).\n\n### Sorting particles by grid cell\n\nA new `sorting` property sorts particles by the grid cell they occupy at the beginning of every particle step, so that `dynamics` sees particles stored in order of increasing cell index:\n\n```julia\nparticles = LagrangianParticles(properties; sorting = CountingSort())  # or ComparisonSort(), or nothing (default)\n```\n\n- `CountingSort()`: atomic histogram, cumulative sum, atomic scatter, then insertion sort within each cell so the result is stable and deterministic. Cost is linear in particles plus cells.\n- `ComparisonSort()`: `sort!` on unique keys combining cell index and pre-sort position.\n- Both produce identical orderings; within each cell particles keep their previous order.\n- After sorting, `particles.sorting` stores each particle's cell index and per-cell offsets. Inside kernels, `cell_particle_indices(i, j, k, grid, particles.sorting)` returns the range of particles in cell `(i, j, k)`.\n- No new dependencies (atomics from KernelAbstractions).\n\nTiming per sort on an A100 (re-sorting after particles moved up to 0.2 cells, which is the typical case each step):\n\n| Cells | Particles | Particles per cell | `CountingSort` | `ComparisonSort` |\n|---|---|---|---|---|\n| 128\u00b3 | 4\u00d710\u2075 | 0.2 | 0.50 ms | 1.8 ms |\n| 128\u00b3 | 4\u00d710\u2076 | 2 | 1.6 ms | 17 ms |\n| 256\u00b3 | 6.4\u00d710\u2077 | 4 | 22 ms | 341 ms |\n| 64\u00b3 | 1.6\u00d710\u2077 | 61 | 14 ms | 83 ms |\n| 32\u00b3 | 1.6\u00d710\u2077 | 488 | 116 ms | 87 ms |\n\nAt hundreds of particles per cell, the within-cell insertion sort in `CountingSort` becomes expensive because the atomic scatter tends to reverse already sorted input. A better within-cell sort can come later if needed.\n\n### Particle boundary conditions\n\nThe `restitution` keyword is replaced by `boundary_conditions`:\n\n```julia\nboundary_conditions = ParticleBoundaryConditions(ReflectingBoundary(0.5); bottom = AbsorbingBoundary())\nparticles = LagrangianParticles(properties; boundary_conditions)\n```\n\n- `ReflectingBoundary(restitution = 1.0)` reproduces the previous behavior; `AbsorbingBoundary()` removes particles that cross the boundary.\n- Boundary conditions are specified for `west, east, south, north, bottom, top`, and `immersed`. The optional positional argument sets the default for all sides.\n- Absorbed particles are removed right after advection with an order-preserving compaction followed by `resize!`. No extra memory is allocated unless some boundary is absorbing.\n- `DroguedParticleDynamics` stores depths outside the particle properties, so combining it with sorting or absorbing boundaries now throws an `ArgumentError` instead of silently misaligning depths.\n\n### Breaking change\n\nThe `restitution` keyword argument is removed. Use `boundary_conditions = ParticleBoundaryConditions(ReflectingBoundary(restitution))` instead. The version number is not bumped in this PR.\n\n### Tests\n\nNew `test/lagrangian_particles/sorting.jl` and `test/lagrangian_particles/boundary_conditions.jl`. These, the existing `tracking.jl`, and the particle checkpointing tests pass on CPU and on an A100.\n\nFollow-up planned: time-stepping particle positions with the same RK3 scheme as the fluid.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-23T02:05:19Z",
+    "deletions": 104,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:21:59Z",
+    "number": 6340,
+    "title": "Sorting and boundary conditions for LagrangianParticles"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "`on_architecture(::ReactantState, ::LatitudeLongitudeGrid)` rebuilds the grid field by field through the private helper `_to_reactant`, which had one hand-written method per type and only knew `StaticVerticalDiscretization`. Any other vertical coordinate hit a `MethodError`: `MutableVerticalDiscretization`, and coordinates defined downstream such as Breeze's terrain-following `TerrainFollowingVerticalDiscretization`.\n\n```\nMethodError: no method matching _to_reactant(::TerrainFollowingVerticalDiscretization{\u2026})\nClosest candidates are:\n  _to_reactant(::Nothing)\n  _to_reactant(::Oceananigans.Grids.StaticVerticalDiscretization)\n  _to_reactant(::OffsetArrays.OffsetArray)\n```\n\nThis PR replaces the five hand-written methods with Reactant's `Adapt` adaptor (EnzymeAD/Reactant.jl#3405), which moved there from an earlier version of this PR at the Reactant maintainers' request:\n\n```julia\n_to_reactant(x) = Adapt.adapt(Reactant.ConcreteRArrayAdaptor(materialize_ranges = true), x)\n```\n\n**Reactant version.** `ConcreteRArrayAdaptor` (EnzymeAD/Reactant.jl#3405) is released in Reactant 0.2.300, so the package's `Reactant` compat is now `0.2.300`, and the tests take `0.2.300 - 0.2.301` (the earlier pin to Reactant `main` is gone). The test compat had capped Reactant at `0.2.279` since #5883 (`0.2.280` broke tests); this lifts that cap to the releases with the adaptor, so failures from Reactant versions in between would not be from this PR's change.\n\n`Adapt.adapt` recurses through every struct that defines `adapt_structure`, which all GPU-capable vertical coordinates already do, so no per-type method is needed here or in downstream packages. Arrays are materialized into `ConcreteRArray`s, `OffsetArray`s keep their offsets via the OffsetArrays Adapt extension, and numbers and `nothing` pass through. `materialize_ranges = true` because Adapt would otherwise rebuild a range from its endpoints, while the grid wants ranges (including `StepRangeLen` with `TwicePrecision` internals) materialized like any other array.\n\nChecked against the real types, with the earlier adaptor defined here (to re-run with #3405's): on a static-coordinate `LatitudeLongitudeGrid` the adaptor and the previous helper agree on every grid field, `z` included, in type and value. On a Breeze terrain-following grid the adaptor produces the same grid type as explicit per-type methods do, and that grid compiles a forward `time_step!` and an Enzyme reverse-mode gradient under Reactant.\n\nOne behavior change worth noting: a coordinate type without an `adapt_structure` method used to raise a `MethodError` and now passes through unchanged. Such a type could not be used on a GPU either, so this should not affect any working configuration.\n\nTests: `MutableVerticalDiscretization` on a Reactant `LatitudeLongitudeGrid`, which goes through the same `Adapt` path as any downstream coordinate.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-15T18:11:03Z",
+    "deletions": 14,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:52:21Z",
+    "number": 6007,
+    "title": "Move LatitudeLongitudeGrid vertical coordinates to ReactantState via Adapt"
+  },
+  {
+    "additions": 1304,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Links plain-text citations in docstrings to the bib with `@cite`, adding the missing entries (Adcroft et al. 1999, Gerdes et al. 1991, Griffies et al. 1998, Ringler et al. 2010, Shchepetkin 2015, Zhang & Shu 2010), and adds every cited work to its docstring's References list. Also sorts the bib alphabetically by first author and drops the duplicate `Smagorinsky63` entry in favour of `Smagorinsky1963`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T19:37:19Z",
+    "deletions": 1122,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-11-05T02:52:43Z",
+    "number": 6437,
+    "title": "Link docstring citations to the bib and complete their reference lists"
+  },
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjI4Njg5MzU4",
+      "is_bot": false,
+      "login": "christiangnrd",
+      "name": "Christian Guinard"
+    },
+    "body": "Removes reliance on PTR internals by using the new `max_default_threads` argument.\n\n`jobs` still need to be computed in runtests.jl since it's used to calculate the max_worker_rss\n\n@giordano ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T19:15:06Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-11-05T02:53:06Z",
+    "number": 6436,
+    "title": "Support ParallelTestRunner 2.10"
+  },
+  {
+    "additions": 18,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "`summary` and `show` throw a `MethodError` for an immersed boundary whose bottom or top height is a `Number` that has not yet been materialized on a grid:\n\n    julia> GridFittedBottom(-1)\n    ERROR: MethodError: no method matching parent(::Int64)\n\nThis adds a `height_statistics` method for `Number`, so these boundaries display like materialized ones:\n\n    GridFittedBottom(mean(z)=-1, min(z)=-1, max(z)=-1)\n\nTests for `GridFittedBottom`, `PartialCellBottom`, `GridFittedVerticalBoundaries` and `PartialCellVerticalBoundaries` are added to `test/unit/immersed_boundary_grid.jl`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T11:42:52Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:53:26Z",
+    "number": 6394,
+    "title": "Fix `show` for immersed boundaries with unmaterialized `Number` heights"
+  },
+  {
+    "additions": 107,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Dealing with all the conditionals. Slackened type annotation in vanilla to accomodate a traced/concrete array.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-07T14:45:49Z",
+    "deletions": 12,
+    "labels": [],
+    "mergedAt": "2026-11-05T02:53:58Z",
+    "number": 6176,
+    "title": "Reactant-friendly `SpecifiedTimes` callback"
+  },
+  {
+    "additions": 615,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "## Fourth-order-accurate stencils for `ScalarDiffusivity`\n\nThis PR adds an `order` keyword to `ScalarDiffusivity`:\n\n```julia\nclosure = ScalarDiffusivity(\u03bd=1.6e-5, \u03ba=2.2e-5, order=4)\n```\n\n`order` is the order of accuracy of the stencils used for the (Laplacian) diffusion operator. This is not biharmonic diffusion. `order = 2` (the default) leaves every existing result unchanged. With `order = 4`, diffusive and viscous fluxes use the face derivative\n\n```\n\u2202\u1da0\u03c6 \u2248 (15 (\u03c6\u1d62 - \u03c6\u1d62\u208b\u2081) - (\u03c6\u1d62\u208a\u2081 - \u03c6\u1d62\u208b\u2082)) / 12\u0394\n```\n\nThe flux divergence `(F\u1d62\u208a\u2081 - F\u1d62)/\u0394` of this derivative is the fourth-order five-point Laplacian `(-\u03c6\u1d62\u208b\u2082 + 16\u03c6\u1d62\u208b\u2081 - 30\u03c6\u1d62 + 16\u03c6\u1d62\u208a\u2081 - \u03c6\u1d62\u208a\u2082)/12\u0394\u00b2`, and the flux form is kept, so the scheme is conservative. Note that the fourth-order staggered *derivative* `(27(\u03c6\u1d62 - \u03c6\u1d62\u208b\u2081) - (\u03c6\u1d62\u208a\u2081 - \u03c6\u1d62\u208b\u2082))/24\u0394` is not the right choice here: differenced by the second-order flux divergence, it gives a Laplacian that is still only second-order accurate (its error is half that of the three-point Laplacian).\n\n### Design\n\n* **Grids.** The fourth-order stencil is used in directions where the grid is a regularly spaced `RectilinearGrid`, including the underlying grid of an `ImmersedBoundaryGrid`. Everywhere else the second-order flux is used: stretched directions, curvilinear grids, `Flat` directions, and `z` with `PartialCellVerticalBoundaries`. The choice is made by dispatch on the grid type, so it costs nothing at run time.\n* **Walls and immersed boundaries.** As with the reduced-order buffer schemes in advection, a flux falls back to second order wherever its four-point stencil would include an `inactive_node`. That covers the halos of `Bounded` directions and the interior of immersed boundaries. The check is identically `false` in `Periodic` directions, so it compiles away there. Fluxes through boundary faces, and the faces next to them, are therefore computed exactly as before, and boundary conditions are imposed the same way. The fallback is selected with `ifelse`.\n* **Viscous stress.** `ScalarDiffusivity` uses the stress `-2\u03bd \u03a3\u1d62\u2c7c = -\u03bd (\u2202\u2c7cu\u1d62 + \u2202\u1d62u\u2c7c)`. With `order = 4`, `\u2202\u2c7cu\u1d62` is computed at fourth order and the transpose term `\u2202\u1d62u\u2c7c` at second order. For constant `\u03bd`, the transpose term contributes `\u03bd \u2202\u1d62(\u2202\u2c7cu\u2c7c)` to the tendency, which vanishes identically for a velocity that is discretely divergence-free (as after the pressure projection). The viscous term is then exactly the fourth-order Laplacian `\u03bd\u2207\u00b2u\u1d62`. Differencing the transpose term at fourth order would instead leave a spurious `\u03bd \u2202\u1d62(D\u2084\u2c7cu\u2c7c - \u03b4\u2c7cu\u2c7c)` term, of the size of the second-order Laplacian's truncation error. For variable `\u03bd`, the stress form, including the transpose term, is retained.\n* **Diffusivities.** Numbers and functions are evaluated at faces as before. Array- or `Field`-valued diffusivities are interpolated to faces at second order, so the flux is fourth-order accurate only for constant or function-valued `\u03ba` and `\u03bd`.\n* **Halo and time step.** `order = 4` requires a halo of 2, and `required_halo_size` is set to 2. `cell_diffusion_timescale` is multiplied by 3/4, because the spectral radius of the five-point Laplacian (16/3\u0394\u00b2) is 4/3 that of the three-point Laplacian.\n* **Scope.** `order = 4` is supported for `ThreeDimensionalFormulation` and `VerticalFormulation` with `ExplicitTimeDiscretization`. It throws an `ArgumentError` for `HorizontalFormulation` and `HorizontalDivergenceFormulation`, whose momentum fluxes use the divergence/vorticity form, and for `VerticallyImplicitTimeDiscretization`, whose tridiagonal solver is second order.\n* **Operators** (`src/Operators/fourth_order_derivative_operators.jl`, exported). The new kernel functions of `(i, j, k, grid, \u03c6)` are:\n  * Differences `fourth_order_\u03b4x\u1da0\u1d43\u1d43`, `fourth_order_\u03b4x\u1d9c\u1d43\u1d43`, `fourth_order_\u03b4y\u1d43\u1da0\u1d43`, `fourth_order_\u03b4y\u1d43\u1d9c\u1d43`, `fourth_order_\u03b4z\u1d43\u1d43\u1da0` and `fourth_order_\u03b4z\u1d43\u1d43\u1d9c`. These are `(15(\u03c6\u1d62 - \u03c6\u1d62\u208b\u2081) - (\u03c6\u1d62\u208a\u2081 - \u03c6\u1d62\u208b\u2082))/12` and its mirror image, and also have `f::Function, args...` methods.\n  * Location-named, fourth-order-accurate first derivatives in flux form for all 8 locations per direction: `fourth_order_\u2202x\u1d63\u1da0\u1d9c\u1d9c`, `fourth_order_\u2202x\u1d63\u1d9c\u1d9c\u1d9c`, ..., `fourth_order_\u2202y\u1d63\u1d9c\u1da0\u1d9c`, ..., `fourth_order_\u2202z\u1d9c\u1d9c\u1da0`, ....\n\n  Each derivative is named after its second-order fallback (`\u2202x\u1d63`, `\u2202y\u1d63`, `\u2202z`), which is the derivative the `ScalarDiffusivity` fluxes have always used. Where the fourth-order stencil applies (regularly spaced rectilinear directions), `\u2202x\u1d63 = \u2202x`. The fallback is used in directions where `fourth_order_x_stencil(grid)` (and the `y`/`z` versions) returns `Val(false)`: not regularly spaced, `Flat`, or curvilinear. It is also used where the four-point stencil includes an `inactive_node`, so near-wall fluxes and the `order = 2` path are bitwise identical to before. `ImmersedBoundaries` extends `fourth_order_\u03be_stencil` to defer to the underlying grid, and to return `Val(false)` in z for `PartialCellVerticalBoundaries`. (These are fourth-order-*accurate first* derivatives; `\u2202\u2074x...` remain the fourth derivatives.)\n* **Closures.** `ScalarDiffusivity` gains a sixth type parameter (the stencil order, an `Int`), and `ScalarDiffusivity{TD, F, N}(\u03bd, \u03ba)` still constructs a second-order closure. `stencil_order(closure)` returns `Val(2)` or `Val(4)`; it is `Val(2)` for every other `AbstractScalarDiffusivity` (Smagorinsky, AMD, ...). `src/TurbulenceClosures/stencil_order_derivatives.jl` maps `Val(2)` to the existing `\u2202x\u1d63\u1da0\u1d9c\u1d9c` etc. and `Val(4)` to `fourth_order_\u2202x\u1d63\u1da0\u1d9c\u1d9c` etc., and assembles the viscous stresses.\n\n### Tests (`test/turbulence_closures/fourth_order_diffusion.jl`, `test/unit/fourth_order_derivative_operators.jl`)\n\n| test | second order | fourth order |\n|---|---|---|\n| tracer Laplacian, triply periodic, N = 16/32/64 (max error) | 0.141, 0.039, 0.010 (rate 1.96) | 0.0103, 7.3e-4, 4.7e-5 (rate 3.95) |\n| viscous term \u2202\u2c7c\u03c4\u1d62\u2c7c, discretely divergence-free velocity, triply periodic | rate 1.99 | 3.1e-4, 2.0e-5, 1.2e-6 (rate 3.99) |\n| Laplacian with no-flux walls in x and z, max error | rate 2.00 | rate 2.00, max error unchanged (located next to the walls) |\n| same, L1 error | 1.8e-3, 4.6e-4, 1.1e-4 (rate 2.00) | 5.8e-4, 8.1e-5, 1.1e-5 (rate 2.93) |\n| time-stepped decay of sin(3x), N = 16/32 | 0.0417, 0.0105 (rate 1.98) | 0.0068, 0.00047 (rate 3.86) |\n\nAlso tested:\n\n* The operators directly. The flux divergence of `fourth_order_\u2202{x,y,z}` converges at rate 4, and the derivative itself (a finite-volume face derivative) converges at rate 2 pointwise. The derivatives are exactly equal to the second-order derivative at the faces next to `Bounded` walls and immersed boundaries, and differ from it everywhere else. The grid traits and the `Function`-argument methods are also tested.\n* A model stepped with second-order closures (including function-valued \u03bd, `VerticalScalarDiffusivity`, and an immersed bottom) is bitwise identical on `main` and on this branch.\n\n* A flat `GridFittedBottom` at z = 1/2 gives tracer and momentum flux divergences identical (to 1e-12) to a `Bounded` grid on z \u2208 (1/2, 1).\n* Tracer content is conserved to 1e-12 with no-flux walls and on the immersed grid.\n* Construction, halo sizes, show, the `ArgumentError`s, `with_tracers`, and `cell_diffusion_timescale`.\n\nThe new tests pass on CPU and on GPU (A100 and H100). The existing `turbulence_closures/closures` and `turbulence_closures/diffusion_stencils` tests also pass.\n\n### Motivation\n\nIn a finite-volume DNS of homogeneous turbulence at \u0394 \u2248 \u03b7 (Breeze, Centered(4) advection), the dissipation-range spectrum is too high by ~7\u201312 % \u00d7 (k\u0394)\u00b2, and changing the advection order barely helps. The three-point Laplacian under-damps near-grid scales: its symbol is 4/\u0394\u00b2 at k\u0394 = \u03c0, against the exact \u03c0\u00b2/\u0394\u00b2.\n\nIn that DNS (decaying turbulence, 32\u00b3\u2013256\u00b3, compared with a converged pseudo-spectral reference), `order = 4` lowers the RMS errors in \u03b5, Re_\u03bb and transverse gradient flatness 2\u20135\u00d7. It also roughly doubles the range of wavenumbers over which the spectrum is accurate to 1 %. Velocity-derivative skewness and flatness improve less (1.0\u20131.6\u00d7), and overall convergence stays second order, because advection metrics, pressure and divergence are still second order. The cost is ~30 % more per step.\n\n### Resolution savings\n\nGrid points per direction `M` needed to bring each statistic within 1 % RMS of the pseudo-spectral reference (decaying turbulence, Centered(4) advection, 4.14 cm box; `M` interpolated from the 32\u00b3\u2013256\u00b3 sweep). Cost is estimated as `M\u2074` (points \u00d7 time steps at fixed CFL), times 1.3 for `order = 4`.\n\n| statistic | `order = 2`: M (\u0394/\u03b7) | `order = 4`: M (\u0394/\u03b7) | cost saving |\n|---|---|---|---|\n| dissipation \u03b5 | 60 (1.29) | \u2264 32 (\u2265 2.42) | \u2265 9.5\u00d7 |\n| Re_\u03bb | 43 (1.78) | \u2264 32 (\u2265 2.42) | \u2265 2.6\u00d7 |\n| velocity-derivative skewness S | 52 (1.48) | 42 (1.84) | 1.8\u00d7 |\n| velocity-derivative flatness F | 50 (1.56) | 39 (2.00) | 2.1\u00d7 |\n| transverse-derivative flatness F_T | 73 (1.06) | 49 (1.59) | 4.0\u00d7 |\n\nThe most demanding statistic (F_T) sets the resolution: `order = 4` relaxes it from \u0394 \u2248 1.06 \u03b7 to \u0394 \u2248 1.59 \u03b7, i.e. 1.5\u00d7 coarser in each direction and ~4\u00d7 cheaper overall. (\"\u2264 32\" means the coarsest run tested already met the threshold.) Statistics are computed with exact (spectral) derivatives of the gridded velocity; second-order finite-difference diagnostics are inconsistent with the fourth-order operator and should not be used to judge it.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 11,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-29T21:55:36Z",
+    "deletions": 25,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-11-05T02:54:58Z",
+    "number": 6389,
+    "title": "Fourth-order accurate Laplacian stencil for ScalarDiffusivity"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6363.\n\nThe Reactant extension's `set_to_field!`, for a source on a different grid, interpolates on CPU twins of the two fields. It now:\n- fills the source's halos with its own boundary conditions first, as the generic `set_to_field!` does (`fill_halo_regions!(v)` on the device), and\n- copies the source's whole parent to the host with `Array(parent(v))`, halos included, instead of `copyto!` from `interior(v)`, a view of the device array, which failed in Base's aliasing check.\n\n**Test.** `test/reactant/unit.jl`: coarse to fine of `c = x` on `ReactantState` matches the same `set!` on the CPU, including the cells next to the boundaries. Not run yet. In the issue's reproducer (Oceananigans `main`, Reactant 0.2.297), copying the parent and filling the halos gives the CPU's `[0.375, 0.375, 0.625, 0.625]`, and copying the parent without the fill gives `[0.1875, 0.375, 0.625, 0.5625]`; that check filled the halos on the CPU twin, with default boundary conditions, where this PR fills them on the device with the source's own.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABaHikWQ",
+        "number": 6363,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6363"
+      }
+    ],
+    "createdAt": "2026-10-26T20:35:50Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-05T03:02:28Z",
+    "number": 6365,
+    "title": "Reactant set_to_field!: fill the source's halos and copy its whole parent to the CPU"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/dependabot"
+    },
+    "body": "> [!NOTE]\n> This update adds `<0.0.1` to standard library compat entries. Before Julia 1.10, `Pkg.test()` gave standard libraries version 0.0.0, so while the `julia` compat entry admits those releases, a stdlib compat entry needs `<0.0.1` for tests to resolve. Raising the `julia` compat entry to `1.10` or later removes the need for it. See the [stdlib compat PSA](https://discourse.julialang.org/t/psa-compat-requirements-in-the-general-registry-are-changing/104958).\n>\n\nUpdates the requirements on LinearAlgebra to permit the latest version.\nUpdates `LinearAlgebra` to 1.0.0\n\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore <dependency name> major version` will close this group update PR and stop Dependabot creating any more for the specific dependency's major version (unless you unignore this specific dependency's major version or upgrade to it yourself)\n- `@dependabot ignore <dependency name> minor version` will close this group update PR and stop Dependabot creating any more for the specific dependency's minor version (unless you unignore this specific dependency's minor version or upgrade to it yourself)\n- `@dependabot ignore <dependency name>` will close this group update PR and stop Dependabot creating any more for the specific dependency (unless you unignore this specific dependency or upgrade to it yourself)\n- `@dependabot unignore <dependency name>` will remove all of the ignore conditions of the specified dependency\n- `@dependabot unignore <dependency name> <ignore condition>` will remove the ignore condition of the specified dependency and ignore conditions\n\n\n</details>",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T09:17:55Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      },
+      {
+        "color": "a270ba",
+        "description": "Pull requests that update julia code",
+        "id": "LA_kwDOCRy_aM8AAAACdijpGw",
+        "name": "julia"
+      }
+    ],
+    "mergedAt": "2026-11-05T06:40:20Z",
+    "number": 6445,
+    "title": "Bump LinearAlgebra in /docs"
+  },
+  {
+    "additions": 267,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Adds `.claude/rules/restriction-rules.md` and lists it in `AGENTS.md`. It loads automatically for agents working in `src/`, `test/`, `validation/` and `examples/`, the same paths as `style-rules.md`.\n\nMachine-written code tends to be correct but hard to read: every failure is anticipated, every invariant is checked at several layers, and the comments argue for the code instead of describing it. A reviewer facing 700 lines cannot tell which 40 are the feature. These rules cover:\n\n* **Diffs:** the feature is the diff, and validation, fallbacks and helper APIs are separate concerns.\n* **Mechanisms:** one invariant is enforced in one place, with no guards for states the public API cannot reach.\n* **Methods:** as few as possible, and no forwarding methods or small tables.\n* **Prose:** comments describe the code in front of them, docstrings describe rather than argue, and error messages are one sentence.\n* **Tests:** they pin behavior, not scaffolding.\n\nThe file ends with a 14-question checklist that agents run over their own diff before presenting it.\n\nNo source code changes.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T08:26:47Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-05T08:52:29Z",
+    "number": 6455,
+    "title": "Add restriction rules for agent-written code"
+  },
+  {
+    "additions": 58,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "`index_binary_search` returned from inside its `while` loop on an exact hit. Reactant's kernel raising cannot lower a loop with a second exit, so any kernel interpolating on a stretched axis failed to compile with `raise = true` (`cannot raise op to stablehlo`). Fixes #6327.\n\nThe search keeps its halvings and runs them a fixed number of times, the bit length of `N`, with no early exit. An exact hit is recorded instead of returned, and once the bracket is found the remaining passes change nothing:\n\n```julia\nfor _ in 1:(8 * sizeof(N) - leading_zeros(N))\n    searching = (low + 1 < high) & (hit == 0)\n    mid = middle_point(low, high)\n    x = @inbounds vec[mid + 1]\n    found = searching & (x == val)\n    hit = ifelse(found, mid + 1, hit)\n    low = ifelse(searching & (x < val), mid, low)\n    high = ifelse(searching & !found & !(x < val), mid, high)\nend\n\nreturn ifelse(hit == 0, (low + 1, high + 1), (hit, hit))\n```\n\nIt stays O(log N) on every backend. It is the same code everywhere, and on GPUs the threads of a warp wait for the longest search anyway. A linear scan over the axis would also raise, but at O(N) for every lookup.\n\nIt returns exactly what the early-return search did. A new unit test compares the two:\n- for `N` from 1 to 64;\n- on strictly increasing, integer and repeated nodes;\n- at every node, just above and just below each one, out of range on both sides, and at `NaN`.\n\nA Reactant test raises the search inside a kernel and checks both indices against the eager search, on a 16-level stretched column: at every node, between each pair, and outside on both sides.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZN_5hg",
+        "number": 6327,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6327"
+      }
+    ],
+    "createdAt": "2026-11-03T18:36:52Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-05T16:41:16Z",
+    "number": 6434,
+    "title": "index_binary_search: a fixed number of halvings and no early return, so Reactant can raise it"
+  }
+]
