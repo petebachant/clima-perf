@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 574,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "This PR adds `Base.:/(t::ITime, num::Integer)`, an exact division of an `ITime` by an integer. When `num` divides the counter, the result keeps the period and counter type of `t`. Otherwise the result has a period of one unit: the unit of the period of `t` when the division is exact there, and otherwise the coarsest finer unit, down to the nanosecond, at which it is exact. For example, `ITime(1, period = Second(1)) / 4` is 250 ms, and `ITime(1, period = Minute(120)) / 2` is 60 minutes with period `Minute(1)`. The division raises an `ErrorException` when no such unit exists (1 s / 3), an `OverflowError` when the counter type cannot represent the result, and a `DivideError` for division by zero. Overflow is detected with checked arithmetic on the input types, without widening. The period type of the result depends on the values, so `/` is not type stable; `div(convert(T, t), num)` is the type-stable alternative. `div(t, num)` is unchanged and truncates the counter.\n\nThe PR also adds `isdivisible(t, num)`, which returns whether `t / num` is exact, and `convert` between `ITime` periods. The conversion is exact, and it raises an error when the instant is not a whole number of the target unit, when the new counter does not fit the target counter type, or when the epoch types differ.\n\nSub-stepping needs `dt / n_sub` to be exact, so that the sub-steps cover the step. `div` truncates: `div(ITime(10, period = Second(1)), 4)` is 2 s, and a sub-cycle built on it covers 8 of the 10 seconds. A division that refines the period changes the type of the `ITime`. A multirate integrator stores the outer time in an inner integrator whose time has the finer period, and without `convert` that assignment raises a `MethodError`. The alternative, a fixed fine period for all times of a run, loses either range (a nanosecond counter overflows `Int64` after about 292 years) or divisibility. The first users are the step-exchange outer methods of ClimaTimeSteppers and the acoustic substepping of ClimaAtmos (CliMA/ClimaAtmos.jl#4660).\n\nThe TimeManager documentation page describes the behavior, and the API block lists the three methods. The PR bumps the version to 0.1.35.\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-07-11T00:39:59Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "D4C5F9",
+        "description": "New feature or request",
+        "id": "LA_kwDOKJvhPM8AAAABXeOJwQ",
+        "name": "new feature \ud83d\udca1"
+      },
+      {
+        "color": "1a814e",
+        "description": "",
+        "id": "LA_kwDOKJvhPM8AAAACsi5aTg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T01:24:05Z",
+    "number": 232,
+    "title": "feat: add exact integer division for ITime"
+  }
+]

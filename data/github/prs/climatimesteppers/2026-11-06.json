@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 97,
+    "author": {
+      "id": "MDQ6VXNlcjQ1MjQzMjM2",
+      "is_bot": false,
+      "login": "haakon-e",
+      "name": "Haakon Ludvig Langeland Ervik"
+    },
+    "body": "The docs jobs of PRs fail when the push of the preview to `gh-pages` is refused, either because another job moved `gh-pages` between the clone and the push, or because GitHub rejects the push with a transient error, as on #460 and #461. The first commit retries `deploydocs` up to ten times with a random delay of 10 to 30 s. The delays are drawn from `RandomDevice`, so that parallel jobs do not draw the same delays even if the docs seed the global generator, which adds `Random` to the docs environment.\n\nThe cleanup on PR close deleted only the preview of the closed PR, and `gh-pages` now holds 76 previews for 3 open PRs. The second commit deletes the previews of all closed PRs on every run, and replaces each release directory that is not the latest patch of its minor version with a symlink to that patch. It pushes with `--force-with-lease`, with the same retry. The workflow can also be started by hand (`workflow_dispatch`), which prunes `gh-pages` once after the merge.\n\nThe first two changes are copied from CloudMicrophysics.jl (CliMA/CloudMicrophysics.jl#833), where the cleanup has run without failure since it merged.\n\n---\n\nThe third commit pins Aqua below 0.8.17 in the test environment. Since Buildkite build 2052 the persistent-tasks check fails on every branch, including main, because the process that loads ClimaTimeSteppers does not exit within `tmax`, also with `tmax = 120` s. Aqua 0.8.17 and 0.8.18 were released between the last passing and the first failing build, and rewrote how the check builds and precompiles its wrapper environment; no code changed in that interval. Locally on Julia 1.11 the check finds no persistent task with either version. The bound can go once an Aqua release fixes the check (JuliaTesting/Aqua.jl#408).\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T23:56:35Z",
+    "deletions": 15,
+    "labels": [
+      {
+        "color": "18d546",
+        "description": "",
+        "id": "LA_kwDOEDQfX88AAAACsi6r2w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T01:48:18Z",
+    "number": 462,
+    "title": "fix(ci): retry the docs deploy, prune gh-pages, and pin Aqua below 0.8.17"
+  }
+]

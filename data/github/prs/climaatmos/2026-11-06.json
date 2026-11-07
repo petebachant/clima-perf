@@ -1,0 +1,127 @@
+[
+  {
+    "additions": 122,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Prescribed temperature tendencies (BOMEX/RICO large-scale forcing, TRMM-LBA radiation, file-driven forcing and nudging, Held\u2013Suarez relaxation) are rates at constant pressure, so they are converted to energy with `cp` instead of `cv`. With `cv`, only 72% of the prescribed potential-temperature tendencies were realized. Adds a test, updates docs and NEWS, and bumps the ref counter (RICO, TRMM-LBA, Held\u2013Suarez references change).",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T19:35:23Z",
+    "deletions": 29,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T00:13:06Z",
+    "number": 4969,
+    "title": "Convert prescribed temperature tendencies with the isobaric heat capacity"
+  },
+  {
+    "additions": 27,
+    "author": {
+      "id": "MDQ6VXNlcjE0MjkwNDQ1",
+      "is_bot": false,
+      "login": "sajjadazimi",
+      "name": "Sajjad Azimi"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \nApply EDMFX TKE production in the implicit stage\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- I have read and checked the items on the review checklist.\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T21:28:49Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T01:25:23Z",
+    "number": 4965,
+    "title": "Implicit TKE production"
+  },
+  {
+    "additions": 1154,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR adds support for running multiple independent column simulation on a single space. I used a LLM to write a majority of the code.\r\n\r\n## TODO\r\n\r\n- [x] Merge https://github.com/CliMA/ClimaCore.jl/pull/2635 in ClimaCore\r\n- [x] Merge https://github.com/CliMA/ClimaDiagnostics.jl/pull/188 in ClimaDiagnostics\r\n- [x] Deal with forcing data in ClimaAtmos, ClimaUtilities, and ClimaInterpolations\r\n\r\n## Questions\r\n\r\nIt is unclear to me what work need to be done for the forcing data. The simplest case is to duplicate the same forcing data for all the columns (see https://github.com/CliMA/ClimaUtilities.jl/pull/251 which implements this). Another case is to use different forcing data for each column, but the times shared between the forcing data is the same. This is already implemented in https://github.com/CliMA/ClimaUtilities.jl/pull/248 with linear interpolation and all the data must fit in memory. The hardest case is if the forcing data is different across times and cannot all fit in memory.\r\n\r\nAre there examples of use cases where a multiple column simulation would be used and what the forcing data would look like? In particular, it would help to know what the NetCDF files look like for the forcing data so that it can properly implemented in ClimaUtilities.jl and ClimaInterpolations.jl.",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-09-11T16:50:59Z",
+    "deletions": 165,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T03:08:46Z",
+    "number": 4817,
+    "title": "Add support for multi col simulation"
+  },
+  {
+    "additions": 549,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "Move CI from Julia 1.11 to 1.13.3. Still needs a ref counter bump.\r\n\r\n- Buildkite pipelines load `climacommon/2026_10_30-1.13.3`. GitHub Actions (CI, docs, downstream) use 1.13.\r\n- `.buildkite/Manifest-v1.13.toml` re-resolved under 1.13.3 with updates to HDF5 and NetCDF. HDF5_jll 1.14.3+3 and NetCDF_jll 400.902.211+1 no longer need the `CURL_4` libcurl symbols that Julia 1.13's libcurl lacks.\r\n- `ref_counter` bumped, since results change with the Julia version.\r\n- Moved musica tests to 1.12, the latest release does not support 1.13.\r\n- `perf/flame.jl` takes the allocation count from a `@timed` step after the `@timev` step. On 1.13, the `@timev` step, the first one after the allocation profiler, allocates ~5 KB to 150 KB more than the step after it. On 1.11 both steps allocated the same.\r\n-  Per-column temporaries made `lazy` in `update_advection_jacobian!`, `set_strain_rate_norm_column!`, `set_face_diffusivities!`, and the EDMF environment precomputed quantities. On 1.13 these are heap allocated on CPU, which put the flame and `bm_default` jobs ~700x over their allocation limits.\r\n- `val_master` in `set_face_diffusivities!` passed as a 1-tuple, since broadcasting wraps a bare `Val` in a `Ref` that is heap allocated once per column.\r\n- Docs updated to 1.13.\r\n\r\nBuild time is better, roughly 10% improvement in median per-job time.",
+    "changedFiles": 32,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T19:44:53Z",
+    "deletions": 155,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T05:41:44Z",
+    "number": 4944,
+    "title": "Test Julia 1.13.3"
+  },
+  {
+    "additions": 93,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR tags a patch release 0.42.18 and updates the .buildkite Manifest. Waiting for #4944, #4968 to merge.\r\n\r\nTop-level dependency updates:\r\n```\r\n    Updating `~/clima/ClimaAtmos-release/.buildkite/Project.toml`\r\n  [13f3f980] \u2191 CairoMakie v0.15.16 \u21d2 v0.15.17\r\n  [b2c96348] ~ ClimaAtmos v0.42.17 `..` \u21d2 v0.42.18 `..`\r\n  [3a4d1b5c] \u2191 ClimaComms v0.6.12 \u21d2 v0.6.13\r\n  [b3f4f4ca] \u2191 ClimaUtilities v0.1.34 \u21d2 v0.1.35\r\n  [08abe8d2] \u2191 PrettyTables v3.5.0 \u21d2 v3.5.1\r\n  [aa65fe97] \u2191 SnoopCompile v3.1.4 \u21d2 v3.2.10\r\n  [e2b509da] \u2191 SnoopCompileCore v3.0.0 \u21d2 v3.1.4\r\n```\r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T03:09:59Z",
+    "deletions": 82,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-06T21:33:47Z",
+    "number": 4972,
+    "title": "(0.42.18) tag patch release + up deps"
+  }
+]
