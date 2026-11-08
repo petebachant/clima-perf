@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 436,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": "1. **Rain and snow on the precipitation shaft by default** (behavioral):\r\n     `sgs_precip_incloud_fraction` 0 \u2192 1 and `sgs_precip_fraction_floor` 0.5 \u2192 0.1.\r\n     Spread uniformly over the cell, rain evaporates 2.5\u20134.5\u00d7 the rate of 3.75 km\r\n     MPAS truth within ne30 cells; on the shaft, ~0.9\u20131.4\u00d7.\r\n  2. **Opt-in updraft rule for the variance fidelity \u03b1**\r\n     (`sgs_variance_fidelity_model: updraft`, PrognosticEDMFX + non-equilibrium\r\n     microphysics; default `equilibrium` unchanged). Where updrafts are cloudy, \u03b1 is\r\n     blended toward `\u03b1 \u03c3_S = c_u q_c,up` (in-cloud updraft condensate), bounded to\r\n     `[\u03b1_min, 1/(1 \u2212 w_eq)]` and weighted by the updraft cloud cover and EDMF\r\n     lower area-limiter factor. ",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T20:58:25Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-07T00:57:20Z",
+    "number": 4931,
+    "title": "1M: place rain/snow on the precipitation shaft by default; opt-in updraft rule for \u03b1"
+  },
+  {
+    "additions": 2268,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR moves AtmosphericProfilesLibrary into ClimaAtmos as a submodule and drops the external dependency. The port is a formatting-only copy of upstream 0.1.10, verified by a normalized diff of all 15 profile files. Main was pinned to 0.1.8. It adds the existing APL docs page in the References section. Copilot's auto-review found a pre-existing GATE III tendency conversion bug and a Float32 promotion in the Bomex cooling rate, this will be fixed in a followup PR #4958 \r\n\r\nTo verify that the code matches APL 0.1.10, run the following from the Atmos repo root:\r\n```julia\r\n\r\nusing Pkg; Pkg.activate(temp = true)\r\nPkg.add(name = \"AtmosphericProfilesLibrary\", version = \"0.1.10\")\r\nimport AtmosphericProfilesLibrary as APL0\r\n\r\nclean(x) = x\r\nclean(s::AbstractString) = join(strip.(split(strip(s), '\\n')), '\\n')\r\nclean(e::Expr) = Expr(e.head, (clean(a) for a in e.args if !(a isa LineNumberNode))...)\r\nast(f) = clean(Meta.parseall(read(f, String)))\r\n\r\nupstream = joinpath(pkgdir(APL0), \"src\", \"profiles\")\r\nfor f in readdir(upstream)\r\n    same = ast(joinpath(upstream, f)) == ast(joinpath(\"src\", \"atmospheric_profiles_library\", f))\r\n    println(rpad(f, 24), same ? \"same\" : \"DIFFERS\")\r\nend\r\n```\r\nOutput, TRMM differs because I added a LinearAlgebra import:\r\n```\r\nARM_SGP.jl              same\r\nBomex.jl                same\r\nDryBubble.jl            same\r\nDycoms_RF01.jl          same\r\nDycoms_RF02.jl          same\r\nGABLS.jl                same\r\nGATE_III.jl             same\r\nISDAC.jl                same\r\nLarcform1.jl            same\r\nLifeCycleTan2018.jl     same\r\nNieuwstadt.jl           same\r\nRico.jl                 same\r\nSP.jl                   same\r\nSoares.jl               same\r\nTRMM_LBA.jl             DIFFERS\r\n```",
+    "changedFiles": 35,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-02T19:51:57Z",
+    "deletions": 34,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-07T02:29:47Z",
+    "number": 4954,
+    "title": "Port AtmosphericProfilesLibrary into Atmos"
+  },
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "This PR updates the modules loaded on `clima` from `climacommon/2026_10_30` to `climacommon/2026_11_06`. The modules loaded on `central` are left unchanged. This should fix the currently broken performance pipeline, and the GPU longruns pipeline.\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [x] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T21:46:34Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-07T06:59:43Z",
+    "number": 4974,
+    "title": "Update clima modules to climacommon/2026_11_06"
+  }
+]

@@ -1,0 +1,120 @@
+[
+  {
+    "additions": 92,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6333.\n\nThe default north and south boundary conditions of a `LatitudeLongitudeGrid` decide whether a boundary is a pole with `\u03c6node(...) \u2248 \u00b190`. Inside a compiled function the latitudes are traced, so this test produces a traced `Bool`, which `? :` cannot branch on. That breaks allocating any `Field`, computed ones included, inside a program on a `ReactantState` lat-lon grid. The grid's extents are traced there too, so there is no host latitude left to read.\n\nThis PR decides the question once, at construction, and stores the answer in two fields that are never traced.\n\n**What is stored.** `LatitudeLongitudeGrid` gains two fields, `south_pole` and `north_pole`. Each is `Pole()` (a new empty singleton in `Oceananigans.Grids`) when that boundary's latitude is \u00b190, and `nothing` otherwise. Neither holds a number, so Reactant leaves them alone even with `track_numbers = true`. The grid gains two type parameters, `SP` and `NP`, one per field.\n\n| grid | `(grid.south_pole, grid.north_pole)` |\n|---|---|\n| regional, e.g. `latitude = (-60, 60)` | `(nothing, nothing)` |\n| `latitude = (0, 90)` | `(nothing, Pole())` |\n| `latitude = (-90, 0)` | `(Pole(), nothing)` |\n| global, `latitude = (-90, 90)` | `(Pole(), Pole())` |\n\nA `Flat` latitude has no poles. The values are found on construction from the first and last latitude face (`find_south_pole`, `find_north_pole`).\n\n**Where it is used.**\n- The lat-lon `default_prognostic_bc`/`default_auxiliary_bc` dispatch on the field: `polar_or(default, ::Nothing, \u2026)` keeps the default condition, and `polar_or(default, ::Pole, \u2026)` gives the polar one. The four north/south methods, which differed only in the side, are generated from one definition per side, and so are the `Flat`-latitude stubs. The `LatitudeLongitudeGrid` docstring now says that a latitude bound at \u00b190 is a pole.\n- Rebuilds of an existing grid pass the two fields through: `with_precomputed_metrics`, `Adapt.adapt_structure`, `on_architecture` to `Distributed`, `ReactantState` and `Distributed{ReactantState}`, and the sharded constructor. Keyword rebuilds (`with_halo`, `slice`, `on_architecture` to serial architectures) recompute them from their own latitudes. The positional constructor takes them as two optional trailing arguments, which default to recomputing.\n- The Reactant `traced_type_inner` for `LatitudeLongitudeGrid` carries `SP` and `NP` through unchanged.\n\nAn earlier version of this PR kept the answer in a `Poles{S, N}` type parameter, read back through a `poles(grid)` accessor. Fields are as safe under tracing, they can be read directly, and the boundary conditions can dispatch on them instead of branching on a `Bool`.\n\n**Tests**\n- `test/reactant/unit.jl`: for regional, north-pole, south-pole and global grids, the full parent array (halos included) of `compute!(Field(2c))` under `@jit` matches the CPU result. It uses `c = \u03bb` so that polar and zero-gradient halos differ. It also checks that the pole fields agree between the CPU and `ReactantState` grids.\n- `test/unit/boundary_conditions.jl`: the pole fields for global, one-pole (each side) and regional grids, and after `Adapt.adapt`, `with_halo` and `on_architecture` to each test architecture.\n\n**Question: immersed grids.** An `ImmersedBoundaryGrid` over a lat-lon grid that reaches a pole gets wall conditions there today, because the polar methods dispatch on `LatitudeLongitudeGrid` only. `_average_pole_value!` already skips inactive nodes, so polar conditions look intended to work there. Supporting it would mean reading `grid.underlying_grid.south_pole`/`north_pole` in `ImmersedBoundaryGrid` methods for the defaults. That would change results for existing immersed polar grids, so I've left it out. Happy to add it here or in a follow-up.\n\n**Compatibility**\n- `LatitudeLongitudeGrid` has two more type parameters and two more fields. Code that writes out every parameter (rather than a prefix with `<:Any`), or that calls the positional constructor with every field, needs updating.\n- JLD2 output stores the grid's type, so files written before this PR load the old type.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZPVbMw",
+        "number": 6333,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6333"
+      }
+    ],
+    "createdAt": "2026-10-22T22:55:45Z",
+    "deletions": 44,
+    "labels": [],
+    "mergedAt": "2026-11-07T00:38:01Z",
+    "number": 6334,
+    "title": "Keep which LatitudeLongitudeGrid boundaries are poles in the grid's type, so Fields allocate inside compiled functions"
+  },
+  {
+    "additions": 79,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Closes #6356. Builds on #6330 (merged).\n\nOn `ReactantState`, `stop_iteration` is now a device number (`ConcreteRNumber{Int}`), an input of the compiled `run!` rather than a constant of it. `sim.stop_iteration = n` between calls runs `n` steps with the same program, without recompiling.\n\n- `Simulation` gets its own type parameter for `stop_iteration` (it shared `FT` with `wall_time_limit` and the others). The eager constructor still stores a `Float64`; nothing changes off Reactant.\n- The Reactant constructor stores the step count as a device number, replicated across devices on a distributed model as the model's clock is, or `nothing` when neither `stop_iteration` nor `stop_time` is given (`run!` throws then, as it did on `Inf`). A `stop_time` is still resolved on the host into whole steps and a remainder step; the remainder step stays as sized at construction. A `setproperty!` turns a plain number into the device number and rejects a negative count.\n- `run!` loops `stop_iteration` times. The count keeps its meaning: steps from wherever the model is, so each call steps that many more times.\n- Adams-Bashforth's forward-Euler first step runs under a traced `if` (so zero steps still take none), and its loop takes `N - first_step` steps, never a negative count: with a negative trip count, Enzyme-JAX folds the loop's `iteration += 1` into one add of the count, so a `1:-1` loop moved the iteration back by one while the state was unchanged (I'll file that separately).\n\n**Tests.** A new testset in `test/reactant/simulations.jl` compiles `run!` once and calls it with `stop_iteration` = 2, 0, 3, for Adams-Bashforth and `SplitRungeKutta3`, against the same chunks stepped eagerly on the CPU (each compiled Adams-Bashforth call starts with a forward-Euler step, so the eager reference does too). Run locally against Reactant 0.2.297 on the CPU backend, with the other Reactant `Simulation` testsets of that file: all pass (the `RectilinearGrid` correctness testset, which needs the full test setup, was not run).\n\n**Not covered.** Reverse-mode differentiation of `run!` with the step count traced: the automatic-differentiation testset compiles the forward `run!` with checkpointing options but takes no gradient, and whether `Periodic`/`Binomial` checkpointing accepts a trip count known only at run time is untested. Downstream code that reads `sim.stop_iteration` on the host as a number (for a Reactant `Simulation`) needs `Reactant.to_number`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABaERv2A",
+        "number": 6356,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6356"
+      }
+    ],
+    "createdAt": "2026-10-26T16:54:59Z",
+    "deletions": 19,
+    "labels": [],
+    "mergedAt": "2026-11-07T00:38:45Z",
+    "number": 6357,
+    "title": "Reactant: stop_iteration as a device number, so a compiled run! changes its step count without recompiling"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "is_bot": true,
+      "login": "app/dependabot"
+    },
+    "body": "Updates the requirements on [StructArrays](https://github.com/JuliaArrays/StructArrays.jl) to permit the latest version.\nUpdates `StructArrays` to 0.7.4\n<details>\n<summary>Release notes</summary>\n<p><em>Sourced from <a href=\"https://github.com/JuliaArrays/StructArrays.jl/releases\">StructArrays's releases</a>.</em></p>\n<blockquote>\n<h2>v0.7.4</h2>\n<h2>StructArrays v0.7.4</h2>\n<p><a href=\"https://github.com/JuliaArrays/StructArrays.jl/compare/v0.7.3...v0.7.4\">Diff since v0.7.3</a></p>\n<p><strong>Merged pull requests:</strong></p>\n<ul>\n<li>Fix example for initializing StructArray (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/350\">#350</a>) (<a href=\"https://github.com/lanceXwq\"><code>@\u200blanceXwq</code></a>)</li>\n<li>Bump julia-actions/setup-julia from 2 to 3 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/352\">#352</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump codecov/codecov-action from 5 to 7 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/356\">#356</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>Bump actions/checkout from 6 to 7 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/357\">#357</a>) (<a href=\"https://github.com/dependabot\"><code>@\u200bdependabot</code></a>[bot])</li>\n<li>CompatHelper: bump compat for WeakRefStrings in [extras] to 2, (keep existing compat) (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/360\">#360</a>) (<a href=\"https://github.com/github-actions\"><code>@\u200bgithub-actions</code></a>[bot])</li>\n<li>CompatHelper: bump compat for JLArrays in [extras] to 0.4, (keep existing compat) (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/361\">#361</a>) (<a href=\"https://github.com/github-actions\"><code>@\u200bgithub-actions</code></a>[bot])</li>\n<li>Allow KernelAbstractions 0.10 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/363\">#363</a>) (<a href=\"https://github.com/vchuravy\"><code>@\u200bvchuravy</code></a>)</li>\n<li>Create separate environment for tests (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/366\">#366</a>) (<a href=\"https://github.com/giordano\"><code>@\u200bgiordano</code></a>)</li>\n<li>Replace CompatHelper with Dependabot (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/367\">#367</a>) (<a href=\"https://github.com/aplavin\"><code>@\u200baplavin</code></a>)</li>\n<li>Fix Julia 1.13 compatibility (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/368\">#368</a>) (<a href=\"https://github.com/aplavin\"><code>@\u200baplavin</code></a>)</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Changelog</summary>\n<p><em>Sourced from <a href=\"https://github.com/JuliaArrays/StructArrays.jl/blob/master/NEWS.md\">StructArrays's changelog</a>.</em></p>\n<blockquote>\n<h1>NEWS</h1>\n<h2>Version 0.6.0</h2>\n<h3>Breaking</h3>\n<ul>\n<li>Static arrays are automatically unwrapped when creating a <code>StructArray{&lt;:StaticArray}</code> <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/186\">#186</a></li>\n</ul>\n<h3>New features</h3>\n<ul>\n<li><code>pop!</code> is now supported on <code>StructVector</code>s <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/190\">#190</a></li>\n</ul>\n<h2>Version 0.5.0</h2>\n<h3>Breaking</h3>\n<ul>\n<li>Renamed <code>fieldarrays</code> to <code>StructArrays.components</code> <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/167\">#167</a></li>\n<li><code>getproperty</code> is no longer used to access fields of a struct. It is replaced by <code>StructArrays.component(x, i)</code> <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/167\">#167</a>. This is only relevant for structs with custom layout.</li>\n<li>Inner constructors are bypassed on <code>getindex</code> <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/136\">#145</a></li>\n<li>Broadcast on <code>StructArray</code>s now returns a <code>StructArray</code> <a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/pull/136\">#136</a></li>\n</ul>\n<h2>Version 0.4.0</h2>\n<h3>Breaking</h3>\n<ul>\n<li><code>fieldarrays</code> now returns a tuple of arrays for a <code>StructArray{&lt;:Tuple}</code></li>\n<li><code>push!</code> now only works if the <code>StructArray</code> and the element have the same propertynames</li>\n<li>The special constructor <code>StructArray(first_col =&gt; last_col)</code> is no longer supported</li>\n</ul>\n<h2>Version 0.2.0</h2>\n<h3>Breaking</h3>\n<ul>\n<li>Renamed <code>columns</code> to <code>fieldarrays</code></li>\n<li><code>StructArray{T}(args...)</code> has been deprecated in favor of <code>StructArray{T}(args::Tuple)</code></li>\n</ul>\n<h3>New features</h3>\n<ul>\n<li>Added <code>collect_structarray</code> function to collect an iterable of structs into a <code>StructArray</code> without having to allocate an array of structs</li>\n<li><code>StructArray{T}(undef, dims)</code> and <code>StructArray(v::AbstractArray)</code> now support an <code>unwrap</code> keyword argument to specify on which types to do recursive unnesting of array of structs to struct of arrays</li>\n</ul>\n</blockquote>\n</details>\n<details>\n<summary>Commits</summary>\n<ul>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/c2a046f2ddca638ff925aad1e9399141ee99b9bb\"><code>c2a046f</code></a> Split KernelAbstractions extension</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/15595e3e79e6e94a914147fc427dedd6fd290bf9\"><code>15595e3</code></a> Rename package extensions</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/9007ca3eb5384eeed14e79959ff4fee76a26668e\"><code>9007ca3</code></a> Use workspace discovery for Dependabot</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/baf62598239b32abdb9068dbd86b749a7f84f37d\"><code>baf6259</code></a> Replace CompatHelper with Dependabot</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/5e3049b50f03d4101c94e75639c60f635173d760\"><code>5e3049b</code></a> Test type-based similar with static axes</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/544926d689138e54b02e8d590ce941cdb8b06e07\"><code>544926d</code></a> Resolve Julia 1.13 shape dispatch ambiguities</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/a6c5cc671528e8bd9be855e06427179900f44d85\"><code>a6c5cc6</code></a> Avoid Julia 1.13 broadcast allocation regression</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/9e93d8984dfbbcf0e22590499fcc2ec4f17f5647\"><code>9e93d89</code></a> Create separate environment for tests (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/366\">#366</a>)</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/290be6b545c4544366cbc18c2fded67aa5d09f4d\"><code>290be6b</code></a> Allow WeakRefStrings 2 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/360\">#360</a>)</li>\n<li><a href=\"https://github.com/JuliaArrays/StructArrays.jl/commit/647e59a4dee99b7eee9a9beb2a62c6c15e89a189\"><code>647e59a</code></a> Allow JLArrays 0.4 (<a href=\"https://redirect.github.com/JuliaArrays/StructArrays.jl/issues/361\">#361</a>)</li>\n<li>Additional commits viewable in <a href=\"https://github.com/JuliaArrays/StructArrays.jl/compare/v0.0.1...v0.7.4\">compare view</a></li>\n</ul>\n</details>\n<br />\n\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting `@dependabot rebase`.\n\n[//]: # (dependabot-automerge-start)\n[//]: # (dependabot-automerge-end)\n\n---\n\n<details>\n<summary>Dependabot commands and options</summary>\n<br />\n\nYou can trigger Dependabot actions by commenting on this PR:\n- `@dependabot rebase` will rebase this PR\n- `@dependabot recreate` will recreate this PR, overwriting any edits that have been made to it\n- `@dependabot show <dependency name> ignore conditions` will show all of the ignore conditions of the specified dependency\n- `@dependabot ignore <dependency name> major version` will close this group update PR and stop Dependabot creating any more for the specific dependency's major version (unless you unignore this specific dependency's major version or upgrade to it yourself)\n- `@dependabot ignore <dependency name> minor version` will close this group update PR and stop Dependabot creating any more for the specific dependency's minor version (unless you unignore this specific dependency's minor version or upgrade to it yourself)\n- `@dependabot ignore <dependency name>` will close this group update PR and stop Dependabot creating any more for the specific dependency (unless you unignore this specific dependency or upgrade to it yourself)\n- `@dependabot unignore <dependency name>` will remove all of the ignore conditions of the specified dependency\n- `@dependabot unignore <dependency name> <ignore condition>` will remove the ignore condition of the specified dependency and ignore conditions\n\n\n</details>",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T09:16:25Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      },
+      {
+        "color": "a270ba",
+        "description": "Pull requests that update julia code",
+        "id": "LA_kwDOCRy_aM8AAAACdijpGw",
+        "name": "julia"
+      }
+    ],
+    "mergedAt": "2026-11-07T03:12:23Z",
+    "number": 6444,
+    "title": "Bump StructArrays in /docs"
+  },
+  {
+    "additions": 796,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Lagrangian particles are now advanced stage by stage with the model's own time-stepping scheme. Before, each RK3 stage ended with a forward Euler particle step, so trajectories were first-order accurate for every time stepper.\n\n- `RungeKutta3TimeStepper`: the fields' low-storage scheme, `X += \u0394t (\u03b3\u1d4f U\u1d4f + \u03b6\u1d4f U\u207b)`.\n- `QuasiAdamsBashforth2TimeStepper`: `X += \u0394t ((3/2 + \u03c7) U\u207f \u2212 (1/2 + \u03c7) U\u207f\u207b\u00b9)`, with a forward Euler step whenever the fields take one.\n- `SplitRungeKuttaTimeStepper`: `X\u1d50 = X\u207f + \u0394t / \u03b2\u1d50 U\u1d50\u207b\u00b9`.\n\n## Design\n\n- `substep_lagrangian_particles!(model, \u0394t, stage)` runs at the start of each stage and replaces `step_lagrangian_particles!` in the RK3, QAB2 and split RK `time_step!` methods. `step_lagrangian_particles!` remains for `HydrostaticFreeSurfaceModel`s that track particles in `PrescribedVelocityFields`.\n- The scheme is chosen by dispatch on the existing time-stepper types through four hooks: `particle_stages`, `particle_stage`, `particle_time_stepper_state` and `advance_particle_position`. Downstream packages extend them; Breeze does this for its SSP RK3 and acoustic RK3.\n- `particle_coordinate_velocity` can be extended, for example to add a terminal velocity.\n- Sorting, user `dynamics` and the resetting of absorption flags happen once per step. Boundary conditions apply at every stage, and absorbed particles are removed after the last stage.\n- Per-particle history lives in an internal `stage_storage`. It is built at model construction, permuted and compacted together with the particles, and checkpointed.\n- `DroguedParticleDynamics` uses the same kernel.\n\n## Behavior change\n\nWith RK3, QAB2 or split RK, trajectories in non-uniform or unsteady flow change and are more accurate. Uniform, steady flow is unchanged. Under QAB2, a mid-run `set!` of the velocity is felt with weight `3/2 + \u03c7`. One test (`Tracked fields at final positions`) was updated to match.\n\n## Tests\n\nNew `test/lagrangian_particles/time_stepping.jl`:\n- **Convergence** in solid-body rotation: RK3 converges at order 3.00, QAB2 with \u03c7 = 0 at 2.00, and split RK3 at 3.00.\n- **Sorting and removal mid-run**: the surviving trajectories match an unsorted reference for all three schemes.\n- **Checkpointing**: a QAB2 run restarted from a checkpoint reproduces an uninterrupted run.\n\nOn an A100: `time_stepping` 66/66, `tracking` 1923/1923, `sorting` 104/104, `boundary_conditions` 57/57, `quality_assurance` 53/53. Breeze's Lagrangian droplet microphysics branch passes against this branch.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T22:14:38Z",
+    "deletions": 108,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-11-07T17:07:06Z",
+    "number": 6440,
+    "title": "Advance Lagrangian particles stage-wise with the model's time stepper"
+  }
+]

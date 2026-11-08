@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 30,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Problem\nThe AMIP dashboard crashed on startup (502 since Nov 5) after new coupler output arrived. Every `clima_land` variable now has a `DateTime` time axis (CF date units decoded by NCDatasets), and `ClimaAnalysis.dates` \u2014 still as of v0.5.25 \u2014 only handles numeric seconds since `start_date`:\n\n```\nMethodError: no method matching time_to_date(::DateTime, ::DateTime)\n  ClimaAnalysis.dates \u2192 _detect_native_period \u2192 available_levels \u2192 precompute_dashboard_cache \u2192 dashboard\n```\n\n## Fix\nAdd `_numeric_time_axis(var)` and call it at the top of `to_display_units`, which every sim-variable load path goes through (`load_sim_var`, `precompute_dashboard_cache`). A `DateTime` axis is converted to `Float64` seconds since `start_date` (or since the first date, recorded as `start_date`, when the attribute is missing). Numeric axes are untouched.\n\n## Testing\n- All 48 DateTime-axis land variables in the current AMIP run now pass `ClimaAnalysis.dates` and `available_levels`.\n- Deployed on the dashboard VM (Julia 1.13.3, ClimaAnalysis 0.5.25): `/amip/` and `/land_longrun/` serve 200 again.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T21:55:57Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-07T18:49:40Z",
+    "number": 74,
+    "title": "Handle DateTime time axes in simulation output"
+  }
+]
