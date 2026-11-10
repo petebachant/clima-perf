@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From Claude: Pete asked me to open this so the land model's RMSE values are saved as data, which gives a time series of them across runs, and I wrote the change.\r\n\r\n`compute_seasonal_leaderboard` builds time-averaged simulation and observation maps for each variable and season, and the global RMSE and bias of those maps only appear in the plots. This also writes `<data source>_leaderboard_rmse.csv` next to the plots (`ERA5_leaderboard_rmse.csv` and `ILAMB_leaderboard_rmse.csv`), one row per variable and season:\r\n\r\n```\r\nshort_name,season,data_source,rmse,bias,units\r\nlhf,ANN,ERA5,10.3,-1.2,\"W m^-2\"\r\n```\r\n\r\nThe same table is printed to the job log, since Buildkite ages artifacts out sooner than logs and it's only about 50 rows per data source.\r\n\r\nThe values come from `ClimaAnalysis.global_rmse` and `ClimaAnalysis.global_bias` on the same land-masked, time-averaged maps the seasonal plots use, so they match the RMSE and bias in the figure titles and are ClimaLand's own RMSE definition. Seasons without data are `NaN`. `rmse_boxplots.jl` isn't touched, so this doesn't overlap with #1897.\r\n\r\nThe long-run jobs that make leaderboard plots (Snowy Land + P Model, its optimal-LAI variant, the 19-year versions of both, and the global bucket run) only upload `*png`, so this adds a `*csv` glob to their `artifact_paths`.\r\n\r\n[clima-perf](https://github.com/petebachant/clima-perf) mirrors the weekly `climaland-long-runs` jobs, so with these numbers it can build a time series of each RMSE and bias instead of them being read off the plots by hand. Nothing else changes; the plots are the same.\r\n\r\nTesting: after merging main, I ran `write_rmses` on synthetic lon/lat/time fields with a known uniform offset and some missing cells, passed through `_land_intersection_mask` and time-averaged as in the leaderboard, plus a season with no data. The RMSE, bias, and `NaN` values are as expected, and the logged table matches the file. I haven't run the long-run leaderboard locally. JuliaFormatter 2.10.1 makes no changes.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T16:52:40Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-09T16:30:55Z",
+    "number": 1950,
+    "title": "Write seasonal leaderboard RMSEs to CSV artifacts"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjE4MTIzMzMx",
+      "is_bot": false,
+      "login": "enri66",
+      "name": "Enrique Curchitser"
+    },
+    "body": "`SeaIceMomentumEquation(grid; rheology = nothing)` builds, but `update_state!` (and so every time step) of a model that uses it throws:\n\n```\nMethodError: no method matching prognostic_fields(::SeaIceMomentumEquation{...}, ::Nothing)\n```\n\n`prognostic_fields(model, mom::SeaIceMomentumEquation)` asks the rheology for its prognostic fields, and only `AbstractRheology` had a method. This adds the one for `nothing`.\n\nThe new test time-steps a model without a rheology with the explicit and split-explicit solvers; it fails without the change.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-07T21:09:56Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-09T07:54:14Z",
+    "number": 208,
+    "title": "Define the prognostic fields of a momentum equation without a rheology"
+  }
+]

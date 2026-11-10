@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 185,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Bumps to `DocStringExtensions = \"0.10\"` and uses `$(MethodSignatures(; defaults = true))` ([JuliaDocs/DocStringExtensions.jl#194](https://github.com/JuliaDocs/DocStringExtensions.jl/pull/194)) for 143 docstrings whose signatures were hand-written only to show defaults. Many of those had gone stale (e.g. `FT = Float64` instead of `Oceananigans.defaults.FloatType`, missing keywords).\n\n41 hand-written signatures stay, where the generated one would mislead: methods dispatching on a specific type (`set!(model::NonhydrostaticModel; ...)`), keywords hidden behind `kwargs...` (`NetCDFWriter`), and docstrings attached to a different method (`CFL`).\n\nThe `;` in `MethodSignatures(; defaults = true)` is needed: without it ExplicitImports reads `defaults = true` as an assignment and flags the import of `Oceananigans.defaults` as stale.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 135,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-15T22:44:58Z",
+    "deletions": 579,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-11-09T20:58:00Z",
+    "number": 6263,
+    "title": "Generate docstring signatures with default values"
+  },
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjkwNDM0Nzk0",
+      "is_bot": false,
+      "login": "awiteck",
+      "name": "Aidan Witeck"
+    },
+    "body": "* `reset!` on a datetime clock should error. Right now it sets the clock to year 0. \n* datetime `Clock` `isapprox` throws currently because Julia has no `isapprox` for `DateTime`. For datetime clocks we should compare via `time_difference_seconds`\n* When a `Simulation` is built with `minimum_relative_step` above `zero` and the step needed to land exactly on a stop time or output time is tiny, `run!` skips the step and advances the clock by hand with clock.time + \u0394t. That's DateTime + Float64, which has no method. The fix uses the same `next_time` helper the time steppers already use.\n* A DateTime clock writes time as seconds since 2000-01-01 with that epoch in the units. The Zarr reader hands those seconds back as plain floats, so a FieldTimeSeries loaded from the store has float times. Any lookup like fts[Time(clock.time)] with a DateTime clock then fails, because it tries to subtract a float from a date. The fix decodes the units into dates on read, matching what NCDatasets does automatically for NetCDF.\n* NetCDF read-back throws on uneven spacing. The NetCDF reader estimates the file's spacing as the mean difference of the times. With date times that mean is a Millisecond, and halving an odd number of milliseconds raises `InexactError`. Its missing-data warning also formats the time with a `%e printf`, which doesn't accept a date. The fix does the arithmetic in seconds.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T00:27:02Z",
+    "deletions": 46,
+    "labels": [],
+    "mergedAt": "2026-11-09T22:46:14Z",
+    "number": 6443,
+    "title": "close some gaps with `DateTime` clock"
+  }
+]

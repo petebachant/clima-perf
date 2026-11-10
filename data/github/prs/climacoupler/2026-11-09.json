@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 1348,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR moves CI and the experiment environments to Julia 1.13 and CUDA 6. CUDA.jl 5 is slow on Julia 1.13. With CUDA 5.11.3 and GPUCompiler 1.17.1, the flagship AMIP GPU run has DRAM traffic of ~9 TB! per coupling step and slows from ~0.29 s to 8 s per step ([perf build](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/431), [profile](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/435)). CUDA 6 doesn't have this problem, so AMIP and CMIP now require it.\n\nChanges\n- Buildkite loads `climacommon/2026_10_30-1.13.3` on `central` and `climacommon/2026_11_06-1.13.3` on `clima`\n- GitHub Actions tests 1.10 and 1.13, and docs build on 1.13\n- `Manifest-v1.13.toml` replaces `Manifest-v1.11.toml` in `experiments/AMIP` and `experiments/CMIP`\n- AMIP and CMIP require CUDA 6, and AMIP moves to CUDA 6.4.1 and GPUCompiler 2.10.0\n- CMIP keeps its package versions apart from `HDF5_jll` and `NetCDF_jll`, which need newer builds on 1.13\n- The `regrid_to_model_levels` test builds its dimensions with an `OrderedDict`, since Julia 1.13 changed `Dict` iteration order\n\nOn this branch the flagship AMIP GPU run takes ~0.32 s per coupling step (0.254 SYPD), the same as main on Julia 1.11 with CUDA 5 (0.32 s, 0.255 SYPD). See this branch's nightly [build](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1608) and main's [build](https://buildkite.com/clima/climacoupler-coarse-nightly-amip/builds/1605). The other two failures in that build, the coarse AMIP 1M `DomainError` and the CMIP `linear_ind` error, also fail on main.\n\nOnce this merges, `COUPLER_COMMIT` in ClimaAtmos `.buildkite/coupler_perf/pipeline.yml` should point to the new commit.\n",
+    "changedFiles": 18,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-07T06:15:19Z",
+    "deletions": 172,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-09T22:44:44Z",
+    "number": 2214,
+    "title": "Move to Julia 1.13 and CUDA 6"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 92,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\n#14 -- this will link to issue 14\nCloses #2 -- this will automatically close issue 2 on PR merge\n-->\n\n\n## To-do\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \n- Proposed task\n-->\n\n\n## Content\n<!---  specific tasks that are currently complete \n- Solution implemented\n-->\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T00:05:43Z",
+    "deletions": 23,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-09T06:54:45Z",
+    "number": 4971,
+    "title": "Add ocean subsurface volume reflectance to RegressionFunctionAlbedo"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From Claude:\n\n`set_precipitation_velocities!` builds a closure over `cmc` and `cmp` and broadcasts it, so every quadrature point reads the Chen 2022 coefficient tables out of a runtime struct. The idiom to avoid that is already in this file: #4930 applied it to `set_microphysics_tendency_cache!`, and a third `set_precipitation_velocities!` method does `_fold(dev, cmp), _fold(dev, thp)` itself -- these two methods were simply missed. #4938 then made `Chen2022TerminalVelocity` the default for snow, which is what made the omission expensive.\n\nThis applies the same idiom at both `set_precipitation_velocities!` methods, with `_unwrapped` at the six `terminal_velocity` dispatch sites.\n\n## Correction to the original description\n\nThis description originally said the change is worth 0.192% of device time and asked that it not be merged expecting SYPD. That was a correct reading of the stack it was measured on, and against current main it is wrong by an order of magnitude, in this PR's own disfavor. Both measurements are below.\n\n## Measured\n\nA100, 120 profiled steps of the coarse AMIP configuration (`amip_coarse_progedmf_1m_land`), Nsight Systems, both arms on the same commit except this change. Measured twice against two different upstream stacks, because the second result is nothing like the first.\n\n### On current main\n\n| kernel | registers/thread | kernel time | change |\n| --- | --- | --- | --- |\n| `set_precipitation_velocities` | 115 -> 68 | 2319.8 -> 1659.3 ms | -28.47% |\n\nOne fused kernel now, 1200 launches in both arms, 128 threads per block. It saves 660.5 ms over the window, 1.901% of device time, resolved 57.9x over the worst move among 197 paired untreated kernels (11.4 ms).\n\nThat is 13.5x the 48.9 ms the same patch saved when it was written. Upstream's 2026-11-03 broadcast fusion merged the two broadcasts this fold targets, 78 and 92 registers, into one set_precipitation_velocities kernel at 115 registers -- above both of them, and past an occupancy step the fold now steps back across. The fold did not change; what it is worth did.\n\nWhich makes the figure a property of the current stack rather than of the patch: if the fusion is reverted or the kernel is split, this goes back to being worth about 0.192% of device time, as it was in October.\n\n### End to end\n\nTwo independent routes, 0.113 points apart:\n\n| route | SYPD |\n| --- | --- |\n| the device saving converted through the longwave g-point split, the one treatment whose device saving and SYPD gain are both measured | 1.724% on a steady-state anchor, 1.827% on a full-run one |\n| the AMIP pair minus both radiation splits' own in-process measurements, 2.936 - 0.753 - 0.572 | 1.611% |\n\nSo roughly 1.6-1.8% of SYPD.\n\nTwo things that range does not hide. The residual route is not evidence on its own: 1.611% does not clear the 1.869% floor this stack puts between two *identical* arms, on a 1.196-point spread between the nulls that set that floor. Its value is agreeing with a conversion that is anchored on a treatment which does resolve. And the two anchors differ by 0.103 points, because the conversion divides the longwave's steady-state gain by its device saving while the AMIP pair is a full-run comparison -- a gap the same size as the agreement being claimed, so both are quoted rather than whichever agrees better.\n\n### As written, before the 2026-11-03 fusion\n\nTwo kernels then, 1080 launches each:\n\n| broadcast | registers/thread | warps/SM | kernel time | change |\n| --- | --- | --- | --- | --- |\n| environment velocity | 78 -> 48 | 24 -> 40 | 185.9 -> 157.2 ms | -15.47% |\n| updraft velocity | 92 -> 56 | 20 -> 36 | 125.1 -> 104.9 ms | -16.08% |\n\nBoth cross an occupancy step. Together they saved 48.9 ms over the window, -15.71% of the work they do, and that did not resolve end to end: the AMIP pair read 1.928% against the same 1.869% floor, a margin of 0.059 points. The patch is unchanged since; the inventory it runs on is not.\n\n## Correctness\n\nOnly the four members the dispatch reads are folded, as `(; cmc.liquid, cmc.ice, cmc.stokes, cmc.Ch2022)`, rather than `cmc` whole -- a type parameter has to be isbits and `cmc` also carries the aerosol-ML coefficients and the activation parameters. `_unwrapped(p) = p` is the identity on anything not wrapped, so the `set_precipitation_velocities!` methods that do not fold reach the same dispatch unchanged.\n\nThe fold changes how the coefficients reach the kernel, not what they are, so I would expect results to be unchanged -- but I have not run a bit-for-bit comparison, and constant folding can change instruction selection, so that is worth checking before merge rather than taking from me.\n\nNo NEWS entry, following #4930.\n\n## Reproducing\n\n`exp/2026-10-31-sedimentation-velocity-fold` in the profiling repository this came from carries the as-written measurement: both arms' refs, both Nsight database hashes and the derived figures. The current-main figures are `results/fold-on-current-stack.json`, recorded at `e6fecc6`, from baseline `6c57ba6` and mod `9eb34e3`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01FYv7qDRgpuycyDQtmL96GH\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-31T20:45:04Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-09T23:19:21Z",
+    "number": 4947,
+    "title": "Fold the terminal-velocity parameters into the type at the sedimentation call sites"
+  }
+]
