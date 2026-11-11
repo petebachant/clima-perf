@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 11,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "On Julia 1.13, we have\r\n\r\n```julia\r\njulia> reduce(vcat, [1])\r\n1-element Vector{Int64}:\r\n 1\r\n```\r\n\r\nand on Julia 1.12, we have\r\n\r\n```julia-repl\r\njulia> reduce(vcat, [1])\r\n1\r\n```\r\n\r\nIn EKP, we have\r\n\r\n```julia\r\nmean(pd::ParameterDistribution) = reduce(vcat, mean.(pd.distribution))\r\n```\r\n\r\nat https://github.com/CliMA/EnsembleKalmanProcesses.jl/blob/8051608c39236b90903c2d55e43576c778df1c84/src/ParameterDistributions.jl#L754.\r\n\r\nThis line above returns a vector of a single value on Julia v1.13 and a single value on Julia v1.12. This difference causes lines like\r\n\r\n```julia\r\ninit_params = ndims(prior) > 1 ? mean(prior) : [mean(prior)]\r\n```\r\n\r\nto return an expression of the form `[[1.0]]` if the mean is 1.0. This breaks other code of CES. This is fixed by using `vcat(mean(prior))` which always return a vector.\r\n\r\nThis PR also makes a new release, so that it can be used in ClimaLand.\r\n\r\nrelated: https://github.com/CliMA/ClimaLand.jl/issues/1959\r\n\r\nI asked a LLM to make the code change for this PR.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-10T19:36:39Z",
+    "deletions": 11,
+    "labels": [],
+    "mergedAt": "2026-11-10T21:40:00Z",
+    "number": 455,
+    "title": "Fix for Julia v1.13"
+  }
+]

@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 478,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "Analogously to https://github.com/CliMA/ClimaAtmos.jl/pull/4944, this PR updates CI to use Julia v1.13.3.\r\n\r\nI asked a LLM to make most of these changes.\r\n\r\nLong run buildkite: https://buildkite.com/clima/climaland-long-runs/builds/5161#_",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T18:47:18Z",
+    "deletions": 685,
+    "labels": [
+      {
+        "color": "30B5F0",
+        "description": "Add this label to run benchmarks on clima",
+        "id": "LA_kwDOGiZe4s8AAAABmdySXA",
+        "name": "Run benchmarks"
+      },
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-10T00:17:11Z",
+    "number": 1955,
+    "title": "Use Julia 1.13.3"
+  },
+  {
+    "additions": 2296,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "[Documentation page](https://clima.github.io/ClimaLand.jl/previews/PR1846/standalone/pages/vegetation/canopy_structure/prognostic_carbon/)\n\n## What\n\n`PrognosticCarbonModel` carries live vegetation carbon in four prognostic pools (sugar, leaf, wood, fine roots). It wraps an LAI model (`PrescribedBiomassModel` or `ZhouOptimalLAIModel`) that still sets the area indices, so GPP and LAI are unchanged by the pools.\n\n- **Pools**: GPP enters the sugar pool; allocation, throttled by the sugar pool against a target set by the living biomass, builds leaf, wood and fine-root carbon, which turn over to litter.\n- **Trees and grasses, no PFTs**: the allocation fractions are those of trees and of grasses weighted by the tree share of the LAI model (with `ZhouOptimalLAIModel`, the one that sets its leaf cost, by default the climate tree share of #1901); grasses build no wood. Wood turns over more slowly in cold climates (mean annual temperature). Around a prescribed LAI, the tree share is passed (e.g. `clm_tree_share`).\n- **Respiration**: `PoolBasedAutotrophicRespirationModel`, required with the pools and selected by default: leaf Rd, sapwood and fine-root maintenance (Q10), growth respiration.\n- **Soil carbon**: in `LandModel`/`SoilCanopyModel`, `SoilCarbonLitterInput` makes SOC prognostic (`dSOC/dt = litter \u2212 Sm`) when the canopy carries pools; without pools SOC is held at its initial condition, as on main.\n- **Spin-up**: `Simulations.spin_up_carbon_pools!(simulation, spinup_end)` advances a simulation, averaging the drivers of the pools, then sets the leaf, wood and root pools to their equilibrium under them (`Canopy.equilibrium_carbon_pools`, closed form). It is called from the run script, so restarts do not repeat it.\n- **Long runs and leaderboard**: the optimal-LAI long runs (2-year and, since #1935, 19-year) now carry the pools, spun up over their first two years (the second removes the transient of the initial state); both years are left out of their leaderboards. Their vegetation leaderboard gains a `cveg` row against the 2000\u20132019 live woody carbon of Xu et al. (2021), above and below ground, from the new `xusaatchi_woody_carbon` artifact (CliMA/ClimaArtifacts#196; `get_woody_carbon_obs_var`, crop-masked like the other rows).\n- Also: a `biomass` keyword on the integrated-model constructors (`nothing` by default, as in #1901), the `crd` diagnostic (canopy leaf respiration), and `cveg` reporting the pools.\n\n## Calibration\n\nThe pools follow GPP and do not feed back on it, so their equilibrium under the climate of one run can be computed for any parameters. An offline emulator does this with the model's own `equilibrium_carbon_pools` at the 220 land points of the 8\u00b0 low-resolution ERA5 grid (a 2-year column-ensemble run of the default land model with prognostic LAI; 207 points of natural vegetation), scored against XuSaatchi and against the ER of the carbon leaderboard (CarbonTracker NEE + GOSIF GPP). As the respiration of the pools replaces the calibrated autotrophic respiration model, it is calibrated jointly with biomass. RMSE in kg C m\u207b\u00b2 (biomass) and kg C m\u207b\u00b2 yr\u207b\u00b9 (fluxes), cos-latitude weighted, with the model of current main (steady-state plant hydraulics #1937, faster TOPMODEL drainage #1945):\n\n| | biomass RMSE (r) | ER RMSE (bias) | NEE RMSE (bias) |\n|---|---|---|---|\n| first version of the pools (C3/C4 allocation, precipitation limit on wood), calibrated on biomass | 2.49 (0.68) | | |\n| tree and grass allocation, defaults of this PR | **2.29** (0.73) | **0.446** (\u22120.05) | **0.284** (\u22120.10) |\n| same, with the CLM5 tree share in place of the climate tree share | 1.86 (0.83) | 0.451 | 0.302 |\n| main (no pools; autotrophic respiration model) | | 0.495 (\u22120.15) | 0.451 (\u22120.21) |\n\nHeld out on a checkerboard of 24\u00b0 blocks, the ER RMSE is 0.48 and 0.40 against 0.53 and 0.45 for the autotrophic respiration model. Four parameters are calibrated: wood turnover 24 yr, wood allocation of trees 0.32, temperature factor of wood turnover 1.7, fine-root respiration 0.75 yr\u207b\u00b9; construction efficiency (0.7), Q10 (2) and sapwood respiration stay at their literature values (freeing them does not improve the fit). Carbon-use efficiency then falls with temperature (tropics 0.38, temperate 0.49, boreal 0.55), and the tropical NEE sink of main (\u22120.39 kg C m\u207b\u00b2 yr\u207b\u00b9 against \u22120.03 in the inversion) falls to \u22120.13. The remaining biomass error is dominated by the climate tree share, which is too low in tropical and boreal forests and too high in wet savannas; improving it would improve LAI and biomass together.\n\n**Recalibration after the rebase.** At the emulator points, the new hydraulics and drainage lower GPP by 9% (13% in the tropics; the soil-moisture factor falls from 0.63 to 0.59) and raise the heterotrophic respiration by 14%; LAI and the tree share are unchanged. Recalibrating moves the four parameters within a flat valley (21 yr, 0.35, 1.7, 0.67 yr\u207b\u00b9) without improving the fit (biomass 2.288, ER 0.446, NEE 0.301), so the defaults are kept. With NEE added to the objective, its RMSE falls to 0.21, but only because fine-root respiration triples (2.3 yr\u207b\u00b9) to cancel the excess of model GPP over GOSIF (+0.06), at the cost of ER (0.49, bias +0.09) and biomass (2.37); not adopted.\n\nA 3-year column run with the pools and the two-stage spin-up of the long run validates the closed form: in the scored year the wood pool changes by 0.2%, the mean leaf, wood and root pools are within 1.5% of the equilibrium of their drivers, and biomass, ER and NEE RMSEs are 2.30, 0.46 and 0.29. The emulator is on the local side branch `ar/biomass_emulator` (not part of this PR, per AGENTS.md).\n\n## Changes from the previous version of this PR\n\n- Rebased onto main after #1935, #1937, #1945 and #1947. The rebased model was rerun in the emulator and recalibrated; the defaults are unchanged (see above).\n- The 19-year optimal-LAI long run of #1935 now leaves the two spin-up years of the pools out of its leaderboards, as the 2-year run does.\n- The XuSaatchi map is read from the `xusaatchi_woody_carbon` artifact (bit-identical to the former copy in `artifacts/prognostic_carbon/`, which is removed with its `.gitignore` exception).\n\nEarlier:\n\n- Rebased and squashed onto main after #1901; the C3/C4 \u03b2 decoupling commit is dropped (superseded by #1901).\n- Allocation by tree share replaces the C3/C4 blend and the precipitation (MAP) ramp, which were both stand-ins for tree cover; `P_annual` and the MAP parameters are removed.\n- The separate pre-industrial spin-up job and its scripts are removed: the long run spins up its own pools, always consistent with the current model and parameters, and spin-up scripts belong off ClimaLand per AGENTS.md. Its observations are those of the recent decades the run covers.\n- The XuSaatchi map is now a 1\u00b0 2000\u20132019 mean used by the leaderboard.\n\n## Before merging\n\n- [x] Make the XuSaatchi 1\u00b0 map a ClimaArtifacts artifact and point `Artifacts.xusaatchi_woody_carbon_path()` at it (`xusaatchi_woody_carbon`, on Box; recipe in CliMA/ClimaArtifacts#196, to be merged there).\n- [ ] Check the global long run (`long run opt lai`): biomass row, and the ER/NEE/GPP rows of the carbon leaderboard with the pools.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 36,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-08-06T17:11:05Z",
+    "deletions": 233,
+    "labels": [
+      {
+        "color": "0e8a16",
+        "description": "Run the snowy_land_pmodel long run with prognostic (optimal) LAI",
+        "id": "LA_kwDOGiZe4s8AAAACqaSp9g",
+        "name": "long run opt lai"
+      },
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-10T18:26:38Z",
+    "number": 1846,
+    "title": "Add a prognostic carbon model for vegetation biomass, with tree and grass allocation and a biomass leaderboard"
+  }
+]
