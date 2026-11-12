@@ -1,0 +1,101 @@
+[
+  {
+    "additions": 97,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "With `ZStarCoordinate` and a `SplitExplicitFreeSurface`, a tracer that starts at c \u2261 1 (and has value 1 at the boundary) doesn't stay at 1 next to open boundaries. In the interior it does, to round-off.\n\nThe cause is that \u03c3 and w\u0303 see different boundary transports. \u03c3 is advanced with \u03b7, and \u03b7 is stepped with the substep `U`/`V` after the halo fill and transport pin. The filtered transport `\u0168`/`\u1e7c`, which sets w\u0303 through \u2202t \u03c3 = \u2212\u2207\u00b7\u0168/H, disagrees with that at the boundary faces in two ways:\n\n1. `\u0168`/`\u1e7c` are accumulated in the velocity kernel, before the substep fill/pin. So face 1 gets pre-fill values, and face N+1 is outside the kernel range and never accumulated.\n2. After substepping, `fill_halo_regions!((\u0168, \u1e7c))` overwrites the boundary faces with the open-boundary value.\n\nSo (\u03c3\u207f\u207a\u00b9 \u2212 \u03c3\u207f)/\u0394t \u2260 \u2212\u2207\u00b7\u0168/H in the boundary rows only. Because the tracer update divides by \u03c3, the result is a multiplicative error in every tracer there.\n\nThis PR:\n\n- moves the `\u0168`/`\u1e7c` accumulation into the free-surface kernel, using `U\u2605` (the same transport that advances \u03b7);\n- also accumulates face N+1 when the right side is `Closed`;\n- builds `\u0168`/`\u1e7c` with boundary conditions that drop `NormalFlow` sides, so the post-substep fill keeps the accumulated faces.\n\nFixing only (1) gives results bit-identical to main, because (2) overwrites the faces anyway.\n\nIn a small channel (`SplitRungeKutta3`, `GravityWaveRadiationBoundaryCondition` on both open sides, 200 steps), max |c \u2212 1| goes from ~2e-5 on main to ~3e-15.\nThe new test in `split_explicit_boundaries.jl` runs c \u2261 1 under z\u2605 through open north/south and west/east boundaries. It fails on main (|c \u2212 1| \u2248 7e-6) and passes here (< 1e-12).\n\nIn a 16-day realistic regional run with open boundaries, the fix also removes the spurious bottom-cell jets that develop along the open boundaries without it.\n\nThis is a fix for `SplitRungeKutta3`. Under `QuasiAdamsBashforth2`, z\u2605 doesn't keep c \u2261 1 even with closed walls (~4e-5 after 50 steps, identical on main and here). With open boundaries there is an extra boundary error of similar size (~1e-4), which this PR doesn't fix.\n\nRelated: #5812 changes the same kernel.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-26T20:19:20Z",
+    "deletions": 26,
+    "labels": [],
+    "mergedAt": "2026-11-11T08:16:59Z",
+    "number": 6362,
+    "title": "Keep uniform tracers uniform at open boundaries under z\u2605 with split-explicit free surface"
+  },
+  {
+    "additions": 53,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "## Problem\n\nA bounds-preserving WENO scheme (`WENO(; bounds = (c\u1d50\u2071\u207f, c\u1d50\u1d43\u02e3))`) combined with adaptive-implicit vertical advection (`time_discretization = AdaptiveVerticallyImplicitDiscretization(...)`) double-counts the vertical flux wherever the vertical Courant number `\u03b1 = |w| \u0394t / \u0394z` exceeds `cfl`.\n\n- With AIVA, the explicit vertical flux uses the CFL-limited velocity `w \u00b7 min(1, cfl/\u03b1)` through `advective_tracer_flux_z(..., ::AVID, ...)`, and the implicit solve adds the remainder `w (1 - cfl/\u03b1)`.\n- With `bounds`, `div_Uc` dispatches to `bounded_tracer_flux_divergence_z`, which builds its vertical fluxes from the **full** `w[i, j, k]` and never goes through `advective_tracer_flux_z`. The implicit part is still added because the scheme is still an `AdaptiveImplicitVerticalAdvection`.\n\nSo a bounded tracer is advected vertically by more than `w`. This is true even when the limiter is inactive (\u03b8 = 1), because the bounded code path is taken whenever `bounds` is set.\n\n## How it showed up\n\nIn a global 1/6\u00b0 tripolar hydrostatic run (z-star, `SplitRungeKutta3`, AIVA `cfl = 1`), salinity had `bounds = (0, 100)` and temperature had the same WENO without `bounds`. In a downwelling, nearly neutral coastal polynya column, salinity split within one step into a fresh top and a salty layer underneath. Column-integrated salt was conserved and T was unaffected. The salty layer sank, sped up the downwelling and ran away (S \u2192 197, then negative, then a TEOS-10 `DomainError`). It failed sooner at longer \u0394t because more cells exceed `cfl`. Removing `bounds`, or this fix, removes it.\n\n## Fix\n\nIn `bounded_tracer_flux_divergence_z`, scale `w` by `explicit_velocity_scale\u1d9c\u1d9c\u1da0` when the scheme's time discretization is `AdaptiveVerticallyImplicitDiscretization`, matching the unbounded path. Other time discretizations are unchanged. Horizontal bounded fluxes need no change, because AIVA keeps horizontal advection fully explicit.\n\nNote that the limiter's bound guarantee assumes the explicit Courant number stays below `maximum_courant_number`. With AIVA's `cfl` above that value, the explicit part can still exceed it, so the strict bound is not guaranteed there. This PR only removes the double counting.\n\n## Test\n\nAdded a test in `test/unit/bounds_preserving_advection.jl`: with a tracer far from its bounds and `\u03b1` up to 1.2 against `cfl = 0.5`, the bounded and unbounded schemes must give the same `div_Uc`.\n\n- On `main`: max difference 126.6 (fails).\n- With this PR: 1.1e-13.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_0152rWCmF3dL1QTrfBGkrjj2\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-11T06:15:44Z",
+    "deletions": 7,
+    "labels": [],
+    "mergedAt": "2026-11-11T09:55:22Z",
+    "number": 6487,
+    "title": "Scale w by the AIVA explicit fraction in the bounded vertical flux divergence"
+  },
+  {
+    "additions": 37,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "On `ReactantState`, a grid holds its coordinates as device arrays, and the plural node accessors are built on views of them. Reducing or broadcasting over those views reads the device arrays element by element on the host, which is a scalar-indexing error. Fixes #6325.\n\nSome places this surfaces:\n- `xnodes`/`ynodes` of a lat-lon grid, which broadcast `R * deg2rad(\u03bb') * hack_cosd(\u03c6)`. Every extent check on a regional lat-lon grid goes through them, for example `Relaxation`'s target-extent check while a nested model is built.\n- `extrema(\u03bbnodes(\u2026))`, as in NumericalEarth's bracket check and its `PrescribedAtmosphere` summary (NumericalEarth/NumericalEarth.jl#856, NumericalEarth/NumericalEarth.jl#858).\n- `tidal_boundary_conditions`, which iterates `\u03bbnodes` and `\u03c6nodes` on the host.\n\nAll of these accessors reach their coordinate arrays through `Oceananigans.Grids._property`:\n- `xnodes`, `ynodes`, `\u03bbnodes` and `\u03c6nodes` on a lat-lon grid;\n- `xnodes` and `ynodes` on a stretched `RectilinearGrid`;\n- `rnodes` and `znodes` on any grid;\n- the two-dimensional form, on orthogonal spherical shell grids.\n\nSo the Reactant extension adds `_property` methods for concrete Reactant arrays. Each copies the coordinate array to the host once and returns the same interior view or halo-inclusive array as before, now on the host.\n\nInside a compiled function the arrays are traced, and inside a kernel the grid is adapted, so neither matches. In-kernel code and traced broadcasts are unchanged. The accessors are host conveniences, so a host array is the right return.\n\nA Reactant unit test compares the accessors with the CPU grid's, at `Center` and `Face`, with and without halos:\n- on a lat-lon grid: `xnodes`, `ynodes`, `\u03bbnodes`, `\u03c6nodes` and `znodes`;\n- on a stretched `RectilinearGrid`: `xnodes`, `ynodes` and `znodes`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABZN_3og",
+        "number": 6325,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6325"
+      }
+    ],
+    "createdAt": "2026-11-03T18:36:55Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-11T14:06:22Z",
+    "number": 6435,
+    "title": "Reactant: the node accessors of a ReactantState grid return host arrays"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "**This merges to**: `glw/thickness-weighted-coriolis`\n\nit's a follow-up to #6450. As noted in https://github.com/CliMA/Oceananigans.jl/pull/6450#issuecomment-6702664746, the vorticity term of `VectorInvariant` momentum advection has the same partial-cell defect as the Coriolis term that #6450 fixes. This PR applies the same fix to both terms via one shared operator.\n\n## Problem\n\n`VectorInvariant(vorticity_scheme=EnergyConserving())` computes\n\n    F\u1d58 = - \u2111y(\u03b6 \u2111x(\u0394x v)) / \u0394x\u1da0\u1d9c\u1d9c,    F\u1d5b = + \u2111x(\u03b6 \u2111y(\u0394y u)) / \u0394y\u1d9c\u1da0\u1d9c.\n\nWeighted by `V\u1d58 = Az \u0394z\u1da0\u1d9c\u1d9c` and `V\u1d5b = Az \u0394z\u1d9c\u1da0\u1d9c`, the corner terms of its work are `\u03b6 \u2111y(\u0394y \u0394z\u1da0\u1d9c\u1d9c u) \u2111x(\u0394x v)` and `\u03b6 \u2111x(\u0394x \u0394z\u1d9c\u1da0\u1d9c v) \u2111y(\u0394y u)`. These cancel only when \u0394z is laterally uniform. With `PartialCellBottom` the term does net work, of the same size as `EnergyConserving` Coriolis.\n\n## Change\n\n* The corner-q flux of #6450 moves into `Operators` (`vorticity_flux_operators.jl`) as `vorticity_flux_x\u1da0\u1d9c\u1d9c` and `vorticity_flux_y\u1d9c\u1da0\u1d9c`. Each takes a corner vorticity `\u03c9(i, j, k, grid, args...)`, either the relative vorticity `\u03b6` or the planetary vorticity `f`, and the flux uses `q = \u03c9 / h` with the active-face corner thickness `h` of #6450. The cancellation is corner by corner, for any `q` and any `h > 0`.\n* `ThicknessWeightedEnergyConserving` now calls the operator with `f\u1da0\u1da0\u1d43`. It is a two-line method, and the results are unchanged: all of #6450's tests pass, including the check against `EnergyConserving` for uniform \u0394z.\n* On `PartialCellBottom` grids, `VectorInvariant(vorticity_scheme=EnergyConserving())` calls the operator with `\u03b6\u2083\u1da0\u1da0\u1d9c`, so the total `(f + \u03b6)` term is energy-neutral. Every other grid keeps the existing code path.\n\nThe flux masks immersed faces only, as #6450's `masked_A*_q` did. An earlier attempt that also masked wall halos broke the check against `EnergyConserving` for uniform \u0394z at `Bounded` walls. That only affected the wall faces, which are not time-stepped.\n\n## Results\n\nThe relative work `|\u03a3 V (u F\u1d58 + v F\u1d5b)| / \u03a3 V (|u F\u1d58| + |v F\u1d5b|)` for random velocities. The grids are single-level `PartialCellBottom` grids over random depths from 8 m to 4000 m, with land:\n\n| | vorticity term on `main` | vorticity term, this PR | `EnergyConserving` Coriolis | f + \u03b6, this PR |\n|---|---|---|---|---|\n| `RectilinearGrid`, periodic | 4.8e\u22122 | round-off | 3.4e\u22122 | round-off |\n| `RectilinearGrid`, bounded | \u2014 | round-off | 2.3e\u22122 | round-off |\n| `LatitudeLongitudeGrid` | 3.2e\u22122 | round-off | 9.0e\u22122 | round-off |\n\nAll flat-bottom grids are at round-off, before and after. The `main` column was measured on separate grids without land, and the bounded case was not run on `main`.\n\nThe time-stepping run is an unforced, inviscid single-level model over the same kind of grid, with `g = 9.81`, initial speed 1 m/s, `\u0394t = 60 s`, 20,000 steps (14 days) and `SplitRungeKutta3`:\n\n| | `main` | this PR |\n|---|---|---|\n| linear free surface | blows up at step 4377 | bounded, E/E\u2080 = 0.50 to 0.58 |\n| `ZStarCoordinate` | blows up at step 4256 | E/E\u2080 falls steadily to 0.44 |\n\nOn `main`, the per-step energy budget shows the vorticity work growing until the blow-up. With this PR it stays at about 1e\u221220.\n\n### What this does not fix\n\nThe kinetic-energy gradient term `\u2207K` is not energy-neutral with a linear free surface, partial cells or not. Its work, `\u2212\u03a3 K \u2207\u00b7(A\u2095 u) = \u03a3 K Az \u2202t\u03b7`, is a kinetic-energy flux through the surface that nothing balances. That holds for the continuous linear-free-surface equations too. It causes the slow rise from 0.50 to 0.58 above, and it disappears with `ZStarCoordinate`.\n\nWith reduced gravity (`g = 0.01`) and 1 m/s, \u03b7 exceeds the thin-cell thickness within about 20 steps, so the linear free surface stops being valid. In that regime both `main` and this PR blow up from the `\u2207K` term, and with `ZStarCoordinate` the thin columns drain. That is a regime problem, so the test below uses `g = 9.81`.\n\n## Tests\n\nIn `test/coriolis/schemes.jl`:\n\n* **Work test:** the `VectorInvariant` vorticity term is checked alongside Coriolis on the three partial-cell grids (rectilinear, lat-lon and stretched lat-lon), and must stay below `100 eps`. `relative_coriolis_work` is generalized to `relative_work`.\n* **Growing mode:** a new testset adds `VectorInvariant(vorticity_scheme=EnergyConserving())` to the single-level model with `ThicknessWeightedEnergyConserving` Coriolis (`g = 9.81`, 2 m/s, `\u0394t = 30 s`, 4000 steps, under a second per run). It requires E/E\u2080 < 1 for both time steppers.\n\nIf the two new `PCBIBG` methods are removed, these 8 assertions fail. The work is 1e\u22122 to 7e\u22122, and E/E\u2080 reaches 2.9 and 3.3 even with `ThicknessWeightedEnergyConserving` Coriolis. With them, all 694 tests in the file pass.\n\nRun locally on CPU with Julia 1.13: `coriolis/schemes.jl`, `unit/quality_assurance.jl` (explicit imports) and `hydrostatic_free_surface/immersed_boundaries.jl` all pass. I have not run the GPU tests, the doctests or the wider hydrostatic suites.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-07T21:03:31Z",
+    "deletions": 44,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-11T19:28:14Z",
+    "number": 6477,
+    "title": "Use the thickness-weighted PV flux for the VectorInvariant vorticity term too (follow-up to #6450)"
+  }
+]

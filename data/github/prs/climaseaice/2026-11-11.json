@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 59,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "On distributed grids, `SplitExplicitSolver` extends the sea-ice velocity grid's halos to `2 substeps + 3` and copies the external velocities onto it (`extended_external_variable`). The ocean surface velocity reaches it as a `k = Nz` view of the three-dimensional ocean velocity. The copy dropped the view's `indices`, so it became a **full three-dimensional field on the extended grid**, with three-dimensional halo-communication buffers 123 rows (60 substeps) to 243 rows (120 substeps) deep. The extended immersed grid also rebuilt its own three-dimensional active-cells map, which the two-dimensional sea-ice fields don't need.\n\nThis PR:\n- keeps the source's `indices` in `extended_external_variable`, so the copy is a two-dimensional slab. The kernels already read it at `k\u1d3a`, so results are unchanged;\n- builds the halo-extended `ImmersedBoundaryGrid` with `active_cells_map = false` (new `extended_sea_ice_grid`).\n\n**Memory** (global tripolar ocean\u2013sea ice model on H100s, `GridFittedBottom` with an active-cells map, NCCL y-partition, 60 mEVP substeps, Float64), measured by walking every `CuArray` reachable from the model:\n\n| | before | after |\n|---|---|---|\n| 1/4\u00b0 (1440 \u00d7 680 \u00d7 70), 2 ranks: device memory per GPU after construction | 20.2 GiB | 16.9 GiB |\n| arrays reachable from the model | 15.62 GiB | 13.79 GiB |\n| of which: 3-D extended `u\u2091`, `v\u2091` (1454 \u00d7 586 \u00d7 80 each) | 1.04 GiB | 0 |\n| 3-D 123-row halo buffers of `u\u2091`, `v\u2091` | 0.44 GiB | 0 |\n| active-cells maps of the two extended sea-ice grids | 0.40 GiB | 0 |\n\nThe waste scales with `Nx \u00d7 (2 substeps + 3) \u00d7 Nz`. At 1/12\u00b0 on 4 ranks (4320 \u00d7 510 rows \u00d7 70) it is about 7 GB per GPU at 60 substeps and about 11 GB at 120, plus ~4 GB for the maps in Float64. With the fix, a 1/12\u00b0 Float32 model on 2 \u00d7 H100 (4320 \u00d7 1020 \u00d7 70 per rank, 120 substeps, the same per-GPU size as 1/24\u00b0 on 8 GPUs) peaks at 56.6 GiB per GPU.\n\n**Test:** `test/test_extended_halo_copies.jl` (new `TEST_GROUP = \"extended_halo\"`) checks that the extended grid keeps the requested halo and has no active-cells map, and that the extended copy of a `k = Nz` view is a single-level slab of `(Nx + 2Hx) \u00d7 (Ny + 2Hy)` that matches the source and refreshes from it. Run locally on CPU: `extended_halo` 8/8, `quality_assurance` (Aqua + ExplicitImports) passed, `distributed` (2 \u00d7 2 ranks) 2/2.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-09T02:04:01Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-11-11T13:07:58Z",
+    "number": 209,
+    "title": "Keep EVP-extended copies of external fields two-dimensional, and skip the active-cells map on the extended grid"
+  }
+]

@@ -1,0 +1,83 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-10T23:53:57Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-11T00:37:04Z",
+    "number": 848,
+    "title": "Fix the prescribed_cloud_droplet_number docstring link"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This is a small fix to the joint vapor relaxation that ensures there is no vapor deposition on snow when the chosen microphysics option is `SublimationOnly`.\r\n\r\nThe snow options clamp the start-of-substep rate, but the joint solve turns that rate into a coefficient per unit ice excess `c_s = S / \u03b4\u1d62`. When a substep starts below ice saturation with cloud liquid present, the evaporating liquid pushes the averaged ice excess above zero within the substep, and `\u0394q_sno = c_s \u03b4\u0304\u1d62 \u0394t` becomes positive, which means deposition.\r\n\r\nThis PR repeats the pattern we already have for cloud ice: the snow vapor-exchange term is `sink_only` where its option blocks deposition, and the joint relaxation sets the snow coefficient to zero where the term is `sink_only` and the averaged excess over ice is positive.\r\n\r\n- `_snow_deposition_blocked(opt, tps, micro, thermo)` holds the condition of each option, and one `conv_q_sno_to_q_vap` method for all `SnowDepositionSublimation` options uses it (replacing the two methods with the same clamp written twice).\r\n- `VaporExchange` gains a `sink_only` field (default `false`), as `VaporRelaxation` has.\r\n- The per-process coupling uses the rate directly and is unchanged.\r\n\r\nThis should not change the AMIP simulation behavior, because we are running by default with `DepositionAndSublimation`.\r\n\r\nOnce we are done with figuring out the 1M structure we want, I'll delete some of those options. \r\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-11T00:44:39Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "FCAE1E",
+        "description": "Please review my pull request",
+        "id": "LA_kwDOFzm_uM8AAAABhPpAWw",
+        "name": "Needs review"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-11T18:09:39Z",
+    "number": 849,
+    "title": "Snow vapor term sink-only where the snow option blocks deposition"
+  },
+  {
+    "additions": 38,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR adds another option: `DepositionWithoutCloudCondensate` that allows for snow growth through deposition of vapor only when cloud condensate is not present.  Sublimation remains unchanged. Having this option allows me to test things more easily in AMIP\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-11T19:33:21Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-11T20:34:16Z",
+    "number": 850,
+    "title": "Snow deposition only when cloud is not present"
+  }
+]
