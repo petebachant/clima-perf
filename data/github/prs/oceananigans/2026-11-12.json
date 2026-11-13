@@ -1,0 +1,106 @@
+[
+  {
+    "additions": 211,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Two changes to `BatchedTridiagonalSolver`. Both leave results bitwise unchanged.\n\n**1. Carry the Thomas sweep in registers (always on).** Each column is swept by one thread, so the solve time is the length of the level-to-level dependency chain. The pivot \u03b2, the elimination ratio t\u1d4f, and the solution of the level just solved are now carried in local variables instead of being read back from `t` and `\u03d5` right after they are stored. The compiler can't do this itself because it can't prove `\u03d5` and `t` don't alias the coefficients. Carried values are converted to the stored array's element type, so results are unchanged. The x, y and z sweeps now share one kernel body (`column_index` maps a level to `(i, j, k)`).\n\n**2. Optional stored factorization.** A new keyword, `factorized = false` by default, which keeps the current behavior. With `factorized = true` the solver stores the factorization of its systems, which depends only on the coefficients, not on the right-hand side:\n\n```\n\u03b2\u00b9 = b\u00b9,    \u03b2\u1d4f = b\u1d4f \u2212 a\u1d4f\u207b\u00b9 t\u1d4f,    t\u1d4f = c\u1d4f\u207b\u00b9 / \u03b2\u1d4f\u207b\u00b9,    k = 2, \u2026, N\n```\n\n```julia\nsolver = BatchedTridiagonalSolver(grid; lower_diagonal, diagonal, upper_diagonal, factorized = true)\ncompute_factorization!(solver, args...)   # whenever the coefficients change\nsolve!(\u03d5, solver, rhs, args...)           # many times: substitution only\n```\n\n- `compute_factorization!` evaluates the coefficients once and stores \u03b2 and `a` (a `TridiagonalFactors`). The ratios `t` stay in the solver's existing scratch array.\n- A factorized `solve!` evaluates neither the coefficients nor the recurrence, and reads only the right-hand side per level.\n- This is for systems solved many times with unchanged coefficients and different right-hand sides, such as the vertical solves of a compressible model's acoustic substep loop, which are fixed within a Runge-Kutta stage.\n- The caller calls `compute_factorization!` again whenever the coefficients change, including through `args`. A factorized `solve!` does not detect changed coefficients. `compute_factorization!` on an unfactorized solver throws an `ArgumentError`.\n- The factorization uses the same floating-point operations as the unfactored sweep. Tests check bitwise equality for x, y and z, for several right-hand sides per factorization, in place, and after refactoring with changed coefficients.\n\n### Benchmarks\n\nWhole step, `HydrostaticFreeSurfaceModel` with CATKE (vertically implicit), 256\u00b3, \u0394t = 60 s (ms/step, two runs; tridiagonal-solve time in parentheses):\n\n| GPU | FT | main | register sweep | change |\n|-|-|-|-|-|\n| H100 | F32 | 9.33 (2.65) | 8.98 (2.29) | \u22123.7 % |\n| H100 | F64 | 11.84 (3.50) | 11.44 (3.09) | \u22123.4 % |\n| A100 | F32 | 16.0\u201316.3 (4.0\u20134.4) | 15.3\u201315.6 (3.26) | \u22124.2 % |\n| A100 | F64 | 20.7\u201320.9 (5.24) | 20.3\u201320.5 (4.83) | \u22122.0 % |\n\nThe register sweep gains more inside the model, where coefficients are computed in the sweep. Results are bitwise identical to main (solver and 10 model steps: u, v, w, T, S, e).\n\nThe stored factorization pays off when one factorization serves many solves. It is not benchmarked here in isolation; in Breeze's acoustic substep loop, factoring once per stage and substituting per substep was part of a 10\u201312 % reduction in ms/step (NumericalEarth/Breeze.jl#1242, which now uses this API). An earlier pivots-only version of change 2 gave no measurable gain for the solver alone (A100, up to 512\u00b2\u00d7256), because it still evaluated `a` and `c` in every solve.\n\nRelated: NumericalEarth/Breeze.jl#1242 replaces its own stored tridiagonal factors with this. #6478 (pentadiagonal solver with a factor-once / substitute-many API) will be updated to follow the same interface (`factorized`, `compute_factorization!`, one `solve!`).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T03:27:49Z",
+    "deletions": 84,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-12T12:47:29Z",
+    "number": 6493,
+    "title": "Register-carried Thomas sweeps and an optional stored factorization for BatchedTridiagonalSolver"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T13:15:26Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-12T13:35:08Z",
+    "number": 6495,
+    "title": "Materialize buoyancy gradients when using closures that depend on buoyancy gradients"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Fixes two typos in the derivation on the Generalized vertical coordinates page:\n\n- divergence in r coordinates: the last bracket used \u2202v/\u2202y \u2202z/\u2202y instead of \u2202v/\u2202r \u2202z/\u2202y;\n- tracer equation: (1/\u03c3) \u2202z/\u2202t|_r \u2202c/\u2202r equals \u2212\u2202r/\u2202t|_z \u2202c/\u2202r (missing minus sign and |_z).",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T15:53:33Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-11-12T17:51:37Z",
+    "number": 6498,
+    "title": "Fix two typos in the generalized vertical coordinates docs"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Reverts CliMA/Oceananigans.jl#6495, this actually broke tests, so they're failing everywhere else: https://github.com/CliMA/Oceananigans.jl/pull/6495#issuecomment-6829973053.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T17:35:36Z",
+    "deletions": 4,
+    "labels": [],
+    "mergedAt": "2026-11-12T18:39:45Z",
+    "number": 6499,
+    "title": "Revert \"Materialize buoyancy gradients when using closures that depend on buoyancy gradients\""
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Documenter's link check gives each URL 10 s by default and stops the build on a timeout. Recent docs builds on #6475 (`docs.julialang.org/en/v1/stdlib/Pkg/`) and #5573 (`www.croco-ocean.org`) failed this way, although both links resolve (200) when retried. This raises `linkcheck_timeout` to 60 s.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T00:00:54Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-12T21:48:01Z",
+    "number": 6491,
+    "title": "Allow 60 s per link in the docs link check"
+  }
+]

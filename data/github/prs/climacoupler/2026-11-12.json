@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 132,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Stacked on #2152.\r\n\r\nThis is to make the fluxes the ocean and sea ice receive integrate to machine precision to what the atmosphere sends. The main change is in `scatter_polys_to_cells!`, where we now divide `F_c`, the incoming flux from the atmosphere into an ocean grid cell, by the *ocean cell's area* rather than the sum of the areas of the polygons on the exchange grid.\r\n\r\nThe previous formulation preserves constants exactly whereas this preserves the global integral of the flux (which is more important for climate). A uniform flux `F` now maps to `F \u03a3_{k\u2208c} b_k / A_c` where `A_c` is the area of cell c and `b_k` is the area of polygon `k` in `c`, as measured by the atmosphere's control volumes. For a given ocean grid, `\u03a3_{k\u2208c} b_k / A_c` is usually very close to 1, mostly because the grid file's cell areas differ from the geometric ones.\r\n\r\nIn the next PR (#2173) the gather for radiation and precipitation will use the transpose of this scatter.",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-16T00:16:30Z",
+    "deletions": 48,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-12T22:58:49Z",
+    "number": 2160,
+    "title": "Conserve fluxes into ocean/sea-ice cells (2/4)"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": " - `config/atmos_configs/climaatmos_progedmf.yml`: `update_constrain_state_every: \"step\"`. With `\"stage\"` (ClimaAtmos default since CliMA/ClimaAtmos.jl#4968),\r\n  coupled 1\u00b0 0M ProgEDMF weather forecasts crash within hours.\r\n  - Nightly and weekly AMIP configs  `dt` , `dt_cpl` 120 s -> 180 s.",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T22:03:36Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-12T23:45:58Z",
+    "number": 2221,
+    "title": "Use update_constrain_state_every: step for 0M ProgEDMF;  dt 180 s in nightly/weekly AMIP"
+  }
+]
