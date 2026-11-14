@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 40,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThis PR fixes the recompilation of GPU slice loops whose operator buffers exceed their level of shared memory on Julia 1.12 and later, which came up when CliMA/ClimaAtmos.jl#4953 moved to Julia 1.13.\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Content\n\n - `shmem_level_error_bytes` reads the bytes that a slice loop needs from markers named by a `SubString{String}` as well as a `String`, so that the loop is compiled again at the next level of shared memory on Julia 1.12 and later.\n - Those versions emit calls to undefined functions through lazily initialized PLT entries, which GPUCompiler names by a `SubString` of the entry's name, so every such loop threw the `InvalidIRError` of its first compilation. This was observed in [13 GPU jobs of a ClimaAtmos build on Julia 1.13](https://buildkite.com/clima/climaatmos-ci/builds/32512), from a `foreach_slab` with a `LumpedRestriction` of a temporary.\n - A new test checks the bytes read from the compile error of a kernel that calls a marker, and from errors in the forms of Julia 1.11 and 1.12+.\n\n* * *\n\n  - [x] Code follows the [style guidelines](https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/) OR N/A.\n  - [x] Unit tests are included OR N/A.\n  - [x] Code is exercised in an integration test OR N/A.\n  - [x] Documentation has been added/updated OR N/A.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-06T10:59:00Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-13T13:35:37Z",
+    "number": 2719,
+    "title": "Fix shared memory level recompilation on Julia 1.12+"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "I asked a LLM to look into how latency can be improved and it suggested these following changes:\r\n\r\n- specialize on `CuFunction` instead of `HostKernel`,\r\n- broadcast argument one by one,\r\n- use _broadcast_getindex for point slices,\r\n- and optimizations with inferred slice size.\r\n\r\nThis branch and the `kp/latency` branch on UnrolledUtilities (see https://github.com/CliMA/UnrolledUtilities.jl/pull/41) gave a -9.2% decrease in latency. See https://buildkite.com/clima/climacoupler-time-to-first-step/builds/63#01a1cd39-0885-49c2-ba1e-6be28b8239ba. ",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T18:30:56Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-13T23:01:52Z",
+    "number": 2723,
+    "title": "Latency fixes"
+  }
+]

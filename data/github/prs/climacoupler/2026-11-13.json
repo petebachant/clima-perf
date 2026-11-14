@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 20,
+    "author": {
+      "id": "MDQ6VXNlcjUzNTA4NzYz",
+      "is_bot": false,
+      "login": "hgpeterson",
+      "name": "Henry Peterson"
+    },
+    "body": "Forgot to do this in #2210 \n\nSkipping Buildkite since it's just a markdown file.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T23:17:47Z",
+    "deletions": 17,
+    "labels": [],
+    "mergedAt": "2026-11-13T17:09:40Z",
+    "number": 2223,
+    "title": "Update version in NEWS.md"
+  },
+  {
+    "additions": 44,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "The goal here is to have time series of numerical results for tracking progress.\n\n---\n\nFrom Claude: Pete asked me to open this so the AMIP leaderboard's numerical values are saved as data, which gives a time series of them across runs, and I wrote the change.\n\n`compute_leaderboard` computes CliMA's global RMSE for each variable and season next to the CMIP6 models' RMSEs, but only saves them as `bias_leaderboard.png`, so there's no way to follow them across runs without reading the plot. This also writes `leaderboard_rmse.csv` next to the plot, one row per variable and season:\n\n```\nshort_name,season,rmse,other_models_median_rmse,other_models_best_rmse,n_other_models,units\npr,ANN,1.5,2.0,1.0,40,\"mm / day\"\n```\n\nThe median and best are over the other models only, not including CliMA. RMSEs that weren't computed are `NaN`. The variables are the ones with CMIP6 RMSEs to compare against: `pr`, `rsut`, and `rlut`.\n\nThe file lands in the job's `artifacts` directory, which the AMIP, long-run, and nightly pipelines already upload with `output/<run>/artifacts/*`, so it's uploaded as `output/<job_id>/artifacts/leaderboard_rmse.csv` with no pipeline changes. [clima-perf](https://github.com/petebachant/clima-perf) mirrors the weekly `climacoupler-amip` and `climacoupler-longruns` jobs, and will fetch this file to build a time series of each variable's RMSE alongside the CMIP6 median and best model. Nothing else changes; the plots are the same.\n\nTesting: I ran `write_rmses` on a hand-built `RMSEVariable` with three models plus CliMA, including missing CliMA values and a `NaN` in another model, checked the medians and best values by hand, and read the file back with a CSV parser. I haven't run a full AMIP leaderboard locally. JuliaFormatter 2.10.1 makes no changes.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-04T16:52:21Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-13T19:06:23Z",
+    "number": 2206,
+    "title": "Write leaderboard RMSEs to a CSV artifact"
+  }
+]

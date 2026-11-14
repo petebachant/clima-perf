@@ -1,0 +1,147 @@
+[
+  {
+    "additions": 33,
+    "author": {
+      "id": "U_kgDOCxIrPA",
+      "is_bot": false,
+      "login": "SpaceOceanCorp",
+      "name": "Space Ocean Corp"
+    },
+    "body": "Addresses Bug A of #5496. This leaves Bug B alone, since `SmagorinskyLilly` matches its docstring as written and changing it looks like a decision for the maintainers.\n\n`_compute_smagorinsky_viscosity!` uses `|S| = sqrt(2\u03a3\u00b2)`, and the Germano M tensor is written for that same convention, `M = 2\u0394\u00b2(\u27e8|S|\u03a3\u1d62\u2c7c\u27e9 - \u03b1\u00b2\u03b2|\u03a3\u0304|\u03a3\u0304\u1d62\u2c7c)`. But `_compute_\u03a3!` and `_compute_\u03a3\u0304!` stored `sqrt(\u03a3\u00b2)`. So M is too small by `\u221a2`, `c\u209b\u00b2 = LM/MM` is too large by `\u221a2`, and so is the eddy viscosity. This PR stores `sqrt(2\u03a3\u00b2)` and `sqrt(2\u03a3\u0304\u00b2)` in those two kernels.\n\n**This changes results, and the regression reference data needs regenerating.** The `regression/nonhydrostatic` group goes from 60 of 60 passing to 44 of 60 on CPU. The 16 failures are `u`, `v`, `w` and `T` in four groups, which fits the two `DynamicSmagorinsky` averaging modes on two grids. The log doesn't name the testsets, so that mapping is my reading of the counts. The reference files are hosted in `OceananigansArtifacts.jl`, so I can't update them from this PR. Please let me know how you'd like to handle that. I can generate new files if that helps, or a maintainer may prefer to do it, and either way the CI regression job should stay red until then.\n\nWhat I ran (CPU, Julia 1.11, based on 4b5e462):\n\n| Check | Without this change | With it | Expected |\n|---|---|---|---|\n| Stored `\u03a3` and `\u03a3\u0304`, `u = \u03b3z` with `\u03b3 = 2` | 1.414 | 2.000 | `\\|S\\| = \u03b3` |\n| Mean `\u03bd\u2091`, `averaging=(1, 2)`, random `u`, `v` | 3.718e-5 | 2.629e-5 | ratio `\u221a2` |\n| Max `\u03bd\u2091`, same case | 4.176e-4 | 2.953e-4 | ratio `\u221a2` |\n| New test, \"Dynamic Smagorinsky strain-rate magnitude\" | fails, 2 of 2 | passes, 2 of 2 | |\n| Other Dynamic Smagorinsky testsets in `closures.jl` | 19 pass | 19 pass | |\n\nThe full `closures.jl` file passes through `Pkg.test`, 363 of 363 on CPU. I did not run on a GPU or run a long simulation to look at flow statistics. With `LagrangianAveraging`, the first-step values in my random-field check sit at the numerator floor (about 1e-33), so they don't test the ratio. The new test covers that mode through the stored fields.\n\n\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-03T02:37:16Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-11-13T02:13:04Z",
+    "number": 6425,
+    "title": "Use |\u03a3| = \u221a(2 \u03a3\u1d62\u2c7c \u03a3\u1d62\u2c7c) in the dynamic Smagorinsky procedure"
+  },
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Adds two EarthArXiv preprints by Whitley, Wenegrat & Thomas to the publications list.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\r\n\r\ncc @whitleyv ",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T02:58:05Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "d2b48c",
+        "description": "The sacred scrolls",
+        "id": "MDU6TGFiZWwxMjU1NjMxNjM1",
+        "name": "documentation \ud83d\udcdc"
+      }
+    ],
+    "mergedAt": "2026-11-13T02:59:55Z",
+    "number": 6503,
+    "title": "Add Whitley et al. (2026) to the publications list"
+  },
+  {
+    "additions": 175,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Follow-up to #6357. Since #6357 a Reactant `Simulation` holds `stop_iteration` as a device number, so the loop in a compiled `run!` has a trip count known only at run time. That broke reverse-mode differentiation of `run!` for every checkpointing setting but one, which #6357 noted as untested. Breeze's move to 0.118 (NumericalEarth/Breeze.jl#1249) fails in `test/reactant/lat_lon_compilation.jl` with:\n\n```\n'stablehlo.dynamic_pad' op can't be translated to XLA HLO\nAttempted to perform automatic differentation of a loop with non-statically known bounds.\n```\n\n- **No checkpointing** (the default): the reverse pass stores each step's state in a buffer as long as the loop. With a run-time trip count that buffer is `tensor<?x...>`, which XLA cannot translate.\n- **`Periodic(n)`**: Enzyme-JAX declines periodic checkpointing on a loop without constant bounds (`supportsDynamicPeriodic() = false`) and falls back to the path above.\n- **`Binomial(budget)`**: works. Revolve keeps `budget` checkpoints in fixed-size buffers and replays one step at a time, so nothing is sized by the trip count.\n\n**Change.** `stop_iteration` is a device number when `checkpointing` is `Reactant.Binomial`, and a plain `Int`, a constant of the program, otherwise, as before #6357:\n\n- The Reactant `Simulation` constructor and `setproperty!(sim, :stop_iteration, n)` go through `step_count(model, steps, automatic_differentiation)`, which returns a device number under `Binomial` and an `Int` otherwise. Both refuse a negative count as before, and `setproperty!` still passes a `ConcreteRNumber` through unchanged.\n- `run!` is unchanged. With an `Int`, `1:N` is a static loop again, and in the Adams-Bashforth `run!` `N \u2265 1` is a plain `Bool`, which `@trace if` evaluates as an ordinary `if`.\n- Docstrings: the Reactant `Simulation` constructor, `run!`, and `AutomaticDifferentiation` say which scheme gives which.\n\nSo one compiled `run!` that takes any `stop_iteration`, forward or differentiated, needs `Binomial`. The options don't change the forward program, so a simulation that is never differentiated can take `Binomial` just to vary its step count. With an `Int`, setting `sim.stop_iteration` changes what the next `@compile` builds, not a program compiled before. This is how it worked before #6357, and the docstrings say so.\n\n**Tests.**\n- `test/reactant/simulations.jl`: the testset that calls one compiled `run!` with several `stop_iteration`s now uses `Binomial(2)`. The automatic-differentiation options testset checks that `Binomial` holds a device number and `false`/`Periodic` hold an `Int`, through construction and `setproperty!`.\n- New `test/reactant/simulation_gradients.jl`: a 4\u00d74\u00d74 tracer diffusing at rest (`HydrostaticFreeSurfaceModel`, `ScalarDiffusivity`), for `QuasiAdamsBashforth2` and `SplitRungeKutta3`. It differentiates a compiled `run!` with no checkpointing, `Periodic(2)` and `Binomial(2)`. Each gradient is checked against central differences of the eager loss at two points; the loss is quadratic in the initial tracer, so that comparison is exact up to roundoff. The three schemes must also agree with each other. With `Binomial(2)`, one compiled gradient is called with 4, 0, 3 and 6 steps; 6 is more steps than the budget.\n\n**Not run yet.** I haven't run the new or changed tests locally; this is a draft until they have run. A standalone reproducer, without Oceananigans, showed the same pattern on Reactant 0.2.290 (CPU): the run-time-count loop fails with `dynamic_pad` without checkpointing, and `Binomial(4)` gives correct gradients for counts above and below the budget.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T18:41:22Z",
+    "deletions": 9,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      },
+      {
+        "color": "0E8A16",
+        "description": "Build expensive docs examples on this PR",
+        "id": "LA_kwDOCRy_aM8AAAADBc6Jbg",
+        "name": "build all examples"
+      }
+    ],
+    "mergedAt": "2026-11-13T12:05:06Z",
+    "number": 6500,
+    "title": "Reactant: stop_iteration a device number only under binomial checkpointing, so run! differentiates again"
+  },
+  {
+    "additions": 31,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Fixes #6510.\n\nInside a Reactant-compiled function `eltype(grid)` is `Reactant.TracedRNumber{Float64}`. A `ZeroField(eltype(grid))` or `OneField(eltype(grid))` passed to a kernel then fails to compile: `getindex` returns `zero(T)` / `one(T)`, which for a traced `T` is a call into the tracer from device code (`InvalidIRError: unsupported dynamic function invocation (call to getindex)`).\n\n**Change.** `ZeroField(T)` and `OneField(T)` store `unwrapped_eltype(T)`. Off Reactant that is `T` itself (the fallback in `Grids/zeros_and_ones.jl`), so nothing changes there. Under Reactant it is the plain float, so indexing in a kernel is a constant. A zero or a one carries no data, so the traced type was never needed. `ConstantField` is unchanged: its value may itself be traced.\n\n**Tests** (`test/reactant/unit.jl`):\n- The constructors give `ZeroField{Float64, 3}` / `OneField{Float32, 3}` for a traced type and leave a plain type alone.\n- A raised kernel on a `ReactantState` lat-lon grid adds `ZeroField(eltype(grid))` and `OneField(eltype(grid))` to a field inside a compiled function, and gets `c + 1`.\n\n**Not run yet.** The files parse; the Reactant tests haven't run. The reproducer in #6510 was run on the CPU backend (Reactant 0.2.308): it fails without the unwrapped type and runs with it.\n\nDownstream: NumericalEarth/NumericalEarth.jl#857, where NumericalEarth/NumericalEarth.jl#756 unwraps the type at the call site for now.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABe_8Exg",
+        "number": 6510,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6510"
+      }
+    ],
+    "createdAt": "2026-11-13T16:14:36Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-11-13T18:40:50Z",
+    "number": 6511,
+    "title": "Reactant: ZeroField and OneField hold the plain number type, so a kernel can index them"
+  },
+  {
+    "additions": 383,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "#6263 required DocStringExtensions v0.10 to show default values in docstring signatures. That blocks environments with packages that still cap DocStringExtensions at 0.9. This PR allows `DocStringExtensions = \"0.9, 0.10\"` again and keeps the default values with v0.10, following SpeedyWeather/SpeedyWeather.jl#1398.\n\n`Oceananigans.Utils` defines\n\n```julia\nconst SIGNATURES = if hasmethod(DocStringExtensions.MethodSignatures, Tuple{}, (:defaults,))\n    DocStringExtensions.MethodSignatures(; defaults = true)\nelse\n    DocStringExtensions.SIGNATURES\nend\n\nconst TYPEDSIGNATURES = if hasmethod(DocStringExtensions.TypedMethodSignatures, Tuple{}, (:defaults,))\n    DocStringExtensions.TypedMethodSignatures(; defaults = true)\nelse\n    DocStringExtensions.TYPEDSIGNATURES\nend\n```\n\nIn v0.10, `MethodSignatures` and `TypedMethodSignatures` have keyword constructors. In v0.9 they are empty structs, so `hasmethod` tells the two versions apart.\n\n### Changes\n\n- `DocStringExtensions = \"0.9, 0.10\"` in `Project.toml`, and version bump to 0.117.3.\n- The 143 `$(MethodSignatures(; defaults = true))` docstrings, which error on v0.9, are now `$(SIGNATURES)`, imported from `Oceananigans.Utils`. With v0.10 they render exactly as before.\n- All modules and extensions now take `TYPEDSIGNATURES` from `Oceananigans.Utils` too. None of the 366 existing `$(TYPEDSIGNATURES)` docstrings render differently with `defaults = true`, but future ones for methods with default values will show them. The only exception is `Architectures`, which loads before `Utils` and keeps DocStringExtensions' `TYPEDSIGNATURES`.\n- The six `$(SIGNATURES)` docstrings in `conformal_conic_grid.jl` now use the `Utils` constant too, since their module imports it. With v0.10, `ConformalConic` and `ConformalConicGrid` therefore now show their default values.\n- `AGENTS.md` and `.claude/rules/docstring-rules.md` describe the new convention.\n\n### Testing\n\nOn Julia 1.13 I loaded Oceananigans with DocStringExtensions pinned and rendered every docstring in Oceananigans and its submodules (1142):\n\n- **v0.10.2**: 0 errors, default values are shown as before (e.g. `architecture=CPU()` in `RectilinearGrid`)\n- **v0.9.5**: 0 errors, plain signatures\n\nThe ExplicitImports checks of `test/unit/quality_assurance.jl` pass. I haven't run the rest of the test suite or built the docs.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 187,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-11T22:54:23Z",
+    "deletions": 418,
+    "labels": [
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-11-13T23:27:39Z",
+    "number": 6490,
+    "title": "Allow DocStringExtensions v0.9 again, show default values with v0.10"
+  }
+]
