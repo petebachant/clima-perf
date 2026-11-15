@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 94,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR makes a new release of ClimaAtmos and updates the manifest.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T22:30:23Z",
+    "deletions": 88,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-14T00:03:46Z",
+    "number": 4987,
+    "title": "Release v0.42.19"
+  },
+  {
+    "additions": 2,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThe end-to-end performance pipeline pins a ClimaCoupler commit from before the coupler moved to Julia 1.13 and CUDA 6 (CliMA/ClimaCoupler.jl#2214), so its AMIP environment resolves CUDA 5.11.3 and GPUCompiler 1.17.1. Under Julia 1.13 that GPU stack compiles the column kernels of the flagship AMIP benchmark with many stack slots and at the register limit, which is why the benchmark has run about 25 times slower since #4944. This PR moves the pin to ClimaCoupler `main` (from `dd16e967` to `ff831888`), whose environment resolves CUDA 6.4.1 and GPUCompiler 2.10.0, the versions of ClimaAtmos's own GPU jobs. It also sets the fallback `BASELINE_SYPD` of the SYPD check to 0.252, the SYPD measured with the new pin in build [511](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/511).\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Comparison against main\n\nThe PR rows come from a build of the head of this PR, `80aea9d45`, and the `main` rows from the build of `main` at `52dfab8de`, its base.\n\n| Metrics | PR | `main` | PR vs `main` | Build IDs |\n|---|---|---|---|---|\n| Flagship AMIP (A100), wall time per coupling step | 0.326 s | 9.02 s | -96.4% | [511](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/511), [510](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/510) |\n| Flagship AMIP (A100), compilation time | 21.4 min | 16.6 min | +29.0% | [511](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/511), [510](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/510) |\n| Flagship AMIP (A100), compilation memory | 289.0 GiB | 264.0 GiB | +9.5% | [511](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/511), [510](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/510) |\n\n## Effect of #4953 with the new pin\n\nWith the new pin, #4953 lowers the wall time per coupling step from 0.382 s (`main` at `7eacbde07`, its base, in build [480](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/480)) to 0.322 s (-15.7%, or +18.6% in SYPD). The table below splits the device time of a coupling step on an A100, its DRAM traffic (reads plus writes), and its global load and store instructions into components that do not overlap, for `main` at `d9da6bfdf` (with #4953) against `7eacbde07` (build [482](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/482), which profiles both commits with the new pin).\n\n| Component | Time with #4953 (share) | vs before #4953 | DRAM traffic with #4953 (share) | vs before #4953 | Loads / stores with #4953 (share) | vs before #4953 |\n|---|---|---|---|---|---|---|\n| radiation (RRTMGP, once every 20 steps) | 63.4 ms (20.6%) | no change | 14.2 GB (12.0%) | no change | 16580.2 / 954.9 M (26.9% / 9.6%) | no change |\n| `initialize_implicit_stage_problem!` | 60.8 ms (19.8%) | -42.7% | 16.9 GB (14.3%) | -62.7% | 8776.5 / 1353.3 M (14.2% / 13.6%) | -57.8% / -48.1% |\n| `set_explicit_precomputed_quantities!` | 58.1 ms (18.9%) | -4.2% | 6.5 GB (5.5%) | -12.3% | 3629.2 / 389.9 M (5.9% / 3.9%) | -14.3% / -23.0% |\n| `set_implicit_precomputed_quantities!` | 38.2 ms (12.4%) | -0.7% | 12.9 GB (10.9%) | -2.2% | 5062.1 / 995.2 M (8.2% / 10.0%) | +0.3% / +1.8% |\n| `invert_jacobian!` | 24.0 ms (7.8%) | no change | 22.1 GB (18.7%) | no change | 8822.1 / 1257.6 M (14.3% / 12.7%) | no change |\n| `implicit_tendency!` | 14.6 ms (4.7%) | -29.6% | 7.1 GB (6.0%) | -46.9% | 5480.4 / 581.1 M (8.9% / 5.8%) | -33.5% / -20.8% |\n| `update_jacobian!` | 13.8 ms (4.5%) | -20.0% | 10.5 GB (8.8%) | -23.1% | 3862.8 / 2031.6 M (6.3% / 20.4%) | -28.8% / -12.6% |\n| `remaining_tendency!` | 13.5 ms (4.4%) | -18.8% | 9.1 GB (7.7%) | -27.8% | 4631.4 / 601.0 M (7.5% / 6.0%) | -27.9% / -7.8% |\n| ODE stage arithmetic (ClimaTimeSteppers) | 5.7 ms (1.8%) | no change | 8.3 GB (7.0%) | no change | 1514.5 / 664.9 M (2.5% / 6.7%) | no change |\n| `correct_implicit_advection_tendency!` | 5.2 ms (1.7%) | no change | 3.4 GB (2.9%) | no change | 1764.5 / 284.5 M (2.9% / 2.9%) | no change |\n| surface models (land, ocean, sea ice) | 4.6 ms (1.5%) | no change | 1.7 GB (1.4%) | no change | 453.4 / 133.5 M (0.7% / 1.3%) | no change |\n| `dss!` | 4.0 ms (1.3%) | no change | 5.1 GB (4.3%) | no change | 864.5 / 602.2 M (1.4% / 6.1%) | no change |\n| other atmos (`constrain_state!`, other kernels) | 1.1 ms (0.3%) | -20.9% | 0.5 GB (0.4%) | -49.8% | 160.8 / 91.4 M (0.3% / 0.9%) | -46.3% / -11.2% |\n| coupler (fluxes, remapping) | 0.8 ms (0.3%) | no change | 0.2 GB (0.1%) | no change | 12.0 / 6.3 M (0.0% / 0.1%) | no change |\n| **Total** | **307.6 ms (100.0%)** | **-16.5%** | **118.5 GB (100.0%)** | **-26.6%** | **61614.4 / 9947.4 M (100.0% / 100.0%)** | **-23.4% / -15.7%** |",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T22:19:11Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-14T06:09:49Z",
+    "number": 4982,
+    "title": "Update coupler commit in perf pipeline"
+  }
+]

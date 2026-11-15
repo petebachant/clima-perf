@@ -1,0 +1,47 @@
+[
+  {
+    "additions": 263,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "Closes #6397.\n\n## Problem\n\n`EnergyConserving` and `EnstrophyConserving` interpolate the thickness-weighted transports \ud835\udcb0 = A_x u and \ud835\udcb1 = A_y v, then divide by the thickness-weighted face area at the velocity point (`Ay\u207b\u00b9\u1da0\u1d9c\u1d9c`, `Ax\u207b\u00b9\u1d9c\u1da0\u1d9c`). The kinetic-energy tendency from Coriolis is then\n\n\u03a3 V\u1d58 u F\u1d58 + \u03a3 V\u1d5b v F\u1d5b = \u03a3 (\ud835\udcb0 / \u0394z\u1d58) \u2111y(f \u2111x \ud835\udcb1) \u2212 \u03a3 (\ud835\udcb1 / \u0394z\u1d5b) \u2111x(f \u2111y \ud835\udcb0),\n\nwhich vanishes only when \u0394z is uniform. With `PartialCellBottom`, Coriolis therefore does net work. In a single-level model whose partial cell spans the whole ocean depth, this drives an exponentially growing mode. In a 0.36\u00b0 global barotropic tide model with true depths (5 m to 9300 m), it produced a steady, self-sustaining mean flow on steep Antarctic slopes, with up to 13 m of mean \u03b7 and 12 m/s. It kept growing after the tidal forcing was switched off, and vanished with Coriolis off.\n\n## Scheme\n\n`ThicknessWeightedEnergyConserving` is Sadourny's (1975) energy-conserving form written for volume transports, with potential vorticity q = f / h at cell corners, dividing by the horizontal spacing only:\n\nF\u1d58 = \u2212 \u2111y(q \u2111x \ud835\udcb1) / \u0394x\u1da0\u1d9c\u1d9c,  F\u1d5b = + \u2111x(q \u2111y \ud835\udcb0) / \u0394y\u1d9c\u1da0\u1d9c.\n\nSince V\u1d58 = \u0394x A_x, the work is \u03a3 q (\u2111x \ud835\udcb1 \u2111y \ud835\udcb0 \u2212 \u2111y \ud835\udcb0 \u2111x \ud835\udcb1) summed over corners. That cancels corner by corner for **any** positive h and any \u0394z. The transports reuse the existing masked `masked_Ay_q\u1d9c\u1da0\u1d9c` and `masked_Ax_q\u1da0\u1d9c\u1d9c`.\n\n**Corner thickness.** h at corner (i, j) is the mean \u0394z over the *active* (non-peripheral) velocity faces that meet there: u faces (i, j) and (i, j\u22121), and v faces (i, j) and (i\u22121, j). Energy conservation holds for any h > 0, so this is a choice of accuracy. I first tried the mean of the four surrounding cell-centre \u0394z. On partial-cell grids, face thickness is the minimum of its neighbours, so centre-based h is biased high on slopes and weakens Coriolis there. In the tide model it raised the deep M2 error against the EOT20 altimetric atlas from 6.28 cm (face h) to 7.58 cm. With uniform \u0394z, h = \u0394z and the scheme is identical to `EnergyConserving`. A test checks this.\n\n## Trade-offs (re: @simone-silvestri's consistent-area variant)\n\nSimone's `ConsistentAreaEnergyConserving` divides by an interpolated masked area instead. As written above, the work vanishes exactly only when the weights pair \ud835\udcb0 with 1/\u0394x and \ud835\udcb1 with 1/\u0394y. Dividing by an interpolated thickness-weighted area leaves a \u0394z mismatch between the two components, so its work is reduced but not zero in general. I suspect that is the residual \"Coriolis work\" issue he remembers, but I haven't verified it against his notes.\n\nThe trade-offs of this scheme:\n\n- **Energy, not enstrophy.** Like `EnergyConserving`, it does not conserve potential enstrophy. With strongly varying \u0394z the relevant enstrophy is that of q = (f + \u03b6)/h, which no scheme here conserves.\n- **Local Coriolis strength.** At a thin face next to thick ones, the effective Coriolis parameter is f \u0394z_face / h \u2260 f. That is the price of using one corner q for both components. It is what makes the scheme energy-neutral, and it vanishes for uniform \u0394z.\n- **Not the default.** It is not strictly better on accuracy. In the tide model the old `EnergyConserving` scored slightly better (5.92 cm) before it went unstable. So this PR adds an option and leaves the default unchanged. For grids where the partial cell spans most of the column, especially single-level models, the scheme is the safe choice. A note in the docs could recommend it there.\n\n## Tests\n\nIn `test/coriolis/schemes.jl`:\n- **Discrete work vanishes.** The work vanishes to within 100 eps for random masked velocities on `RectilinearGrid` (f-plane) and `LatitudeLongitudeGrid` with `PartialCellBottom` over random depths from 8 to 4000 m. For contrast, the test also asserts that `EnergyConserving` does **not** conserve on the same grids (relative work > 1e-3).\n- **Equivalence with `EnergyConserving`** for uniform \u0394z.\n- **Growing mode of #6397.** An unforced, inviscid, single-level f-plane model with `ExplicitFreeSurface` and random depths and velocities, run for 500 steps. Total energy grows more than 2\u00d7 with `EnergyConserving` and does not grow with the new scheme. In a 2000-step version, energy grew 1.7\u00d710\u2076\u00d7 with `EnergyConserving` and fell to 0.41 with the new scheme, from time-stepping dissipation.\n- **Existing per-scheme tests.** The new scheme runs through the existing antisymmetry, geostrophic balance, energy conservation and inertial-oscillation tests, and the instantiation test.\n\nLocally on CPU (Julia 1.12.6), every testset in `test/coriolis/schemes.jl`, `test/coriolis/coriolis.jl` and `test/coriolis/rotated_spherical_coriolis.jl` passes. I have not run the doctests, the GPU tests, or the wider hydrostatic suites.\n\n## Validation in a full model\n\nThe same scheme, applied as a forcing in a 0.36\u00b0 single-level tripolar tide model with true depths:\n- **Unforced, inviscid run seeded with 0.05 m/s noise.** `EnergyConserving` energy grows exponentially to NaN by day 4. The new scheme loses 0.5% monotonically over 8 days.\n- **Per-corner work** is exactly 0 everywhere, including the tripolar fold.\n- **Tidal runs.** The spurious mean flow is gone (max |mean \u03b7| 0.00 m), with no change in cost.\n- **Second model.** An independent explicit-free-surface implementation reproduces both the instability and the fix.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 9,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABbMrcMw",
+        "number": 6397,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6397"
+      }
+    ],
+    "createdAt": "2026-11-04T20:40:32Z",
+    "deletions": 17,
+    "labels": [
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      },
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-14T06:25:51Z",
+    "number": 6450,
+    "title": "Add ThicknessWeightedEnergyConserving Coriolis scheme, energy-neutral with partial cells"
+  }
+]
