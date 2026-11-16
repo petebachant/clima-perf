@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "MDQ6VXNlcjI5MzgwODIx",
+      "is_bot": false,
+      "login": "jtbuch",
+      "name": "Jatan Buch"
+    },
+    "body": "## Problem\n\n`create_nccl_comm_from_mpi` broadcasts the NCCL unique id with `MPI.Bcast!` and then every rank immediately enters `ncclCommInitRank`, which blocks until all ranks have joined. When the ranks are on different nodes, the broadcast may not have been delivered to every rank by the time rank 0 blocks inside NCCL: MPI makes progress only inside MPI calls, and rank 0 makes no further MPI call. The remaining ranks then wait in `MPI.Bcast!` forever and the job hangs at start-up with no error.\n\nRuns with all ranks on one node do not show this, because the shared-memory transport delivers the broadcast eagerly.\n\n## Fix\n\nOne `MPI.Barrier(mpi_subcomm)` directly after the broadcast. The barrier returns only once every rank has completed the broadcast, so the id is delivered before any rank enters `ncclCommInitRank`.\n\n## Verification\n\n- Two ranks on two nodes: without the barrier the job hangs in communicator creation; with it, creation completes and a ring of `NCCL.Send` / `NCCL.Recv!` exchanges returns the right data. An MPI-only test (Bcast + Allreduce) between the same nodes passes without the barrier, which rules out MPI routing. Warming up the MPI connections with an all-pairs `Sendrecv!` before communicator creation does not remove the hang.\n- Sixteen ranks on two nodes: a terrain-following compressible Breeze case runs to completion with the barrier in place.\n- Single-node behaviour is unchanged apart from one extra barrier per communicator.\n\nVerified against Oceananigans 0.117.1; the change applies unmodified to `main`. No test is added: the hang needs ranks on two nodes, which the test suite does not have. Happy to add one if there is a multi-node runner I should target.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T03:21:41Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-15T10:14:20Z",
+    "number": 6492,
+    "title": "Deliver the NCCL unique id to every rank before communicator creation blocks"
+  }
+]
