@@ -68,6 +68,9 @@ stages:
       - data/buildkite-weekly:
           cache: false
           persist: true
+      - data/buildkite-weekly-leaderboards:
+          cache: false
+          persist: true
     desc: Automatically generated from the 'fetch-weekly-buildkite' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-github:
@@ -360,11 +363,24 @@ stages:
       - .calkit/notebooks/cleaned/notebooks/analyze-weekly.ipynb
       - .calkit/env-locks/analyze
       - data/buildkite-weekly
+      - data/buildkite-weekly-leaderboards
     outs:
       - results/weekly-benchmarks.csv:
           cache: false
           persist: false
-      - figures/weekly-benchmarks.json:
+      - results/weekly-leaderboards.csv:
+          cache: false
+          persist: false
+      - figures/weekly-benchmarks-amip.json:
+          cache: false
+          persist: false
+      - figures/weekly-benchmarks-cmip.json:
+          cache: false
+          persist: false
+      - figures/weekly-benchmarks-cpu-gpu.json:
+          cache: false
+          persist: false
+      - figures/weekly-benchmarks-land.json:
           cache: false
           persist: false
       - .calkit/notebooks/executed/notebooks/analyze-weekly.ipynb:
