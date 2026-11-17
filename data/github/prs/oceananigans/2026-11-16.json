@@ -1,0 +1,76 @@
+[
+  {
+    "additions": 235,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Removes every `import` from `src/` and `ext/` (52 statements in 19 files). Names come in with `using Module: Module, name` (or `using Module: Module as M` for the aliases the GPU extensions use), and methods are extended with the qualified name. Adds the rule to `AGENTS.md`.\r\n\r\n- **Qualify by owner.** Extensions name the module that owns the function, not one that re-exports it: `CommonDataModel.defVar` (`NCDatasets.defVar` fails to precompile on Julia 1.12+), `NDIteration.get` / `NDIteration.expand`, `KA.partition` / `KA.__ndrange` / \u2026\r\n- **AbstractOperations.** `import Base: +, -, *, /, ==` was module-wide, so it silently also made `@multiary +` and the `*` definitions extend `Base`. These are now explicit: `Base.:+(a::ZeroField, b::AbstractField) = b`, `@multiary Base.:+`, and `@binary Base.:*` / `@multiary Base.:*`, which replace the hand-rolled `eval(define_*_operator(:*))` workaround (\"for unknown reasons, the macros fail for `:*`\"). The `@unary`/`@binary`/`@multiary` docstrings now say to qualify rather than import.\r\n- **GPU extensions.** CUDA and AMDGPU `@device_override` now extend `KernelAbstractions.__validindex`, matching Metal.\r\n- **MutableImmersedGrid.** The `@eval`-generated spacing methods extend `Operators.$zspacing` instead of importing inside the loop.\r\n\r\nNo behavior change; net \u221241 lines.\r\n\r\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 39,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T22:57:47Z",
+    "deletions": 273,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "14b76e",
+        "description": "Quite meta",
+        "id": "MDU6TGFiZWwxNTY0NTExMDg0",
+        "name": "package \ud83d\udce6"
+      }
+    ],
+    "mergedAt": "2026-11-16T21:11:32Z",
+    "number": 6518,
+    "title": "Replace `import` with qualified method extensions"
+  },
+  {
+    "additions": 33,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "The ExplicitImports checks in `test/unit/quality_assurance.jl` only ran on `Oceananigans` itself. Extensions are separate top-level modules, so none of them were checked.\n\nThis PR loads the trigger package of every extension and runs the five ExplicitImports checks on each extension listed in `Project.toml`. A new extension is picked up automatically. If its trigger package isn't loaded in the test, its checks fail.\n\nSix extensions fail some checks today. Those checks are marked `@test_broken`:\n\n| Extension | Broken checks |\n|---|---|\n| AMDGPU | implicit imports, stale imports, qualified accesses via owners |\n| Enzyme | implicit imports, stale imports, qualified accesses via owners |\n| Makie | implicit imports, imports via owners, stale imports |\n| Metal | stale imports |\n| NCCL | implicit imports, stale imports, qualified accesses via owners |\n| Reactant | all four of the above |\n\nCUDA, oneAPI, ConservativeRegridding, NCDatasets and Zarr pass everything. When one of the extensions above is fixed, its check reports an unexpected pass, so the fix has to remove that entry from `broken_extension_checks`.\n\nThe new trigger packages are loaded after the Aqua testset. Loading them earlier would make `detect_ambiguities` report ambiguities between those packages and Oceananigans, mostly Reactant's `Base` overloads. Some of those are internal to Oceananigans, e.g. `on_architecture` and `all_reduce` in the Reactant extension against methods in `src/`. They are left for a separate PR.\n\n`using Metal` and `using oneAPI` have only been tried on macOS. CI will show whether they load on the Linux runners.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-14T04:47:30Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      }
+    ],
+    "mergedAt": "2026-11-16T21:11:52Z",
+    "number": 6519,
+    "title": "Run the ExplicitImports checks on all extensions"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "This adds Rule 14 to `.claude/rules/restriction-rules.md`, for bug fixes and feature additions alike. Before opening or proposing a PR, Claude searches the open PRs by the keywords of its title (the error message for a fix, the new type, function or keyword for a feature), and by the files its diff touches. A match is only a candidate: Claude reads its description and diff and checks that it fixes the same bug or adds the same feature, by whatever means. If it does, Claude says so, links it, says what it covers and what the new change adds, and proposes a comment on it instead of a new PR. A new PR is opened only if the user decides so after seeing the existing one.\n\nWhat prompted it: two open PRs, opened on the same day, add the same one-line `regularize_boundary_condition(f::FTS0, ...) = f`, and a third branch with that line was ready to be opened. Run with that third branch's title keywords and its changed file, both commands in the rule list the two existing PRs.\n\nThe rule loads with the rest of `restriction-rules.md`, when Claude touches `src/`, `test/`, `validation/` or `examples/`. The per-edit checklist is unchanged, since this check runs once, before a PR exists.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T18:28:01Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-16T21:15:19Z",
+    "number": 6540,
+    "title": "Look for an open PR with the same scope before opening one"
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "additions": 890,
+    "author": {
+      "id": "MDQ6VXNlcjE3MDc1NTQ1",
+      "is_bot": false,
+      "login": "costachris",
+      "name": "Costa Christopoulos "
+    },
+    "body": " This PR adds two options to the 0M microphysics:\r\n  1. With PrognosticEDMFX, updraft condensate precipitates with its own timescale, `precipitation_timescale_updraft_ratio` \u00d7 `precipitation_timescale` (ratio 1\r\n  by default). The thresholds (`S_0`, `qc_0`) are shared with the grid mean.\r\n  2. Optional below-cloud evaporation/sublimation of the precipitation flux, switched on with the YAML option `precipitation_evaporation_0m: \"Kessler\"`\r\n  (default `~`, off). Evaporated water returns to the grid mean with the energy it was removed with; if all precipitation evaporates, the surface precipitation\r\n  energy flux is zero.\r\n\r\n  The rate and parameters are in CloudMicrophysics and ClimaParams (versions already on main; no compat change). Results are unchanged with the defaults. New\r\n  diagnostics: `prup`, `prevap`, `tnhusevp`.\r\n\r\n  CI: the TRMM 0M EDMF job (`prognostic_edmfx_trmm_column_0M`) now runs with evaporation on (ClimaParams default coefficient).\r\nToDo\r\n\r\n- [ ] move new parameters to ClimaParams\r\n\r\nOutcomes: \r\nImproves upper atmosphere humidity errors across the board, and zonal mean temperature biases. (blue is baseline/main behavior, green is this PR)\r\n<img width=\"3400\" height=\"1680\" alt=\"key4_overall_vs_operational_abs\" src=\"https://github.com/user-attachments/assets/9a77d43d-09e0-4ac5-bd51-f004ea0bf94d\" />\r\n\r\nThe split timescale + reevaporation removes upper atmosphere mean temperature biases and reduces lower atmosphere  warm biases (a is baseline/main behavior, e is this PR)\r\n<img width=\"2800\" height=\"1800\" alt=\"fig17_xsec_T_bias\" src=\"https://github.com/user-attachments/assets/41fab733-86a4-4957-afae-3b6d5998b0e0\" />\r\n\r\nThis also appears to address too little ice in the upper troposphere.\r\n<img width=\"2800\" height=\"1800\" alt=\"fig16_xsec_cli\" src=\"https://github.com/user-attachments/assets/1e3a747e-ba94-4316-aa9a-6ba639cd8db7\" />\r\n\r\n",
+    "changedFiles": 19,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-09T19:07:00Z",
+    "deletions": 19,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-16T04:31:47Z",
+    "number": 4881,
+    "title": "0m: Add split up-env timescale, add reevaporation"
+  },
+  {
+    "additions": 13,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Retunes the turbulent lateral entrainment `E_turb(a) = c\u2081 exp(-c\u2082 a)` in `toml/prognostic_edmfx_1M.toml` and `toml/prognostic_edmfx_1M_mlcloud.toml` from `[0.001, 1e5]` to `[0.007, 400.0]`.\n\nWith the old values, the characteristic area scale `1 / c\u2082 = 1e-5` equaled `EDMF_min_area`, so `E_turb` was negligible (< 5e-8 s\u207b\u00b9) for every updraft with `a \u2265 1e-4`. The new values place it at `a = 0.0025`:\n\n- Broad boundary-layer updrafts (`a ~ 0.06\u20130.16`) stay undiluted (`exp(-400 a) < 4e-11`).\n- Narrow shallow-cumulus plumes mix tracers with the environment: `E_turb` = 3e-3, 1e-3, and 2e-5 s\u207b\u00b9 at `a` = 0.002, 0.005, and 0.015.\n- Extinguished drafts (`a = 1e-5`) relax toward the environment on a timescale `1 / c\u2081 \u2248 143 s`.\n\n`E_turb` acts only on updraft scalars, not on the updraft mass `\u03c1a`.\n\nReduces vertical LWP/RWP oscillations in RICO/BOMEX somewhat. However, there still are stong temporal oscillations.\n\n### Other changes\n- `ref_counter` bumped to 470 (the DYCOMS_RF02, Rico, and TRMM reproducibility jobs use `prognostic_edmfx_1M.toml`).\n- NEWS entry.",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T17:08:53Z",
+    "deletions": 3,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-16T21:27:49Z",
+    "number": 4990,
+    "title": "Retune turbulent lateral entrainment in the 1M prognostic EDMFX parameter files"
+  },
+  {
+    "additions": 154,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Evaluates the linearized saturation-excess variance as `(\u03c3_q \u2212 \u03b3 \u03c3_T)\u00b2 + 2 \u03b3 \u03c3_T \u03c3_q (1 \u2212 corr)`, which keeps its precision where `\u03c3_q \u2248 \u03b3 \u03c3_T` and `corr \u2248 1`, and clamps the correlation of `T\u2032` and `S\u2032` to `[\u22121, 1]` in `sgs_temperature_regression`. With the expanded form, `\u03c3_S` collapsed to its floor in `Float32` and node temperatures of the 1M conditional-moment rule reached the temperature floor.\n\nBumps `ref_counter` to 471.\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T18:16:47Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-16T23:18:46Z",
+    "number": 4992,
+    "title": "Eliminate Float32 cancellation in the saturation-excess width"
+  }
+]
