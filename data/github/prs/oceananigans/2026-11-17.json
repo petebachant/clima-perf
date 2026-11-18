@@ -1,0 +1,134 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Removes two stale imports from the Metal extension.\n\nFollow-up to #6519: removes the extension from `broken_extension_checks`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T21:27:42Z",
+    "deletions": 4,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-11-17T01:09:55Z",
+    "number": 6542,
+    "title": "Pass the ExplicitImports checks in the Metal extension"
+  },
+  {
+    "additions": 8,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Explicit imports via owners in the AMDGPU extension. Also fixes the `@debug` device listing, which called `LLVM.name` instead of `AMDGPU.HIP.name`.\n\nFollow-up to #6519: removes the extension from `broken_extension_checks`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T21:27:52Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-11-17T11:41:22Z",
+    "number": 6543,
+    "title": "Pass the ExplicitImports checks in the AMDGPU extension"
+  },
+  {
+    "additions": 12,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "Explicit imports via owners in the Enzyme extension; drops imports only used in commented-out code.\n\nFollow-up to #6519: removes the extension from `broken_extension_checks`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T21:28:03Z",
+    "deletions": 22,
+    "labels": [
+      {
+        "color": "808000",
+        "description": "Paying off technical debt",
+        "id": "MDU6TGFiZWwxMjI2NzM3MDA1",
+        "name": "cleanup \ud83e\uddf9"
+      },
+      {
+        "color": "FEF2C0",
+        "description": "",
+        "id": "LA_kwDOCRy_aM8AAAABaeTEIw",
+        "name": "extensions \ud83e\uddec"
+      }
+    ],
+    "mergedAt": "2026-11-17T20:25:40Z",
+    "number": 6544,
+    "title": "Pass the ExplicitImports checks in the Enzyme extension"
+  },
+  {
+    "additions": 62,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "Fixes #6431.\n\nTracing a `RectilinearGrid` promotes its float type over the element type of every field of the vertical discretization, so that the grid's float type is traced whenever its coordinates are. That loop assumed each field is an array or a number, as in `StaticVerticalDiscretization`. Breeze's `TerrainFollowingVerticalDiscretization` also holds its decay formulation, a struct, whose `eltype` is `Any`, so any kernel launch on such a grid (`minimum_zspacing`, `AtmosphereModel` construction) failed with a `TypeError` while promoting.\n\nThe promotion is now a small recursive helper: arrays and numbers promote over their `eltype` as before, a struct is entered field by field, and a non-`DataType` (a `Union`) is left alone. Recursing rather than skipping struct fields keeps the grid's float type traced if a formulation's scalars are ever traced.\n\n**Test.** The issue's reproducer uses Breeze's discretization, which the tests cannot depend on, so `test/reactant/unit.jl` gets the same shape without Breeze: a vertical coordinate holding the four coordinate arrays and a `DecayFormulation` struct, a `ReactantState` grid built on it through the low-level constructor, then `minimum_zspacing` and a computed `zspacings` field, exactly as in the reproducer. On `main` this hits the `TypeError`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABcL9oFw",
+        "number": 6431,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6431"
+      }
+    ],
+    "createdAt": "2026-11-05T20:52:43Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-11-17T23:17:41Z",
+    "number": 6460,
+    "title": "Reactant: trace a RectilinearGrid whose vertical discretization holds a struct"
+  }
+]

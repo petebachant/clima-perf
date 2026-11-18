@@ -1,0 +1,45 @@
+[
+  {
+    "additions": 155,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Purpose\n\nReview follow-ups for #1952, opened against `kd/fix_ph_bug`. The commits are separate, so they can be taken together or cherry-picked one by one. The first holds the fixes the PR needs; the second is a design change that matters only if the cached norm stays.\n\n## Content\n\n**1. Regression test, docstrings, NEWS**\n- New nested testset in `test/integrated/soil_canopy_lsm.jl`. It builds a `SoilCanopyModel` with `PlantHydraulicsModel` + `PiecewiseMoistureStressModel`, puts the top 0.4 m at `\u03b8_low`, and checks `0 < \u03b2m < 1` and `\u03b2m \u2248 \u222b\u03b2 p dz / \u222bp dz`. On `main` this setup has `\u03b2m = 0`, and no test covered it. With the `update_root_dryness_norm!` call removed from `update_hydraulics!(::PlantHydraulicsModel)`, the new test fails (`\u03b2m` = 0 vs 0.094).\n- Docstrings: for Tuzet/no stress the norm is \u222bp K dz, not \u222bp \u03b2 dz. The no-op method no longer says it updates the norm, and both `update_hydraulics!` docstrings now mention the norm. Two signature typos fixed (`sms:::`, `},,`).\n- NEWS bugfix entry for `\u03b2m = 0` with plant hydraulics + piecewise stress since v1.15.0.\n\n**2. One root water weight for the norm and all its readers**\n- `root_water_weight(p, sms, canopy)` returns p(z)\u03b2(z) for the piecewise stress and p(z)K(z) for every other stress model. `update_root_dryness_norm!` is a single method that integrates this weight whenever `has_root_dryness_norm(hydraulics, sms)` holds. Root extraction and the steady-state leaf water potential multiply by the same weight, so the norm and its readers cannot drift apart, and \u222b root extraction dz = transpiration by construction.\n- `has_root_dryness_norm(hydraulics, sms)` replaces `add_root_dryness_norm(sms, hydraulics)` and takes its arguments in the same order as `update_root_dryness_norm!`. It is true for any hydraulics with the piecewise stress, because the `\u03b2m` update reads the norm, and an explicit (SteadyState, Piecewise) method removes the ambiguity.\n- The two steady-state root extraction methods merge into one. The K-weighted leaf water potential method accepts any moisture stress model again (the \"fix ambiguity\" commit had narrowed it to `Union{Tuzet, NoStress}`). A new stress model paired with `SteadyStateModel` therefore gets a consistent K-weighted path, instead of a MethodError or a norm that stays 0 while root extraction divides by `eps`.\n- Same number of column integrals per step as in #1952. Results are unchanged: a column run with plant hydraulics + piecewise stress gives the same `\u03b2m` (0.9943170540012812) before and after this commit.\n\n**3. Test tidying**\n- Compare the cached norm with `\u2248` instead of `==`, revert a no-op `.(` inside `@.`, and drop blank-line churn.\n\n**4. One more docstring:** the `PrescribedGroundConditions` no-op in `plant_hydraulics.jl` now describes the prognostic norm as the integral of the root water weight rather than \u222bp \u03b2 dz.\n\n**Left as is:** the `has_root_dryness_norm(m.canopy) ? (base..., X) : base` lines in `lsm_aux_vars`/`lsm_aux_types`/`lsm_aux_domain_names` follow the existing `has_soil_litter_input` pattern. A helper covering both optional fields would also touch code from #1846, so it is better as a separate change.\n\n## Testing\n\nLocal, CPU only (Julia 1.13, `.buildkite` environment):\n- `test/integrated/soil_canopy_lsm.jl` and `test/integrated/full_land.jl` pass.\n- `Test.detect_ambiguities` finds no ambiguities involving ClimaLand methods.\n- GPU not exercised locally. The GitHub Actions jobs run on this PR, but the Buildkite pipeline (including GPU), the docs build, and Codecov did not trigger for a non-`main` base; they will run on #1952 once these commits are merged into it.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-17T18:08:10Z",
+    "deletions": 181,
+    "labels": [],
+    "mergedAt": "2026-11-17T18:54:29Z",
+    "number": 1974,
+    "title": "Follow-ups to #1952: \u03b2m regression test, shared root water weight"
+  },
+  {
+    "additions": 220,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\nThis fixes a bug when using the PlantHydraulicsModel + Piecewise Moisture stress model. in this case, the root dryness norm was never updated, was zero all the time, and then msf = 0. \r\n\r\nThis is pretty convoluted and confusing (to re-use the root_dryness_norm) because it depends on SMS, hdyraulics choice, and is used by different parts of the model in different combinations of these two. But it prevents us from recomputing the same integral many times.\r\n\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T19:27:24Z",
+    "deletions": 90,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-17T20:16:20Z",
+    "number": 1952,
+    "title": "clarify when root norm weight is added, updated, and what if affects"
+  }
+]
