@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 3263,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "This PR replaces the placeholder snow optics (which previously reused the `LookUpCld` clamped cloud-ice table) with standalone band-averaged precipitation lookup tables (`LookUpPrecip`) generated following Feng, Menzel, & Paynter (2025, *JAMES*, doi:10.1029/2024MS004478) and Yang et al. (2013).\r\n\r\n### Changes\r\n\r\n  - Adds the precipitation artifact and the script that generates it (`Artifacts.toml`, `src/ArtifactPaths.jl`, `scripts/generate_rrtmgp_precip_lut.jl`). The `rrtmgp-precip-optics-data` artifact contains `rrtmgp-precip-lw-bnd.nc` and `rrtmgp-precip-sw-bnd.nc`, leaving the upstream `rrtmgp-data` cloud tables untouched.\r\n  - Tabulates $N = 64$ log-uniform effective radii across the 16 LW and 14 SW RRTMGP bands (Planck thin-averaging in LW, solar thick-averaging in SW) for:\r\n    - **Snow ($5\\text{\u2013}1100\\,\\mu\\mathrm{m}$):** Yang et al. (2013) severely roughened `solid_column` (`Rough050`), Gamma PSD $a = 1$, $T_\\mathrm{LW} = 233\\,\\mathrm{K}$.\r\n    - **Rain ($5\\text{\u2013}5000\\,\\mu\\mathrm{m}$):** Wiscombe Mie scattering + Segelstein (1981) refractive index, Gamma PSD $a = 1$, $T_\\mathrm{LW} = 250\\,\\mathrm{K}$ (included in the artifact for future support; not yet wired into `CloudState`).\r\n  - Adds `LookUpPrecip` (with CPU-scalar size counts for GPU scalar-indexing safety) and $O(1)$ log-uniform interpolation via `compute_lookup_precip_props`.\r\n  - Wires snow optics through `LookupBundle`, 1-scalar LW, and 2-stream LW/SW (including fused clear+all-sky) paths on both CPU and CUDA.\r\n  - Compiles out `LookUpPrecip` completely when `cld_path_sno === nothing` (`include_snow = false`), preserving zero-overhead performance and bitwise-identical fluxes in snow-off runs.\r\n  - Documents the precipitation optics formulation, current scope (rain not yet active; snow gated by `cloud_fraction` via `cld_mask`), and 1D/2D lookup-table visualizations reproducing Figures 4 & 6 of Feng et al. (2025).\r\n  - Adds unit tests for `compute_lookup_precip_props`, CPU/GPU lookup serialization, TOA LW/SW snow radiative response, `JET.@test_opt`, and zero allocations (`@allocated == 0`).",
+    "changedFiles": 30,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-10T01:10:28Z",
+    "deletions": 206,
+    "labels": [
+      {
+        "color": "012AD7",
+        "description": "Launch Buildkite run",
+        "id": "LA_kwDODGrFgs8AAAABcLc0wQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-18T00:39:54Z",
+    "number": 638,
+    "title": "Add snow to lookup tables"
+  }
+]

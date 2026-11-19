@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 3,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR builds the error message with a `LazyString` instead of an interpolated `String`. The check can't fail inside a kernel, but GPU compilation still compiles the code that formats the message, then removes it. A `LazyString` only formats the message when the error is printed, so that code is never compiled.\n\nI ran this script in the REPL\n\n```julia\nusing CUDA, CloudMicrophysics.Parameters\n\nmp = Microphysics1MParams(Float32)\ny = CUDA.zeros(Float32, 1)\nwarmup!(y) = (y[1] = 0.0f0; nothing)\nkernel!(y, mp) = (y[1] = process_params(mp, CloudLiquidRainAccretion()).e; nothing)\n\n@cuda launch=false always_inline=true warmup!(y)  # one-time compiler setup\n@time @cuda launch=false always_inline=true kernel!(y, mp)\n```\n\nand the following timings\n\n```julia-repl\n# This PR\n0.725939 seconds (5.46 M allocations: 257.036 MiB, 8.91% gc time, 91.03% compilation time: <1% of which was recompilation)\n\n# main branch\n6.249995 seconds (46.24 M allocations: 2.151 GiB, 28.48% gc time, 98.91% compilation time: <1% of which was recompilation)\n```\n\nI asked a LLM to implement this change.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-18T19:53:07Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-18T22:22:31Z",
+    "number": 858,
+    "title": "Build option/params mismatch error with LazyString"
+  }
+]
