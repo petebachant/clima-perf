@@ -1,0 +1,102 @@
+[
+  {
+    "additions": 509,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Updrafts rise through the clear part of the environment, which is cooler and denser than the environment mean, whose temperature includes the latent heat of the condensate in the cloudy part. With 1M microphysics and `PrognosticEDMFX`, the updraft buoyancy (`\u1d9c\u03c1_diff\u02b2s`) is taken against `\u03c1 + \u0394\u03c1`, where `\u0394\u03c1` (`updraft_reference_density_excess`) is the density excess of the environment with the fraction `f_ev (1 \u2212 cf\u2070)` of its cloud liquid and ice, and their latent heat, removed at fixed pressure and total water. Here `cf\u2070` is the environment cloud fraction of the SGS closure, and `f_ev` = `edmf_buoyancy_clear_env_weight` (default `0`, bit-identical to main). `\u0394\u03c1` vanishes in clear and in overcast environments; with `f_ev = 1`, the reference is the mixture `(cf\u2070)\u00b2` cloudy and `1 \u2212 (cf\u2070)\u00b2` clear of the two-part environment, so `\u0394\u03c1 \u2248 cf\u2070 (1 \u2212 cf\u2070) (\u03c1_clear \u2212 \u03c1_cloudy)`, largest in broken cloud.\n\n- The reference enters the updraft momentum and area solves and the entrainment closures. The pressure work in the updraft `mse` equation adds `\u1d9c\u03c1_ref_excess / \u03c1\u02b2` back and keeps the grid-mean density: the extra buoyancy is an updraft\u2013environment force pair classed with the pressure closure, which preserves the PROPHET domain-decomposition identities (see the reference-density note in `docs/src/prophet.md`).\n- The draft closures run after the cloud-fraction update, reading the environment cloud fraction (new field `\u1d9ccloud_fraction\u2070`) of the same state, so restarts are reproducible. The Picard predictor evaluates `\u0394\u03c1` once, at the stage-entering state.\n- `toml/prognostic_edmfx_1M.toml` and `toml/prognostic_edmfx_1M_mlcloud.toml` set `f_ev = 1`, which changes the 1M EDMFX column jobs, `larcform1_1M_prognostic_edmfx`, and the 1M aquaplanet, AMIP target, and benchmark configurations; the 2M RICO job ignores the weight. Reference counter bumped to 474.\n- Tests: unit tests for `\u0394\u03c1` (exact zero limits, sign, linearization, ice against liquid) and the parameter range, and a 1M EDMFX DYCOMS RF01 column restart case that checks exact restart reproduction with nonzero `\u0394\u03c1`. Docs: the reference-density note in `prophet.md` and a tail-entrainment paragraph in `prophet_closures.md`.\n\nPeeled off `ts/Sc-Cu-rev`.\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T16:18:57Z",
+    "deletions": 102,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-19T01:14:54Z",
+    "number": 4989,
+    "title": "Reference updraft buoyancy to the clear part of the environment"
+  },
+  {
+    "additions": 61,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR changes how we built the vector of diagnostics by avoiding splatting. Splatting calls `Base.vect` which specializes on every element in the lists being splatted. This is avoided by appending to a vector instead.\n\nI ran this script\n\n```julia\nimport ClimaAtmos as CA, ClimaDiagnostics, Dates\nimport ClimaUtilities.TimeManager: ITime\n\nmodel = CA.AtmosModel(CA.SphereGrid(Float32);\n    microphysics_model = CA.NonEquilibriumMicrophysics1M(),\n    radiation_mode = CA.RRTMGPI.AllSkyRadiationWithClearSkyDiagnostics(),\n    turbconv_model = CA.PrognosticEDMFX(; prognostic_tke = true, area_fraction = 1.0f-5))\nstart_date = Dates.DateTime(2010)\nt_start, duration = promote(ITime(0; epoch = start_date), ITime(732 * 86400; epoch = start_date))\nwriter = ClimaDiagnostics.Writers.DictWriter()\n\n@time diags = CA.Diagnostics.default_diagnostics(model, duration, start_date, t_start; output_writer = writer, topography = true)\n```\n\nand got the following timings:\n\n```julia-repl\n# main branch\njulia> @time diags = CA.Diagnostics.default_diagnostics(model, duration, start_date, t_start; output_writer = writer, topography = true)\n  8.880688 seconds (22.43 M allocations: 1.181 GiB, 2.53% gc time, 99.76% compilation time)\n\n# this PR\njulia> @time diags = CA.Diagnostics.default_diagnostics(model, duration, start_date, t_start; output_writer = writer, topography = true)\n  3.001751 seconds (4.21 M allocations: 221.945 MiB, 2.42% gc time, 99.80% compilation time)\n```\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-18T22:21:28Z",
+    "deletions": 42,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-19T03:02:52Z",
+    "number": 5000,
+    "title": "Build list of diagnostics without splatting"
+  },
+  {
+    "additions": 196,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\n## Purpose \n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\n#14 -- this will link to issue 14\nCloses #2 -- this will automatically close issue 2 on PR merge\n-->\nSet a default toml that will be used by amip and most of the atmos configs. For configs that need specific tomls, I append them.\n\n## To-do\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \n- Proposed task\n-->\n\n\n## Content\n<!---  specific tasks that are currently complete \n- Solution implemented\n-->\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [ ] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 80,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-18T23:23:12Z",
+    "deletions": 595,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-19T05:13:03Z",
+    "number": 5001,
+    "title": "set default toml"
+  },
+  {
+    "additions": 381,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Adds a floor on the width of the truncated-Gaussian cloud-fraction closure in proportion to the subsaturation deficit `\u03b4_sub = max(0, \u2212\u03bc_S)`:\n\n```\n\u03c3_aug\u00b2 = (\u03b1 \u03c3_S)\u00b2 + (\u03b5_rel \u03b4_sub)\u00b2 + \u03c3_abs\u00b2\n```\n\nWhere the condensate falls short of equilibrium, the variance fidelity narrows `\u03b1 \u03c3_S` in proportion to `q_c`, so the cloud fraction stays fixed as the condensate decreases (about 9% at a deficit of one standard deviation). The floor bounds the normalized condensate by `q_c / (\u03b5_rel \u03b4_sub)`, so the cloud fraction of subsaturated air vanishes with its condensate. The term vanishes at saturation, and condensate in equilibrium keeps its Gaussian cover.\n\n- New provisional parameter `cloud_fraction_eps_rel` (`\u03b5_rel`). Its default `0` supersedes the ClimaParams value `0.02` and reproduces the current results.\n- `toml/default_parameters.toml` sets `\u03b5_rel = 0.05`, so the floor applies to the moist jobs that read it with the `quadrature` cloud model; the reference counter is bumped.\n- `docs/src/prophet_closures.md` states the cloud-fraction relation, the two floors, and the variance-fidelity factors; unit tests cover the width, the bound, and the documented numbers.\n\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T18:14:22Z",
+    "deletions": 109,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-19T22:20:58Z",
+    "number": 4991,
+    "title": "Add a subsaturation-deficit floor of the cloud-fraction width"
+  }
+]

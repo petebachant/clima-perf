@@ -1,0 +1,99 @@
+[
+  {
+    "additions": 443,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "Follow-up to #6389 which introduces bespoke fourth order stencils for the derivative of a quantity.\r\nThis PR improves the approach by generalizing the operators already existing in the advection (and moving them in the Operators module) such that we can perform interpolations and differences at a higher (finite volume) order.\r\n\r\nAs discussed there: the stencils now come from the finite-volume reconstruction in `stencil_coefficients`, and `stencil_order` works at any even order.\r\n\r\n## What changes\r\n\r\nInterpolation and difference operators take an order. Without one they are second order, so no existing caller changes.\r\n\r\n```julia\r\n\u2111x\u1da0\u1d43\u1d43(i, j, k, grid, Val(4), \u03c8, args...)   # interior stencil, any even order and float type\r\n\u03b4x\u1da0\u1d43\u1d43(i, j, k, grid, Val(4), \u03c6)            # interior stencil\r\n\u03b4x\u1da0\u1d9c\u1d9c(i, j, k, grid, Val(4), \u03c6)            # the order decreases near boundaries\r\n\u2202x\u1d63\u1da0\u1d9c\u1d9c(i, j, k, grid, Val(4), \u03c6)           # \u03b4 \u00d7 \u0394\u207b\u00b9, also for \u2202y\u1d63 and \u2202z\r\n```\r\n\r\nCode removed: 51 functions added by #6389 (`fourth_order_*`, `active_*_stencil`, `diffusive_\u2202*`, ...) and the `Centered` literal stencils. `symmetric_interpolate_*` goes from 225 methods to 15. New names: `near_boundary` and the `NonFlat` alias.",
+    "changedFiles": 17,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-05T08:02:35Z",
+    "deletions": 549,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-19T09:08:51Z",
+    "number": 6454,
+    "title": "Give interpolation and derivative operators an order of accuracy"
+  },
+  {
+    "additions": 32,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "Taken out of #5799: getting rid of a now-unnecessary 6-year old workaround makes compilation (and tests time) faster :slightly_smiling_face:\n\n> `interpolation_operator` returned one of six functions, `identity1` to `identity6`, picked by a global counter incremented on every call. It was introduced in #1595 to work around GPU compilation failures of nested abstract operations on Julia 1.5 (#1241). As a side effect, building the same operation twice gave two different types: `typeof(c * c) != typeof(c * c)`, and likewise for `sin(c)`, `u * v`, `\u2202x(c)`, `Integral(c)`, ... So every Julia method and GPU kernel specialized on an operation was compiled again, up to six times, each time an equivalent operation was built, for example every reduction of a `Field(Integral(c))`.\n> \n> Return a single interpolator, `\u2111\u1d43\u1d43\u1d43`, which is the name the generic branch of `interpolation_operator` already builds when no direction is interpolated. Nested operations through the same interpolator compile on current Julia versions, as the other interpolators like `\u2111x\u1da0\u1d43\u1d43` were never rotated.\n> \n> The GPU test `multi_region/reductions` goes from 395 s to 307 s locally (CUDA 6.2.2, GPUArrays 11.5.16, Julia 1.13).\n> \n> Add tests that rebuilding operations gives the same type, and that deeply nested operations at a single location compute the right values.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T14:18:08Z",
+    "deletions": 35,
+    "labels": [],
+    "mergedAt": "2026-11-19T16:06:46Z",
+    "number": 6497,
+    "title": "Use a single interpolator between identical locations"
+  },
+  {
+    "additions": 35,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "#6404 wraps a boundary condition reduced in x and z in an `XZReducedCondition` and reads it as `[1, j, 1]`. The types that select it, `YFTS = FlavorOfFTS{Nothing, <:Any, Nothing}` and `XZReducedField = Field{Nothing, <:Any, Nothing}`, also match a series or field reduced in **every** direction, because `<:Any` matches `Nothing`. So a `{Nothing, Nothing, Nothing}` series or field used on a west, east, bottom or top boundary is read past its one point for `j > 1`:\n\n```\nBoundsError: attempt to access 1\u00d71\u00d71\u00d72 StaticStridesOffsetArray(::Array{Float64, 4}, 1:1, 1:1, 1:1, 1:2) at index [1, 2, 1, 1]\n  ...\n  [8] xz_reduced_getbc @ OutputReaders/field_time_series_indexing.jl:242\n  [9] getbc @ BoundaryConditions/boundary_condition.jl:245\n```\n\nThis is ClimaSeaIce's `test_boundary_time_series.jl` (a 0D `FieldTimeSeries` as an east `ValueBoundaryCondition`), which now fails on its `main`. Outside `--check-bounds=yes` the read is silently wrong rather than an error.\n\nThe fix leaves the fully reduced case unwrapped. Its own `getbc` (`FTS0`, `XYZReducedField`) already reads `[1, 1, 1]` on any boundary:\n\n- `regularize_boundary_condition(f::FTS0, grid, loc, dim, args...) = f`\n- `xz_reduced_boundary_condition(condition::XYZReducedField, dim) = condition`\n\nA test next to #6404's puts a 0D `Field` and a 0D `FieldTimeSeries` on the east and top boundaries, for `Nz = 1` and `Nz = 5`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T18:04:10Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-19T16:37:38Z",
+    "number": 6539,
+    "title": "Read a boundary condition reduced in every direction at its one point"
+  },
+  {
+    "additions": 117,
+    "author": {
+      "id": "U_kgDOC0af_Q",
+      "is_bot": false,
+      "login": "shriyafruitwala",
+      "name": ""
+    },
+    "body": "There is already support for an implicit free surface with the `FourierTridiagonalPoissonSolver` ([#4740](https://github.com/CliMA/Oceananigans.jl/pull/4740)). With the `ConjugateGradientPoissonSolver`, the free surface was handled through halo filling of the pressure field's `MixedBoundaryCondition`. This PR fixes some consistency issues with that treatment.\n\nWith an implicit free surface, the surface boundary condition on pressure is a Robin condition, rather than a Neumann condition. This enters the CG solve in 3 places: the linear operator, the right-hand-side, and the preconditioner. The pressure field already carries a `MixedBoundaryCondition` at the top; the solver\u2019s right-hand-side field now shares it.\n\n- CG needs a linear, symmetric operator. If the Robin condition is imposed only through the halo, each application picks up the inhomogeneous part `w\u0303 + \u03b7/\u0394t`. We therefore need to apply only the homogeneous Robin flux in the operator, and send the inhomogeneous part to the right-hand-side.\n- Area weighting: CG solves a volume weighted system, so the Robin flux through the top face is per area and must be multiplied by `Az\u1d9c\u1d9c\u1da0` to be added to the right-hand-side. The Fourier-tridiagonal system does not have this weight.\n- The coefficient `1/(g\u0394t\u00b2)` changes every time step, so it should be refreshed to avoid halos being filled according to the previous time step\u2019s values. With the tridiagonal solver, we were only updating that after the solve, which was fine since we had a separate call to update the row of the matrix corresponding to the free surface.\n- No gauge condition: the pressure is fixed by the surface condition, so the operator is no longer singular and the zero-mean gauge is not needed. Imposing it would shift the solution away from the one that satisfies the surface condition.\n\n`nonhydrostatic_model.jl`\n\n- If the pressure solver is a `ConjugateGradientPoissonSolver` and there is a free surface, the solver is rebuilt with `top_bc` passed in. \n\n`conjugate_gradient_poisson_solver.jl`\n\n- New `top_bc` keyword. When set, the rhs field is built with the mixed top boundary condition. The linear operator then becomes `compute_symmetric_laplacian_with_free_surface!`\n- `enforce_gauge_condition!` now defaults to `nothing`. This resolves to `ZeroMeanGaugeCondition(grid)` for a rigid lid and `no_gauge_enforcement!` for a free surface.  \n- `_apply_robin_top_bc!` replaces the zero-gradient top flux `Az(\u03d5[Nz+1] \u2212 \u03d5[Nz])/\u0394z\u1da0` with the Robin flux `\u2212Az \u03d5[Nz]/(g\u0394t\u00b2 + \u0394z\u1da0/2)` \n\n`solve_for_pressure.jl`\n\n- Boundary term on the right-hand-side (`add_inhomogeneous_boundary_terms!`):\n- Now masked with `active`\n- Gains an `area_weighted` keyword that multiplies the term by `Az\u1d9c\u1d9c\u1da0`\n- The CG path uses true because its right-hand-side is volume weighted (`\u03b4\u00b7V`). The Fourier tridiagonal path uses false because its right-hand-side is `\u0394z\u00b7\u03b4`.\n- `solve_for_pressure!` for CG now does the following for a free surface:\n  - Sets the mixed BC coefficient to `1/(g\u0394t\u00b2)` (needs to be refreshed every time step)\n  - Updates the preconditioner diagonal\n  - Adds the area-weighted boundary term to the right-hand-side\n\n`pressure_correction.jl`\n\n- Boundary condition inhomogeneity is zeroed in inactive columns, `\u03b7` is only updated in active columns\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-11T00:30:28Z",
+    "deletions": 31,
+    "labels": [],
+    "mergedAt": "2026-11-19T18:39:20Z",
+    "number": 6486,
+    "title": "Implicit free surface support for ConjugateGradientPoissonSolver"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOCzaF3w",
+      "is_bot": false,
+      "login": "dkytezab",
+      "name": ""
+    },
+    "body": "didn't find any user-facing breaking changes",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-19T18:53:34Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-19T23:07:22Z",
+    "number": 6557,
+    "title": "Bump version from 0.118.1 to 0.118.2"
+  }
+]

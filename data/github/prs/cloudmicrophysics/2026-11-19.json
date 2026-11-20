@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 660,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Following ClimaAtmos PR: https://github.com/CliMA/ClimaAtmos.jl/pull/4995\n\nTLDR:\n\nI think part of this logic should live in CloudMicrophysics, along with the BMTs. This helps to keep it consistent with microphysics options, and avoids possible duplications between guarding updrafts, grid-mean calls etc. @tapios - lmk if you disagree, then I'll close it here. I just wanted to test and see how it looks when implemented.\n\nLonger explanation:\n\nWe have 4 possible levels to guard against zero inputs:\n\n1. **Individual rate functions** - to prevent zero divisions, logs of negative numbers and so on. Implemented in CM.jl. The pattern is `ifelse(cond, rate, zero(rate))` which is branchless on GPU.\n2. **Parts of BMT** - A possibility to add to CM.jl, along the lines of https://github.com/CliMA/CloudMicrophysics.jl/pull/857. We could exit early from some part of the BMT evaluation, when we know for example that we have cloud but not snow. This could save time because we would skip on some expensive size distribution parameters evaluations.\n3. **All zero input to BMT** - results in early exit from BMT. (What this PR does in CloudMicrophysics or https://github.com/CliMA/ClimaAtmos.jl/pull/4995 does in ClimaAtmos)\n4.  **Cell-level subgrid quadrature skip in host models** - the other part of https://github.com/CliMA/ClimaAtmos.jl/pull/4995 that should stay in ClimaAtmos\n\nThis PR adds two functions:\n\n- `no_rates(::Microphysics1Moment, mp, tps, T_hi, q_lcl, q_icl, q_rai, q_sno, \u03f5_precip = UT.\u03f5_numerics(T_hi))`: branchless, vapor-independent check using only comparisons and option flags (compiles to return `false` when `cloud_liquid_formation` or `cloud_ice_formation are enabled`). Checked at entry in both `Instantaneous*` and `LinearizedAverage*`.\n\n- `_clear_and_subsaturated_1m`: checked at entry in `LinearizedAverage*` only, returning exact zeros when all four condensates are absent and vapor cannot nucleate liquid or ice (skipping the nsub implicit 4\u00d74 substep solves across clear subsaturated warps, without adding extra `q_sat` evaluations on cloudy points or in `Instantaneous*`).\n\nThe benefits:\n- Our favorite \"Single source of truth for process activity\". Deciding whether all 1M rates vanish depends on `Microphysics1MOptions` toggles, `Utilities.\u03f5_numerics`, and `MicrophysicsNonEq` microphysics INP limiters. Keeping this predicate in `BulkMicrophysicsTendencies` avoids duplicating CM.jl option and threshold logic in ClimaAtmos where it can drift out of sync as options evolve.\n- Shared benefit across all callers and nodes: Guarding `bulk_microphysics_tendencies` directly benefits grid-mean calls, individual active SGS quadrature nodes, KinematicDriver, and standalone tests alike, and eliminates the \u2264 4 eps(q) / \u0394t Cramer's-rule round-off residual on inactive sub-threshold points in `LinearizedAverage`.",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-18T23:42:41Z",
+    "deletions": 27,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-19T19:57:41Z",
+    "number": 859,
+    "title": "Exit BMT when there is nothing to do"
+  }
+]

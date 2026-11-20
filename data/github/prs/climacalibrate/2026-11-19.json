@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 183,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "Following the suggestion in https://github.com/CliMA/ClimaCalibrate.jl/pull/395#pullrequestreview-5926458688, this PR removes `ScalarCovariance`. In addition, we also make a breaking release of ClimaCalibrate.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-17T22:48:05Z",
+    "deletions": 411,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      },
+      {
+        "color": "4b989c",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACw_Cc9A",
+        "name": "Launch Derecho"
+      }
+    ],
+    "mergedAt": "2026-11-19T01:02:28Z",
+    "number": 396,
+    "title": "Remove ScalarCovariance and make a breaking release"
+  },
+  {
+    "additions": 1305,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "First step towards completing https://github.com/CliMA/ClimaCalibrate.jl/issues/372. This PR adds functionality to be able to log information at the end of each iteration of a calibration. This involves building a `CalibrationReport` consisting of multiple `AbstractReporter`s which can include `WalltimeReporter`, `TimeStepReporter`, `ErrorReporter`, `ParameterReporter`, and `EnsembleReporter`. Each reporter is responsible for logging one specific kind of information. Users can implement their own `AbstractReporter` and add it to the `CalibrationReport`.\r\n\r\n## Example\r\n\r\nThe output of the last two iterations looks like this for a toy calibration:\r\n\r\n```julia\r\n\u250c Info: Calibration report \u00b7 iteration 4 \u00b7 2026-10-28T16:20:30\r\n\u2502   Walltime\r\n\u2502     iteration walltime:                  1 second\r\n\u2502     total walltime:                      4 seconds\r\n\u2502     walltime remaining for 1 iterations: 1 second (2026-10-28T16:20:31)\r\n\u2502   Timestep\r\n\u2502     current algorithm time: 0.117\r\n\u2502     current timestep size:  0.0726\r\n\u2502     timestep history:       [0.00482, 0.0137, 0.0262, 0.0726]\r\n\u2502   Error\r\n\u2502     current loss:            8.96 (-67.7% from previous)\r\n\u2502     best loss:               8.96 (iteration 4)\r\n\u2502     loss history:            [131.0, 70.8, 27.7, 8.96]\r\n\u2502     current unweighted_loss: 0.0896 (-67.7% from previous)\r\n\u2502     best unweighted_loss:    0.0896 (iteration 4)\r\n\u2502     unweighted_loss history: [1.31, 0.708, 0.277, 0.0896]\r\n\u2502   Parameter\r\n\u2502     a:        1.41 (+5.5% from previous)\r\n\u2502     a spread: 0.0777 (-34.9% from previous)\r\n\u2502     b:        2.46 (+8.6% from previous)\r\n\u2502     b spread: 0.108 (-52.4% from previous)\r\n\u2502   Ensemble\r\n\u2514     successful members: 10 of 10\r\n\u250c Info: Calibration report \u00b7 iteration 5 \u00b7 2026-10-28T16:20:31\r\n\u2502   Walltime\r\n\u2502     iteration walltime: 1 second\r\n\u2502     total walltime:     5 seconds\r\n\u2502   Timestep\r\n\u2502     current algorithm time: 0.438\r\n\u2502     current timestep size:  0.321\r\n\u2502     timestep history:       [0.00482, 0.0137, 0.0262, 0.0726, 0.321]\r\n\u2502   Error\r\n\u2502     current loss:            1.33 (-85.1% from previous)\r\n\u2502     best loss:               1.33 (iteration 5)\r\n\u2502     loss history:            [131.0, 70.8, 27.7, 8.96, 1.33]\r\n\u2502     current unweighted_loss: 0.0133 (-85.1% from previous)\r\n\u2502     best unweighted_loss:    0.0133 (iteration 5)\r\n\u2502     unweighted_loss history: [1.31, 0.708, 0.277, 0.0896, 0.0133]\r\n\u2502   Parameter\r\n\u2502     a:        1.46 (+3.3% from previous)\r\n\u2502     a spread: 0.0284 (-63.5% from previous)\r\n\u2502     b:        2.57 (+4.4% from previous)\r\n\u2502     b spread: 0.0506 (-53.0% from previous)\r\n\u2502   Ensemble\r\n\u2514     successful members: 10 of 10\r\n```\r\n\r\n## Questions\r\n\r\n1. How will this be called? One way is to add this as a keyword argument or argument to the `calibrate` function. This allows us to call it when it is not at the end of an iteration.\r\n2. Should the log be saved to a file? I am not sure about the benefits of a `report.md` that only store the logs produced by `CalibrationReport`.\r\n3. Right only, I am assuming that this is called at the end of each iteration. Should there be support for calls to `CalibrationReport` pre and post iteration?\r\n\r\n## Future Work\r\n\r\nThis includes logging information about the residuals, ClimaAnalysis specific information such what observations are used for the minibatch, and generating plots. There could also be support for structuring all of the logs in a `report.md` file with plots too.\r\n\r\n## TODO\r\n\r\n- [x] Add documentation\r\n\r\nI used a LLM to generate most of the code.",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-28T21:46:34Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "419c8e",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACsi7Bsg",
+        "name": "Launch Buildkite"
+      },
+      {
+        "color": "4b989c",
+        "description": "",
+        "id": "LA_kwDOI0q0v88AAAACw_Cc9A",
+        "name": "Launch Derecho"
+      }
+    ],
+    "mergedAt": "2026-11-19T18:04:19Z",
+    "number": 389,
+    "title": "Add calibration report"
+  }
+]
