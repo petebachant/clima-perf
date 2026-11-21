@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 445,
+    "author": {
+      "id": "MDQ6VXNlcjQ2MDQ4Njk=",
+      "is_bot": false,
+      "login": "petebachant",
+      "name": "Pete Bachant"
+    },
+    "body": "From Claude: this moves formatting to prek, the arrangement ClimaAtmos.jl and ClimaCore.jl already use, and then applies it.\n\n## Why\n\nThe current `JuliaFormatter` workflow reports success without formatting anything. It runs `julia --project=.dev .dev/climaformat.jl .`, and `climaformat.jl` has been a deprecation shim for some time: it prints \"climaformat.jl has been discontinued in favor of JuliaFormatter\", suggests the replacement, and exits 0 without touching a file. The `git diff --color=always --exit-code` step that follows then finds nothing, so the job is green. The tell in the logs is the timing \u2014 the formatting step takes about a tenth of a second.\n\nThe consequence is that `main` is not formatter-clean, and nothing says so. Running the pinned formatter over it changes 39 Julia files.\n\n## What this does\n\nThe first commit is configuration only:\n\n- `.JuliaFormatter.toml` at the repo root carries the CliMA options (margin 80, `always_for_in`, `whitespace_typedefs`, `whitespace_ops_in_indices`) that `.dev/clima_formatter_options.jl` used to hold.\n- `.dev/format/Project.toml` is a dedicated environment pinning the formatter's major version, so a local run and CI agree regardless of what is in your base environment.\n- `.pre-commit-config.yaml` adds the standard hygiene hooks (large files, case conflicts, merge conflicts, symlinks, TOML, YAML, end-of-file, line endings, trailing whitespace) plus a local JuliaFormatter hook that runs out of that pinned environment.\n- `.github/workflows/format.yml` replaces `JuliaFormatter.yml` and runs the hooks through `j178/prek-action`, so the gate checks exactly what the hook checks.\n- `docs/dev-guides` and `.github` are excluded in both the hook config and `.JuliaFormatter.toml`. The dev guides are vendored from CliMA/DeveloperGuides, so formatting them here would churn lines this repo does not own and fight the next `update_dev_guides` run. Both places need the entry because JuliaFormatter applies `ignore` only when it walks a directory itself.\n\nThe second commit is the sweep: 44 files, and nothing in it changes behavior. I checked that rather than assuming it. With whitespace and commas stripped, all 39 Julia files are byte-identical before and after, and no added comma stands alone on its own line, so no parenthesized expression became a single-element tuple; the 5 non-Julia files are byte-identical with whitespace alone stripped. What is left is line wrapping at 80 columns, trailing commas in multi-line argument lists, and trailing whitespace removed from two Buildkite pipelines, a .gitignore, a Project.toml and one Markdown file.\n\n## git blame\n\nThe third commit adds `.git-blame-ignore-revs`, with the same header ClimaAtmos.jl and ClimaCore.jl use, naming the sweep commit. GitHub's blame view reads it by default; locally, `git config blame.ignoreRevsFile .git-blame-ignore-revs` once per clone. I checked it does what it should: a rewrapped line in `src/api/getters.jl` blames to the sweep without it and to the commit that actually wrote the line with it.\n\nThis is why the sweep is a commit of its own, separate from the configuration -- an entry here is only honest if the commit it names changed nothing but formatting, which is what the check above establishes. One caveat: the SHA survives a merge commit, as #636 and #638 were, but a squash merge would rewrite it and the entry would need updating to the new SHA.\n\n## Using it\n\nInstall the hooks once with `prek install` (or `pre-commit install`; the config works with either) and they run on staged files at each commit. `prek run --all-files` does a whole-repo sweep.\n\n## Merge order\n\nThis reformats `src/rte/longwave_2stream.jl` and `src/rte/shortwave_2stream.jl`, which #637 also changes. They merge cleanly in either order -- `git merge-tree` on the two branches produces a tree with no conflicts -- so this is only a preference: landing it after #637 keeps reformatting churn out of a review that is still in progress.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01FYv7qDRgpuycyDQtmL96GH\n",
+    "changedFiles": 55,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-19T14:04:21Z",
+    "deletions": 285,
+    "labels": [
+      {
+        "color": "012AD7",
+        "description": "Launch Buildkite run",
+        "id": "LA_kwDODGrFgs8AAAABcLc0wQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-20T20:46:39Z",
+    "number": 641,
+    "title": "Run formatting through prek"
+  }
+]

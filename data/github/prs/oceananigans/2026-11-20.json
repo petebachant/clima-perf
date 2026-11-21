@@ -1,0 +1,20 @@
+[
+  {
+    "additions": 2,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "Fixes a regression from #6362 in `test/mpi/split_explicit_boundaries.jl`.\n\nOn `main`, `test/mpi/split_explicit_boundaries.jl` fails for one-dimensional\npartitions on non-immersed grids: `u`, `v` and `\u03b7` differ between the serial\nand distributed runs. Reverting #6362 makes the test pass again.\n\n### Cause\nWith `ExtendedHalos`, the barotropic substep kernels run over\n`surface_kernel_parameters(grid)`. This includes the wall faces and halos in the\ndirection that is not partitioned. There the halo keeps its original depth,\nwhich is less than the exchange interval. So values that are out of date at the\nedge of the halo move inward, and the barotropic transport at the wall faces\nends up nonzero. \u03b7 is not affected, because the divergence ignores wall faces.\nBefore #6362, the halo fill for \u0168/\u1e7c reset the wall faces through the normal-flow\nboundary conditions. Since #6362 skips that fill, the transport velocities carry\nflux through the walls.\n\n### Fix\n`ExtendedHalos` is selected only when there are no open boundaries and no\nnonzero normal-flow boundaries, so a full halo fill is always correct in that\nmode. `fill_barotropic_state_halos!` for `ExtendedHalos` now ignores\n`fill_normal_flow_bcs = false`. The other halo modes, which open-boundary runs\nuse, are unchanged, so the #6362 fix still applies there.\n\n### Testing\n`test/mpi/split_explicit_boundaries.jl` passes on 4 GPUs (all four testsets).\n\n### Note\nThis test runs only in the Buildkite distributed pipeline, which reported no\nstatus on #6362.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T08:04:46Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-20T05:54:25Z",
+    "number": 6506,
+    "title": "Follow-up to #6362: refill all barotropic halos with ExtendedHalos"
+  }
+]

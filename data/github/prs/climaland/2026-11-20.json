@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 963,
+    "author": {
+      "id": "MDQ6VXNlcjY1OTc5MjA1",
+      "is_bot": false,
+      "login": "kmdeck",
+      "name": ""
+    },
+    "body": "## Purpose \r\n1. Check conservation in the full land model, and remove the conservation checker from the soil model. This entails: (1) adding diagnostics to Land, removing from soil. (2) adding prognostic and cache vars to the land model and removing them from soil. We need new prognostic variable corresponding to the time integral of the fluxes, which is equal to the change in the total energy or water of the model. Since we include the derivative of some fluxes with respect to the state in the Jacobian, the new variables require some changes to the Jacobian matrix.\r\n3. Adds a unit test of conservation (single step) with and without lake\r\n4. Adds an experiment checking conservation over a longer period of time, remove a previous version that did not use the new tools\r\n5. Clarifies discussion around variables in implicit_timestepping.jl\r\n\r\n\r\n\r\n## To-do\r\n\r\n## Content\r\n\r\n[Land_Conservation.pdf](https://github.com/user-attachments/files/29115165/Land_Conservation.pdf)\r\nWith constant LAI, water and energy conservation look good. With analytic LAI, the energy conservation gets a lot bigger (still small, fractionally). It is confusing because we also use the LAI tendency in the water conservation computation, and that hardly changes when LAI is varying in time. so presumably it is somehow related to energy being handled implicitly for the canopy. But I am not sure how to fix it.\r\n\r\nConstant LAI:\r\n<img width=\"3000\" height=\"800\" alt=\"energy_conservation\" src=\"https://github.com/user-attachments/assets/f7fde32c-dd33-4fa5-ba00-c7032bb6ac80\" />\r\n<img width=\"3000\" height=\"800\" alt=\"water_conservation\" src=\"https://github.com/user-attachments/assets/98b01665-6d09-4ea4-9199-8570a9730202\" />\r\n\r\n\r\nTime Varying LAI/Analytic:\r\n<img width=\"3000\" height=\"800\" alt=\"energy_conservation\" src=\"https://github.com/user-attachments/assets/cfd5f3d5-1751-4991-aea6-1fb97a488924\" />\r\n<img width=\"3000\" height=\"800\" alt=\"water_conservation\" src=\"https://github.com/user-attachments/assets/7efcc4da-3cc7-4dea-a1d9-3bfe0a82af1a\" />\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 40,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-06-16T22:50:42Z",
+    "deletions": 1125,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-20T17:03:01Z",
+    "number": 1771,
+    "title": "Conservation checker"
+  }
+]
