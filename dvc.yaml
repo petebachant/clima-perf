@@ -63,6 +63,7 @@ stages:
     deps:
       - scripts/fetch-weekly-buildkite.py
       - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/buildkite_api.py
       - .calkit/env-locks/bk
     outs:
       - data/buildkite-weekly:
@@ -72,6 +73,41 @@ stages:
           cache: false
           persist: true
     desc: Automatically generated from the 'fetch-weekly-buildkite' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  fetch-nightly-nsys:
+    cmd: calkit xenv -n bk --no-check -- python scripts/fetch-nightly-nsys.py
+    deps:
+      - scripts/fetch-nightly-nsys.py
+      - .calkit/local/current-periods/1-day-utc.txt
+      - scripts/buildkite_api.py
+      - .calkit/env-locks/bk
+    outs:
+      - data/buildkite-nightly-nsys:
+          cache: false
+          persist: true
+    desc: Automatically generated from the 'fetch-nightly-nsys' stage in
+      calkit.yaml. Changes made here will be overwritten.
+  analyze-nsys-kernels:
+    cmd: calkit xenv -n analyze --no-check -- python
+      scripts/analyze-nsys-kernels.py
+    deps:
+      - scripts/analyze-nsys-kernels.py
+      - .calkit/env-locks/analyze
+      - data/buildkite-nightly-nsys
+    outs:
+      - results/amip-gpu-kernels-latest.csv:
+          cache: false
+          persist: false
+      - results/amip-gpu-kernels-latest.md:
+          cache: false
+          persist: false
+      - figures/amip-gpu-kernels-latest.json:
+          cache: false
+          persist: false
+      - figures/amip-gpu-kernels.json:
+          cache: false
+          persist: false
+    desc: Automatically generated from the 'analyze-nsys-kernels' stage in
       calkit.yaml. Changes made here will be overwritten.
   fetch-github:
     cmd: calkit xenv -n clima-data --no-check -- python scripts/fetch-github.py

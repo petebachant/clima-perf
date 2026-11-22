@@ -916,23 +916,27 @@ stages:
       nfiles: 2
     - path: .calkit/local/current-periods/1-day-utc.txt
       hash: md5
-      md5: 717b2011cc323404d28b08fd7fe1c916
+      md5: badd5cd3516a51b6f01d2b70d88ad9dd
       size: 11
+    - path: scripts/buildkite_api.py
+      hash: md5
+      md5: 3ec3e5ad77c66fb6eac6a247e93f441a
+      size: 9066
     - path: scripts/fetch-weekly-buildkite.py
       hash: md5
-      md5: e469136c8e9dc98d0ad5256e493aca17
-      size: 15255
+      md5: 6dd5690b3a7aa555bc2121fc7750690c
+      size: 7263
     outs:
     - path: data/buildkite-weekly
       hash: md5
-      md5: e5023441139dad44c2fcfcc1d9218d73.dir
-      size: 197912193
-      nfiles: 1269
+      md5: 54cee3ccdcc4691c2c480c13ef4c34fd.dir
+      size: 198762206
+      nfiles: 1277
     - path: data/buildkite-weekly-leaderboards
       hash: md5
-      md5: 022ba954134213c19c9795ad4dc19fb6.dir
-      size: 90919
-      nfiles: 150
+      md5: b1e07c8da102de850654b4ec7d0eac68.dir
+      size: 112523
+      nfiles: 165
   analyze-weekly:
     cmd: calkit nb execute --environment analyze --no-check --to html 
       "notebooks/analyze-weekly.ipynb"
@@ -1566,3 +1570,64 @@ stages:
       hash: md5
       md5: a5d5168f8bf7020f10c3d3bd25784f14
       size: 1078
+  fetch-nightly-nsys:
+    cmd: calkit xenv -n bk --no-check -- python scripts/fetch-nightly-nsys.py
+    deps:
+    - path: .calkit/env-locks/bk
+      hash: md5
+      md5: 2931c13ebe749149d73be56c1e8202d1.dir
+      size: 1308
+      nfiles: 2
+    - path: .calkit/local/current-periods/1-day-utc.txt
+      hash: md5
+      md5: badd5cd3516a51b6f01d2b70d88ad9dd
+      size: 11
+    - path: scripts/buildkite_api.py
+      hash: md5
+      md5: 3ec3e5ad77c66fb6eac6a247e93f441a
+      size: 9066
+    - path: scripts/fetch-nightly-nsys.py
+      hash: md5
+      md5: bbde7909e4e5302713807cc96001d672
+      size: 2150
+    outs:
+    - path: data/buildkite-nightly-nsys
+      hash: md5
+      md5: 088e9aa8d069406639207e95694308c9.dir
+      size: 163088
+      nfiles: 37
+  analyze-nsys-kernels:
+    cmd: calkit xenv -n analyze --no-check -- python 
+      scripts/analyze-nsys-kernels.py
+    deps:
+    - path: .calkit/env-locks/analyze
+      hash: md5
+      md5: 0ef5b0cfb92b4a8a40c598d4a75d7114.dir
+      size: 5098
+      nfiles: 5
+    - path: data/buildkite-nightly-nsys
+      hash: md5
+      md5: 088e9aa8d069406639207e95694308c9.dir
+      size: 163088
+      nfiles: 37
+    - path: scripts/analyze-nsys-kernels.py
+      hash: md5
+      md5: 2c2910592b47b1ccf12d80d7aa567d62
+      size: 14213
+    outs:
+    - path: figures/amip-gpu-kernels-latest.json
+      hash: md5
+      md5: c0cddaf2e0f4b06136c2c281d29db395
+      size: 10672
+    - path: figures/amip-gpu-kernels.json
+      hash: md5
+      md5: c574816815a93a950feb08c0a6d89f44
+      size: 12710
+    - path: results/amip-gpu-kernels-latest.csv
+      hash: md5
+      md5: b7d1797b6b31a98dc7a65e2b3dfa52c8
+      size: 96085
+    - path: results/amip-gpu-kernels-latest.md
+      hash: md5
+      md5: 6c8c5ba9450a5313a26f2a6e629c4b91
+      size: 3341

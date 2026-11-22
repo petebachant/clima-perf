@@ -133,12 +133,52 @@ pipeline:
       inputs:
         - kind: schedule
           period: 1 day
+        - scripts/buildkite_api.py
       outputs:
         - path: data/buildkite-weekly
           delete_before_run: false
           storage: git
         - path: data/buildkite-weekly-leaderboards
           delete_before_run: false
+          storage: git
+    fetch-nightly-nsys:
+      description: >
+        Mirror the Nsight Systems GPU kernel summary CSV
+        (cuda_gpu_kern_sum) that the "nsys AMIP with prognostic EDMF" step
+        of climacoupler-coarse-nightly-amip has uploaded since 2026-11-16,
+        from scheduled builds only (the pipeline also runs downstream tests
+        and feature-branch builds). Buildkite ages artifacts out, so this
+        keeps a copy of each night's; already-mirrored builds are skipped.
+      kind: python-script
+      script_path: scripts/fetch-nightly-nsys.py
+      environment: bk
+      inputs:
+        - kind: schedule
+          period: 1 day
+        - scripts/buildkite_api.py
+      outputs:
+        - path: data/buildkite-nightly-nsys
+          delete_before_run: false
+          storage: git
+    analyze-nsys-kernels:
+      description: >
+        Normalize the nightly AMIP's GPU kernel names (dropping the package
+        depot slug), rank the latest night's kernels by GPU time into a
+        table that is rewritten in place each night, chart the latest top
+        kernels as ranked bars, and plot their time over the nights.
+      kind: python-script
+      script_path: scripts/analyze-nsys-kernels.py
+      environment: analyze
+      inputs:
+        - from_stage_outputs: fetch-nightly-nsys
+      outputs:
+        - path: results/amip-gpu-kernels-latest.csv
+          storage: git
+        - path: results/amip-gpu-kernels-latest.md
+          storage: git
+        - path: figures/amip-gpu-kernels-latest.json
+          storage: git
+        - path: figures/amip-gpu-kernels.json
           storage: git
     fetch-github:
       description: >
@@ -672,6 +712,28 @@ figures:
       is about ten times any other package's. Posts less than 28 days old
       are compared over the days so far.
     stage: analyze-blog
+  - path: figures/amip-gpu-kernels-latest.json
+    title: Most expensive nightly AMIP GPU kernels
+    stage: analyze-nsys-kernels
+    description: >
+      The latest nightly coarse AMIP's (amip_progedmf_1m_land_he16) 20 most
+      expensive GPU kernels by share of GPU kernel time over the profiled
+      steps, one bar per kernel launch site. Hovering a bar gives its
+      source, time, call count, and its rank and time the night before;
+      when its launch site isn't in the previous night's profile (a moved
+      line, or a kernel renamed between its source line and its NVTX
+      range), it compares against the previous night's kernels of the same
+      function instead. Redrawn each night; the figure's history shows how
+      the ranking changed.
+  - path: figures/amip-gpu-kernels.json
+    title: Nightly AMIP GPU kernel time
+    stage: analyze-nsys-kernels
+    description: >
+      Total GPU kernel time over the profiled steps of each nightly coarse
+      AMIP (amip_progedmf_1m_land_he16), and the time of the latest
+      night's eight most expensive kernels, grouped by function and source
+      file so a kernel keeps its trace when its line number or package
+      version changes.
   - path: figures/weekly-benchmarks-amip.json
     title: Weekly ClimaCoupler AMIP benchmarks
     stage: analyze-weekly
@@ -789,7 +851,9 @@ notebooks:
 
 showcase:
   - figure: figures/amip-speedup.json
+  - figure: figures/amip-gpu-kernels-latest.json
   - markdown_file: results/amip-repo-diff-links.md
+  - markdown_file: results/amip-gpu-kernels-latest.md
 
 datasets:
   - path: data/github-code-dependents
@@ -935,6 +999,27 @@ datasets:
       window removes them. One JSON file per job, named by build number and
       job ID.
     stage: fetch-weekly-buildkite
+  - path: data/buildkite-nightly-nsys
+    title: Nightly AMIP GPU kernel summaries
+    description: >
+      The Nsight Systems GPU kernel summary CSVs (nsys stats
+      cuda_gpu_kern_sum) from the profiling step of each scheduled
+      climacoupler-coarse-nightly-amip build since 2026-11-16, mirrored
+      verbatim before Buildkite's retention window removes them. One index
+      JSON per build listing its summaries and the jobs that wrote them,
+      and the CSVs under <build>-<job ID>/.
+    stage: fetch-nightly-nsys
+  - path: results/amip-gpu-kernels-latest.csv
+    title: Latest nightly AMIP GPU kernels
+    description: >
+      Every GPU kernel in the latest nightly AMIP profile, most expensive
+      first, with its share of GPU time, total and per-call time, and call
+      count over the profiled steps. Rewritten in place each night, so this
+      file's history is the history of the ranking. The source column is
+      the package, file, and line the kernel was launched from; "/" in the
+      file path can't be told apart from "_" in the kernel name, so it is
+      left as "_".
+    stage: analyze-nsys-kernels
   - path: data/buildkite-weekly-leaderboards
     title: Weekly benchmark leaderboard CSVs
     description: >
