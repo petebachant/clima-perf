@@ -1,0 +1,33 @@
+[
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Purpose\r\n\r\nThis PR updates ClimaAtmos to CloudMicrophysics 0.51, which changes how 1-moment rain collides with cloud ice and snow and reduces the register use of its GPU kernels. It also raises the ClimaParams compat to 1.3.13, which CloudMicrophysics 0.51 requires.\r\n\r\n## Disclosure\r\n\r\nThis PR and its description were partly generated using Claude.\r\n\r\n## Content\r\n\r\n- In 1-moment rain collisions with cloud ice and snow, collected rain freezes over a linear temperature ramp below freezing (`temperature_rain_collision_snow`), collected cloud ice melts into rain at and above freezing, and snow melts only by the sensible heat of the collected rain.\r\n- In the 1M process diagnostics (`mp1m_`, `mp1mup_`, `mp1men_`), `*_S_accr_rai_sno_warm` is removed and `*_S_accr_melt_icl_rai` is added.\r\n- The parameter structs of CloudMicrophysics are defined with `ClimaParams.@params`, so that they hold their values in a type parameter and GPU kernels do not allocate any registers or parameter memory for them.\r\n- The 1-moment tendencies of CloudMicrophysics execute fewer instructions and use fewer registers.\r\n\r\n## Comparison against main\r\n\r\nA profile of an A100 coupling step (build [620](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/620), of `12e9c9f1b`, which merges this PR into `main`, and of `main` at `ddf265498`) splits the device time into components, with the registers per thread and the achieved occupancy of each component averaged over its kernels, weighted by their device time:\r\n\r\n| Component | PR time (share) | PR vs main time | PR registers per thread | PR vs main registers | PR achieved occupancy | PR vs main occupancy |\r\n|---|---|---|---|---|---|---|\r\n| radiation (RRTMGP, once every 20 steps) | 63.4 ms (25.3%) | +0.2% | 255.0 | no change | 12.2% | no change |\r\n| `initialize_implicit_stage_problem!` | 49.7 ms (19.9%) | -18.7% | 50.5 | -19.3% | 41.5% | +14.2% |\r\n| `set_explicit_precomputed_quantities!` | 30.0 ms (12.0%) | -36.3% | 84.7 | -26.4% | 32.2% | +31.4% |\r\n| `invert_jacobian!` | 24.1 ms (9.6%) | +0.2% | 28.5 | no change | 88.7% | no change |\r\n| `implicit_tendency!` | 23.2 ms (9.2%) | -1.0% | 65.3 | -1.1% | 44.9% | +0.5% |\r\n| `remaining_tendency!` | 13.8 ms (5.5%) | +0.5% | 55.0 | +0.1% | 56.7% | -0.2% |\r\n| `update_jacobian!` | 13.6 ms (5.4%) | -1.0% | 47.4 | -0.3% | 56.2% | +1.0% |\r\n| `set_implicit_precomputed_quantities!` | 11.5 ms (4.6%) | -12.0% | 40.6 | -19.3% | 60.9% | +12.8% |\r\n| ODE stage arithmetic (ClimaTimeSteppers) | 5.7 ms (2.3%) | no change | 19.5 | no change | 81.6% | no change |\r\n| `correct_implicit_advection_tendency!` | 5.2 ms (2.1%) | +0.2% | 26.8 | no change | 85.0% | no change |\r\n| surface models (land, ocean, sea ice) | 4.4 ms (1.8%) | -3.3% | 47.8 | +1.9% | 40.3% | +1.4% |\r\n| `dss!` | 4.0 ms (1.6%) | no change | 40.1 | no change | 68.5% | +0.1% |\r\n| other atmos (`constrain_state!`, other kernels) | 1.1 ms (0.4%) | no change | 33.2 | no change | 69.3% | no change |\r\n| coupler (fluxes, remapping) | 0.8 ms (0.3%) | no change | 49.1 | -0.4% | 14.7% | +0.2% |\r\n| **Total** | **250.5 ms (100.0%)** | **-10.8%** | **104.0** | **-4.1%** | **42.5%** | **+8.6%** |\r\n\r\nA coupling step executes 10.2% fewer instructions with the same global loads and stores. Almost all of the difference is in the 1-moment microphysics kernels, most of which use fewer registers per thread and reach a higher occupancy (e.g., the slower of the two `set_environment_1m_tendency` kernels uses 105 instead of 136 registers, reaches an occupancy of 22.6% instead of 16.9%, and executes 38% fewer instructions). The surface models row differs because this PR's environment resolves ClimaLand 1.16.0 instead of 1.15.0.",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-20T23:49:53Z",
+    "deletions": 32,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-21T10:43:56Z",
+    "number": 5004,
+    "title": "Update to CloudMicrophysics 0.51"
+  }
+]

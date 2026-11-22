@@ -1,0 +1,64 @@
+[
+  {
+    "additions": 145,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThis PR defines the parameter structs of CloudMicrophysics with `ClimaParams.@params`, so that they hold their values in a type parameter and GPU kernels do not allocate any registers or parameter memory for them. CliMA/ClimaAtmos.jl#4984 measures the effect.\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Content\n\n- The structs of `src/parameters` that hold parameter values, and the quadrature rules `ChebyshevGauss` and `GaussLegendre`, are defined with `@params`.\n- `NIceProxyDepletion` is a `ParametersType`, and the quadrature rules print as calls to their constructors, e.g., `GaussLegendre(Float64, 16)`.\n- Structs that only hold other parameter structs, lookup tables, or rates computed at every point (e.g., `Microphysics2MParams`, `P3IceParams`, and `LclRaiRates`) stay `@kwdef` structs.\n\n## Comparison against main\n\nThe tests were timed on one core of an Apple M2 Max with Julia 1.13.3. Constant-folded parameter values shorten most tests, but every new set of parameter values requires recompilation, which lengthens the calibration tests.\n\n| Latency metrics | PR | main | PR vs main |\n|---|---|---|---|\n| Test files other than the calibration tests, total time | 334.9 s | 406.0 s | -17.5% |\n| `aerosol_activation_calibration.jl`, time | 121.0 s | 43.3 s | +179.4% |\n| `ice_nucleation_calibration.jl`, time | 89.9 s | 37.7 s | +138.5% |\n| All test files, total time | 545.8 s | 487.0 s | +12.1% |\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 33,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T07:45:07Z",
+    "deletions": 98,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-21T00:08:44Z",
+    "number": 851,
+    "title": "Replace kwdef with params macro from ClimaParams"
+  },
+  {
+    "additions": 523,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThis PR reduces the work per point and the number of live values in the 1M bulk microphysics tendencies, which take a quarter of a time step of the flagship ClimaAtmos AMIP configuration on GPUs. It builds on #851, and CliMA/ClimaAtmos.jl#4985 builds on it.\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Content\n\n- `linearized_step_1m` folds each process into the linearization and into one decay total per donor as soon as its rates are known, and takes its second backward Euler step only when a limiter is active.\n- A substep starts from the non-negative part of the species and skips its vapor relaxation when no vapor process is enabled.\n- The saturation vapor pressures, the snow intercept, and the ice relaxation timescale are evaluated once instead of once per process.\n- The rain-snow and rain-sink collision rates use the mass content in place of an equivalent product of powers, which changes results by roundoff, except at the tiny contents where `lambda_inverse` clips \u03bb\u207b\u00b9 (below about 4e-21 kg/kg of rain in Float64).\n- The Chen 2022 terminal velocities evaluate each logarithm and gamma value of the state once.\n- Factors that depend only on parameters, such as `r0^(me + \u0394m)` in `lambda_inverse` and the large-ice Chen 2022 coefficients, are evaluated during compilation (`Utilities.precomputed`).\n- The kernel forms of `accretion_snow_rain` and `accretion_rain_sink` take different arguments, so the next release is breaking (0.51.0, already the version on `main`).\n\n## Comparison against #851\n\nKernels that call CloudMicrophysics in a coupling step of the flagship AMIP configuration on one A100, with ClimaAtmos `fdd1d977e` (CliMA/ClimaAtmos.jl#4985) on both sides, profiled in build [607](https://buildkite.com/clima/climaatmos-end-to-end-performance/builds/607) at `f21fd1d7` (#851) and `51dd8c73` (this PR). Times are averaged over 20 coupling steps, and the other metrics come from Nsight Compute on one coupling step. A row with several launches per step sums them, and weights its occupancy by time.\n\n| Kernels (launches per step) | PR time per step | PR vs #851 time | PR registers per thread | PR vs #851 registers per thread | PR achieved occupancy | PR vs #851 achieved occupancy | PR warp instructions per step | PR vs #851 warp instructions | PR DRAM traffic per step | PR vs #851 DRAM traffic |\n|---|---|---|---|---|---|---|---|---|---|---|\n| Environment, explicit (`set_microphysics_tendency_cache!`) (2) | 14.22 ms | -48.5% | 95 | -18.1% | 28.1% | +26.8% | 3349 M | -40.2% | 3.26 GB | +23.3% |\n| Environment, implicit (`update_implicit_1m_tendency!`) (2) | 4.19 ms | -7.1% | 77 | -2.5% | 34.6% | +0.2% | 1438 M | -8.4% | 0.61 GB | -2.0% |\n| Updraft, explicit (`update_updraft_microphysics_tendency_cache!`) (4) | 6.33 ms | -56.1% | 73 | -28.4% | 35.8% | +47.5% | 2497 M | -40.6% | 0.93 GB | -15.4% |\n| Updraft, implicit processes (`update_updraft_microphysics_tendency_cache!`) (4) | 6.31 ms | -27.3% | 80 | -2.4% | 35.8% | +19.6% | 2407 M | -17.2% | 0.58 GB | -12.6% |\n| Updraft, implicit (`update_implicit_1m_tendency!`) (2) | 0.36 ms | -7.5% | 45 | -15.1% | 49.8% | +7.4% | 160 M | -3.1% | 0.20 GB | no change |\n| Terminal velocities (`set_precipitation_velocities!`) (10) | 8.70 ms | -21.8% | 48 | -15.8% | 41.4% | +30.4% | 2096 M | -15.1% | 5.18 GB | -4.2% |\n| Microphysics Jacobian (`update_jacobian!`) (2) | 1.60 ms | -8.0% | 66 | -7.0% | 41.9% | +1.1% | 319 M | -10.5% | 1.56 GB | -0.5% |\n| Total (26) | 41.71 ms | -39.1% | \u2013 | \u2013 | 34.6% | +30.1% | 12265 M | -29.0% | 12.33 GB | +0.9% |\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T11:20:08Z",
+    "deletions": 227,
+    "labels": [
+      {
+        "color": "A5E123",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACboRpdg",
+        "name": "Approved :four_leaf_clover:"
+      },
+      {
+        "color": "9539db",
+        "description": "",
+        "id": "LA_kwDOFzm_uM8AAAACstuUlA",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-21T00:08:45Z",
+    "number": 852,
+    "title": "Reduce the work and register use of the 1M tendencies"
+  }
+]
