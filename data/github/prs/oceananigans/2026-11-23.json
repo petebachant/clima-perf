@@ -1,0 +1,60 @@
+[
+  {
+    "additions": 56,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #6562. Closes #6567.\n\nA reduction over a reduced field on an immersed `TripolarGrid` built the mask of the immersed columns twice on the rank of the north fold, because only that rank wrapped its condition in `PrognosticTripolarCells`. The second mask allocates a distributed field that the other ranks do not, the field tags diverge, and later halo exchanges never complete.\n\n- Every rank now wraps the condition in `PrognosticTripolarCells`; the predicate keeps every cell where the local y-topology has no fold.\n- `immersed_reduced_tripolar_condition_operand` builds the `ConditionalOperation` directly, so the immersed columns are masked once.\n- The fold rank of a distributed `FaceFolded` grid now gets the `FaceFolded` mask (it got the `CenterFolded` one because its south side is not `Closed`).\n- New distributed test, for the three fold topologies: the field tags are equal on every rank, and `sum(c; dims=(1, 2))`, `Average(c, dims=(1, 2))` and `sum(v)` match a serial grid.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABhabLHA",
+        "number": 6562,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6562"
+      },
+      {
+        "id": "I_kwDOCRy_aM8AAAABhclhiA",
+        "number": 6567,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6567"
+      }
+    ],
+    "createdAt": "2026-11-22T06:39:47Z",
+    "deletions": 24,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "7407c6",
+        "description": "Our plan for total cluster domination",
+        "id": "MDU6TGFiZWwxODI2Mzk1NzA2",
+        "name": "distributed \ud83d\udd78\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-11-23T20:56:15Z",
+    "number": 6565,
+    "title": "Create the same fields on every rank in reductions on immersed tripolar grids"
+  }
+]

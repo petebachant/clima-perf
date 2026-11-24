@@ -1,0 +1,58 @@
+[
+  {
+    "additions": 4,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR updates the diagnostics written in pressure coordinates to use `ClimaCore.Remapping.LogLinearInPressure()`. This interpolates linearly in the logarithm of pressure instead of linearly in pressure.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-23T19:14:28Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-23T22:11:10Z",
+    "number": 5006,
+    "title": "Interpolate diagnostics in log pressure"
+  },
+  {
+    "additions": 1436,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "## Summary\r\n\r\nAdds two mixed-phase Arctic stratocumulus single-column model (SCM) benchmarks \u2014 **ISDAC** (Ovchinnikov et al., 2014) and **M-PACE** Case B (Klein et al., 2009) \u2014 for `PrognosticEDMFX` with 1-moment microphysics, along with Buildkite CI jobs and literature-based intercomparison plots.\r\n\r\n## Changes\r\n\r\n- **M-PACE case setup (`Setups.MPACE`, `MPACEForcing`):**\r\n  - Hydrostatically integrated initial $\\theta_{li}(p)$ and $q_t(p)$ profiles from Klein et al. (2009), extended above an Arctic tropopause (`300` hPa isothermal stratosphere, `q_top = 3e-6` kg/kg floor) to support full-column RRTMGP on the 79-level AMIP stretched grid (`z_max: 60e3`).\r\n  - Prescribed surface fluxes (`shf = 136.5` W m\u207b\u00b2, `lhf = 107.7` W m\u207b\u00b2, `z0 = 1e-4` m, `T_sfc = 274.01` K), large-scale subsidence and cold-air advective cooling/drying tapered smoothly to zero between `550` and `450` hPa, `MPACEForcing` horizontal wind nudging toward `(-13, -3)` m/s (`\u03c4 = 3600` s), and time-varying insolation starting `17Z 9 October 2004`.\r\n- **ISDAC SCM updates (`Setups.ISDAC`, `RadiationISDAC`):**\r\n  - Sets `Setups.ISDAC` surface sensible and latent heat fluxes to zero (`shf = 0`, `lhf = 0`) per Ovchinnikov et al. (2014), Appendix A2.\r\n  - Applies `RadiationISDAC` parameterized longwave cooling consistently to `PrognosticEDMFX` updraft MSE.\r\n- **Configs, CI, docs, & post-processing:**\r\n  - Adds `prognostic_edmfx_isdac_column.yml` (38-level stretched grid to `2.5` km matching AMIP levels below `2.5` km) and `prognostic_edmfx_mpace_column.yml` (79-level AMIP stretched grid to `60` km with `rad: allskywithclear`), wired into `.buildkite/full_pipeline.yml` and `post_processing/ci_plots.jl`.\r\n  - Adds literature reference data (`post_processing/scm_literature_references.jl`) and updates `edmf_scm_intercomparison.jl` / `run_all_scm_intercomparisons.jl` to plot ISDAC (6\u20138 h average vs. Ovchinnikov et al. 2014 LES) and M-PACE (4\u201312 h average vs. Klein et al. 2009 CRM ensemble).\r\n  - Documents `Setups.MPACE` and `MPACEForcing` and adds unit tests in `test/config/model_from_config.jl`.\r\n\r\n## Behavioral Changes\r\n\r\n- **`Setups.ISDAC` surface fluxes:** Prescribes `shf = 0` and `lhf = 0` (with `z0 = 4e-4` m) per Ovchinnikov et al. (2014), Appendix A2: *\"both sensible and latent surface heat fluxes are set to zero in these simulations\"*. Previously, `MoninObukhov(; z0 = 4e-4)` computed interactive surface fluxes from `T_sfc = 267` K, so this alters existing ISDAC configurations such as `les_isdac_box.yml`.",
+    "changedFiles": 21,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-30T21:53:11Z",
+    "deletions": 179,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-23T23:28:51Z",
+    "number": 4945,
+    "title": "Add M-PACE and ISDAC to SCM comparison plots"
+  }
+]
