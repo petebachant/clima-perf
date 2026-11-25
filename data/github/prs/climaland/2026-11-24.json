@@ -1,0 +1,176 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "On one of the buildkite builds, I noticed that the MPI run fail even though the build did not throw an error. See https://buildkite.com/clima/climaland-ci/builds/11774#01a209e8-a352-45cf-8cd9-600f20d449fa.\r\n\r\n`solve!` catches the error but only logs it. This results in the build succeeding. To fix this, `solve!` throws an error after closing the output writers and NetCDF files. To fix the MPI run, the default ODE algorithm is used. ",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-23T22:04:02Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T00:47:48Z",
+    "number": 1980,
+    "title": "Fix Global Run CPU MPI run"
+  },
+  {
+    "additions": 88,
+    "author": {
+      "id": "U_kgDOBdh4bA",
+      "is_bot": false,
+      "login": "ph-kev",
+      "name": "Kevin Phan "
+    },
+    "body": "This PR updates the calibration pipeline to use ClimaCalibrate v0.7.\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-20T00:14:53Z",
+    "deletions": 142,
+    "labels": [
+      {
+        "color": "fbca04",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACL-BGHw",
+        "name": "Run test calibration"
+      },
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T02:11:17Z",
+    "number": 1977,
+    "title": "Update calibration to use ClimaCalibrate v0.7"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Follow up to #1979\n\n\n\n<!---\nReview checklist\n\nI have:\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\n- checked that this PR does not duplicate an open PR.\n\nIn the Content, I have included \n- relevant unit tests, and integration tests, \n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\n\n-->\n\n----\n- [x] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T17:34:27Z",
+    "deletions": 10,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T19:05:12Z",
+    "number": 1982,
+    "title": "Make Optimisers.jl a weak dep"
+  },
+  {
+    "additions": 136,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "When water or ice fills soil pores, the model keeps the O\u2082 of the layer while its effective porosity `\u03b8_a + \u03b2_O\u2082 \u03b8_l` shrinks. The O\u2082 fraction of the soil air, `so2`, then rises above the atmospheric 0.21. It rises about 12-fold when soil at \u03b8_l = 0.25 saturates.\n\nGas barely diffuses through full pores, so the excess stays. The soil has no O\u2082 source. Physically, the displaced air and the O\u2082 that freezing water rejects leave the soil.\n\nThis PR releases the O\u2082 above the atmospheric concentration over one hour (`o2_release_rate`). The atmospheric concentration is taken at the air temperature, as in the top boundary condition. The column total is kept as a flux to the atmosphere, `o2_release_flux`, so O\u2082 mass is conserved. CO\u2082 is unchanged.\n\nColumn with no respiration and O\u2082 starting at 0.21; the soil below 0.5 m fills with water between day 1 and day 2:\n\n| `so2` at 1.05 m | day 1 | day 2 | day 3 | day 4 |\n|---|---|---|---|---|\n| before | 0.210 | 2.58 | 2.58 | 2.58 |\n| after | 0.210 | 0.31 | 0.210 | 0.210 |\n\nThe release is one-sided, so layers that diffusion reaches slowly settle at the concentration of the warmest air. With air at 263 \u00b1 10 K over soil at 275 K, the daily mean `so2` at 2 m after 30 days is 0.211 instead of 0.219. Removing this would need diffusion of the O\u2082 mole fraction rather than its mass concentration.\n\nThis PR is stacked on #1984.\n\nTests:\n- a unit test of `o2_release_rate`;\n- in `saturation_stability_test.jl`, a saturated column holding ten times the atmospheric O\u2082. It checks the release, the O\u2082 tendency and the surface flux, and that nothing is released at the atmospheric concentration.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 7,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T19:29:04Z",
+    "deletions": 0,
+    "labels": [],
+    "mergedAt": "2026-11-24T19:51:59Z",
+    "number": 1985,
+    "title": "Release O\u2082 squeezed out of filling soil pores"
+  },
+  {
+    "additions": 85,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "The soil CO\u2082 and O\u2082 diffusivities (Ryan et al. 2018, after Moldrup et al. 2004) use `\u03b8_a100`, the **air-filled** porosity at a matric potential of \u2212100 cm H\u2082O. Ryan et al. (2018, Table 1) give 18.16 %, the value hard-coded before #690.\n\nSince #690, `PrognosticMet` and `PrescribedMet` have computed `S(\u03c8 = \u22121 m)(\u03bd \u2212 \u03b8_r) + \u03b8_r`, which is the **water** content there. This PR computes the air content, `(\u03bd \u2212 \u03b8_r)(1 \u2212 S(\u03c8 = \u22121 m))`, in `air_filled_porosity_100cm`, which both constructors now use. It also corrects \"~10 Pa\" to \"~10 kPa\" in the docstrings and adds the formula to the DAMM docs.\n\n## Before / after\n\nDefault ROSETTA soil parameters, surface layer, weighted by area. These are computed offline with the model's formulas.\n\n| | before | after |\n|---|---|---|\n| `\u03b8_a100`, median (10\u201390 %) | 0.36 (0.24\u20130.46) | 0.10 (0.06\u20130.16) |\n| Land where D exceeds the open-air diffusivity D0 | ~2.4 % (Sahara up to ~80 \u00d7 D0) | 0 % |\n| D_before / D_after, p10 / p50 / p90 | 0.54 / 0.93 / 1.17 | |\n\nFor most soils, D changes little. Coarse soils had D above D0, which soil cannot produce, and clays had D too low.\n\nRespiration changes through the O\u2082 supply (`D_o2`). The calibrated soil-CO\u2082 parameters and the SOC spin-ups were tuned with the old diffusivity. The long run on this PR shows the effect on Rh, ER and NEE.\n\n## Question for review: the ratio cap\n\n`gas_diffusivity_in_soil` caps `\u03b8_a / \u03b8_a100` at 5 (#1714). With the old `\u03b8_a100`, the cap binds on \u2264 0.2 % of land. With the new value, it binds in dry, fine-textured soils:\n\n| Surface dried to \u03c8 = | \u221215 m | \u2212150 m | \u221210\u2074 m |\n|---|---|---|---|\n| ratio cap \u2264 5 binds on | 7 % | 23 % | 29 % |\n| `D \u2264 \u03b8_a D0` (tortuosity \u2265 1) would bind on | 0.5 % | 1.5 % | 2.4 % |\n\nSome bound is needed. Without one, the corrected formula exceeds D0 on 0.1 % of land (ROSETTA), and on up to 11 % of dry land with the Gupta et al. maps. This PR keeps the ratio cap.\n\n## Tests\n\n- The test that restated the old formula now checks that the water left at `\u03b8_a100` sits at \u03c8 = \u22121 m.\n- `air_filled_porosity_100cm` has its own unit test. The function floors the result at `eps(FT)`, for Brooks\u2013Corey soils that are still saturated at \u22121 m.\n- Ran locally:\n  - `co2_parameterizations`\n  - `biogeochemistry_module`\n  - `saturation_stability_test`\n  - `soil_energy_hydrology_biogeochemistry`\n  - `diagnostics/compute_methods`\n  - `aqua`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T17:56:26Z",
+    "deletions": 18,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T21:15:59Z",
+    "number": 1983,
+    "title": "Fix \u03b8_a100: air-filled porosity at -100 cm, not the water content"
+  },
+  {
+    "additions": 425,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "## Summary\n\n1. **Depth limit on decomposition** (Koven et al. 2013, Biogeosciences 10:7109, Eq. 7).\n   - The DAMM microbial source is multiplied by `exp(-depth / z_\u03c4)`, with the new parameter\n     `soilCO2_decomposition_efolding_depth` z_\u03c4 = 0.5 m.\n   - `soilCO2_reference_rate` goes from 6.7e-7 to 1.273e-6 (\u00d71.9), so global heterotrophic\n     respiration (Rh) at SoilGrids SOC stays about the same. This re-tunes the value set in #1968.\n2. **Soil carbon spin-up.**\n   - `Simulations.spin_up_carbon_pools!(sim, t; soil_carbon = true)` sets each soil layer's SOC to\n     the value at which its respiration over the spin-up period balances its litter input. It\n     samples the respiration hourly at 41 candidate SOC values, from 10\u207b\u00b3 to 100 kg C m\u207b\u00b3; a\n     layer without a balance below 100 keeps its SOC.\n   - The opt-LAI long run uses it in its second spin-up year, so its scored year starts from SOC in\n     equilibrium with the model's own litter, not from SoilGrids.\n\nBoth are documented on the DAMM model page.\n\n## Why\n\nAgainst CarbonTracker CT2022, the SH NEE seasonal cycle is 3.8\u20134.8\u00d7 CT's, and Australia is a strong\nsource (+0.7 to +1.3 g C m\u207b\u00b2 d\u207b\u00b9). GPP is fine (it matches GOSIF in every SH region); ER is the\nproblem:\n- **Unbalanced SOC:** in drylands, SoilGrids SOC is far out of balance with the model's litter\n  (Australia: Rh 2.1 against litter 0.5 g C m\u207b\u00b2 d\u207b\u00b9).\n- **Rh from the wrong depth:** in Australia, 79% of Rh comes from below 0.3 m, where the soil is\n  wet and aseasonal.\n\nIn an independent study by the PR author, the Koven-style depth limit also gave better agreement\nwith soil-CO\u2082 profiles at NEON sites.\n\n## Results\n\nGlobal opt-LAI long runs, scored as the leaderboard (CT2022 NEE, g C m\u207b\u00b2 d\u207b\u00b9, 2010-03..2011-02):\n\n| run | lb NEE RMSE | seasonal-cycle RMSE | SH NEE amp / CT | Australia NEE bias | NH NEE amp (CT 1.86) | global mean NEE (CT \u22120.07) |\n|---|---|---|---|---|---|---|\n| main | 0.756 | 0.802 | 3.78 | +1.28 | 1.80 | +0.05 |\n| depth limit only | 0.660 | 0.765 | 3.18 | +0.51 | 1.64 | \u22120.02 |\n| spin-up only | 0.532 | 0.723 | 3.50 | \u22120.06 | 1.81 | \u22120.31 |\n| **this PR** | **0.425** | **0.708** | **2.96** | \u22120.11 | 1.68 | \u22120.16 |\n| this PR with z_\u03c4 = 1 m, \u00d71.48 | 0.457 | 0.708 | 3.19 | \u22120.09 | 1.72 | \u22120.21 |\n\n- **Reproduced:** this PR's Buildkite opt-LAI long run (build 5185) matches the \"this PR\" row within\n  5e-5 on every leaderboard RMSE. The review changes (cebc34e3e) leave the results unchanged.\n- **Other fluxes:** GPP and the energy fluxes are unchanged, and ER RMSE falls 2%.\n- **Timing:** the NH peak-uptake month moves from June to July, as in CT.\n- **Prescribed LAI:** only the depth limit applies; NEE RMSE goes 0.914 \u2192 0.888.\n\n## Caveats\n\n- **The equilibrium leaves a sink** (global NEE \u22120.16 vs CT \u22120.07). DAMM saturates in cold or dry\n  topsoil, so some layers cannot respire their litter at any SOC below 100 kg C m\u207b\u00b3 and keep\n  accumulating. This PR does not address it.\n- **Equilibrium SOC differs from SoilGrids:**\n  - top metre: below it (12.7 vs 16.0 kg C m\u207b\u00b2 globally; Australia 5.5 vs 19.4);\n  - below 2 m: above it (5.6 vs 1.0).\n- **z_\u03c4 is debated.** CLM5 weakened its depth limit, and CLM6 uses 10 m; 0.5 m is Koven 2013's\n  \u00b9\u2074C-based value.\n- **Short spin-up:** the equilibrium covers one ERA5 year, not a pre-industrial spin-up.\n- **Prescribed-LAI long run:** it also changes, but it needs the `Run long runs` label.\n\n## Tests\n\n- **Unit tests:** the depth factor, and the equilibrium solver (a known root on a saturating curve,\n  the linear range, layers without litter, saturated layers).\n- **Integrated test** on a coarse global land model: the solved SOC balances the litter within 2%,\n  and `soil_carbon = true` leaves SOC finite and non-negative.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 14,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-19T17:57:53Z",
+    "deletions": 20,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T22:25:54Z",
+    "number": 1975,
+    "title": "Slow DAMM decomposition with depth, and spin up soil carbon in the opt-LAI long run"
+  },
+  {
+    "additions": 322,
+    "author": {
+      "id": "MDQ6VXNlcjIyMTYwMjU3",
+      "is_bot": false,
+      "login": "AlexisRenchon",
+      "name": "Alexandre Alexis Renchon"
+    },
+    "body": "Two problems kept the soil O\u2082 volumetric fraction `so2` far above the atmospheric 0.21. In the global long run it reached 2\u201334, at depth and near the surface in cold regions.\n\n**1. Initial conditions.** `set_soilco2_initial_conditions!` initialized O\u2082 with the effective porosity of CO\u2082, `\u03b8_a + \u03b2_CO\u2082 \u03b8_l`, instead of O\u2082's, `\u03b8_a + \u03b2_O\u2082 \u03b8_l`. CO\u2082 is about 30 times more soluble in water than O\u2082. So wherever pores held water or ice, the soil air started with far more O\u2082 than the atmosphere has. The ERA5-Land, atmosphere-and-parameters and FLUXNET initializers set a uniform 0.08 kg O\u2082 m\u207b\u00b3, which has the same problem.\n\nAll initializers now start CO\u2082 and O\u2082 from the soil state, each gas with its own effective porosity. The FLUXNET one keeps its own SOC.\n\n**2. Pores that fill during a run.** When water or ice filled pores, the O\u2082 of the layer stayed put while its effective porosity shrank. So `so2` rose, about 12-fold when soil at \u03b8_l = 0.25 saturates. It then stayed high, since gas barely diffuses through full pores.\n\nO\u2082 above the atmospheric concentration is now released over one hour. The atmospheric concentration is taken at the air temperature, as in the top boundary condition. The column total is kept as a flux to the atmosphere, `o2_release_flux`, so O\u2082 mass is conserved.\n\n`so2` before and after:\n\n| case | before | after |\n|---|---|---|\n| initialization, pores full of ice (z = \u22120.15 m) | 7.33 | 0.200 |\n| initialization, pores full of water (z = \u22120.75 m) | 4.75 | 0.163 |\n| initialization from atmosphere and parameters, column maximum | 0.409 | 0.203 |\n| soil below 0.5 m saturating, two days later (z = \u22121.05 m) | 2.58 | 0.210 |\n\nIn the initialization rows, \"after\" equals the intended profile, 0.21 \u00b7 exp(z ln(0.21/0.15)).\n\nThe release is one-sided, so layers that diffusion reaches slowly settle at the concentration of the warmest air. With air at 263 \u00b1 10 K over soil at 275 K, the daily mean `so2` at 2 m after 30 days is 0.211 instead of 0.219.\n\nTests:\n- The initializers are tested in `soil_energy_hydrology_biogeochemistry.jl`, `soil_canopy_lsm.jl` and `full_land.jl`. Each check fails before the fix. No test covers the ERA5-Land initializer.\n- The release is tested in `co2_parameterizations.jl` and `saturation_stability_test.jl`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T18:25:16Z",
+    "deletions": 48,
+    "labels": [
+      {
+        "color": "32bd5d",
+        "description": "",
+        "id": "LA_kwDOGiZe4s8AAAACrCdPpQ",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T23:39:48Z",
+    "number": 1984,
+    "title": "Fix soil O\u2082 above the atmospheric level: initial conditions and filling pores"
+  }
+]

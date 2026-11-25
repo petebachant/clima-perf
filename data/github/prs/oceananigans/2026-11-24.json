@@ -1,0 +1,150 @@
+[
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjE1MjcxOTQy",
+      "is_bot": false,
+      "login": "glwagner",
+      "name": "Gregory L. Wagner"
+    },
+    "body": "#6425 downloads the four `ocean_large_eddy_simulation_DynamicSmagorinsky_*` regression files from a branch on a contributor's fork. That branch can be deleted or force-pushed at any time, and CI would load whatever it then contains.\n\nThe same files are now in `glwagner/OceananigansArtifacts.jl` (merged in glwagner/OceananigansArtifacts.jl#11). This PR points `dynamic_smagorinsky_path` at that repository, pinned to the merge commit `1f2eedd`, so the reference data can no longer change underneath the tests.\n\nThe files at the pinned URL are byte-identical to the ones on the fork branch, so `regression_truth_data_v4` keeps its name and cached copies on CI remain valid.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-16T15:19:57Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-11-24T05:50:59Z",
+    "number": 6536,
+    "title": "Download DynamicSmagorinsky regression data from OceananigansArtifacts at a pinned commit"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "When a time window spans more time indices than a partly in-memory `FieldTimeSeries` holds, `update_field_time_series!` throws an\n`ArgumentError` that gives the times and the indices but not the series. A model with several series (forcing, restoring, radiation) on 32\nranks prints 32 interleaved copies of it, and finding which series failed took a separate investigation. The message now starts with\n`summary(fts)`:\n\n```\nArgumentError: 2\u00d72\u00d72\u00d75 FieldTimeSeries{InMemory} located at (Center, Center, Center) of c at \u2026/c.jld2: times 0.5 to 2.5 span time\nindices 1 to 4, more than the 2 held in memory; increase `time_indices_in_memory`.\n```\n\nChanges:\n\n- The window error is prefixed with `summary(fts)`.\n\nThe split-explicit free surface asks every series for the whole barotropic substep window. When a time node falls inside the window, the\nwindow spans three indices, so a backend of two fails at the first such node. The OMIP run that hit this had a chlorophyll series of\ntwo in memory, and it died at model day 45.5, when the mid-February SeaWiFS node fell inside the substep window. NumericalEarth's\ndataset-backed series default to three indices since v0.9.4.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-23T18:30:27Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-24T10:16:31Z",
+    "number": 6575,
+    "title": "Name the FieldTimeSeries in the time-window error"
+  },
+  {
+    "additions": 5,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "The zero-argument `versioninfo_with_gpu()` branches on `isdefined(Main, :CUDA)`. On Julia \u2265 1.12, inference folds this check and records an\nedge on the `Main.CUDA` binding, so `using CUDA` in `Main` invalidates `initialize_nc_file` / `initialize_zarr_store!` and every caller above\nthem (`initialize!` of the writers, `write_output!`, `time_step!(::Simulation)`, `run!`). Precompiled workloads that include these methods\nare recompiled at load time. Reported by @daverumph, who measured 229 s of recompilation per launch.\n\nChanges:\n\n- `versioninfo_with_gpu()` is removed. The NetCDF and Zarr writers call `versioninfo_with_gpu(child_architecture(architecture(model)))`, and\n  one generic method `versioninfo_with_gpu(arch) = \"\"` covers every architecture without a specific method, so `Distributed`, Metal, AMD,\n  oneAPI and Reactant models keep writing output. `Distributed` CUDA models report the CUDA device as before.\n- The CUDA method drops an unused `s = sprint(versioninfo)` and the `InteractiveUtils` import it needed.\n\nChanged output: in a session that loads CUDA, a CPU model writes `\"This file was generated using \"` in the `Julia` attribute, where it wrote\nthe CUDA device name. `versioninfo_with_gpu(CPU())` returns `\"\"` where it returned `\"No GPU device\"`. Files written by CPU-only sessions and\nby CUDA models are unchanged.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-19T10:01:26Z",
+    "deletions": 25,
+    "labels": [],
+    "mergedAt": "2026-11-24T11:47:14Z",
+    "number": 6554,
+    "title": "Take the GPU in output metadata from the model's architecture"
+  },
+  {
+    "additions": 25,
+    "author": {
+      "id": "MDQ6VXNlcjMzNTQ3Njk3",
+      "is_bot": false,
+      "login": "simone-silvestri",
+      "name": "Simone Silvestri"
+    },
+    "body": "`Checkpointer` writes to `joinpath(dir, prefix * \"_iteration$(iteration).jld2\")`, but `pickup` globs `prefix * \"_iteration*.jld2\"` inside\n`dir`. When `prefix` carries a directory, for example `prefix = joinpath(output_directory, \"run_checkpoint\")`, writing works because\n`joinpath(\".\", \"/absolute/path\")` drops the `\".\"`. The glob pattern then starts with `/`, though, and pickup throws\n`Glob pattern cannot be empty or start with a / character`, and only at the first restart.\n\nChanges:\n\n- The constructor splits `joinpath(dir, prefix)` into `dir` and `prefix`, so a directory given in `prefix` moves into `dir`.\n  Checkpoints land at the same paths as before, so files written before the change are picked up after it. A prefix without a directory\n  gives the same `dir` and `prefix` as before.\n- `mkpath` also creates a directory given in `prefix`.\n- New test: checkpoint with a directory in `prefix`, then pick up from it. On main it fails with the `Glob` error above.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-23T18:30:46Z",
+    "deletions": 0,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      }
+    ],
+    "mergedAt": "2026-11-24T11:47:42Z",
+    "number": 6576,
+    "title": "Find checkpoints written with a directory in the Checkpointer prefix"
+  },
+  {
+    "additions": 19,
+    "author": {
+      "id": "MDQ6VXNlcjcxMTI3Njg=",
+      "is_bot": false,
+      "login": "navidcy",
+      "name": "Navid C. Constantinou"
+    },
+    "body": "On a grid with a single vertical level the vertical halo is one cell. Building a `PartialCellBottom` (or `PartialCellVerticalBoundaries`) grid there throws a `BoundsError` if any column is fully immersed:\n\n- a land column (bottom at the top) has `\u230as\u230b = Nz + 1`, so the bottom face reciprocal is computed at face `Nz + 2`;\n- a column fully covered by the top boundary has `\u230as\u230b = 0`, so `\u0394r\u1d9c\u1d9c\u1da0` at face 0 reads the cell spacing at `k = -1`.\n\nBoth indices lie outside a one-cell halo. That reciprocal is only read at the partial cell, which a fully immersed column doesn't have, so this PR clamps the face index to `1:Nz+1`. Columns that aren't fully immersed are unaffected.\n\nThe new test `test_single_level_partial_cells` (in `test/unit/immersed_boundary_grid.jl`) builds both cases on a one-level grid. With bounds checking on, it fails on `main` and passes with this change.\n\nThis came up in #6450, whose new test hit the bug.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-12T21:57:39Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "d93f0b",
+        "description": "Less Ocean, more anigans",
+        "id": "MDU6TGFiZWwyNDY3NzUwOTEz",
+        "name": "immersed boundaries \u26f0\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-11-24T19:50:27Z",
+    "number": 6502,
+    "title": "Fix out-of-bounds partial-cell spacings in fully immersed columns on single-level grids"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Reactant v0.2.309 fails to compile the Enzyme gradient through the checkpointed `@trace` loop in `test/reactant/tripolar.jl` (`operand #0 does not dominate this use`). This has turned the Reactant jobs red on `main` and on every PR since Nov 23. This caps Reactant at 0.2.308 in the test environment only, so users of the extension can still take newer versions.\n\nUpstream: EnzymeAD/Reactant.jl#3842. Lift the cap once that is fixed.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T17:16:07Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      },
+      {
+        "color": "0366d6",
+        "description": "Pull requests that update a dependency file",
+        "id": "LA_kwDOCRy_aM8AAAABlQJGpw",
+        "name": "dependencies"
+      },
+      {
+        "color": "027be0",
+        "description": "all day I dream about MLIR",
+        "id": "LA_kwDOCRy_aM8AAAACXryXMw",
+        "name": "reactant \u2207"
+      }
+    ],
+    "mergedAt": "2026-11-24T23:12:21Z",
+    "number": 6581,
+    "title": "Cap Reactant below 0.2.309 in the test environment"
+  }
+]

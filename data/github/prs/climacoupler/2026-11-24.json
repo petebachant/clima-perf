@@ -1,0 +1,66 @@
+[
+  {
+    "additions": 986,
+    "author": {
+      "id": "U_kgDOChCSqA",
+      "is_bot": false,
+      "login": "imreddyTeja",
+      "name": "Teja Reddy"
+    },
+    "body": "Compat changes:\r\n- Allow ClimaAtmos 0.43\r\n- Allow KernelAbstractions 0.10\r\n\r\nAMIP:\r\n- ClimaAtmos 0.42.19 -> 0.43.0\r\n- ClimaCore 1.0.8 -> 1.0.9\r\n- ClimaLand 1.15.0 -> 1.16.0\r\n- ClimaParams 1.3.10 -> 1.3.14\r\n- CloudMicrophysics 0.49.1 -> 0.50.1\r\n- RRTMGP 1.1.1 -> 1.1.2\r\n- CUDA 6.4.1 -> 6.5.1\r\n- GPUCompiler 2.10.0 -> 2.23.4\r\n- LLVM 9.13.2 -> 10.7.0\r\n- KernelAbstractions 0.9.47 -> 0.10.8\r\n\r\nCMIP:\r\n- ClimaAtmos 0.42.17 -> 0.43.0\r\n- ClimaComms 0.6.12 -> 0.6.13\r\n- ClimaCore 1.0.5 -> 1.0.9\r\n- ClimaDiagnostics 0.4.0 -> 0.4.1\r\n- ClimaLand 1.14.1 -> 1.16.0\r\n- ClimaParams 1.3.6 -> 1.3.14\r\n- ClimaSeaIce 0.7.2 -> 0.7.3\r\n- ClimaUtilities 0.1.33 -> 0.1.35\r\n- CloudMicrophysics 0.47.0 -> 0.50.1\r\n- RRTMGP 1.1.1 -> 1.1.2\r\n- AtmosphericProfilesLibrary removed (no longer a transitive dependency)\r\n- CUDA 6.4.1 -> 6.4.2 # this is restricted by Oceananigans and ClimaSeaIce\r\n- GPUCompiler 2.10.0 -> 2.23.4\r\n- LLVM 9.13.2 -> 10.7.0\r\n- KernelAbstractions 0.9.45 -> 0.9.48 # also restricted by Oceananigans/climseaice\r\n\r\n<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\n\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [x] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T18:12:05Z",
+    "deletions": 1596,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T19:34:24Z",
+    "number": 2240,
+    "title": "Update  compats and manifests"
+  },
+  {
+    "additions": 849,
+    "author": {
+      "id": "MDQ6VXNlcjYwNzEyMzE4",
+      "is_bot": false,
+      "login": "daverumph",
+      "name": "Dave Rumph"
+    },
+    "body": "## Purpose\n\nStep the component models concurrently rather than one after another, so the coupled wall clock is not the sum of the components. Closes #1700.\n\n## Content\n\nTwo configuration options, both default `false`.\n\n**`step_concurrently`** advances the components as two groups running at the same time: sea ice then ocean in a task of their own, while the calling task steps land then atmosphere. Land and atmosphere are implicitly coupled; ocean and sea ice must step together to pass the frazil heat flux. Group membership is decided by type through `Interfacer.is_overlapped`, which concrete models opt into.\n\n**`overlap_slow_surfaces`**, which requires `step_concurrently`, spans one ocean/sea ice step across several coupling steps, rather than blocking on it within one. While that step is in flight the coupler leaves ice and ocean state alone; the atmosphere still gets a blended surface state and turbulent fluxes each step, because both are summed separately for the fast and slow surfaces and the slow sums are reused across the window.\n\nThe three cadences, for `k = 3`:\n\n```\nk = dt_ocean / dt_cpl = 3.  A = atmosphere + land,  O\u2099 = the nth ocean/sea ice\nstep.  Each column is one coupling step; \u2500\u2500\u25b6 marks a step spanning several.\n\n                        \u2502  1  \u2502  2  \u2502  3  \u2502  4  \u2502  5  \u2502  6  \u2502  per window\n                        \u251c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2524\n  sequential            \u2502  A  \u2502  A  \u2502 A O\u2081\u2502  A  \u2502  A  \u2502 A O\u2082\u2502  3A + O\n                        \u251c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2524\n  step_concurrently     \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  2A + max(A,O)\n                        \u2502     \u2502     \u2502  O\u2081 \u2502     \u2502     \u2502  O\u2082 \u2502\n                        \u251c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2524\n  overlap_slow_surfaces \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  A  \u2502  max(3A, O)\n                        \u2502     \u2502     \u2502 O\u2081\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25b6   \u2502 O\u2082\u2500\u2500\u25b6\n                        \u2502 atmos uses O\u2080               \u2502 O\u2081  \u2502\n                        \u2514\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n`docs/src/simcoordinator.md` describes the scheme and gives the relation that decides which option is worth enabling for a given ratio of ocean to atmosphere cost. `docs/src/checkpointer.md` covers the interaction with checkpoint and restart.\n\n## Testing\n\n`test/overlap_schedule_tests.jl` is new and runs in CI: 37 assertions, about three seconds, no GPU. With stub ocean and ice models it checks that each window takes one slow step and none runs past the end of the run (`k` = 1, 2, 5, including a run that ends mid-window, under `Float64` and `ITime` time), that overlap delays the ocean the coupler sees by `max(k \u2212 1, 1)` coupling steps, and that the turbulent fluxes of an in-flight surface are restored rather than recomputed.\n\nBoth options are also exercised end to end on GPU, against real Oceananigans and ClimaSeaIce, for 3 simulated hours at `k` = 5: `gpu_cmip_oceananigans_climaseaice` runs with `step_concurrently` and the new `gpu_cmip_oceananigans_climaseaice_overlap` with `overlap_slow_surfaces` as well. In the longruns pipeline `cmip_edonly_land` runs with `step_concurrently`; the bucket runs stay sequential.\n\n## Measurements\n\nMeasured on 7a8412aa with the standard CMIP configuration (`cmip_progedmf_land`: prognostic EDMF, `h_elem` 16, `Float64`, eORCA1 ocean) and `dt_ocean = dt_seaice = 1800 s`, so `k = 5`.\n\n### Cost\n\nWall time per window of five coupling steps on one H100, over one simulated day after a two-hour warm-up, with the three schedules run in one process. Radiation runs every other window and adds 1.4 s. `A` is a coupling step with neither an ocean step nor radiation, and `O` the extra for an ocean and sea ice step, both from the sequential run with the device synchronized after every step. The 1/4\u00b0 ocean is a 1440\u00d7720 tripolar grid built for this measurement only, with the 1\u00b0 tripolar bathymetry repeated onto it.\n\n| ocean grid | columns | `A` | `O` | `O/(k\u00b7A)` | sequential | `step_concurrently` | `overlap_slow_surfaces` |\n|:--|--:|--:|--:|--:|--:|--:|--:|\n| eORCA1 | 107k | 0.27 s | 0.13 s | 0.09 | 2.19 s | 2.16 s (\u22121.4%) | 2.14 s (\u22122.3%) |\n| 1/4\u00b0 tripolar | 1.04M | 0.29 s | 0.66 s | 0.45 | 2.95 s | 2.89 s (\u22122.0%) | 2.79 s (\u22125.3%) |\n\nHiding the ocean entirely, as the relation in `docs/src/simcoordinator.md` assumes, would save 5.8% under either option on eORCA1, and 16.2% and 22.5% at 1/4\u00b0. A kernel trace of the overlapped run shows why the options fall short: the atmosphere and the ocean share one GPU, and their kernels almost never run at the same time. Over 15 coupling steps at 1/4\u00b0, the ocean's kernels ran for 1.70 s, of which 0.18 s alongside an atmosphere kernel. The ocean step runs in the gaps between atmosphere kernels, and the coupling step after each launch still pays most of `O`. The machinery for concurrent and overlapped stepping is in place, but it pays off only once the ocean and sea ice run on a separate GPU, which the coupler does not support yet.\n\n### Effect on the solution\n\nFive identical sequential runs over three simulated days, with one `step_concurrently` run and one `overlap_slow_surfaces` run, on one A100 in one process. GPU runs are not bitwise reproducible, so each option is compared against the noise between the identical runs. For each of the 47 hourly 2-D atmosphere, land and coupler fields that differ between runs, the global RMS difference of the option from each of the five sequential runs is set against the ten pairs of sequential runs. A field is outside the noise when all five option pairs exceed all ten sequential pairs.\n\n| fields outside the noise, at hour | 1 | 2 | 3 | 6 | 12 | 24 | 48 | 72 |\n|:--|--:|--:|--:|--:|--:|--:|--:|--:|\n| `step_concurrently` | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 1 |\n| `overlap_slow_surfaces` | 44 | 33 | 27 | 16 | 7 | 5 | 2 | 0 |\n\n`step_concurrently` stays within the noise throughout. `overlap_slow_surfaces` departs from the sequential runs at first, as expected from its lagged start. The noise grows by two orders of magnitude over the first day, and by hour 72 no field is outside it. Whether the lag changes the solution over longer integrations, including its conservation, needs long runs.\n\n----\n- [x] I have read and checked the items on the review checklist.\n",
+    "changedFiles": 30,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOEn8xDc7oFuv0",
+        "number": 1700,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkzMTAzMjU1MTc=",
+          "name": "ClimaCoupler.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/ClimaCoupler.jl/issues/1700"
+      }
+    ],
+    "createdAt": "2026-02-10T23:24:04Z",
+    "deletions": 55,
+    "labels": [
+      {
+        "color": "11e9ce",
+        "description": "",
+        "id": "LA_kwDOEn8xDc8AAAACrthO0w",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-24T23:34:24Z",
+    "number": 1723,
+    "title": "Concurrent and overlapped component model stepping"
+  }
+]
