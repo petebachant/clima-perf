@@ -1,0 +1,52 @@
+[
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\r\n\r\nThis PR fixes a regression of ClimaCore v1.0.9: on CPUs, `MatrixFields.single_field_solve!` and the solvers that call it allocate on the heap when bounds checking is on, which fails a zero-allocation test of ClimaAtmos (`test/prognostic_equations/correct_implicit_advection_tests.jl`, now run with ClimaCore v1.0.8 since CliMA/ClimaAtmos.jl#5013).\r\n\r\n## Disclosure\r\n\r\nThis PR and its description were generated using Claude.\r\n\r\n## Content\r\n\r\n- `single_column_solve!` is inlined into the loop over columns, so the factors of a band matrix stay in arrays on the stack of the solving thread when bounds checking is on (as in `Pkg.test`), instead of on the heap.",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-25T03:04:57Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T18:59:20Z",
+    "number": 2730,
+    "title": "Inline single_column_solve!"
+  },
+  {
+    "additions": 474,
+    "author": {
+      "id": "MDQ6VXNlcjg4NTUyNTg=",
+      "is_bot": false,
+      "login": "dennisYatunin",
+      "name": "Dennis Yatunin"
+    },
+    "body": "## Purpose\n\nThis PR adds the `@noconsts` macro, an analogue of `@noinline` that disables constant propagation on a function, and uses this macro in place of `@drop_constprop` and `Base.@constprop :none`. It also disables constant propagation on the functions that only pass their arguments along, which lowers compilation latency and memory usage.\n\n## Disclosure\n\nThis PR and its description were mostly generated using Claude.\n\n## Content\n\n- `@noconsts` replaces `Base.@constprop :none` and `@drop_constprop`, with a docstring that explains when to use it\n- Constant propagation is disabled on functions that pass their arguments along without computing on constant values, so they are no longer re-inferred for every new constant input:\n  - CUDA extension functions that configure, compile, and launch kernels\n  - functions that construct, check, reassign, slice, and evaluate broadcasts\n  - `copyto!`, `fill!`, and `setindex!` of `Field`s, `FieldVector`s, and data layouts\n  - views, `level` slices, and constructors of `Field`s and data layouts\n  - `Operators` and `MatrixFields` internals, like geometry helpers and field name lookups\n  - the thread pool and point update loop functions\n  - the tri-diagonal band solve\n\n## Comparison against main\n\nEach row compares this PR against the `main` branch, in ClimaCore's CI and the downstream builds that it triggers ([8379](https://buildkite.com/clima/climacore-ci/builds/8379), [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [204](https://buildkite.com/clima/climacoupler-downstream/builds/204), and [174](https://buildkite.com/clima/climaland-downstream/builds/174) for the PR; [8375](https://buildkite.com/clima/climacore-ci/builds/8375), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814), [200](https://buildkite.com/clima/climacoupler-downstream/builds/200), and [170](https://buildkite.com/clima/climaland-downstream/builds/170) for `main`), and in the end-to-end performance pipeline ([826](https://buildkite.com/clima/climacore-end-to-end-performance/builds/826) for the PR; [823](https://buildkite.com/clima/climacore-end-to-end-performance/builds/823) for `main`). Rows over several jobs give the median of the PR values, the median of the `main` values, and the median of the per-job changes (so a change can differ from the ratio of the two medians beside it). Setup memory is the memory allocated while a simulation is set up, most of it by compilation, and it is the same in every build of one commit.\n\n| Compilation metrics                 | PR        | `main`    | PR vs `main` | Num values | Build IDs                                                                                                                                                      |\n|:------------------------------------|:----------|:----------|:-------------|:-----------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| ClimaCore CPU jobs, wall time       | 2.41 min  | 2.54 min  | -3%          | 54         | [8379](https://buildkite.com/clima/climacore-ci/builds/8379), [8375](https://buildkite.com/clima/climacore-ci/builds/8375)                                     |\n| ClimaCore GPU jobs, wall time       | 1.90 min  | 2.12 min  | -8%          | 66         | [8379](https://buildkite.com/clima/climacore-ci/builds/8379), [8375](https://buildkite.com/clima/climacore-ci/builds/8375)                                     |\n| ClimaAtmos CPU jobs, setup memory   | 9.80 GiB  | 11.0 GiB  | -13%         | 56         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaAtmos GPU jobs, setup memory   | 12.9 GiB  | 15.4 GiB  | -17%         | 11         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaAtmos CPU jobs, setup time     | 72.3 s    | 75.4 s    | -2%          | 56         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaAtmos GPU jobs, setup time     | 129 s     | 140 s     | -8%          | 11         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaAtmos CPU jobs, wall time      | 10.8 min  | 11.6 min  | +0%          | 68         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaAtmos GPU jobs, wall time      | 14.4 min  | 15.8 min  | -8%          | 19         | [822](https://buildkite.com/clima/climaatmos-downstream/builds/822), [814](https://buildkite.com/clima/climaatmos-downstream/builds/814)                       |\n| ClimaCoupler GPU jobs, setup memory | 134.7 GiB | 142.0 GiB | -6%          | 5          | [204](https://buildkite.com/clima/climacoupler-downstream/builds/204), [200](https://buildkite.com/clima/climacoupler-downstream/builds/200)                   |\n| ClimaCoupler GPU jobs, setup time   | 1155 s    | 1190 s    | -3%          | 5          | [204](https://buildkite.com/clima/climacoupler-downstream/builds/204), [200](https://buildkite.com/clima/climacoupler-downstream/builds/200)                   |\n| ClimaCoupler GPU jobs, wall time    | 25.5 min  | 27.6 min  | -7%          | 6          | [204](https://buildkite.com/clima/climacoupler-downstream/builds/204), [200](https://buildkite.com/clima/climacoupler-downstream/builds/200)                   |\n| ClimaLand CPU jobs, wall time       | 4.06 min  | 4.38 min  | -9%          | 21         | [174](https://buildkite.com/clima/climaland-downstream/builds/174), [170](https://buildkite.com/clima/climaland-downstream/builds/170)                         |\n| ClimaLand GPU jobs, wall time       | 5.19 min  | 5.29 min  | -7%          | 6          | [174](https://buildkite.com/clima/climaland-downstream/builds/174), [170](https://buildkite.com/clima/climaland-downstream/builds/170)                         |\n| Flagship AMIP setup memory          | 124.0 GiB | 138.2 GiB | -10%         | 1          | [826](https://buildkite.com/clima/climacore-end-to-end-performance/builds/826), [823](https://buildkite.com/clima/climacore-end-to-end-performance/builds/823) |\n| Flagship AMIP setup time            | 1022 s    | 1056 s    | -3%          | 1          | [826](https://buildkite.com/clima/climacore-end-to-end-performance/builds/826), [823](https://buildkite.com/clima/climacore-end-to-end-performance/builds/823) |\n| Global soil model setup time        | 108 s     | 116 s     | -7%          | 1          | [826](https://buildkite.com/clima/climacore-end-to-end-performance/builds/826), [823](https://buildkite.com/clima/climacore-end-to-end-performance/builds/823) |\n| Snowy land model setup time         | 235 s     | 251 s     | -6%          | 1          | [826](https://buildkite.com/clima/climacore-end-to-end-performance/builds/826), [823](https://buildkite.com/clima/climacore-end-to-end-performance/builds/823) |\n\nThe two reproducibility jobs that fail in the downstream ClimaAtmos build fail in every downstream build of a ClimaCore branch that contains #2697, which reordered column reductions, and so does the comparison of multiple columns with single columns since CliMA/ClimaAtmos.jl#5011.",
+    "changedFiles": 47,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T06:05:47Z",
+    "deletions": 340,
+    "labels": [
+      {
+        "color": "0cb314",
+        "description": "",
+        "id": "LA_kwDOFT2Pms8AAAACsi7Kkg",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T23:13:17Z",
+    "number": 2728,
+    "title": "Avoid unnecessary constant propagation"
+  }
+]

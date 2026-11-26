@@ -1,0 +1,104 @@
+[
+  {
+    "additions": 9,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "The PCG implicit free surface fails on its first iteration with `DiagonallyDominantInversePreconditioner`: `diagonally_dominant_inverse_precondition!` returns `nothing`, which the conjugate-gradient iteration passes to `dot!` (broken since #3802). Its kernel also read the residual at `k = 1` instead of the surface index `k = Nz + 1`, outside the windowed field.\n\n- `diagonally_dominant_inverse_precondition!` returns `P_r` and reads `r[i, j, grid.Nz+1]`.\n- `test/hydrostatic_free_surface/implicit_solver.jl` runs the existing PCG solution check with this preconditioner on its three grids.\n\n```julia\nusing Oceananigans\nusing Oceananigans.Models.HydrostaticFreeSurfaceModels: DiagonallyDominantInversePreconditioner\n\ngrid = RectilinearGrid(size=(16, 16, 4), extent=(1e5, 1e5, 1e3))\nfree_surface = ImplicitFreeSurface(solver_method=:PreconditionedConjugateGradient,\n                                   preconditioner=DiagonallyDominantInversePreconditioner())\nmodel = HydrostaticFreeSurfaceModel(grid; free_surface)\nset!(model, u=(x, y, z) -> sin(2\u03c0 * x / 1e5))\ntime_step!(model, 1) # MethodError: no method matching dot!(::Vector{Float64}, ::Nothing, ::Field{...})\n```\n\nCloses #6191.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABV8gaug",
+        "number": 6191,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6191"
+      }
+    ],
+    "createdAt": "2026-10-08T18:53:33Z",
+    "deletions": 2,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "4682b4",
+        "description": "So things don't blow up and boil the lobsters alive",
+        "id": "MDU6TGFiZWwxMjM4MDQ4NDUw",
+        "name": "numerics \ud83e\uddee"
+      }
+    ],
+    "mergedAt": "2026-11-25T00:34:14Z",
+    "number": 6190,
+    "title": "Fix the diagonally dominant preconditioner of the PCG implicit free surface"
+  },
+  {
+    "additions": 46,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "On the fold rank of a distributed `FaceFolded` `TripolarGrid`, `worksize(grid)` is `(Nx, Ny+1, Nz)` (`DRFTRG` in `distributed_tripolar_grid.jl`), because `v` has a prognostic row at `j = Ny+1`. But `build_active_cells_map` for `AsynchronousDistributed` grids builds its regions from `size(grid)`. So the fold row is in none of the halo-independent or halo-dependent maps, and its momentum tendencies are never computed when `active_cells_map = true`. Without an active cells map, `interior_tendency_kernel_parameters` already uses `worksize`, so the fold row is covered.\n\nWe found this in a 1\u00b0 ocean\u2013sea-ice run (`FaceFolded`, `FPivot`, immersed bathymetry with `active_cells_map = true`, `Partition(1, 4)`). Serial and 4-rank runs differed at the fold row from the first step, and the 4-rank run went to NaN after about 100 steps.\n\n### This PR\n1. **Fix:** use `Utils.worksize(grid)` instead of `size(grid)` in `build_active_cells_map` for asynchronous distributed grids.\n2. **Test:** the existing serial-vs-distributed tripolar simulation test, rerun with `active_cells_map = true` on `Partition(1, 4)` and `Partition(2, 2)` for all three fold topologies. The current tests never build an active cells map, so they miss this.\n\n3. **Comment:** replace the `TODO` in `right_face_folded_kernel_parameters.jl` about buffers on asynchronous distributed `RFTRG`. The buffer kernel parameters already use `worksize` (since #5439), and this PR fixes the active cells maps.\n\nRelated: #6476 (the fold rank loses the immersed boundary condition).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 4,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T01:26:42Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "b74b2d",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2ODk1ODMz",
+        "name": "grids \ud83d\uddfa\ufe0f"
+      }
+    ],
+    "mergedAt": "2026-11-25T01:45:14Z",
+    "number": 6580,
+    "title": "Cover the FaceFolded fold row in the asynchronous active cells maps of distributed grids"
+  },
+  {
+    "additions": 1,
+    "author": {
+      "id": "U_kgDOBngJ3w",
+      "is_bot": false,
+      "login": "kaikoepchen",
+      "name": "Kai Koepchen"
+    },
+    "body": "Fixes #6504 and therefore also NoraLoose/PanArcticShenanigans#44.\n\n`fill_halo_regions!(fts)` for an in-memory `FieldTimeSeries` fills the halos inside `asyncmap`, which means it opens a separate Julia task. On GPU each task receives its own stream, so the halo kernels can run before the kernels that write the interior have finished, which can lead to halos being filled with old data.\n\nThis PR fixes it by running the fill halos in a loop instead of `asyncmap`. With this, two runs stay bit-identical and comparable in speed.\n",
+    "changedFiles": 1,
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOCRy_aM8AAAABe2E12Q",
+        "number": 6504,
+        "repository": {
+          "id": "MDEwOlJlcG9zaXRvcnkxNTI4Nzg5NTI=",
+          "name": "Oceananigans.jl",
+          "owner": {
+            "id": "MDEyOk9yZ2FuaXphdGlvbjQzMTYxMTg4",
+            "login": "CliMA"
+          }
+        },
+        "url": "https://github.com/CliMA/Oceananigans.jl/issues/6504"
+      }
+    ],
+    "createdAt": "2026-11-13T05:42:38Z",
+    "deletions": 1,
+    "labels": [],
+    "mergedAt": "2026-11-25T20:44:28Z",
+    "number": 6505,
+    "title": "Fill FieldTimeSeries halos in a loop instead of asyncmap"
+  }
+]

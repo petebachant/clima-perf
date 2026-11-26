@@ -1,0 +1,133 @@
+[
+  {
+    "additions": 377,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Cloud condensate that fills only part of a cell is more concentrated within the cloud than in the cell mean, and its particles are larger and fall faster: the 1-moment velocities of cloud liquid (Stokes) and cloud ice (Chen et al., 2022) take the mean particle size from the specific humidity and a prescribed number concentration. This PR adds an option to evaluate these velocities at the in-cloud specific humidity.\n\n## Changes\n\n- New parameter `sgs_cloud_sedimentation_cf_floor` (`c_min`, in `(0, 1]`, default `1`) in `SGSQuadratureParameters`, with a range check at construction.\n- With `c_min < 1`, `set_precipitation_velocities!` evaluates the 1M cloud liquid and cloud ice terminal velocities at `q / clamp(CF, c_min, 1)` (`incloud_specific_humidity`). The velocity multiplies the mean condensate, so the sedimentation flux is the in-cloud flux weighted by the cloud fraction.\n- Without EDMF, `q` and `CF` are the cell mean and the grid-mean cloud fraction `\u1d9ccloud_fraction`. With `PrognosticEDMFX`, they are the environment mean and the environment cloud fraction `\u1d9ccloud_fraction\u2070`; the updrafts sediment cloud condensate at their own mean specific humidity.\n- The cloud fraction is an explicit precomputed quantity. `set_explicit_precomputed_quantities!` therefore sets the velocities that read it after it has updated the cloud fraction (`sedimentation_reads_cloud_fraction`), so that the cache depends on the state alone, which restarts require. The Newton iterates in between refresh the velocities with the cloud fraction of that update.\n- The option affects the state-dependent velocities (`cloud_liquid_terminal_velocity: Stokes`, `cloud_ice_terminal_velocity: Chen2022`); a fixed velocity is independent of the specific humidity.\n\n## Behavior\n\n- The default `c_min = 1` evaluates the velocities at the mean specific humidity through the same code path as on `main`, so results are unchanged and `ref_counter.jl` is untouched.\n- With `c_min < 1`, the velocities are computed twice per full cache update: in the implicit part and again after the cloud fraction update.\n- The floor bounds the concentration factor by `1 / c_min`. The upper bound on the cloud-ice fall speed itself is part of CloudMicrophysics (`Chen2022_small_ice_terminal_velocity_max`, 1.5 m/s, CliMA/CloudMicrophysics.jl#861, in 0.51.1). Runs with a small `c_min` should use that release; this PR does not depend on it. The Stokes cloud liquid velocity has no upper bound in CloudMicrophysics, so the floor alone limits it.\n\n## Tests\n\nIn `test/parameterized_tendencies/microphysics/terminal_velocity.jl`:\n\n- \"In-cloud specific humidity\": the default and the range check of the parameter, `incloud_specific_humidity` at, above, and below the floor and for negative condensate, and the increase of the Stokes and Chen et al. (2022) fall speeds with decreasing cloud fraction down to the floor.\n- \"In-cloud velocities through `set_precipitation_velocities!`\": with the parameter read from a toml file, `\u1d9cw\u2097` and `\u1d9cw\u1d62` of a 1M column and of a `PrognosticEDMFX` Bomex column equal the terminal velocities at the in-cloud specific humidity, for condensate and a cloud fraction that vary with height. The EDMF case checks that the environment cloud fraction enters and the grid-mean cloud fraction does not.\n- \"In-cloud velocities through `set_precomputed_quantities!`\": a cloud fraction left in the cache before the call does not affect the velocities, for the grid mean and the EDMF environment.\n\nIn `test/restart.jl` (Buildkite), the 1M `PrognosticEDMFX` DYCOMS RF01 restart case runs with the Stokes cloud liquid velocity and `sgs_cloud_sedimentation_cf_floor = 0.1` (`toml/cloud_sedimentation_restart_test.toml`).\n\nThis is the in-cloud sedimentation part of f5675258356c1fe248e8d6ded3845c664495febf on `ts/swcre-30pct`, ported onto `main` and extended to cloud liquid.\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T02:16:04Z",
+    "deletions": 21,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T00:43:37Z",
+    "number": 5008,
+    "title": "Evaluate the 1M cloud condensate terminal velocities at the in-cloud specific humidity"
+  },
+  {
+    "additions": 203,
+    "author": {
+      "id": "MDQ6VXNlcjExNTk4NDMz",
+      "is_bot": false,
+      "login": "szy21",
+      "name": "Zhaoyi Shen"
+    },
+    "body": "<!--- THESE LINES ARE COMMENTED -->\r\n## Purpose \r\n<!--- One sentence to describe the purpose of this PR, refer to any linked issues:\r\n#14 -- this will link to issue 14\r\nCloses #2 -- this will automatically close issue 2 on PR merge\r\n-->\r\nThe updraft gets one radius `R` that sets both its form drag and its turbulent entrainment.\r\n\r\n**Plume radius.** `R = H \u221aclamp(a, a_lb, a_max)`, with `H = R_d T_sfc,ref / g` and the lower area bound `a_lb = (R_min / H)\u00b2` from a minimum radius that grows linearly with height above the surface `R_min(z) = min(c_R (z \u2212 z_sfc), R_max)` \r\n\r\n**Form drag.** `d_c = \u03b1_d / 2 (1 / R + 1 / R\u2070)`, `R\u2070 = H \u221aclamp(a\u2070, 1 \u2212 a_max, 1)`. The floor only weakens the drag of thin updrafts.\r\n\r\n**Turbulent entrainment.** `\u03b5_T = c\u2081 exp(\u2212c\u2082 a) + 2 c_e \u221atke / R`: exchange across the plume edge at velocity `c_e \u221atke` on perimeter `2\u03c0R` over area `\u03c0R\u00b2`, with the same `R` as the drag. Optionally tapered with height by `exp(\u2212((z \u2212 z_sfc) / H_t)\u00b2)`.\r\n\r\n## To-do\r\n<!---  list of proposed tasks in the PR, move to \"Content\" on completion \r\n- Proposed task\r\n-->\r\n\r\n\r\n## Content\r\n<!---  specific tasks that are currently complete \r\n- Solution implemented\r\n-->\r\n\r\n\r\n<!---\r\nReview checklist\r\n\r\nI have:\r\n- followed the codebase contribution guide: https://clima.github.io/ClimateMachine.jl/latest/Contributing/\r\n- followed the style guide: https://clima.github.io/ClimateMachine.jl/latest/DevDocs/CodeStyle/\r\n- followed the documentation policy: https://github.com/CliMA/policies/wiki/Documentation-Policy\r\n- checked that this PR does not duplicate an open PR.\r\n\r\nIn the Content, I have included \r\n- relevant unit tests, and integration tests, \r\n- appropriate docstrings on all functions, structs, and modules, and included relevant documentation.\r\n\r\n-->\r\n\r\n----\r\n- [ ] I have read and checked the items on the review checklist.\r\n",
+    "changedFiles": 13,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T05:05:14Z",
+    "deletions": 39,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T01:53:53Z",
+    "number": 5009,
+    "title": "use plume radius in turbulent entrainment and pressure drag"
+  },
+  {
+    "additions": 212,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "Under SGS quadrature, the 1M microphysics places rain and snow on a subgrid precipitation shaft (`sgs_precip_incloud_fraction`, default 1; width `max(a_p, sgs_precip_fraction_floor)`), but sedimentation used the terminal velocity of the cell mean. This PR makes the grid-mean and environment rain and snow velocities the mass-weighted mean of the velocities in the shaft and in the rest of the cell:\n\n`w_eff = a_s \u03c6_in w(\u03c6_in q) + (1 \u2212 a_s) \u03c6_out w(\u03c6_out q)`, with `\u03c6_in = 1 \u2212 \u03b2_p + \u03b2_p/a_s`, `\u03c6_out = 1 \u2212 \u03b2_p`.\n\n- New `shaft_weighted_terminal_velocity`, `precip_shaft_options`, `on_precip_shaft` in `terminal_velocity_utils.jl`; wired into both 1M `set_precipitation_velocities!` methods. Updraft velocities are unchanged.\n- Behavior change for default 1M runs: at the 0.1 floor, rain falls 1.2\u20131.7x faster and snow ~1.2x faster (Chen 2022).\n- Unit tests for the limits, the zone-flux identity, and the floor; RICO EDMF column runs 4 h with zero allocations in `set_precipitation_velocities!`.\n",
+    "changedFiles": 8,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T06:46:43Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T05:57:45Z",
+    "number": 5011,
+    "title": "Sediment 1M rain and snow at the shaft-weighted terminal velocity"
+  },
+  {
+    "additions": 180,
+    "author": {
+      "id": "MDQ6VXNlcjYwMDQ5ODM3",
+      "is_bot": false,
+      "login": "nefrathenrici",
+      "name": "Nat Efrat-Henrici"
+    },
+    "body": "This PR applies `toml/default_parameters.toml` to every run, between the ClimaParams defaults and the config `toml` files, and exposes its path as `ClimaAtmos.Parameters.DEFAULT_PARAMS_FILEPATH` for ClimaCoupler. Configs that did not list it change results. The configs and tests no longer list it. The coupler will use this API in a followup PR.",
+    "changedFiles": 65,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-23T21:47:30Z",
+    "deletions": 139,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T16:18:47Z",
+    "number": 5007,
+    "title": "Provide public default parameter path"
+  },
+  {
+    "additions": 28,
+    "author": {
+      "id": "MDQ6VXNlcjExOTY2OTY=",
+      "is_bot": false,
+      "login": "trontrytel",
+      "name": "Anna Jaruga"
+    },
+    "body": "Change the default sedimentation velocities for 1M:\n- Stokes for cloud liquid\n- Chen2022 for cloud ice\n\nWe already use Chen2022 for rain and snow.",
+    "changedFiles": 5,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T23:50:00Z",
+    "deletions": 16,
+    "labels": [
+      {
+        "color": "70E5FE",
+        "description": "",
+        "id": "LA_kwDOFoZ0Vs7tELZP",
+        "name": "Microphysics"
+      },
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-25T20:58:38Z",
+    "number": 5015,
+    "title": "Use Stokes and Chen2022 as default 1M"
+  }
+]
