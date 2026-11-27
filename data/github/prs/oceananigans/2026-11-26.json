@@ -1,0 +1,175 @@
+[
+  {
+    "additions": 21,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "`stability` required `N\u00b2`, `\u03a3\u00b2` and the reduction factor to share one float type, so `SmagorinskyLilly` threw a `MethodError` whenever its float type differed from the grid's. It now promotes mixed types; all-`Float32` calls still compute in `Float32`.\n\nThe `stability` docstring now uses unicode math and states the `\u03a3\u00b2 = 0` case.\n\n```julia\nusing Oceananigans\ngrid = RectilinearGrid(Float32; size=(4, 4, 4), extent=(1, 1, 1))\nNonhydrostaticModel(grid; closure=SmagorinskyLilly())\n# ERROR: MethodError: no method matching stability(::Float32, ::Float32, ::Float64)\n```\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-25T20:30:33Z",
+    "deletions": 11,
+    "labels": [
+      {
+        "color": "ffbb11",
+        "description": "Even a perfect program still has bugs",
+        "id": "MDU6TGFiZWwxMDg5ODE0MjU2",
+        "name": "bug \ud83d\udc1e"
+      },
+      {
+        "color": "ffd700",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc3MDEyNTI0",
+        "name": "turbulence closures \ud83c\udf90"
+      }
+    ],
+    "mergedAt": "2026-11-26T04:44:57Z",
+    "number": 6588,
+    "title": "Let SmagorinskyLilly run when its float type differs from the grid's"
+  },
+  {
+    "additions": 76,
+    "author": {
+      "id": "MDQ6VXNlcjIwNjk1NzQw",
+      "is_bot": false,
+      "login": "taimoorsohail",
+      "name": "Taimoor Sohail"
+    },
+    "body": "The CPU and GPU `distributed` Buildkite jobs have timed out on every build since #6463. With per-rank stage logging (build 16373), all four ranks of `Partition(x = 4)` in `test/mpi/boundary_transport.jl` reach \"computing the divergence\" and never get past it.\n\n**Cause.** Every distributed field takes its halo-exchange tag from `arch.field_count`, so all ranks must create the same fields in the same order. `initialize_boundary_transport` creates the transport and area fields of a boundary only on the ranks that own it. After model construction the ranks' counters therefore differ, and the next field every rank creates (here `Field(\u2202x(u) + \u2202y(v) + \u2202z(w))`) posts sends and receives whose tags never match. A `Simulation` with this setup would hit the `check_field_tags` error in `initialize!` instead of hanging.\n\n**Fix.**\n- `synchronize_field_tags!(arch)` sets every rank's counter to the largest one. `initialize_boundary_transport` calls it once the boundary fields exist. Those fields are reductions that never exchange halos, so their mismatched tags are never used.\n- The test now checks `check_field_tags(arch)` after building the model, so a regression fails instead of hanging.\n\nThe `Launch Distributed Buildkite` label is set so the distributed pipeline runs.\n\n### CI\n\nWith this change `cpu-distributed-tests` passes in about 6 minutes, after timing out at about 68 minutes on every build since #6463. `mpi/boundary_transport` passes on GPU too, along with every other CPU distributed job.\n\nTwo GPU jobs are still red, and they fail in exactly the same way on builds before this change (e.g. [16372](https://buildkite.com/clima/oceananigans-distributed/builds/16372)). The old builds hid this because `cpu-distributed-tests` hung.\n- `gpu-distributed-tests`: 10 failures in \"Distributed grids have the nodes of the global grid\" (`test/mpi/architectures.jl:83`).\n- `gpu-distributed-hydrostatic-model-tests`: solid-body-rotation mismatches (`test/mpi/hydrostatic_model.jl:182-218`). Each run gives 6, 12 and 13 failures on three of the ranks; the job then hangs and is killed with exit \u22121.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_0152rWCoK7G4WAX3ByroJRM9\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T23:39:02Z",
+    "deletions": 12,
+    "labels": [
+      {
+        "color": "22d123",
+        "description": "Select this label to run the Distributed Buildkite tests",
+        "id": "LA_kwDOCRy_aM8AAAACrtl4lA",
+        "name": "Launch Distributed Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-26T04:49:04Z",
+    "number": 6583,
+    "title": "Resynchronize field tags after building the distributed boundary transports"
+  },
+  {
+    "additions": 575,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "Part 2 of 4 splitting #6110; #6153 has merged. Depends only on `main`.\n\n## What\n\n`HydrostaticFreeSurfaceModel` on grids with an immersed top (`GridFittedVerticalBoundaries(; bottom_height, top_height)`, `PartialCellVerticalBoundaries(; bottom_height, top_height)`):\n\n- **Free surface masked by the water column.** `top_inactive_node` / `immersed_top_inactive_node` treat the free surface at `k = Nz + 1` as active in every wet column, using `dry_column\u1d9c\u1d9c\u1d43` instead of the activity of the cell at `k = Nz`. Masked `\u03b4x\u1d9c\u1d9c\u1d43`/`\u03b4y\u1d9c\u1d9c\u1d43` are used by the explicit, FFT/PCG implicit and split-explicit free surfaces and by z\u2605.\n- **`w` from continuity** restarts the integral in immersed cells, so `w` vanishes inside the immersed top.\n- **Tracer advection:** advective fluxes are masked at immersed faces. The masked transports do not close in the topmost wet cell, so the tracer tendency adds `c \u2207\u22c5\ud835\udc14` there (advective-form correction).\n- **z\u2605:** `znode` on a mutable immersed-top grid stretches about the top height. The vertical derivative in the z\u2605 chain-rule term averages `\u2202z` only over active faces (`active_weighted_\u2111xz\u1da0\u1d9c\u1d9c`, `active_weighted_\u2111yz\u1d9c\u1da0\u1d9c`), since `\u03b4z` is zero next to immersed cells and otherwise biases the correction in the topmost wet cell. It also takes `\u2202z` with the underlying grid's vertical spacing (`active_\u2202z\u1d9c\u1d9c\u1da0`) rather than the partial-cell spacing.\n- **Staggered partial cells.** With `PartialCellVerticalBoundaries`, a cell that is partial from the top can face a cell that is partial from the bottom at the same `k`. Their wet intervals then overlap by less than either spacing, or not at all. `\u0394r\u1da0\u1d9c\u1d9c`, `\u0394r\u1d9c\u1da0\u1d9c` and their reciprocals use the overlap. Faces whose overlap is below `minimum_fractional_cell_height` are closed: `peripheral_node` is `true`, and the face column depth is zero. Faces where one wet interval contains the other are unchanged.\n- **Moving face depths.** On a mutable grid with an immersed top, the column depth at a face is its static depth stretched by the mean $(h + \\eta)/h$ of the two adjacent columns, rather than the smaller of their moving depths. When the adjacent columns have different static depths, the smaller-depth rule can drive a thin face beneath the top to zero or negative depth once the deeper column's $\\eta$ drops. The two rules agree when the static depths are equal, and grids without an immersed top are unchanged.\n\nAll top-specific behavior dispatches on `ImmersedTopIBG = Union{GFBTIBG, PCBTIBG}`; the generic fallbacks are the existing code, and bottom-only grids give bit-identical results to `main`.\n\n## Equations\n\nLet $z^t_{ij}$ and $z^b_{ij}$ be the column top and bottom heights, $h_{ij} = z^t_{ij} - z^b_{ij}$ the static column depth. A column is wet if $h_{ij} > 0$.\n\n**Free surface.** In every wet column, with $U = \\sum_k u\\,\\Delta z$, $V = \\sum_k v\\,\\Delta z$,\n\n$$\\partial_t \\eta = -\\frac{1}{A_z}\\left[\\delta_x(\\Delta y\\, U) + \\delta_y(\\Delta x\\, V)\\right], \\qquad \\partial_t \\mathbf{u}_h = \\dots - g\\,\\nabla_h \\eta .$$\n\nThe differences of $U$, $V$ and $\\eta$ across a face are zeroed when a neighboring column is dry, rather than when the cell at $k = N_z$ is immersed.\n\n**Vertical velocity.** From $w_{1/2} = 0$,\n\n$$w_{k+1/2} = w_{k-1/2} - \\frac{\\delta_x(A_x u) + \\delta_y(A_y v)}{A_z} - \\Delta r_k\\, \\partial_t \\sigma, \\qquad w_{k+1/2} = 0 \\ \\text{ if cell } k \\text{ is immersed},$$\n\nso the integral restarts inside the immersed top.\n\n**Tracers.** With $\\tilde{F}$ denoting a flux zeroed at immersed faces,\n\n$$G_c = -\\frac{1}{V}\\left[\\delta_x \\tilde{F}_x(uc) + \\delta_y \\tilde{F}_y(vc) + \\delta_z \\tilde{F}_z(wc)\\right] + \\frac{c}{V}\\left[\\delta_x \\tilde{F}_x(u) + \\delta_y \\tilde{F}_y(v) + \\delta_z \\tilde{F}_z(w) + A_z \\Delta r\\, \\partial_t \\sigma\\right].$$\n\nThe second term vanishes by continuity except in the topmost wet cell, where the transport through the immersed top is zeroed; it restores the advective form $-\\mathbf{u} \\cdot \\nabla c$ there, so a uniform tracer stays uniform.\n\n**z\u2605.** On a mutable grid with an immersed top, stretching is about $z^t$ instead of $z = 0$:\n\n$$z = z^t + \\eta + \\sigma\\,(r - z^t), \\qquad \\sigma = \\frac{h + \\eta}{h},$$\n\nwhich keeps $z = z^b$ fixed at $r = z^b$ and moves the top to $z^t + \\eta$. In the horizontal pressure gradient the chain-rule term $\\partial_x z \\, \\overline{\\partial_z p}$ averages $\\partial_z p$ over the active faces of the neighboring columns only, with $\\partial_z$ taken on the underlying grid.\n\n## Tests\n\nNew tests in `test/hydrostatic_free_surface/immersed_top_dynamics.jl`, including the depth of a thin face beneath the top; staggered faces are tested in `test/unit/immersed_boundary_top_height.jl`.\n\nNot in this PR: the ice load (`TopLoad`, part 3) and the nonhydrostatic model (part 4).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n\n\n\n",
+    "changedFiles": 20,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-05T20:08:27Z",
+    "deletions": 55,
+    "labels": [
+      {
+        "color": "6575E6",
+        "description": "runs preconfigured benchamarks and spits out timing",
+        "id": "LA_kwDOCRy_aM8AAAAB-rZ-Sg",
+        "name": "benchmark performance"
+      }
+    ],
+    "mergedAt": "2026-11-26T12:46:42Z",
+    "number": 6162,
+    "title": "Hydrostatic dynamics beneath an immersed top"
+  },
+  {
+    "additions": 21,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "## Summary\n- `extract_field_time_series(f::Field)` only searched `f.boundary_conditions`, so a `FieldTimeSeries` captured only as a `KernelFunctionOperation` argument (eg a forcing field built from a prescribed atmosphere) was invisible to the generic per-step `update_field_time_series!` reload.\n- Its in-memory chunk window then never advanced, and the fast pointwise `getindex(fts, i, j, k, ::Time)` path (used inside forcing kernels) does unclamped linear extrapolation rather than erroring once the clock passes the loaded window \u2014 silently diverging the model instead of failing loudly.\n- Fix: also recurse into `f.operand` when extracting from a `Field`, so computed fields built from such series are discovered like any other.\n- Added a regression test exercising a `FieldTimeSeries` captured only inside a `KernelFunctionOperation`.\n\nFound while debugging an illegal-memory-access crash in a sea-ice model forced by `ERA5PrescribedAtmosphere` winds, where the forcing stress field's atmosphere `FieldTimeSeries` was never being reloaded past its first in-memory chunk.\n\n## Test plan\n- [x] `test/test_output_readers.jl` passes in full (11623/11623), including the new test and existing extraction regression tests (CPU)\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+    "changedFiles": 2,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-10-13T15:54:39Z",
+    "deletions": 2,
+    "labels": [],
+    "mergedAt": "2026-11-26T12:48:15Z",
+    "number": 6242,
+    "title": "Find FieldTimeSeries captured in a computed field's operand"
+  },
+  {
+    "additions": 192,
+    "author": {
+      "id": "U_kgDODjnWpA",
+      "is_bot": false,
+      "login": "aklocker42",
+      "name": "Andreas Klocker"
+    },
+    "body": "With a `SplitExplicitFreeSurface`, `step_boundary_conditions!(velocities, ...)` runs at the end of `rk_substep_velocities!` / `ab2_step_velocities!`, i.e. on the predictor `u\u2605`, before `correct_barotropic_mode!`. Radiation schemes (`NormalRadiation`, `ObliqueRadiation`, ...) therefore extrapolate the uncorrected predictor onto the boundary face, while the interior keeps `u\u2605 + (U - \u03a3 \u0394z u\u2605) / H`. The boundary and the first interior point then differ by the barotropic correction at every step. When the predictor carries a force that the free-surface slope balances (a body force, a sloping free surface), that mismatch sets up a spurious flow along open boundaries, concentrated at corners.\n\n### Changes\n\n- In the split-explicit `rk_substep!` and `hydrostatic_ab2_step!`, the velocity boundary conditions are stepped after `correct_barotropic_mode!`, so the radiation schemes see the corrected velocity. The velocity halo fill and its asynchronous communication are unchanged: the barotropic correction covers the halos, and the boundary step covers the halos along the boundary (Periodic or distributed), so both read synchronized, corrected values.\n- The barotropic correction is then applied a second time. Radiation extrapolates each level on its own, so without it the boundary columns would no longer integrate to the barotropic transport `U`; interior columns already satisfy it and change only by round-off.\n- The implicit free surface keeps stepping the velocity boundaries on the predictor (now explicitly in `rk_substep!` / `hydrostatic_ab2_step!` instead of inside `rk_substep_velocities!` / `ab2_step_velocities!`), since `enforce_targeted_open_boundary_transport!` and the pressure solve act on it.\n\n### Tests\n\n- `test/hydrostatic_free_surface/open_boundary_conditions.jl`: a two-layer, x-uniform flow with a depth-uniform body force balanced by the free-surface slope, radiating through `NormalRadiation` velocity and `GravityWaveRadiation` transport boundaries, stays steady to round-off for `SplitRungeKutta3` and `QuasiAdamsBashforth2` (`max|u - u\u1d62|` \u2248 1e-16; on `main` it drifts to 1.7e-6 in 10 steps).\n- Same file: starting from an x-varying baroclinic flow and a free-surface bump, the radiating boundary columns integrate to `U` (`max|\u222bu dz - U|` = 0 on the boundary faces after 10 steps, for both time steppers; without the second correction it is 0.83 m\u00b2/s).\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n",
+    "changedFiles": 6,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-13T12:55:13Z",
+    "deletions": 8,
+    "labels": [],
+    "mergedAt": "2026-11-26T12:48:28Z",
+    "number": 6507,
+    "title": "Step radiating velocity boundaries after the barotropic correction"
+  },
+  {
+    "additions": 47,
+    "author": {
+      "id": "MDQ6VXNlcjUwNjI0NTIx",
+      "is_bot": false,
+      "login": "xkykai",
+      "name": "Xin Kai Lee"
+    },
+    "body": "Closes #6569. The substeps read the boundary conditions of `U`, `V` and `\u03b7` past the end of the time step, so a partly in-memory `FieldTimeSeries` in them needs 3 records in memory. With fewer, the model now throws when it is built instead of at the first record time of the run.\n\n- `materialize_free_surface` throws an `ArgumentError` when such a series holds fewer than `min(3, length(times))` records. `ExtendedHalos` is exempt, since it fills the barotropic halos without the substep clock.\n- Records spaced closer than the substep span are still caught by the runtime span check.\n\nBased on #6563.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+    "changedFiles": 3,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-22T19:42:26Z",
+    "deletions": 1,
+    "labels": [
+      {
+        "color": "c0c0c0",
+        "description": "",
+        "id": "MDU6TGFiZWwxODc2OTAxMDY1",
+        "name": "output \ud83d\udcbe"
+      },
+      {
+        "color": "c3d657",
+        "description": "",
+        "id": "MDU6TGFiZWwxODkwNDMyNDEw",
+        "name": "boundary conditions \ud83c\udfd3"
+      }
+    ],
+    "mergedAt": "2026-11-26T14:17:20Z",
+    "number": 6570,
+    "title": "Require 3 records in memory for time series in the barotropic boundary conditions"
+  },
+  {
+    "additions": 6,
+    "author": {
+      "id": "MDQ6VXNlcjc2NTc0MA==",
+      "is_bot": false,
+      "login": "giordano",
+      "name": "Mos\u00e8 Giordano"
+    },
+    "body": "This is needed for #5799\r\n\r\n> The initial-condition closures captured a variable that was reassigned (`amplitude = Ref(amplitude)`), which in the broadcast testset makes the closure hold a `Core.Box`. A boxed closure is not a bitstype, so it cannot be a kernel argument on a device backend, and calling it means dynamic dispatch inside the kernel. KernelAbstractions 0.9 hides this because its CPU backend runs kernels on the host; with 0.10, where CPU kernels are compiled through POCL, Enzyme fails with an internal relocation error. Keep the `Ref` in its own variable instead.",
+    "changedFiles": 1,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-26T17:08:07Z",
+    "deletions": 7,
+    "labels": [
+      {
+        "color": "708090",
+        "description": "Tests get priority in case of emergency evacuation",
+        "id": "MDU6TGFiZWwxMjQ3MDY0MTMx",
+        "name": "testing \ud83e\uddea"
+      }
+    ],
+    "mergedAt": "2026-11-26T18:02:44Z",
+    "number": 6597,
+    "title": "Don't reassign the captured amplitude in the Enzyme test"
+  }
+]

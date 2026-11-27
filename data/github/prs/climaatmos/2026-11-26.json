@@ -1,0 +1,27 @@
+[
+  {
+    "additions": 317,
+    "author": {
+      "id": "MDQ6VXNlcjE1MTg1MzE2",
+      "is_bot": false,
+      "login": "tapios",
+      "name": "Tapio Schneider"
+    },
+    "body": "`Kessler1M` rain autoconversion uses a higher threshold and a longer timescale when `w <= 0` so quiescent stratocumulus decks do not drizzle away, and transitions with upward velocity `max(w, 0)` to faster autoconversion in convective updrafts. With `PrognosticEDMFX`, however, the environment subsides (`w\u2070 <= 0`) to balance rising updrafts. Cloud liquid detrained from cumulus updrafts into that subsiding environment sees `max(w\u2070, 0) = 0` and converts to rain at the slow stratocumulus values, so slowing quiescent autoconversion for stratocumulus causes detrained liquid to linger in cumulus layers and inflate cloud water and cloud cover.\n\nTo separate detrained convective condensate from stratocumulus in the environment, this PR uses the fraction `f_neq = clamp((q_c \u2212 q_c_eq) / q_c, 0, 1)` of environment cloud condensate `q_c = q_lcl + q_icl` in excess of the equilibrium condensate `q_c_eq` of the subgrid saturation-excess distribution (`f_neq \u2248 0` in stratocumulus decks; `f_neq \u2248 1` for condensate detrained into a subsaturated cumulus layer), and evaluates environment `Kessler1M` autoconversion at\n\n`w_mp\u2070 = max(w\u2070, f_neq (c_w w_up + w_d))`,\n\nwhere `w_up = \u03a3\u2c7c a\u02b2 max(w\u02b2, 0) / max(\u03a3\u2c7c a\u02b2, a_min)` is the area-weighted mean updraft velocity of the cell and `w_d` is a velocity for detrained condensate that has outlived active drafts. Equilibrium stratocumulus stays on the quiescent branch (`w_mp\u2070 = w\u2070`), while detrained cumulus condensate converts to rain at convective rates.\n\n- Off by default: adds provisional parameters `sgs_env_autoconversion_updraft_velocity_weight` (`c_w`) and `sgs_env_autoconversion_detrained_velocity` (`w_d`) to `SGSQuadratureParameters`, both defaulting to `0` so existing runs are unchanged.\n- Adds `env_detrained_condensate_fraction`, `draft_mean_updraft_velocity`, and `env_autoconversion_velocity` in `microphysics_cache.jl`, applied in `set_environment_1m_tendency!` and in the `mp1men_` process diagnostics when `Kessler1M` is active and either parameter is positive.\n- Documented in `docs/src/microphysics.md` and `NEWS.md`; unit tests in `test/parameter_tests.jl` and `test/parameterized_tendencies/microphysics/cloud_fraction.jl`.\n",
+    "changedFiles": 10,
+    "closingIssuesReferences": [],
+    "createdAt": "2026-11-24T23:38:19Z",
+    "deletions": 6,
+    "labels": [
+      {
+        "color": "006b75",
+        "description": "Add to launch buildkite run",
+        "id": "LA_kwDOFoZ0Vs8AAAABSC3w4Q",
+        "name": "Launch Buildkite"
+      }
+    ],
+    "mergedAt": "2026-11-26T04:52:23Z",
+    "number": 5014,
+    "title": "Add a convective vertical velocity for the environment Kessler1M autoconversion"
+  }
+]
